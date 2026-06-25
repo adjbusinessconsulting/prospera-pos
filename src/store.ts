@@ -26,7 +26,7 @@ interface POSState {
   restart: () => void;
 }
 
-export const useStore = create<POSState>((set, get) => ({
+export const useStore = create<POSState>((set) => ({
   screen: 'login',
   selectedCashier: 'ra',
   pin: '',

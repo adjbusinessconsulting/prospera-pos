@@ -13,7 +13,7 @@ const METHODS = [
 const QUICK_AMOUNTS = [50000, 100000, 200000, 300000, 500000];
 
 export default function Payment() {
-  const { cart, paymentMethod, cashReceived, setPaymentMethod, setCashReceived, addCash, setScreen } = useStore();
+  const { cart, paymentMethod, cashReceived, setPaymentMethod, setCashReceived, setScreen } = useStore();
   const total = getTotal(cart);
   const itemCount = getItemCount(cart);
   const change = cashReceived - total;
