@@ -1,5 +1,14 @@
-import { useStore, getTotal, getItemCount } from '../store';
-import { PRODUCTS, CATEGORIES, getCatLabel, formatRp } from '../data';
+﻿import { ShoppingCart, CalendarDays, Package, Wallet, BarChart2, Search, Upload, Plus, User } from "lucide-react";
+import { useStore, getTotal, getItemCount } from "../store";
+import { PRODUCTS, CATEGORIES, getCatLabel, formatRp } from "../data";
+
+const NAV = [
+  { id: "jual",    label: "JUAL",    Icon: ShoppingCart, dot: false },
+  { id: "riwayat", label: "RIWAYAT", Icon: CalendarDays,  dot: false },
+  { id: "produk",  label: "PRODUK",  Icon: Package,       dot: false },
+  { id: "kas",     label: "KAS",     Icon: Wallet,        dot: true  },
+  { id: "laporan", label: "LAPORAN", Icon: BarChart2,     dot: false },
+];
 
 export default function Sales() {
   const { cart, category, search, setCategory, setSearch, addToCart, updateQty, clearCart, setScreen } = useStore();
@@ -7,7 +16,7 @@ export default function Sales() {
   const itemCount = getItemCount(cart);
 
   const filtered = PRODUCTS.filter(p => {
-    const matchCat = category === 'Semua' || getCatLabel(p.category) === category;
+    const matchCat = category === "Semua" || getCatLabel(p.category) === category;
     const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
@@ -15,182 +24,181 @@ export default function Sales() {
   const cartQty = (id: string) => cart.find(i => i.product.id === id)?.qty ?? 0;
 
   return (
-    <div className="screen" style={{ width: '100%', height: '100%', background: '#FAFAF7', display: 'flex' }}>
+    <div className="w-full h-full flex animate-screen-in">
       {/* Sidebar */}
-      <aside style={{ width: 88, background: '#fff', borderRight: '1px solid #ECE7DD', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 0', flexShrink: 0 }}>
-        <div style={{ width: 36, height: 36, marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src="/mark-navy.png" style={{ width: 36, height: 36, objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+      <aside className="w-[88px] bg-white border-r border-warm-border flex flex-col items-center py-6 shrink-0">
+        <div className="w-9 h-9 mb-8">
+          <img src="/mark-navy-512.png" className="w-9 h-9 object-contain" alt="" />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, alignItems: 'center' }}>
-          {[
-            { label: 'JUAL', active: true, icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 2.3a1 1 0 00.7 1.7H17"/><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/></svg> },
-            { label: 'RIWAYAT', active: false, icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v4M16 4v4"/></svg> },
-            { label: 'PRODUK', active: false, icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg> },
-            { label: 'KAS', active: false, dot: true, icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 100 4h4v-4z"/></svg> },
-            { label: 'LAPORAN', active: false, icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M9 11H5a2 2 0 00-2 2v7h6m4-9V5a2 2 0 012-2h2a2 2 0 012 2v15m-6 0v-9m0 0h6m0 9v-2"/></svg> },
-          ].map(({ label, active, icon, dot }) => (
-            <button key={label} style={{ width: 60, height: 60, borderRadius: 14, background: active ? '#0B1129' : 'transparent', border: 'none', color: active ? '#F2EDE3' : '#7A776F', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, position: 'relative' }}>
-              {icon}
-              <span style={{ fontSize: 8.5, letterSpacing: '0.1em', fontWeight: 500 }}>{label}</span>
-              {dot && <span style={{ position: 'absolute', top: 8, right: 10, width: 6, height: 6, borderRadius: '50%', background: '#C9A55F' }} />}
-            </button>
-          ))}
+        <div className="flex flex-col gap-1.5 flex-1 items-center w-full px-2">
+          {NAV.map(({ id, label, Icon, dot }) => {
+            const active = id === "jual";
+            return (
+              <button key={id} className={`w-[60px] h-[60px] rounded-card flex flex-col items-center justify-center gap-1 relative ${active ? "bg-navy text-cream-text" : "bg-transparent text-text-mute"}`}>
+                <Icon size={20} strokeWidth={active ? 2 : 1.6} />
+                <span className="text-[8.5px] font-medium tracking-mono-default uppercase leading-none">{label}</span>
+                {dot && <span className="absolute top-2 right-2.5 w-1.5 h-1.5 rounded-full bg-gold" />}
+              </button>
+            );
+          })}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#5C9E7E', display: 'block' }} />
-            <span className="mono" style={{ fontSize: 8, color: '#7A776F', letterSpacing: '0.1em' }}>SYNC</span>
+        <div className="flex flex-col items-center gap-3.5">
+          <div className="flex flex-col items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-success block" />
+            <span className="font-mono text-[8px] text-text-mute tracking-mono-default">SYNC</span>
           </div>
-          <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#F2EDE3', border: '1px solid #ECE7DD', color: '#0B1129', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 13 }}>RA</div>
+          <div className="w-[38px] h-[38px] rounded-full bg-cream-pill border border-warm-border flex items-center justify-center font-semibold text-[13px] text-navy">RA</div>
         </div>
       </aside>
 
       {/* Main */}
-      <main style={{ flex: 1, padding: '24px 28px 24px 32px', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <main className="flex-1 flex flex-col min-w-0 pl-8 pr-7 pt-6 pb-6 bg-cream-bg">
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+        <div className="flex justify-between items-start mb-5">
           <div>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: '#7A776F', textTransform: 'uppercase', marginBottom: 4 }}>PENJUALAN · NEW SALE</div>
-            <h1 className="serif" style={{ fontSize: 32, fontWeight: 500, margin: 0, letterSpacing: '-0.01em', lineHeight: 1.1 }}>Selamat siang, Ratna</h1>
-            <div style={{ fontSize: 13, color: '#7A776F', marginTop: 4 }}>Selasa, 24 Juni 2026 · Transaksi ke <span style={{ color: '#0B1129', fontWeight: 500 }}>#PLU-0427</span></div>
+            <p className="font-mono text-eyebrow tracking-eyebrow uppercase text-text-mute mb-1">PENJUALAN · NEW SALE</p>
+            <h1 className="font-serif text-display-m font-medium text-navy">Selamat siang, Ratna</h1>
+            <p className="text-[13px] text-text-mute mt-1">
+              Selasa, 24 Juni 2026 · Transaksi ke <span className="font-mono font-medium text-navy">#PLU-0427</span>
+            </p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button style={{ background: '#fff', border: '1px solid #ECE7DD', borderRadius: 10, padding: '9px 14px', fontSize: 12, color: '#0B1129', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2 bg-white border border-warm-border rounded-[10px] px-3.5 py-2.5 text-[12px] text-navy">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
               Shift Siang · 14:32
-            </button>
-            <button style={{ background: '#fff', border: '1px solid #ECE7DD', borderRadius: 10, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B1129' }}>
+            </div>
+            <button className="w-[38px] h-[38px] bg-white border border-warm-border rounded-[10px] flex items-center justify-center text-text-mute">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
             </button>
-            <button style={{ background: '#fff', border: '1px solid #ECE7DD', borderRadius: 10, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B1129', position: 'relative' }}>
+            <button className="w-[38px] h-[38px] bg-white border border-warm-border rounded-[10px] flex items-center justify-center text-text-mute relative">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
-              <span style={{ position: 'absolute', top: 6, right: 8, width: 7, height: 7, borderRadius: '50%', background: '#C9A55F', border: '1.5px solid #fff' }} />
+              <span className="absolute top-[7px] right-[8px] w-[7px] h-[7px] rounded-full bg-gold border-[1.5px] border-white" />
             </button>
           </div>
         </div>
 
         {/* Search */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
-          <div style={{ flex: 1, background: '#fff', border: '1px solid #ECE7DD', borderRadius: 12, padding: '0 16px', display: 'flex', alignItems: 'center', gap: 12, height: 46 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input value={search} onChange={e => setSearch(e.target.value)} style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, color: '#0B1129', background: 'transparent' }} placeholder="Cari produk, scan barcode, atau ketik kode SKU…" />
-            <span className="mono" style={{ fontSize: 10, color: '#7A776F', background: '#F2EDE3', padding: '4px 8px', borderRadius: 6, letterSpacing: '0.08em' }}>⌘ K</span>
+        <div className="flex gap-2.5 mb-[18px]">
+          <div className="flex-1 bg-white border border-warm-border rounded-button h-[46px] flex items-center gap-3 px-4">
+            <Search size={16} className="text-text-mute shrink-0" strokeWidth={2} />
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              className="flex-1 border-0 outline-none text-[14px] text-navy bg-transparent placeholder:text-text-mute"
+              placeholder="Cari produk, scan barcode, atau ketik kode SKU…" />
+            <span className="font-mono text-[10px] text-text-mute bg-cream-pill px-2 py-1 rounded-[6px] tracking-mono-default shrink-0">⌘ K</span>
           </div>
-          <button style={{ background: '#fff', border: '1px solid #ECE7DD', borderRadius: 12, padding: '0 18px', height: 46, display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: '#0B1129' }}>
+          <button className="bg-white border border-warm-border rounded-button px-4 h-[46px] flex items-center gap-2.5 text-[13px] text-navy shrink-0">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M7 5v14M11 5v14M15 5v14M19 5v14"/></svg>
             Scan Barcode
           </button>
         </div>
 
-        {/* Categories */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 22, alignItems: 'center' }}>
-          <span className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: '#7A776F', textTransform: 'uppercase', marginRight: 6 }}>KATEGORI</span>
+        {/* Category pills */}
+        <div className="flex gap-2 mb-[22px] items-center flex-wrap">
+          <span className="font-mono text-eyebrow tracking-eyebrow uppercase text-text-mute mr-1.5">KATEGORI</span>
           {CATEGORIES.map(c => (
             <button key={c} onClick={() => setCategory(c)}
-              style={{ background: category === c ? '#0B1129' : '#fff', border: `1px solid ${category === c ? '#0B1129' : '#ECE7DD'}`, borderRadius: 999, padding: '8px 16px', fontSize: 12.5, color: category === c ? '#F2EDE3' : '#0B1129', fontWeight: category === c ? 500 : 400 }}>
-              {c === 'Semua' ? `Semua · ${PRODUCTS.length}` : c}
+              className={`px-4 py-2 rounded-full text-[12.5px] font-medium transition-colors border ${category === c ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border"}`}>
+              {c === "Semua" ? `Semua · ${PRODUCTS.length}` : c}
             </button>
           ))}
         </div>
 
         {/* Product grid */}
-        <div style={{ flex: 1, overflow: 'auto', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, alignContent: 'flex-start' }}>
+        <div className="flex-1 overflow-auto grid grid-cols-5 gap-3 content-start">
           {filtered.map(p => {
             const qty = cartQty(p.id);
             return (
-              <div key={p.id} onClick={() => addToCart(p)}
-                style={{ background: '#fff', border: '1px solid #ECE7DD', borderRadius: 14, padding: 10, cursor: 'pointer', position: 'relative' }}>
-                <div style={{ aspectRatio: '1', background: 'linear-gradient(135deg,#F2EDE3 0%,#E8DFC9 100%)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10, position: 'relative' }}>
-                  <span className="serif" style={{ fontSize: 30, color: 'rgba(11,17,41,0.55)', fontWeight: 500 }}>{p.monogram}</span>
-                  <span className="mono" style={{ position: 'absolute', top: 6, left: 8, fontSize: 8.5, color: p.stock <= 5 ? '#C25E3D' : '#7A776F', letterSpacing: '0.05em' }}>×{p.stock}</span>
-                  {qty > 0 && <div className="mono" style={{ position: 'absolute', top: 6, right: 6, background: '#0B1129', color: '#C9A55F', fontSize: 9, padding: '3px 7px', borderRadius: 5, letterSpacing: '0.08em', fontWeight: 600 }}>×{qty}</div>}
+              <button key={p.id} onClick={() => addToCart(p)}
+                className="bg-white border border-warm-border rounded-card p-2.5 text-left hover:border-navy/30 transition-colors">
+                <div className="relative aspect-square rounded-[9px] flex items-center justify-center mb-2.5"
+                  style={{ background: "linear-gradient(135deg, #F2EDE3 0%, #E8DFC9 100%)" }}>
+                  <span className="font-serif text-[30px] font-medium" style={{ color: "rgba(11,17,41,0.55)" }}>{p.monogram}</span>
+                  <span className={`absolute top-1.5 left-2 font-mono text-[8.5px] ${p.stock <= 5 ? "text-warning" : "text-text-mute"}`}>×{p.stock}</span>
+                  {qty > 0 && <span className="absolute top-1.5 right-1.5 bg-navy text-gold font-mono text-[9px] px-[7px] py-[3px] rounded-[5px] font-semibold">×{qty}</span>}
                 </div>
-                <div style={{ fontSize: 12, fontWeight: 500, lineHeight: 1.25, marginBottom: 3 }}>{p.name}</div>
-                <div style={{ fontSize: 10.5, color: '#7A776F', marginBottom: 6 }}>{p.category} · {p.unit}</div>
-                <div className="serif" style={{ fontSize: 17, fontWeight: 600 }}>Rp {p.price.toLocaleString('id-ID')}</div>
-              </div>
+                <div className="text-[12px] font-medium text-navy leading-tight mb-0.5">{p.name}</div>
+                <div className="text-[10.5px] text-text-mute mb-1.5">{p.category} · {p.unit}</div>
+                <div className="font-serif text-[17px] font-semibold text-navy">Rp {p.price.toLocaleString("id-ID")}</div>
+              </button>
             );
           })}
         </div>
       </main>
 
       {/* Cart */}
-      <aside style={{ width: 400, background: '#fff', borderLeft: '1px solid #ECE7DD', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-        {/* Cart header */}
-        <div style={{ padding: '24px 24px 16px', borderBottom: '1px solid #ECE7DD' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+      <aside className="w-[400px] bg-white border-l border-warm-border flex flex-col shrink-0">
+        <div className="px-6 pt-6 pb-4 border-b border-warm-border">
+          <div className="flex justify-between items-start mb-3">
             <div>
-              <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: '#7A776F', textTransform: 'uppercase' }}>KERANJANG · CART</div>
-              <div className="serif" style={{ fontSize: 24, fontWeight: 500, marginTop: 2 }}>{itemCount} item</div>
+              <p className="font-mono text-eyebrow tracking-eyebrow uppercase text-text-mute">KERANJANG · CART</p>
+              <h2 className="font-serif text-display-s font-medium text-navy mt-0.5">{itemCount} item</h2>
             </div>
-            <button onClick={clearCart} style={{ background: 'transparent', border: 'none', color: '#7A776F', fontSize: 12, textDecoration: 'underline', textUnderlineOffset: 3 }}>Kosongkan</button>
+            <button onClick={clearCart} className="text-[12px] text-text-mute underline underline-offset-[3px] mt-1">Kosongkan</button>
           </div>
-          <button style={{ width: '100%', background: '#FAFAF7', border: '1px dashed #D8D2C4', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', color: '#0B1129' }}>
-            <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#F2EDE3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7A776F' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a4 4 0 014-4h8a4 4 0 014 4v2"/></svg>
+          <button className="w-full bg-cream-bg border border-dashed border-warm-dashed rounded-[10px] px-3.5 py-2.5 flex items-center gap-2.5">
+            <div className="w-[30px] h-[30px] rounded-full bg-cream-pill flex items-center justify-center text-text-mute shrink-0">
+              <User size={14} strokeWidth={1.8} />
             </div>
-            <div style={{ flex: 1, textAlign: 'left' }}>
-              <div style={{ fontSize: 12.5, fontWeight: 500 }}>Pelanggan umum</div>
-              <div style={{ fontSize: 10.5, color: '#7A776F' }}>Tambah nama / WhatsApp untuk hutang</div>
+            <div className="flex-1 text-left">
+              <div className="text-[12.5px] font-medium text-navy">Pelanggan umum</div>
+              <div className="text-[10.5px] text-text-mute">Tambah nama / WhatsApp untuk hutang</div>
             </div>
-            <span style={{ fontSize: 18, color: '#C9A55F', fontWeight: 300 }}>+</span>
+            <span className="text-[18px] text-gold font-light leading-none">+</span>
           </button>
         </div>
 
-        {/* Cart items */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '16px 24px' }}>
-          {cart.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#D8D2C4', fontSize: 13, paddingTop: 40 }}>Keranjang kosong</div>
-          )}
+        <div className="flex-1 overflow-auto px-6 py-4">
+          {cart.length === 0 && <p className="text-center text-warm-dashed text-[13px] pt-10">Keranjang kosong</p>}
           {cart.map(item => (
-            <div key={item.product.id} style={{ display: 'flex', gap: 12, padding: '12px 0', borderBottom: '1px solid #F2EDE3' }}>
-              <div style={{ width: 44, height: 44, borderRadius: 8, background: 'linear-gradient(135deg,#F2EDE3,#E8DFC9)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span className="serif" style={{ fontSize: 16, color: 'rgba(11,17,41,0.55)', fontWeight: 500 }}>{item.product.monogram}</span>
+            <div key={item.product.id} className="flex gap-3 py-3 border-b border-[#F2EDE3]">
+              <div className="w-11 h-11 rounded-thumb flex items-center justify-center shrink-0"
+                style={{ background: "linear-gradient(135deg, #F2EDE3 0%, #E8DFC9 100%)" }}>
+                <span className="font-serif text-[16px] font-medium" style={{ color: "rgba(11,17,41,0.55)" }}>{item.product.monogram}</span>
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 500 }}>{item.product.name}</div>
-                <div style={{ fontSize: 11, color: '#7A776F', marginTop: 2 }}>{item.qty} × Rp {item.product.price.toLocaleString('id-ID')}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[12.5px] font-medium text-navy">{item.product.name}</div>
+                <div className="text-[11px] text-text-mute mt-0.5">{item.qty} × Rp {item.product.price.toLocaleString("id-ID")}</div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-                <div className="serif" style={{ fontSize: 15, fontWeight: 600 }}>{(item.product.price * item.qty).toLocaleString('id-ID')}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <button onClick={() => updateQty(item.product.id, -1)} style={{ width: 24, height: 24, border: '1px solid #ECE7DD', background: '#fff', borderRadius: 6, color: '#7A776F', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-                  <span className="mono" style={{ fontSize: 11, width: 14, textAlign: 'center' }}>{item.qty}</span>
-                  <button onClick={() => updateQty(item.product.id, 1)} style={{ width: 24, height: 24, border: '1px solid #ECE7DD', background: '#fff', borderRadius: 6, color: '#0B1129', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+              <div className="flex flex-col items-end gap-1.5 shrink-0">
+                <span className="font-serif text-[15px] font-semibold text-navy">{(item.product.price * item.qty).toLocaleString("id-ID")}</span>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => updateQty(item.product.id, -1)} className="w-6 h-6 border border-warm-border bg-white rounded-stepper flex items-center justify-center text-text-mute text-[13px] leading-none">−</button>
+                  <span className="font-mono text-[11px] w-3.5 text-center text-navy">{item.qty}</span>
+                  <button onClick={() => updateQty(item.product.id, 1)} className="w-6 h-6 border border-warm-border bg-white rounded-stepper flex items-center justify-center text-navy text-[13px] leading-none">+</button>
                 </div>
               </div>
             </div>
           ))}
           {cart.length > 0 && (
-            <button style={{ marginTop: 14, background: 'transparent', border: 'none', color: '#C9A55F', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+            <button className="mt-3.5 flex items-center gap-1.5 text-[12px] text-gold font-medium">
+              <Plus size={13} strokeWidth={2} />
               Tambah diskon / catatan
             </button>
           )}
         </div>
 
-        {/* Cart footer */}
-        <div style={{ padding: '18px 24px 22px', borderTop: '1px solid #ECE7DD', background: '#FAFAF7' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: '#7A776F', marginBottom: 6 }}>
-            <span>Subtotal</span><span className="mono">Rp {total.toLocaleString('id-ID')}</span>
+        <div className="px-6 pb-[22px] pt-[18px] border-t border-warm-border bg-cream-bg">
+          <div className="flex justify-between text-[12.5px] text-text-mute mb-1.5">
+            <span>Subtotal</span><span className="font-mono">Rp {total.toLocaleString("id-ID")}</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: '#7A776F', marginBottom: 6 }}>
-            <span>Diskon</span><span className="mono">− Rp 0</span>
+          <div className="flex justify-between text-[12.5px] text-text-mute mb-3.5">
+            <span>Diskon</span><span className="font-mono">− Rp 0</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 14, paddingTop: 14, borderTop: '1px dashed #D8D2C4' }}>
+          <div className="flex justify-between items-end pt-3.5 border-t border-dashed border-warm-dashed">
             <div>
-              <div className="mono" style={{ fontSize: 9.5, letterSpacing: '0.22em', color: '#7A776F', textTransform: 'uppercase', marginBottom: 2 }}>TOTAL</div>
-              <div style={{ fontSize: 11, color: '#7A776F' }}>{itemCount} item · belum termasuk pajak</div>
+              <p className="font-mono text-[9.5px] tracking-eyebrow uppercase text-text-mute mb-0.5">TOTAL</p>
+              <p className="text-[11px] text-text-mute">{itemCount} item · belum termasuk pajak</p>
             </div>
-            <div className="serif" style={{ fontSize: 34, fontWeight: 600, lineHeight: 1, letterSpacing: '-0.01em' }}>Rp {total.toLocaleString('id-ID')}</div>
+            <span className="font-serif text-amount-l font-semibold text-navy leading-none">Rp {total.toLocaleString("id-ID")}</span>
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-            <button style={{ flexShrink: 0, background: '#fff', border: '1px solid #ECE7DD', borderRadius: 12, padding: '0 14px', height: 50, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#0B1129' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          <div className="flex gap-2 mt-4">
+            <button className="shrink-0 bg-white border border-warm-border rounded-button h-[50px] px-3.5 flex items-center gap-1.5 text-[12px] text-navy">
+              <Upload size={14} strokeWidth={1.8} />
               Tahan
             </button>
-            <button onClick={() => cart.length > 0 && setScreen('payment')} style={{ flex: 1, background: cart.length > 0 ? '#0B1129' : '#ECE7DD', border: 'none', borderRadius: 12, height: 50, color: cart.length > 0 ? '#F2EDE3' : '#7A776F', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, letterSpacing: '0.02em' }}>
-              <span>BAYAR · {formatRp(total)}</span>
+            <button onClick={() => cart.length > 0 && setScreen("payment")}
+              className={`flex-1 rounded-button h-[50px] flex items-center justify-center gap-2.5 text-[14px] font-semibold tracking-[0.02em] transition-colors ${cart.length > 0 ? "bg-navy text-cream-text" : "bg-warm-border text-text-mute"}`}>
+              <span>BAYAR — {formatRp(total)}</span>
               {cart.length > 0 && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
             </button>
           </div>
