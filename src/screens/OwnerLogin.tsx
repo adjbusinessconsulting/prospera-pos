@@ -13,7 +13,7 @@ export default function OwnerLogin() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -147,8 +147,16 @@ export default function OwnerLogin() {
           </div>
         )}
 
+        {/* Demo mode */}
+        <div style={{ marginTop: 16, padding: "10px 14px", background: "rgba(201,165,95,0.07)", border: "1px dashed rgba(201,165,95,0.35)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span className="text-text-mute" style={{ fontSize: 11.5 }}>Ingin coba dulu tanpa akun?</span>
+          <button type="button" onClick={() => setScreen("login")} className="font-mono text-gold" style={{ background: "transparent", border: "none", fontSize: 10, letterSpacing: "0.14em", cursor: "pointer", fontWeight: 600, textTransform: "uppercase" }}>
+            COBA DEMO →
+          </button>
+        </div>
+
         {/* Footer */}
-        <div className="border-t border-warm-border flex justify-between items-center" style={{ marginTop: 28, paddingTop: 22 }}>
+        <div className="border-t border-warm-border flex justify-between items-center" style={{ marginTop: 20, paddingTop: 18 }}>
           <div className="text-text-mute" style={{ fontSize: 11.5 }}>
             {mode === "signin" ? (
               <>Belum punya akun?{" "}
