@@ -27,7 +27,7 @@ interface POSState {
 }
 
 export const useStore = create<POSState>((set) => ({
-  screen: 'login',
+  screen: 'owner-login',
   selectedCashier: 'ra',
   pin: '',
   cart: [],
@@ -59,7 +59,7 @@ export const useStore = create<POSState>((set) => ({
   setCashReceived: (cashReceived) => set({ cashReceived }),
   addCash: (n) => set(s => ({ cashReceived: s.cashReceived + n })),
 
-  restart: () => set({ screen: 'login', cart: [], pin: '', paymentMethod: 'tunai', cashReceived: 200000 }),
+  restart: () => set({ screen: 'owner-login', cart: [], pin: '', paymentMethod: 'tunai', cashReceived: 200000 }),
 }));
 
 export const getTotal = (cart: CartItem[]) => cart.reduce((sum, i) => sum + i.product.price * i.qty, 0);

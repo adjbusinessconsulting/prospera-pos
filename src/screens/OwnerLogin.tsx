@@ -1,0 +1,115 @@
+import { useState } from "react";
+import { useStore } from "../store";
+
+export default function OwnerLogin() {
+  const setScreen = useStore(s => s.setScreen);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setScreen("login");
+  }
+
+  return (
+    <div className="w-full h-full bg-cream-deep flex items-center justify-center" style={{ padding: "32px 20px" }}>
+      {/* Card */}
+      <div style={{ width: "100%", maxWidth: 480, background: "#FAFAF7", border: "1px solid #ECE7DD", borderRadius: 18, padding: "44px 44px 36px", display: "flex", flexDirection: "column", boxShadow: "0 30px 80px -24px rgba(11,17,41,0.18), 0 4px 16px rgba(11,17,41,0.06)" }}>
+
+        {/* Mini chrome */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 36 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span className="w-[7px] h-[7px] rounded-full bg-success shadow-sync-glow inline-block" />
+            <span className="font-mono text-[10px] uppercase text-text-mute" style={{ letterSpacing: "0.18em" }}>SYSTEM READY</span>
+          </div>
+          <button className="bg-white border border-warm-border rounded-[8px] flex items-center gap-1.5 text-navy" style={{ padding: "5px 10px", fontSize: 11, cursor: "pointer" }}>
+            <span>ID</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+        </div>
+
+        {/* Brand block */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 32 }}>
+          <img src="/horizontal-light.png" alt="Prospera Business Consulting" style={{ height: 96, width: "auto", objectFit: "contain", marginBottom: 18 }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ flex: "0 0 28px", height: 1, background: "linear-gradient(to right, rgba(201,165,95,0), rgba(201,165,95,0.6))", display: "inline-block" }} />
+            <span className="font-mono text-gold" style={{ fontSize: 10, letterSpacing: "0.32em", textTransform: "uppercase", fontWeight: 500 }}>POS · POINT OF SALE</span>
+            <span style={{ flex: "0 0 28px", height: 1, background: "linear-gradient(to left, rgba(201,165,95,0), rgba(201,165,95,0.6))", display: "inline-block" }} />
+          </div>
+        </div>
+
+        {/* Header */}
+        <div style={{ marginBottom: 30, textAlign: "center" }}>
+          <h2 className="font-serif text-navy" style={{ fontSize: 38, fontWeight: 500, margin: "0 0 8px", letterSpacing: "-0.015em", lineHeight: 1.05 }}>Masuk ke toko Anda</h2>
+          <div className="text-text-mute" style={{ fontSize: 13.5 }}>Sign in to manage your store</div>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* Email / WA */}
+          <div>
+            <label style={{ display: "block", marginBottom: 8 }}>
+              <span className="font-mono text-text-mute uppercase" style={{ fontSize: 10, letterSpacing: "0.22em" }}>EMAIL · NOMOR WHATSAPP</span>
+            </label>
+            <div className="bg-white border border-warm-border rounded-[11px] flex items-center gap-[10px] focus-within:border-navy" style={{ padding: "0 14px", height: 50, transition: "border-color 0.15s, box-shadow 0.15s" }}
+              onFocus={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 0 0 4px rgba(11,17,41,0.06)"; (e.currentTarget as HTMLDivElement).style.borderColor = "#0B1129"; }}
+              onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) { (e.currentTarget as HTMLDivElement).style.boxShadow = ""; (e.currentTarget as HTMLDivElement).style.borderColor = "#ECE7DD"; } }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>
+              <input type="text" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@toko.id atau 0812-3456-7890" className="flex-1 bg-transparent border-0 outline-none text-navy" style={{ fontSize: 14.5, padding: 0 }} />
+            </div>
+          </div>
+
+          {/* Password */}
+          <div>
+            <label style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+              <span className="font-mono text-text-mute uppercase" style={{ fontSize: 10, letterSpacing: "0.22em" }}>KATA SANDI · PASSWORD</span>
+              <button type="button" className="text-text-mute" style={{ background: "transparent", border: "none", padding: 0, fontSize: 11, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "rgba(122,119,111,0.3)" }}>Lupa?</button>
+            </label>
+            <div className="bg-white border border-warm-border rounded-[11px] flex items-center gap-[10px]" style={{ padding: "0 14px", height: 50, transition: "border-color 0.15s, box-shadow 0.15s" }}
+              onFocus={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 0 0 4px rgba(11,17,41,0.06)"; (e.currentTarget as HTMLDivElement).style.borderColor = "#0B1129"; }}
+              onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) { (e.currentTarget as HTMLDivElement).style.boxShadow = ""; (e.currentTarget as HTMLDivElement).style.borderColor = "#ECE7DD"; } }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="flex-1 bg-transparent border-0 outline-none text-navy" style={{ fontSize: 14.5, letterSpacing: showPw ? 0 : "0.1em", padding: 0 }} />
+              <button type="button" onClick={() => setShowPw(p => !p)} className="text-text-mute" style={{ background: "transparent", border: "none", cursor: "pointer", padding: 4 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Remember */}
+          <label style={{ display: "flex", alignItems: "center", gap: 9, cursor: "pointer", userSelect: "none", marginTop: 4 }}>
+            <span className="bg-navy border-navy flex items-center justify-center shrink-0" style={{ width: 16, height: 16, borderRadius: 5, border: "1.5px solid #0B1129" }}>
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="3.5"><path d="M20 6L9 17l-5-5"/></svg>
+            </span>
+            <span className="text-navy" style={{ fontSize: 12.5 }}>Ingat saya selama 30 hari</span>
+          </label>
+
+          {/* CTA */}
+          <button type="submit" className="bg-navy text-cream-text flex items-center justify-center gap-3 hover:bg-navy-soft transition-colors" style={{ marginTop: 8, border: "none", borderRadius: 12, padding: "0 22px", height: 54, cursor: "pointer", fontSize: 14, fontWeight: 600, letterSpacing: "0.02em" }}>
+            <span>MASUK KE TOKO</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </button>
+        </form>
+
+        {/* Manager notice */}
+        <div className="bg-white border border-warm-border flex items-start gap-[10px]" style={{ marginTop: 18, padding: "12px 14px", borderRadius: 10 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2" style={{ flexShrink: 0, marginTop: 2 }}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <div className="text-text-mute" style={{ fontSize: 11.5, lineHeight: 1.45 }}>
+            Khusus pemilik / manajer toko. Kasir akan login dengan PIN di tablet setelah Anda buka shift.
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-warm-border flex justify-between items-center" style={{ marginTop: 28, paddingTop: 22 }}>
+          <div className="text-text-mute" style={{ fontSize: 11.5 }}>
+            Belum punya akun?{" "}
+            <button type="button" className="text-navy" style={{ background: "transparent", border: "none", padding: "0 0 0 4px", fontSize: 11.5, cursor: "pointer", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#C9A55F" }}>Daftar toko</button>
+          </div>
+          <div className="font-mono text-text-mute uppercase" style={{ fontSize: 9.5, letterSpacing: "0.18em" }}>© 2026 PROSPERA</div>
+        </div>
+      </div>
+    </div>
+  );
+}

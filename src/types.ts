@@ -1,4 +1,4 @@
-export type Screen = 'login' | 'sales' | 'payment' | 'receipt';
+export type Screen = 'owner-login' | 'login' | 'sales' | 'payment' | 'receipt';
 
 export interface Product {
   id: string;
