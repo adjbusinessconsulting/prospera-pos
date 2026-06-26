@@ -1,27 +1,33 @@
 import { useState } from "react";
 import { useStore } from "../store";
+import { supabase } from "../lib/supabase";
 
 export default function OwnerLogin() {
   const setScreen = useStore(s => s.setScreen);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setLoading(true);
+    setError("");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { setError(error.message); setLoading(false); return; }
     setScreen("login");
   }
 
   return (
     <div className="w-full h-full bg-cream-deep flex items-center justify-center" style={{ padding: "32px 20px" }}>
-      {/* Card */}
       <div style={{ width: "100%", maxWidth: 480, background: "#FAFAF7", border: "1px solid #ECE7DD", borderRadius: 18, padding: "44px 44px 36px", display: "flex", flexDirection: "column", boxShadow: "0 30px 80px -24px rgba(11,17,41,0.18), 0 4px 16px rgba(11,17,41,0.06)" }}>
 
         {/* Mini chrome */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 36 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span className="w-[7px] h-[7px] rounded-full bg-success shadow-sync-glow inline-block" />
-            <span className="font-mono text-[10px] uppercase text-text-mute" style={{ letterSpacing: "0.18em" }}>SYSTEM READY</span>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#5C9E7E", boxShadow: "0 0 0 3px rgba(92,158,126,0.18)", display: "inline-block" }} />
+            <span className="font-mono text-text-mute uppercase" style={{ fontSize: 10, letterSpacing: "0.18em" }}>SYSTEM READY</span>
           </div>
           <button className="bg-white border border-warm-border rounded-[8px] flex items-center gap-1.5 text-navy" style={{ padding: "5px 10px", fontSize: 11, cursor: "pointer" }}>
             <span>ID</span>
@@ -29,9 +35,9 @@ export default function OwnerLogin() {
           </button>
         </div>
 
-        {/* Brand block */}
+        {/* Brand */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 32 }}>
-          <img src="/horizontal-light.png" alt="Prospera Business Consulting" style={{ height: 96, width: "auto", objectFit: "contain", marginBottom: 18 }} />
+          <img src="/horizontal-light.png" alt="Prospera" style={{ height: 96, width: "auto", objectFit: "contain", marginBottom: 18 }} />
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ flex: "0 0 28px", height: 1, background: "linear-gradient(to right, rgba(201,165,95,0), rgba(201,165,95,0.6))", display: "inline-block" }} />
             <span className="font-mono text-gold" style={{ fontSize: 10, letterSpacing: "0.32em", textTransform: "uppercase", fontWeight: 500 }}>POS · POINT OF SALE</span>
@@ -45,15 +51,13 @@ export default function OwnerLogin() {
           <div className="text-text-mute" style={{ fontSize: 13.5 }}>Sign in to manage your store</div>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-
-          {/* Email / WA */}
+          {/* Email */}
           <div>
             <label style={{ display: "block", marginBottom: 8 }}>
               <span className="font-mono text-text-mute uppercase" style={{ fontSize: 10, letterSpacing: "0.22em" }}>EMAIL · NOMOR WHATSAPP</span>
             </label>
-            <div className="bg-white border border-warm-border rounded-[11px] flex items-center gap-[10px] focus-within:border-navy" style={{ padding: "0 14px", height: 50, transition: "border-color 0.15s, box-shadow 0.15s" }}
+            <div className="bg-white border border-warm-border rounded-[11px] flex items-center gap-[10px]" style={{ padding: "0 14px", height: 50, transition: "border-color 0.15s, box-shadow 0.15s" }}
               onFocus={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 0 0 4px rgba(11,17,41,0.06)"; (e.currentTarget as HTMLDivElement).style.borderColor = "#0B1129"; }}
               onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) { (e.currentTarget as HTMLDivElement).style.boxShadow = ""; (e.currentTarget as HTMLDivElement).style.borderColor = "#ECE7DD"; } }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>
@@ -86,10 +90,12 @@ export default function OwnerLogin() {
             <span className="text-navy" style={{ fontSize: 12.5 }}>Ingat saya selama 30 hari</span>
           </label>
 
+          {error && <div style={{ fontSize: 12, color: "#C25E3D", background: "rgba(194,94,61,0.06)", border: "1px solid rgba(194,94,61,0.2)", borderRadius: 8, padding: "8px 12px" }}>{error}</div>}
+
           {/* CTA */}
-          <button type="submit" className="bg-navy text-cream-text flex items-center justify-center gap-3 hover:bg-navy-soft transition-colors" style={{ marginTop: 8, border: "none", borderRadius: 12, padding: "0 22px", height: 54, cursor: "pointer", fontSize: 14, fontWeight: 600, letterSpacing: "0.02em" }}>
-            <span>MASUK KE TOKO</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          <button type="submit" disabled={loading} className="bg-navy text-cream-text flex items-center justify-center gap-3 hover:bg-navy-soft transition-colors" style={{ marginTop: 8, border: "none", borderRadius: 12, padding: "0 22px", height: 54, cursor: loading ? "not-allowed" : "pointer", fontSize: 14, fontWeight: 600, letterSpacing: "0.02em", opacity: loading ? 0.75 : 1 }}>
+            <span>{loading ? "Memverifikasi…" : "MASUK KE TOKO"}</span>
+            {!loading && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
           </button>
         </form>
 

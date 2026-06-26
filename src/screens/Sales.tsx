@@ -1,6 +1,7 @@
-﻿import { ShoppingCart, CalendarDays, Package, Wallet, BarChart2, Search, Upload, Plus, User } from "lucide-react";
+﻿import { ShoppingCart, CalendarDays, Package, Wallet, BarChart2, Search, Upload, Plus, User, LogOut } from "lucide-react";
 import { useStore, getTotal, getItemCount } from "../store";
 import { PRODUCTS, CATEGORIES, getCatLabel, formatRp } from "../data";
+import { supabase } from "../lib/supabase";
 
 const NAV = [
   { id: "jual",    label: "JUAL",    Icon: ShoppingCart, dot: false },
@@ -11,7 +12,7 @@ const NAV = [
 ];
 
 export default function Sales() {
-  const { cart, category, search, setCategory, setSearch, addToCart, updateQty, clearCart, setScreen } = useStore();
+  const { cart, category, search, setCategory, setSearch, addToCart, updateQty, clearCart, setScreen, signOut } = useStore();
   const total = getTotal(cart);
   const itemCount = getItemCount(cart);
 
@@ -48,6 +49,11 @@ export default function Sales() {
             <span className="font-mono text-[8px] text-text-mute tracking-mono-default">SYNC</span>
           </div>
           <div className="w-[38px] h-[38px] rounded-full bg-cream-pill border border-warm-border flex items-center justify-center font-semibold text-[13px] text-navy">RA</div>
+          <button onClick={async () => { await supabase.auth.signOut(); signOut(); }}
+            className="w-[38px] h-[38px] rounded-card flex items-center justify-center text-text-mute hover:text-warning hover:bg-cream-pill transition-colors border-0 bg-transparent"
+            title="Keluar">
+            <LogOut size={15} strokeWidth={1.8} />
+          </button>
         </div>
       </aside>
 
