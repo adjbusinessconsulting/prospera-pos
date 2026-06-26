@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { CartItem, Product, Screen } from './types';
+import type { CartItem, CashierDB, Product, Screen } from './types';
 
 interface POSState {
   screen: Screen;
@@ -10,6 +10,11 @@ interface POSState {
   search: string;
   paymentMethod: string;
   cashReceived: number;
+
+  storeId: string;
+  storeName: string;
+  storeAddress: string;
+  dbCashiers: CashierDB[];
 
   setScreen: (s: Screen) => void;
   selectCashier: (id: string) => void;
@@ -25,17 +30,23 @@ interface POSState {
   addCash: (n: number) => void;
   restart: () => void;
   signOut: () => void;
+  setStoreData: (id: string, name: string, address: string, cashiers: CashierDB[]) => void;
 }
 
 export const useStore = create<POSState>((set) => ({
   screen: 'owner-login',
-  selectedCashier: 'ra',
+  selectedCashier: '',
   pin: '',
   cart: [],
   category: 'Semua',
   search: '',
   paymentMethod: 'tunai',
   cashReceived: 200000,
+
+  storeId: '',
+  storeName: '',
+  storeAddress: '',
+  dbCashiers: [],
 
   setScreen: (screen) => set({ screen }),
   selectCashier: (id) => set({ selectedCashier: id }),
@@ -61,7 +72,12 @@ export const useStore = create<POSState>((set) => ({
   addCash: (n) => set(s => ({ cashReceived: s.cashReceived + n })),
 
   restart: () => set({ screen: 'sales', cart: [], pin: '', paymentMethod: 'tunai', cashReceived: 200000 }),
-  signOut: () => set({ screen: 'owner-login', cart: [], pin: '', paymentMethod: 'tunai', cashReceived: 200000, selectedCashier: 'ra' }),
+  signOut: () => set({ screen: 'owner-login', cart: [], pin: '', paymentMethod: 'tunai', cashReceived: 200000, selectedCashier: '', storeId: '', storeName: '', storeAddress: '', dbCashiers: [] }),
+
+  setStoreData: (id, name, address, cashiers) => set({
+    storeId: id, storeName: name, storeAddress: address, dbCashiers: cashiers,
+    selectedCashier: cashiers.length > 0 ? cashiers[0].id : '',
+  }),
 }));
 
 export const getTotal = (cart: CartItem[]) => cart.reduce((sum, i) => sum + i.product.price * i.qty, 0);

@@ -22,3 +22,19 @@ export interface Cashier {
   role: string;
   active?: boolean;
 }
+
+export interface CashierDB {
+  id: string;
+  store_id: string;
+  name: string;
+  initials: string;
+  role: string;
+  pin: string;
+  active: boolean;
+}
+
+export interface StoreData {
+  id: string;
+  name: string;
+  address: string;
+}

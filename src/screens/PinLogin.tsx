@@ -1,8 +1,30 @@
+import { useState } from "react";
 import { useStore } from "../store";
 import { CASHIERS } from "../data";
 
 export default function PinLogin() {
-  const { selectedCashier, selectCashier, pin, addPin, clearPin, setScreen } = useStore();
+  const { selectedCashier, selectCashier, pin, addPin, clearPin, setScreen, storeName, storeAddress, dbCashiers } = useStore();
+  const [pinError, setPinError] = useState("");
+
+  const cashierList = dbCashiers.length > 0 ? dbCashiers : CASHIERS.map(c => ({ ...c, store_id: "", pin: "123456", active: true }));
+  const displayName = storeName || "Toko Sembako Maju";
+  const displayAddress = storeAddress || "Jl. Diponegoro No. 24, Palu Timur · Shift Siang";
+
+  function handleLogin() {
+    setPinError("");
+    if (dbCashiers.length === 0) {
+      setScreen("sales");
+      return;
+    }
+    const cashier = dbCashiers.find(c => c.id === selectedCashier);
+    if (!cashier) return;
+    if (cashier.pin === pin) {
+      setScreen("sales");
+    } else {
+      setPinError("PIN salah. Coba lagi.");
+      clearPin();
+    }
+  }
 
   return (
     <div className="w-full h-full bg-cream-bg flex flex-col">
@@ -31,17 +53,17 @@ export default function PinLogin() {
           {/* Store greeting */}
           <div className="text-center mb-7">
             <p className="font-mono text-[10px] tracking-eyebrow uppercase text-gold mb-3">SELAMAT DATANG</p>
-            <h1 className="font-serif text-display-xl font-medium text-navy mb-1.5">Toko Sembako Maju</h1>
-            <p className="text-[13.5px] text-text-mute">Jl. Diponegoro No. 24, Palu Timur · Shift Siang</p>
+            <h1 className="font-serif text-display-xl font-medium text-navy mb-1.5">{displayName}</h1>
+            <p className="text-[13.5px] text-text-mute">{displayAddress}</p>
           </div>
 
           {/* Cashier picker */}
           <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-text-mute mb-2.5">PILIH KASIR · SELECT CASHIER</p>
           <div className="flex gap-2.5 mb-7">
-            {CASHIERS.map(c => {
+            {cashierList.map(c => {
               const active = selectedCashier === c.id;
               return (
-                <button key={c.id} onClick={() => { selectCashier(c.id); clearPin(); }}
+                <button key={c.id} onClick={() => { selectCashier(c.id); clearPin(); setPinError(""); }}
                   className={`flex-1 flex items-center gap-3 rounded-card px-4 py-3 relative text-left border transition-colors ${active ? "border-navy" : "border-warm-border"} bg-white`}>
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-[14px] shrink-0 ${active ? "bg-navy text-cream-text" : "bg-cream-pill text-text-mute"}`}>
                     {c.initials}
@@ -58,36 +80,43 @@ export default function PinLogin() {
 
           {/* PIN dots */}
           <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-text-mute mb-3">MASUKKAN PIN · ENTER PIN</p>
-          <div className="flex gap-3 justify-center mb-7">
+          <div className="flex gap-3 justify-center mb-3">
             {Array(6).fill(0).map((_, i) => {
               const filled = i < pin.length;
               const active = i === pin.length && pin.length < 6;
               return (
-                <div key={i} className={`w-[58px] h-[58px] rounded-card bg-white flex items-center justify-center border transition-all ${active ? "border-gold border-[1.5px] shadow-pin-glow" : "border-warm-border"}`}>
-                  {filled && <div className="w-3.5 h-3.5 rounded-full bg-navy" />}
+                <div key={i} className={`w-[58px] h-[58px] rounded-card bg-white flex items-center justify-center border transition-all ${pinError ? "border-warning border-[1.5px]" : active ? "border-gold border-[1.5px] shadow-pin-glow" : "border-warm-border"}`}>
+                  {filled && <div className={`w-3.5 h-3.5 rounded-full ${pinError ? "bg-warning" : "bg-navy"}`} />}
                   {active && !filled && <div className="w-0.5 h-5 bg-navy cursor-blink" />}
                 </div>
               );
             })}
           </div>
 
+          {/* PIN error */}
+          {pinError && (
+            <p className="text-center text-[12px] mb-4" style={{ color: "#C25E3D" }}>{pinError}</p>
+          )}
+          {!pinError && <div className="mb-4" />}
+
           {/* Numpad */}
           <div className="grid grid-cols-3 gap-2">
             {["1","2","3","4","5","6","7","8","9"].map(d => (
-              <button key={d} onClick={() => addPin(d)}
+              <button key={d} onClick={() => { addPin(d); setPinError(""); }}
                 className="bg-white border border-warm-border rounded-card py-4 text-[22px] font-medium text-navy hover:bg-cream-pill transition-colors">
                 {d}
               </button>
             ))}
-            <button onClick={clearPin}
+            <button onClick={() => { clearPin(); setPinError(""); }}
               className="font-mono text-[12px] text-text-mute rounded-card py-4 bg-transparent border-0 hover:text-navy transition-colors">
-              LUPA?
+              HAPUS
             </button>
-            <button onClick={() => addPin("0")}
+            <button onClick={() => { addPin("0"); setPinError(""); }}
               className="bg-white border border-warm-border rounded-card py-4 text-[22px] font-medium text-navy hover:bg-cream-pill transition-colors">
               0
             </button>
-            <button onClick={() => pin.length >= 1 && setScreen("sales")}
+            <button
+              onClick={() => pin.length >= 1 && handleLogin()}
               className={`rounded-card py-4 flex items-center justify-center gap-2 text-[13px] font-medium tracking-mono-tight transition-colors ${pin.length >= 1 ? "bg-navy text-cream-text hover:bg-navy-soft" : "bg-warm-border text-text-mute cursor-not-allowed"}`}>
               <span>MASUK</span>
               {pin.length >= 1 && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}

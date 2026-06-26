@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useStore } from "../store";
 import { supabase } from "../lib/supabase";
+import type { CashierDB } from "../types";
 
 export default function OwnerLogin() {
-  const setScreen = useStore(s => s.setScreen);
+  const { setScreen, setStoreData } = useStore();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,8 +33,27 @@ export default function OwnerLogin() {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) { setError(error.message); setLoading(false); return; }
+
+    const userId = authData.user?.id;
+    if (userId) {
+      const { data: storeRows } = await supabase
+        .from("stores")
+        .select("id, name, address")
+        .eq("owner_id", userId)
+        .limit(1);
+      if (storeRows && storeRows.length > 0) {
+        const store = storeRows[0];
+        const { data: cashierRows } = await supabase
+          .from("cashiers")
+          .select("*")
+          .eq("store_id", store.id)
+          .eq("active", true);
+        setStoreData(store.id, store.name, store.address || "", (cashierRows ?? []) as CashierDB[]);
+      }
+    }
+
     setScreen("login");
   }
 
