@@ -3,8 +3,54 @@ import { useStore } from "../store";
 import { supabase } from "../lib/supabase";
 import type { CashierDB } from "../types";
 
+const STRINGS = {
+  id: {
+    headingIn: "Masuk ke toko Anda",
+    headingUp: "Daftar toko baru",
+    subIn: "Masuk untuk mengelola toko Anda",
+    subUp: "Buat akun Prospera POS baru",
+    storeName: "NAMA TOKO",
+    emailLabel: "EMAIL",
+    pwLabel: "KATA SANDI",
+    pwMin: "Minimal 6 karakter",
+    forgot: "Lupa?",
+    cta: "MASUK KE TOKO",
+    ctaUp: "DAFTAR SEKARANG",
+    ctaLoading: "Memproses…",
+    demoPrompt: "Coba tanpa akun?",
+    demoBtn: "COBA DEMO →",
+    noAccount: "Belum punya akun?",
+    register: "Daftar toko",
+    hasAccount: "Sudah punya akun?",
+    signIn: "Masuk",
+    successMsg: "Akun dibuat! Cek email Anda untuk konfirmasi, lalu masuk.",
+  },
+  en: {
+    headingIn: "Sign in to your store",
+    headingUp: "Register new store",
+    subIn: "Sign in to manage your store",
+    subUp: "Create your Prospera POS account",
+    storeName: "STORE NAME",
+    emailLabel: "EMAIL",
+    pwLabel: "PASSWORD",
+    pwMin: "Minimum 6 characters",
+    forgot: "Forgot?",
+    cta: "SIGN IN TO STORE",
+    ctaUp: "REGISTER NOW",
+    ctaLoading: "Processing…",
+    demoPrompt: "Try without an account?",
+    demoBtn: "TRY DEMO →",
+    noAccount: "Don't have an account?",
+    register: "Register store",
+    hasAccount: "Already have an account?",
+    signIn: "Sign in",
+    successMsg: "Account created! Check your email to confirm, then sign in.",
+  },
+};
+
 export default function OwnerLogin() {
   const { setScreen, setStoreData } = useStore();
+  const [lang, setLang] = useState<"id" | "en">("id");
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,6 +59,8 @@ export default function OwnerLogin() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const t = STRINGS[lang];
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
@@ -27,7 +75,7 @@ export default function OwnerLogin() {
         options: { data: { store_name: storeName } },
       });
       if (error) { setError(error.message); setLoading(false); return; }
-      setSuccess("Akun dibuat! Cek email Anda untuk konfirmasi, lalu masuk.");
+      setSuccess(t.successMsg);
       setMode("signin");
       setLoading(false);
       return;
@@ -67,8 +115,11 @@ export default function OwnerLogin() {
             <span className="w-[6px] h-[6px] rounded-full bg-success inline-block" style={{ boxShadow: "0 0 0 3px rgba(92,158,126,0.18)" }} />
             <span className="font-mono text-text-mute uppercase" style={{ fontSize: 9.5, letterSpacing: "0.18em" }}>SYSTEM READY</span>
           </div>
-          <button className="bg-white border border-warm-border rounded-[7px] flex items-center gap-1.5 text-navy" style={{ padding: "4px 9px", fontSize: 10.5, cursor: "pointer" }}>
-            <span>ID</span>
+          <button
+            onClick={() => setLang(l => l === "id" ? "en" : "id")}
+            className="bg-white border border-warm-border rounded-[7px] flex items-center gap-1.5 text-navy hover:bg-cream-deep transition-colors"
+            style={{ padding: "4px 9px", fontSize: 10.5, cursor: "pointer", fontFamily: "var(--font-mono, monospace)", letterSpacing: "0.06em", fontWeight: 500 }}>
+            {lang.toUpperCase()}
             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
           </button>
         </div>
@@ -86,10 +137,10 @@ export default function OwnerLogin() {
         {/* Header */}
         <div style={{ marginBottom: 16, textAlign: "center" }}>
           <h2 className="font-serif text-navy" style={{ fontSize: 28, fontWeight: 500, margin: "0 0 5px", letterSpacing: "-0.01em", lineHeight: 1.1 }}>
-            {mode === "signin" ? "Masuk ke toko Anda" : "Daftar toko baru"}
+            {mode === "signin" ? t.headingIn : t.headingUp}
           </h2>
           <div className="text-text-mute" style={{ fontSize: 12.5 }}>
-            {mode === "signin" ? "Sign in to manage your store" : "Create your Prospera POS account"}
+            {mode === "signin" ? t.subIn : t.subUp}
           </div>
         </div>
 
@@ -98,7 +149,7 @@ export default function OwnerLogin() {
           {mode === "signup" && (
             <div>
               <label style={{ display: "block", marginBottom: 5 }}>
-                <span className="font-mono text-text-mute uppercase" style={{ fontSize: 9.5, letterSpacing: "0.22em" }}>NAMA TOKO</span>
+                <span className="font-mono text-text-mute uppercase" style={{ fontSize: 9.5, letterSpacing: "0.22em" }}>{t.storeName}</span>
               </label>
               <div className="bg-white border border-warm-border rounded-[10px] flex items-center gap-[10px]" style={{ padding: "0 13px", height: 44 }}
                 onFocus={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 0 0 3px rgba(11,17,41,0.06)"; (e.currentTarget as HTMLDivElement).style.borderColor = "#0B1129"; }}
@@ -111,7 +162,7 @@ export default function OwnerLogin() {
 
           <div>
             <label style={{ display: "block", marginBottom: 5 }}>
-              <span className="font-mono text-text-mute uppercase" style={{ fontSize: 9.5, letterSpacing: "0.22em" }}>EMAIL</span>
+              <span className="font-mono text-text-mute uppercase" style={{ fontSize: 9.5, letterSpacing: "0.22em" }}>{t.emailLabel}</span>
             </label>
             <div className="bg-white border border-warm-border rounded-[10px] flex items-center gap-[10px]" style={{ padding: "0 13px", height: 44 }}
               onFocus={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 0 0 3px rgba(11,17,41,0.06)"; (e.currentTarget as HTMLDivElement).style.borderColor = "#0B1129"; }}
@@ -123,9 +174,9 @@ export default function OwnerLogin() {
 
           <div>
             <label style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
-              <span className="font-mono text-text-mute uppercase" style={{ fontSize: 9.5, letterSpacing: "0.22em" }}>KATA SANDI</span>
+              <span className="font-mono text-text-mute uppercase" style={{ fontSize: 9.5, letterSpacing: "0.22em" }}>{t.pwLabel}</span>
               {mode === "signin" && (
-                <button type="button" className="text-text-mute" style={{ background: "transparent", border: "none", padding: 0, fontSize: 10.5, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "rgba(122,119,111,0.3)" }}>Lupa?</button>
+                <button type="button" className="text-text-mute" style={{ background: "transparent", border: "none", padding: 0, fontSize: 10.5, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "rgba(122,119,111,0.3)" }}>{t.forgot}</button>
               )}
             </label>
             <div className="bg-white border border-warm-border rounded-[10px] flex items-center gap-[10px]" style={{ padding: "0 13px", height: 44 }}
@@ -137,7 +188,7 @@ export default function OwnerLogin() {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
             </div>
-            {mode === "signup" && <p className="text-text-mute mt-1" style={{ fontSize: 10.5 }}>Minimal 6 karakter</p>}
+            {mode === "signup" && <p className="text-text-mute mt-1" style={{ fontSize: 10.5 }}>{t.pwMin}</p>}
           </div>
 
           {error && (
@@ -148,16 +199,16 @@ export default function OwnerLogin() {
           )}
 
           <button type="submit" disabled={loading} className="bg-navy text-cream-text flex items-center justify-center gap-3 hover:bg-navy-soft transition-colors" style={{ marginTop: 2, border: "none", borderRadius: 10, padding: "0 18px", height: 46, cursor: loading ? "not-allowed" : "pointer", fontSize: 13.5, fontWeight: 600, letterSpacing: "0.02em", opacity: loading ? 0.75 : 1 }}>
-            <span>{loading ? "Memproses…" : mode === "signin" ? "MASUK KE TOKO" : "DAFTAR SEKARANG"}</span>
+            <span>{loading ? t.ctaLoading : mode === "signin" ? t.cta : t.ctaUp}</span>
             {!loading && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
           </button>
         </form>
 
         {/* Demo bypass */}
         <div style={{ marginTop: 12, padding: "8px 13px", background: "rgba(201,165,95,0.07)", border: "1px dashed rgba(201,165,95,0.35)", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span className="text-text-mute" style={{ fontSize: 11 }}>Coba tanpa akun?</span>
+          <span className="text-text-mute" style={{ fontSize: 11 }}>{t.demoPrompt}</span>
           <button type="button" onClick={() => setScreen("login")} className="font-mono text-gold" style={{ background: "transparent", border: "none", fontSize: 9.5, letterSpacing: "0.14em", cursor: "pointer", fontWeight: 600, textTransform: "uppercase" }}>
-            COBA DEMO →
+            {t.demoBtn}
           </button>
         </div>
 
@@ -165,12 +216,12 @@ export default function OwnerLogin() {
         <div className="border-t border-warm-border flex justify-between items-center" style={{ marginTop: 14, paddingTop: 12 }}>
           <div className="text-text-mute" style={{ fontSize: 11 }}>
             {mode === "signin" ? (
-              <>Belum punya akun?{" "}
-                <button type="button" onClick={() => { setMode("signup"); setError(""); setSuccess(""); }} className="text-navy" style={{ background: "transparent", border: "none", padding: "0 0 0 3px", fontSize: 11, cursor: "pointer", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#C9A55F" }}>Daftar toko</button>
+              <>{t.noAccount}{" "}
+                <button type="button" onClick={() => { setMode("signup"); setError(""); setSuccess(""); }} className="text-navy" style={{ background: "transparent", border: "none", padding: "0 0 0 3px", fontSize: 11, cursor: "pointer", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#C9A55F" }}>{t.register}</button>
               </>
             ) : (
-              <>Sudah punya akun?{" "}
-                <button type="button" onClick={() => { setMode("signin"); setError(""); setSuccess(""); }} className="text-navy" style={{ background: "transparent", border: "none", padding: "0 0 0 3px", fontSize: 11, cursor: "pointer", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#C9A55F" }}>Masuk</button>
+              <>{t.hasAccount}{" "}
+                <button type="button" onClick={() => { setMode("signin"); setError(""); setSuccess(""); }} className="text-navy" style={{ background: "transparent", border: "none", padding: "0 0 0 3px", fontSize: 11, cursor: "pointer", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#C9A55F" }}>{t.signIn}</button>
               </>
             )}
           </div>
