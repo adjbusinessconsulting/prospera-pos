@@ -50,21 +50,23 @@ const STRINGS = {
 
 function BrandLockup() {
   return (
-    <div style={{ width: "100%", display: "flex", alignItems: "flex-end", gap: 8, justifyContent: "center" }}>
-      <svg width="44" height="44" viewBox="0 0 100 100" style={{ flexShrink: 0, marginRight: -3 }}>
-        <rect x="10" y="62" width="14" height="26" rx="3" fill="#A6843F"/>
-        <rect x="30" y="50" width="14" height="38" rx="3" fill="#C9A55F"/>
-        <rect x="50" y="34" width="14" height="54" rx="3" fill="#D4B36C"/>
-        <rect x="70" y="22" width="14" height="66" rx="3" fill="#E5C778"/>
-        <polygon points="63,22 91,22 77,4" fill="#E5C778"/>
-      </svg>
-      <div style={{ width: 1, height: 40, background: "linear-gradient(to bottom, rgba(201,165,95,0), rgba(201,165,95,0.55), rgba(201,165,95,0))", flexShrink: 0 }} />
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 1, paddingBottom: 7 }}>
-        <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 32, letterSpacing: "0.025em", lineHeight: 1, paddingLeft: "0.025em", color: "#0B1129" }}>
-          PROSPER<span style={{ marginLeft: "0.06em" }}>A</span>
-        </div>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 7.5, letterSpacing: "0.36em", color: "#C9A55F", marginTop: 5, paddingLeft: "0.36em", lineHeight: 1 }}>
-          BUSINESS&nbsp;CONSULTING
+    <div style={{ width: "100%", textAlign: "center" }}>
+      <div style={{ display: "inline-flex", alignItems: "flex-end", gap: 8 }}>
+        <svg width="44" height="44" viewBox="0 0 100 100" style={{ flexShrink: 0 }}>
+          <rect x="10" y="62" width="14" height="26" rx="3" fill="#A6843F"/>
+          <rect x="30" y="50" width="14" height="38" rx="3" fill="#C9A55F"/>
+          <rect x="50" y="34" width="14" height="54" rx="3" fill="#D4B36C"/>
+          <rect x="70" y="22" width="14" height="66" rx="3" fill="#E5C778"/>
+          <polygon points="63,22 91,22 77,4" fill="#E5C778"/>
+        </svg>
+        <div style={{ width: 1, height: 40, background: "linear-gradient(to bottom, rgba(201,165,95,0), rgba(201,165,95,0.55), rgba(201,165,95,0))", flexShrink: 0 }} />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 1, paddingBottom: 7 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 32, letterSpacing: "0.025em", lineHeight: 1, color: "#0B1129" }}>
+            PROSPER<span style={{ marginLeft: "0.06em" }}>A</span>
+          </div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 7.5, letterSpacing: "0.36em", color: "#C9A55F", marginTop: 5, lineHeight: 1 }}>
+            BUSINESS&nbsp;CONSULTING
+          </div>
         </div>
       </div>
     </div>
