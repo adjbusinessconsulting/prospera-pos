@@ -8,13 +8,16 @@ import Receipt from "./screens/Receipt";
 export default function App() {
   const screen = useStore(s => s.screen);
 
+  if (screen === "owner-login") {
+    return <OwnerLogin />;
+  }
+
   return (
     <div className="fixed inset-0 bg-cream-deep flex items-center justify-center">
       <div
         className="bg-cream-bg rounded-card shadow-tablet overflow-hidden"
         style={{ width: 1366, height: 900, maxWidth: "96vw", maxHeight: "calc(100vh - 40px)" }}
       >
-        {screen === "owner-login" && <OwnerLogin />}
         {screen === "login" && <PinLogin />}
         {screen === "sales" && <Sales />}
         {screen === "payment" && <Payment />}
