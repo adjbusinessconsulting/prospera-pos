@@ -147,10 +147,10 @@ export default function OwnerLogin() {
         {/* Brand */}
         <div style={{ marginBottom: 12 }}>
           <BrandLockup />
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
-            <span style={{ flex: "0 0 28px", height: 1, background: "linear-gradient(to right, rgba(201,165,95,0), rgba(201,165,95,0.6))", display: "inline-block" }} />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 10 }}>
+            <span style={{ width: 28, height: 1, background: "linear-gradient(to right, rgba(201,165,95,0), rgba(201,165,95,0.6))", display: "inline-block", flexShrink: 0 }} />
             <span className="font-mono text-gold" style={{ fontSize: 9.5, letterSpacing: "0.32em", textTransform: "uppercase", fontWeight: 500 }}>POS · POINT OF SALE</span>
-            <span style={{ flex: "0 0 28px", height: 1, background: "linear-gradient(to left, rgba(201,165,95,0), rgba(201,165,95,0.6))", display: "inline-block" }} />
+            <span style={{ width: 28, height: 1, background: "linear-gradient(to left, rgba(201,165,95,0), rgba(201,165,95,0.6))", display: "inline-block", flexShrink: 0 }} />
           </div>
         </div>
 
