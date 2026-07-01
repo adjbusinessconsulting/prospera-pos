@@ -8,13 +8,13 @@ const STRINGS = {
     headingIn: "Masuk ke toko Anda",
     headingUp: "Daftar toko baru",
     subIn: "Masuk untuk mengelola toko Anda",
-    subUp: "Buat akun Prospera POS baru",
+    subUp: "Buat akun Sterith POS baru",
     storeName: "NAMA TOKO",
     emailLabel: "EMAIL",
     pwLabel: "KATA SANDI",
     pwMin: "Minimal 6 karakter",
     forgot: "Lupa?",
-    cta: "MASUK KE TOKO",
+    cta: "MASUK",
     ctaUp: "DAFTAR SEKARANG",
     ctaLoading: "Memproses…",
     demoPrompt: "Coba tanpa akun?",
@@ -29,13 +29,13 @@ const STRINGS = {
     headingIn: "Sign in to your store",
     headingUp: "Register new store",
     subIn: "Sign in to manage your store",
-    subUp: "Create your Prospera POS account",
+    subUp: "Create your Sterith POS account",
     storeName: "STORE NAME",
     emailLabel: "EMAIL",
     pwLabel: "PASSWORD",
     pwMin: "Minimum 6 characters",
     forgot: "Forgot?",
-    cta: "SIGN IN TO STORE",
+    cta: "SIGN IN",
     ctaUp: "REGISTER NOW",
     ctaLoading: "Processing…",
     demoPrompt: "Try without an account?",
@@ -51,16 +51,10 @@ const STRINGS = {
 function BrandLockup() {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
-      <svg width="44" height="44" viewBox="0 0 100 100">
-        <rect x="10" y="62" width="14" height="26" rx="3" fill="#A6843F"/>
-        <rect x="30" y="50" width="14" height="38" rx="3" fill="#C9A55F"/>
-        <rect x="50" y="34" width="14" height="54" rx="3" fill="#D4B36C"/>
-        <rect x="70" y="22" width="14" height="66" rx="3" fill="#E5C778"/>
-        <polygon points="63,22 91,22 77,4" fill="#E5C778"/>
-      </svg>
+      <img src="/mark-gold-512.png" alt="" style={{ width: 52, height: 52, objectFit: "contain", display: "block" }} />
       <div style={{ width: 80, height: 1, background: "linear-gradient(to right, rgba(201,165,95,0), rgba(201,165,95,0.6), rgba(201,165,95,0))", margin: "7px 0 9px" }} />
-      <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 32, letterSpacing: "0.06em", lineHeight: 1, color: "#0B1129" }}>PROSPERA</div>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 7.5, letterSpacing: "0.36em", color: "#C9A55F", marginTop: 5, lineHeight: 1 }}>BUSINESS&nbsp;CONSULTING</div>
+      <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 32, letterSpacing: "0.06em", lineHeight: 1, color: "#0B1129" }}>STERITH</div>
+      <div style={{ fontFamily: "Inter, system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 7.5, letterSpacing: "0.36em", color: "#C9A55F", marginTop: 5, lineHeight: 1 }}>BUSINESS&nbsp;CONSULTING</div>
     </div>
   );
 }
@@ -124,12 +118,9 @@ export default function OwnerLogin() {
 
   return (
     <div className="w-full h-full bg-cream-deep flex items-center justify-center overflow-hidden" style={{ padding: "0 20px" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=JetBrains+Mono:wght@400;500&display=swap');
-      `}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:wght@300;400;500;600;700&display=swap');`}</style>
       <div style={{ width: "100%", maxWidth: 460, background: "#FAFAF7", border: "1px solid #ECE7DD", borderRadius: 18, padding: "22px 36px 18px", display: "flex", flexDirection: "column", boxShadow: "0 30px 80px -24px rgba(11,17,41,0.18), 0 4px 16px rgba(11,17,41,0.06)" }}>
 
-        {/* Mini chrome */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
             <span className="w-[7px] h-[7px] rounded-full bg-success inline-block" style={{ boxShadow: "0 0 0 3px rgba(92,158,126,0.18)" }} />
@@ -144,7 +135,6 @@ export default function OwnerLogin() {
           </button>
         </div>
 
-        {/* Brand */}
         <div style={{ marginBottom: 12 }}>
           <BrandLockup />
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 10 }}>
@@ -154,7 +144,6 @@ export default function OwnerLogin() {
           </div>
         </div>
 
-        {/* Header */}
         <div style={{ marginBottom: 14, textAlign: "center" }}>
           <h2 className="font-serif text-navy" style={{ fontSize: 28, fontWeight: 500, margin: "0 0 5px", letterSpacing: "-0.015em", lineHeight: 1.05 }}>
             {mode === "signin" ? t.headingIn : t.headingUp}
@@ -184,7 +173,7 @@ export default function OwnerLogin() {
             </label>
             <div className="bg-white border border-warm-border flex items-center gap-[10px]" style={{ borderRadius: 11, padding: "0 14px", height: 46 }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@toko.id" required className="flex-1 bg-transparent border-0 outline-none text-navy" style={{ fontSize: 14.5, padding: 0 }} />
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="anthony@tokomaju.id" required className="flex-1 bg-transparent border-0 outline-none text-navy" style={{ fontSize: 14.5, padding: 0 }} />
             </div>
           </div>
 
@@ -218,7 +207,6 @@ export default function OwnerLogin() {
           </button>
         </form>
 
-        {/* Demo bypass */}
         <div style={{ marginTop: 10, padding: "7px 12px", background: "rgba(201,165,95,0.07)", border: "1px dashed rgba(201,165,95,0.35)", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span className="text-text-mute" style={{ fontSize: 11 }}>{t.demoPrompt}</span>
           <button type="button" onClick={() => setScreen("login")} className="font-mono text-gold" style={{ background: "transparent", border: "none", fontSize: 9.5, letterSpacing: "0.14em", cursor: "pointer", fontWeight: 600, textTransform: "uppercase" }}>
@@ -226,7 +214,6 @@ export default function OwnerLogin() {
           </button>
         </div>
 
-        {/* Footer */}
         <div className="border-t border-warm-border flex justify-between items-center" style={{ marginTop: 12, paddingTop: 11 }}>
           <div className="text-text-mute" style={{ fontSize: 11.5 }}>
             {mode === "signin" ? (
@@ -239,7 +226,7 @@ export default function OwnerLogin() {
               </>
             )}
           </div>
-          <div className="font-mono text-text-mute uppercase" style={{ fontSize: 9.5, letterSpacing: "0.18em" }}>© 2026 PROSPERA</div>
+          <div className="font-mono text-text-mute uppercase" style={{ fontSize: 9.5, letterSpacing: "0.18em" }}>© 2026 STERITH</div>
         </div>
       </div>
     </div>

@@ -1,9 +1,10 @@
-export type Screen = 'owner-login' | 'login' | 'sales' | 'payment' | 'receipt';
+export type Screen = 'owner-login' | 'login' | 'sales' | 'payment' | 'receipt' | 'riwayat' | 'produk' | 'kas' | 'laporan';
 
 export interface Product {
   id: string;
   name: string;
   monogram: string;
+  emoji: string;
   category: string;
   unit: string;
   price: number;

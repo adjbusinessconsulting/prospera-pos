@@ -1,16 +1,20 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "./store";
 import OwnerLogin from "./screens/OwnerLogin";
 import PinLogin from "./screens/PinLogin";
 import Sales from "./screens/Sales";
 import Payment from "./screens/Payment";
 import Receipt from "./screens/Receipt";
+import Riwayat from "./screens/Riwayat";
+import Produk from "./screens/Produk";
+import Kas from "./screens/Kas";
+import Laporan from "./screens/Laporan";
 
 const DEMO_CASHIER = {
-  id: "demo-cashier",
+  id: "ae",
   store_id: "demo",
-  name: "Demo Cashier",
-  initials: "DC",
+  name: "Aerith Djiady",
+  initials: "AE",
   role: "cashier",
   pin: "000000",
   active: true,
@@ -39,7 +43,7 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("demo") === "true") {
-      setStoreData("demo", "Prospera Demo Store", "Palu, Sulawesi Tengah", [DEMO_CASHIER]);
+      setStoreData("demo", "Toko Sembako Maju", "Jl. Diponegoro No. 24, Palu Timur", [DEMO_CASHIER]);
       setScreen("sales");
     }
   }, []);
@@ -55,10 +59,14 @@ export default function App() {
         style={{ width: Math.round(1366 * scale), height: Math.round(900 * scale) }}
       >
         <div style={{ width: 1366, height: 900, transformOrigin: "top left", transform: `scale(${scale})` }}>
-          {screen === "login" && <PinLogin />}
-          {screen === "sales" && <Sales />}
+          {screen === "login"   && <PinLogin />}
+          {screen === "sales"   && <Sales />}
           {screen === "payment" && <Payment />}
           {screen === "receipt" && <Receipt />}
+          {screen === "riwayat" && <Riwayat />}
+          {screen === "produk"  && <Produk />}
+          {screen === "kas"     && <Kas />}
+          {screen === "laporan" && <Laporan />}
         </div>
       </div>
     </div>

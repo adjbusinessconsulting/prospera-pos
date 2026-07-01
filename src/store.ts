@@ -4,12 +4,16 @@ import type { CartItem, CashierDB, Product, Screen } from './types';
 interface POSState {
   screen: Screen;
   selectedCashier: string;
+  cashierName: string;
+  cashierInitials: string;
+  selectedShift: 1 | 2 | 3;
   pin: string;
   cart: CartItem[];
   category: string;
   search: string;
   paymentMethod: string;
   cashReceived: number;
+  trxCounter: number;
 
   storeId: string;
   storeName: string;
@@ -18,7 +22,9 @@ interface POSState {
 
   setScreen: (s: Screen) => void;
   selectCashier: (id: string) => void;
+  setShift: (n: 1 | 2 | 3) => void;
   addPin: (digit: string) => void;
+  removePin: () => void;
   clearPin: () => void;
   addToCart: (product: Product) => void;
   updateQty: (id: string, delta: number) => void;
@@ -33,15 +39,26 @@ interface POSState {
   setStoreData: (id: string, name: string, address: string, cashiers: CashierDB[]) => void;
 }
 
+function currentShiftFromTime(): 1 | 2 | 3 {
+  const h = new Date().getHours();
+  if (h >= 6 && h < 14) return 1;
+  if (h >= 14 && h < 22) return 2;
+  return 3;
+}
+
 export const useStore = create<POSState>((set) => ({
   screen: 'owner-login',
-  selectedCashier: '',
+  selectedCashier: 'ae',
+  cashierName: 'Aerith',
+  cashierInitials: 'AE',
+  selectedShift: currentShiftFromTime(),
   pin: '',
   cart: [],
   category: 'Semua',
   search: '',
   paymentMethod: 'tunai',
   cashReceived: 200000,
+  trxCounter: 42,
 
   storeId: '',
   storeName: '',
@@ -49,8 +66,18 @@ export const useStore = create<POSState>((set) => ({
   dbCashiers: [],
 
   setScreen: (screen) => set({ screen }),
-  selectCashier: (id) => set({ selectedCashier: id }),
-  addPin: (digit) => set(s => ({ pin: s.pin.length < 6 ? s.pin + digit : s.pin })),
+
+  selectCashier: (id) => set((s) => {
+    const cashier = s.dbCashiers.find(c => c.id === id);
+    const name = cashier ? cashier.name.split(' ')[0] : (id === 'ae' ? 'Aerith' : id === 'st' ? 'Stevany' : 'Anthony');
+    const initials = cashier ? cashier.initials : (id === 'ae' ? 'AE' : id === 'st' ? 'ST' : 'AN');
+    return { selectedCashier: id, cashierName: name, cashierInitials: initials };
+  }),
+
+  setShift: (n) => set({ selectedShift: n }),
+
+  addPin: (digit) => set(s => ({ pin: s.pin.length < 4 ? s.pin + digit : s.pin })),
+  removePin: () => set(s => ({ pin: s.pin.slice(0, -1) })),
   clearPin: () => set({ pin: '' }),
 
   addToCart: (product) => set(s => {
@@ -71,14 +98,40 @@ export const useStore = create<POSState>((set) => ({
   setCashReceived: (cashReceived) => set({ cashReceived }),
   addCash: (n) => set(s => ({ cashReceived: s.cashReceived + n })),
 
-  restart: () => set({ screen: 'sales', cart: [], pin: '', paymentMethod: 'tunai', cashReceived: 200000 }),
-  signOut: () => set({ screen: 'owner-login', cart: [], pin: '', paymentMethod: 'tunai', cashReceived: 200000, selectedCashier: '', storeId: '', storeName: '', storeAddress: '', dbCashiers: [] }),
+  restart: () => set(s => ({
+    screen: 'sales',
+    cart: [],
+    pin: '',
+    paymentMethod: 'tunai',
+    cashReceived: 200000,
+    trxCounter: s.trxCounter + 1,
+  })),
+
+  signOut: () => set({
+    screen: 'owner-login',
+    cart: [],
+    pin: '',
+    paymentMethod: 'tunai',
+    cashReceived: 200000,
+    selectedCashier: 'ae',
+    cashierName: 'Aerith',
+    cashierInitials: 'AE',
+    storeId: '',
+    storeName: '',
+    storeAddress: '',
+    dbCashiers: [],
+    trxCounter: 42,
+  }),
 
   setStoreData: (id, name, address, cashiers) => set({
-    storeId: id, storeName: name, storeAddress: address, dbCashiers: cashiers,
-    selectedCashier: cashiers.length > 0 ? cashiers[0].id : '',
+    storeId: id,
+    storeName: name,
+    storeAddress: address,
+    dbCashiers: cashiers,
+    selectedCashier: cashiers.length > 0 ? cashiers[0].id : 'ae',
   }),
 }));
 
 export const getTotal = (cart: CartItem[]) => cart.reduce((sum, i) => sum + i.product.price * i.qty, 0);
 export const getItemCount = (cart: CartItem[]) => cart.reduce((sum, i) => sum + i.qty, 0);
+export const getTrxId = (counter: number) => `#TRX-${counter.toString().padStart(4, '0')}`;
