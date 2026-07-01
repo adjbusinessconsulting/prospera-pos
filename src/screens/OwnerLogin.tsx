@@ -216,13 +216,12 @@ export default function OwnerLogin() {
 
         {/* Left brand */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-          <div style={{ display: "inline-flex", flexDirection: "column", marginBottom: 28 }}>
-            <img src="/horizontal-light.png" alt="Sterith Business Consulting" style={{ height: 64, width: "auto", objectFit: "contain", objectPosition: "left", display: "block", marginBottom: 16 }} />
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ flex: 1, height: 1, background: "linear-gradient(to right, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
-              <span style={{ fontSize: 9.5, letterSpacing: "0.32em", textTransform: "uppercase" as const, color: "#C9A55F", fontWeight: 500, whiteSpace: "nowrap" as const }}>POS · POINT OF SALE</span>
-              <span style={{ flex: 1, height: 1, background: "linear-gradient(to left, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
-            </div>
+          <img src="/horizontal-light.png" alt="Sterith Business Consulting" style={{ width: "100%", height: "auto", objectFit: "contain", objectPosition: "left", display: "block", marginBottom: 20 }} />
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
+            <span style={{ flex: 1, height: 1, background: "linear-gradient(to right, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
+            <span style={{ fontSize: 9.5, letterSpacing: "0.32em", textTransform: "uppercase" as const, color: "#C9A55F", fontWeight: 500, whiteSpace: "nowrap" as const }}>POS · POINT OF SALE</span>
+            <span style={{ flex: 1, height: 1, background: "linear-gradient(to left, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
           </div>
 
           <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 46, fontWeight: 500, color: "#0B1129", lineHeight: 1.1, margin: "0 0 14px", letterSpacing: "-0.01em" }}>
