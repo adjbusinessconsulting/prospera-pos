@@ -10,16 +10,12 @@ const SHIFT_LABEL: Record<1 | 2 | 3, string> = {
   3: "Shift 3 · Malam",
 };
 
-const PERGERAKAN = [
+const INITIAL_PERGERAKAN = [
   { time: "16:42", label: "18 trx tunai",            desc: "14:00–16:42 · otomatis dari penjualan", amount: +2680000, icon: "auto",   photo: false },
   { time: "15:30", label: "Bayar parkir & retribusi", desc: "Aerith D. · operasional",              amount: -15000,   icon: "keluar", photo: true  },
   { time: "14:48", label: "Beli es batu",             desc: "Aerith D. · supplier",                 amount: -100000,  icon: "keluar", photo: true  },
   { time: "14:00", label: "Modal awal shift",         desc: "Dibuka oleh Anthony D. (owner)",       amount: +500000,  icon: "masuk",  photo: false },
 ];
-
-const kasKeluar = PERGERAKAN.filter(p => p.amount < 0).reduce((s, p) => s + Math.abs(p.amount), 0);
-const kasMasuk  = PERGERAKAN.filter(p => p.amount > 0 && p.icon !== "auto").reduce((s, p) => s + p.amount, 0);
-const saldo     = PERGERAKAN.reduce((s, p) => s + p.amount, 0);
 
 function PhotoThumb({ size = "sm" }: { size?: "sm" | "md" }) {
   const dim = size === "md" ? "w-10 h-10" : "w-8 h-8";
@@ -39,6 +35,7 @@ function PhotoThumb({ size = "sm" }: { size?: "sm" | "md" }) {
 export default function Kas() {
   const { cashierInitials, cashierName, selectedShift, setScreen, signOut } = useStore();
 
+  const [pergerakan, setPergerakan] = useState(INITIAL_PERGERAKAN);
   const [showMasuk, setShowMasuk] = useState(false);
   const [showKeluar, setShowKeluar] = useState(false);
   const [kasNominal, setKasNominal] = useState("");
@@ -46,6 +43,10 @@ export default function Kas() {
   const [kasPhoto, setKasPhoto] = useState<string | null>(null);
   const kasCamera = useRef<HTMLInputElement>(null);
   const kasGallery = useRef<HTMLInputElement>(null);
+
+  const kasKeluar = pergerakan.filter(p => p.amount < 0).reduce((s, p) => s + Math.abs(p.amount), 0);
+  const kasMasuk  = pergerakan.filter(p => p.amount > 0 && p.icon !== "auto").reduce((s, p) => s + p.amount, 0);
+  const saldo     = pergerakan.reduce((s, p) => s + p.amount, 0);
 
   const bukaTime = "14:00";
   const isModalOpen = showMasuk || showKeluar;
@@ -66,6 +67,21 @@ export default function Kas() {
     setKasNominal("");
     setKasKet("");
     setKasPhoto(null);
+  }
+
+  function handleKasConfirm() {
+    const amount = parseInt(kasNominal.replace(/\D/g, "") || "0");
+    if (!amount) return;
+    const timeStr = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    setPergerakan(prev => [{
+      time: timeStr,
+      label: kasKet.trim() || (modalType === "masuk" ? "Kas Masuk" : "Kas Keluar"),
+      desc: `${cashierName} · ${modalType}`,
+      amount: modalType === "masuk" ? +amount : -amount,
+      icon: modalType,
+      photo: kasPhoto !== null,
+    }, ...prev]);
+    closeKasModal();
   }
 
   return (
@@ -150,7 +166,7 @@ export default function Kas() {
 
               <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-2.5">PERGERAKAN HARI INI</p>
               <div className="bg-white border border-warm-border rounded-card overflow-hidden">
-                {PERGERAKAN.map((p, i) => (
+                {pergerakan.map((p, i) => (
                   <div key={i} className={`flex items-center gap-3 px-4 py-3 ${i < PERGERAKAN.length - 1 ? "border-b border-[#F2EDE3]" : ""}`}>
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${p.amount > 0 ? "bg-[#5C9E7E20]" : "bg-[#C25E3D14]"}`}>
                       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={p.amount > 0 ? "#5C9E7E" : "#C25E3D"} strokeWidth="2.5">
@@ -193,7 +209,7 @@ export default function Kas() {
 
             <div className="flex-1 overflow-auto">
               <div className="bg-white border border-warm-border rounded-card overflow-hidden">
-                {PERGERAKAN.map((p, i) => (
+                {pergerakan.map((p, i) => (
                   <div key={i} className={`flex items-center gap-3 px-5 py-4 ${i < PERGERAKAN.length - 1 ? "border-b border-[#F2EDE3]" : ""}`}>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${p.amount > 0 ? "bg-[#5C9E7E14]" : "bg-[#C25E3D14]"}`}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={p.amount > 0 ? "#5C9E7E" : "#C25E3D"} strokeWidth="2.5">
@@ -326,7 +342,7 @@ export default function Kas() {
               </button>
               <button
                 disabled={!kasNominal}
-                onClick={closeKasModal}
+                onClick={handleKasConfirm}
                 className={`flex-1 rounded-card h-[46px] text-[13px] font-semibold border-0 transition-opacity ${kasNominal
                   ? `${modalType === "masuk" ? "bg-[#3D7A5E]" : "bg-[#C25E3D]"} text-white hover:opacity-90 cursor-pointer`
                   : "bg-navy/20 text-navy/40 cursor-not-allowed"}`}>
