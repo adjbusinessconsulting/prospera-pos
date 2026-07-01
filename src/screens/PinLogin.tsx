@@ -51,7 +51,7 @@ export default function PinLogin() {
       {/* Top bar */}
       <div className="flex justify-between items-center px-12 py-5 shrink-0">
         <div className="flex items-center gap-3">
-          <img src="/horizontal-dark.png" alt="Sterith Business Consulting" style={{ height: 32, width: "auto", display: "block" }} />
+          <img src="/horizontal-light.png" alt="Sterith Business Consulting" style={{ height: 52, width: "auto", display: "block" }} />
         </div>
         <div className="flex items-center gap-4 text-[13px] text-text-mute">
           <div className="flex items-center gap-2">
