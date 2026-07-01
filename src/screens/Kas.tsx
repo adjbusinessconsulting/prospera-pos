@@ -1,6 +1,6 @@
 import { useStore } from "../store";
 import { formatRp } from "../data";
-import { AppSidebar, MobileBottomNav } from "../components/AppSidebar";
+import { AppSidebar } from "../components/AppSidebar";
 
 const SHIFT_LABEL: Record<1 | 2 | 3, string> = {
   1: "Shift 1 · Pagi (06:00–14:00)",
@@ -69,7 +69,7 @@ export default function Kas() {
           <div className="px-5 lg:px-10 pt-5 pb-0 shrink-0">
             <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-3">PERGERAKAN KAS</p>
           </div>
-          <div className="flex-1 overflow-auto px-5 lg:px-10 pb-[70px] lg:pb-6">
+          <div className="flex-1 overflow-auto px-5 lg:px-10 pb-4 lg:pb-6">
             <div className="bg-white border border-warm-border rounded-card overflow-hidden">
               {PERGERAKAN.map((p, i) => (
                 <div key={i} className={`flex items-center gap-3 px-5 py-3.5 ${i < PERGERAKAN.length - 1 ? "border-b border-[#F2EDE3]" : ""}`}>
@@ -128,7 +128,6 @@ export default function Kas() {
         </div>
       </div>
 
-      <MobileBottomNav active="kas" setScreen={setScreen} />
     </div>
   );
 }

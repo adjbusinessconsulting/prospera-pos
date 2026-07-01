@@ -2,7 +2,7 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 import { useStore } from "../store";
 import { PRODUCTS, formatRp } from "../data";
-import { AppSidebar, MobileBottomNav } from "../components/AppSidebar";
+import { AppSidebar } from "../components/AppSidebar";
 
 export default function Produk() {
   const [search, setSearch] = useState("");
@@ -24,15 +24,10 @@ export default function Produk() {
             <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute mb-1">MANAJEMEN · CATALOG</p>
             <h1 className="font-serif text-display-l font-medium text-navy">Produk</h1>
           </div>
-          <div className="relative">
-            <button className="bg-white border border-warm-border rounded-card h-[38px] px-4 flex items-center gap-2 text-[12px] text-navy hover:border-navy/30 transition-colors">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
-              Tambah Produk
-            </button>
-            <span style={{ position: "absolute", top: -8, right: -6, background: "rgba(201,165,95,0.10)", border: "1px solid rgba(201,165,95,0.30)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.12em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const }}>
-              STANDARD
-            </span>
-          </div>
+          <button className="bg-white border border-warm-border rounded-card h-[38px] px-4 flex items-center gap-2 text-[12px] text-navy hover:border-navy/30 transition-colors">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+            Tambah Produk
+          </button>
         </div>
 
         {/* Search */}
@@ -46,7 +41,7 @@ export default function Produk() {
         </div>
 
         {/* Desktop table / Mobile list */}
-        <div className="flex-1 overflow-auto px-5 lg:px-10 pt-4 pb-[70px] lg:pb-6">
+        <div className="flex-1 overflow-auto px-5 lg:px-10 pt-4 pb-4 lg:pb-6">
 
           {/* Desktop: table */}
           <div className="hidden lg:block bg-white border border-warm-border rounded-card overflow-hidden">
@@ -116,7 +111,6 @@ export default function Produk() {
         </div>
       </div>
 
-      <MobileBottomNav active="produk" setScreen={setScreen} />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useStore } from "../store";
 import { formatRp } from "../data";
-import { AppSidebar, MobileBottomNav } from "../components/AppSidebar";
+import { AppSidebar } from "../components/AppSidebar";
 
 const PERIOD_DATA = [
   {
@@ -106,7 +106,7 @@ export default function Laporan() {
           ))}
         </div>
 
-        <div className="flex-1 overflow-auto px-5 lg:px-10 pt-4 pb-[70px] lg:pb-6">
+        <div className="flex-1 overflow-auto px-5 lg:px-10 pt-4 pb-4 lg:pb-6">
 
           {/* Summary cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
@@ -183,7 +183,6 @@ export default function Laporan() {
         </div>
       </div>
 
-      <MobileBottomNav active="laporan" setScreen={setScreen} />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useStore } from "../store";
 import { formatRp } from "../data";
-import { AppSidebar, MobileBottomNav } from "../components/AppSidebar";
+import { AppSidebar } from "../components/AppSidebar";
 
 const TODAY = [
   { trxId: "#TRX-0042", date: "Hari ini", time: "14:32", cashier: "AE", cashierName: "Aerith D.",   items: 3, total: 89000,  method: "Tunai",    change: 11000 },
@@ -102,7 +102,7 @@ export default function Riwayat() {
         </div>
 
         {/* Desktop table / Mobile cards */}
-        <div className="flex-1 overflow-auto px-5 lg:px-10 pt-4 pb-[70px] lg:pb-6">
+        <div className="flex-1 overflow-auto px-5 lg:px-10 pt-4 pb-4 lg:pb-6">
 
           {/* Desktop: table */}
           <div className="hidden lg:block bg-white border border-warm-border rounded-card overflow-hidden">
@@ -168,7 +168,6 @@ export default function Riwayat() {
         </div>
       </div>
 
-      <MobileBottomNav active="riwayat" setScreen={setScreen} />
     </div>
   );
 }
