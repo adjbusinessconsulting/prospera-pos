@@ -26,7 +26,7 @@ export default function Kas() {
 
   return (
     <div className="w-full h-full flex animate-screen-in bg-cream-bg">
-      <AppSidebar active="kas" cashierInitials={cashierInitials} setScreen={setScreen} signOut={signOut} showDemoBack />
+      <AppSidebar active="riwayat" cashierInitials={cashierInitials} setScreen={setScreen} signOut={signOut} showDemoBack />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 

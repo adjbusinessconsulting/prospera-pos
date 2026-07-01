@@ -1,13 +1,11 @@
-import { ShoppingCart, Clock, Package, Wallet, BarChart2, ChevronLeft, LogOut } from "lucide-react";
+import { ShoppingCart, Package, BarChart2, ChevronLeft, LogOut } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import type { Screen } from "../types";
 
 const NAV = [
   { id: "sales"   as Screen, label: "JUAL",    Icon: ShoppingCart },
-  { id: "riwayat" as Screen, label: "RIWAYAT", Icon: Clock },
   { id: "produk"  as Screen, label: "PRODUK",  Icon: Package },
-  { id: "kas"     as Screen, label: "KAS",     Icon: Wallet },
-  { id: "laporan" as Screen, label: "LAPORAN", Icon: BarChart2 },
+  { id: "riwayat" as Screen, label: "LAPORAN", Icon: BarChart2 },
 ];
 
 interface Props {
@@ -67,8 +65,7 @@ export function MobileBottomNav({ active, setScreen }: { active: string; setScre
   const items = [
     { id: "sales"   as Screen, label: "Jual",    Icon: ShoppingCart },
     { id: "produk"  as Screen, label: "Produk",  Icon: Package },
-    { id: "kas"     as Screen, label: "Kas",     Icon: Wallet },
-    { id: "laporan" as Screen, label: "Laporan", Icon: BarChart2 },
+    { id: "riwayat" as Screen, label: "Laporan", Icon: BarChart2 },
   ];
   return (
     <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-warm-border flex z-40"

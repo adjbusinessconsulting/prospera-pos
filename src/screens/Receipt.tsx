@@ -1,6 +1,7 @@
 import { useStore, getTotal, getTrxId } from "../store";
 import { formatRp } from "../data";
 import { Printer, Check, ChevronLeft } from "lucide-react";
+import { AppSidebar } from "../components/AppSidebar";
 
 function SterithWatermark() {
   return (
@@ -15,7 +16,7 @@ function SterithWatermark() {
 }
 
 export default function Receipt() {
-  const { cart, cashReceived, cashierName, selectedShift, trxCounter, restart, setScreen } = useStore();
+  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, trxCounter, restart, setScreen, signOut } = useStore();
   const total = getTotal(cart);
   const change = cashReceived - total;
   const trxId = getTrxId(trxCounter);
@@ -33,10 +34,13 @@ export default function Receipt() {
   );
 
   return (
-    <div className="w-full h-full bg-cream-bg flex flex-col animate-screen-in">
+    <div className="w-full h-full bg-cream-bg flex animate-screen-in">
+      <AppSidebar active="sales" cashierInitials={cashierInitials} setScreen={setScreen} signOut={signOut} />
+
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
       {/* Two-column area */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 overflow-hidden">
 
         {/* Left: receipt */}
         <div className="flex-1 flex flex-col min-w-0 px-6 lg:px-10 py-5 lg:py-7 overflow-auto">
@@ -54,7 +58,7 @@ export default function Receipt() {
             </div>
             <div>
               <p style={{ fontSize: 9.5, letterSpacing: "0.22em" }} className="font-sans uppercase text-gold mb-0.5">BERHASIL · PAID</p>
-              <h2 className="font-serif text-[22px] lg:text-[26px] font-medium text-navy leading-tight">Transaksi selesai</h2>
+              <h2 className="font-serif text-[22px] lg:text-[26px] font-medium text-navy leading-tight">Terima kasih, pelanggan</h2>
             </div>
           </div>
 
@@ -175,9 +179,12 @@ export default function Receipt() {
       <div className="px-6 lg:px-8 pb-6 lg:pb-8 pt-3 shrink-0">
         <button onClick={restart}
           className="w-full bg-navy rounded-card h-[54px] flex items-center justify-center gap-3 text-[14px] font-semibold text-cream-text hover:opacity-90 transition-opacity cursor-pointer border-0">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
           TRANSAKSI BARU — {nextTrxId}
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
         </button>
+      </div>
+
       </div>
     </div>
   );
