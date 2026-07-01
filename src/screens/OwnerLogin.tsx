@@ -1,99 +1,55 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "../store";
 import { supabase } from "../lib/supabase";
 import type { CashierDB } from "../types";
 
-const STRINGS = {
-  id: {
-    headingIn: "Masuk ke toko Anda",
-    headingUp: "Daftar toko baru",
-    subIn: "Masuk untuk mengelola toko Anda",
-    subUp: "Buat akun Sterith POS baru",
-    storeName: "NAMA TOKO",
-    emailLabel: "EMAIL",
-    pwLabel: "KATA SANDI",
-    pwMin: "Minimal 6 karakter",
-    forgot: "Lupa?",
-    cta: "MASUK",
-    ctaUp: "DAFTAR SEKARANG",
-    ctaLoading: "Memproses…",
-    demoPrompt: "Coba tanpa akun?",
-    demoBtn: "COBA DEMO →",
-    noAccount: "Belum punya akun?",
-    register: "Daftar toko",
-    hasAccount: "Sudah punya akun?",
-    signIn: "Masuk",
-    successMsg: "Akun dibuat! Cek email Anda untuk konfirmasi, lalu masuk.",
-  },
-  en: {
-    headingIn: "Sign in to your store",
-    headingUp: "Register new store",
-    subIn: "Sign in to manage your store",
-    subUp: "Create your Sterith POS account",
-    storeName: "STORE NAME",
-    emailLabel: "EMAIL",
-    pwLabel: "PASSWORD",
-    pwMin: "Minimum 6 characters",
-    forgot: "Forgot?",
-    cta: "SIGN IN",
-    ctaUp: "REGISTER NOW",
-    ctaLoading: "Processing…",
-    demoPrompt: "Try without an account?",
-    demoBtn: "TRY DEMO →",
-    noAccount: "Don't have an account?",
-    register: "Register store",
-    hasAccount: "Already have an account?",
-    signIn: "Sign in",
-    successMsg: "Account created! Check your email to confirm, then sign in.",
-  },
-};
-
-function BrandLockup() {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
-      <img src="/mark-gold-512.png" alt="" style={{ width: 52, height: 52, objectFit: "contain", display: "block" }} />
-      <div style={{ width: 80, height: 1, background: "linear-gradient(to right, rgba(201,165,95,0), rgba(201,165,95,0.6), rgba(201,165,95,0))", margin: "7px 0 9px" }} />
-      <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 32, letterSpacing: "0.06em", lineHeight: 1, color: "#0B1129" }}>STERITH</div>
-      <div style={{ fontFamily: "Inter, system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 7.5, letterSpacing: "0.36em", color: "#C9A55F", marginTop: 5, lineHeight: 1 }}>BUSINESS&nbsp;CONSULTING</div>
-    </div>
-  );
-}
+const DAY_ID = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
 export default function OwnerLogin() {
   const { setScreen, setStoreData } = useStore();
-  const [lang, setLang] = useState<"id" | "en">("id");
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [loginAs, setLoginAs] = useState<"toko" | "backoffice">("toko");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [storeName, setStoreName] = useState("");
   const [showPw, setShowPw] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lang, setLang] = useState<"id" | "en">("id");
+  const [now, setNow] = useState(new Date());
 
-  const t = STRINGS[lang];
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 20000);
+    return () => clearInterval(t);
+  }, []);
+
+  const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+  const dayStr = DAY_ID[now.getDay()];
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
+    if (loginAs === "backoffice") return;
     setLoading(true);
     setError("");
     setSuccess("");
 
     if (mode === "signup") {
-      const { error } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { store_name: storeName } },
       });
-      if (error) { setError(error.message); setLoading(false); return; }
-      setSuccess(t.successMsg);
+      if (signUpError) { setError(signUpError.message); setLoading(false); return; }
+      setSuccess("Akun dibuat! Cek email Anda untuk konfirmasi, lalu masuk.");
       setMode("signin");
       setLoading(false);
       return;
     }
 
-    const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) { setError(error.message); setLoading(false); return; }
+    const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    if (signInError) { setError(signInError.message); setLoading(false); return; }
 
     const userId = authData.user?.id;
     if (userId) {
@@ -112,121 +68,169 @@ export default function OwnerLogin() {
         setStoreData(store.id, store.name, store.address || "", (cashierRows ?? []) as CashierDB[]);
       }
     }
-
     setScreen("login");
   }
 
-  return (
-    <div className="w-full h-full bg-cream-deep flex items-center justify-center overflow-hidden" style={{ padding: "0 20px" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:wght@300;400;500;600;700&display=swap');`}</style>
-      <div style={{ width: "100%", maxWidth: 460, background: "#FAFAF7", border: "1px solid #ECE7DD", borderRadius: 18, padding: "22px 36px 18px", display: "flex", flexDirection: "column", boxShadow: "0 30px 80px -24px rgba(11,17,41,0.18), 0 4px 16px rgba(11,17,41,0.06)" }}>
+  const card = (
+    <div style={{ width: "100%", maxWidth: 340, background: "white", borderRadius: 18, padding: "28px 28px 24px", boxShadow: "0 8px 48px rgba(11,17,41,0.10), 0 2px 8px rgba(11,17,41,0.04)" }}>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <span className="w-[7px] h-[7px] rounded-full bg-success inline-block" style={{ boxShadow: "0 0 0 3px rgba(92,158,126,0.18)" }} />
-            <span className="font-mono text-text-mute uppercase" style={{ fontSize: 9.5, letterSpacing: "0.18em" }}>SYSTEM READY</span>
-          </div>
-          <button
-            onClick={() => setLang(l => l === "id" ? "en" : "id")}
-            className="bg-white border border-warm-border flex items-center gap-1.5 text-navy hover:bg-cream-deep transition-colors"
-            style={{ borderRadius: 8, padding: "5px 10px", fontSize: 11, cursor: "pointer", fontWeight: 500 }}>
-            {lang.toUpperCase()}
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
+      {/* MASUK SEBAGAI */}
+      <div style={{ marginBottom: 18 }}>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9.5, letterSpacing: "0.22em", textTransform: "uppercase" as const, color: "#7A776F", fontWeight: 600, margin: "0 0 9px" }}>MASUK SEBAGAI</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+
+          {/* Toko tile */}
+          <button onClick={() => setLoginAs("toko")} style={{ position: "relative", background: loginAs === "toko" ? "white" : "#FAFAF7", border: loginAs === "toko" ? "2px solid #0B1129" : "1.5px solid #ECE7DD", borderRadius: 11, padding: "12px 14px 12px", cursor: "pointer", textAlign: "left" as const }}>
+            {loginAs === "toko" && (
+              <span style={{ position: "absolute", top: 10, right: 10, width: 20, height: 20, borderRadius: "50%", background: "#0B1129", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
+              </span>
+            )}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={loginAs === "toko" ? "#0B1129" : "#A8A39B"} strokeWidth="1.8" style={{ marginBottom: 6 }}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <div style={{ fontSize: 13.5, fontWeight: 600, color: loginAs === "toko" ? "#0B1129" : "#A8A39B", marginBottom: 2 }}>Toko</div>
+            <div style={{ fontSize: 10.5, color: loginAs === "toko" ? "#7A776F" : "#C4C0B8" }}>POS, kasir, jualan</div>
           </button>
-        </div>
 
-        <div style={{ marginBottom: 12 }}>
-          <BrandLockup />
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 10 }}>
-            <span style={{ width: 28, height: 1, background: "linear-gradient(to right, rgba(201,165,95,0), rgba(201,165,95,0.6))", display: "inline-block", flexShrink: 0 }} />
-            <span className="font-mono text-gold" style={{ fontSize: 9.5, letterSpacing: "0.32em", textTransform: "uppercase", fontWeight: 500 }}>POS · POINT OF SALE</span>
-            <span style={{ width: 28, height: 1, background: "linear-gradient(to left, rgba(201,165,95,0), rgba(201,165,95,0.6))", display: "inline-block", flexShrink: 0 }} />
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 14, textAlign: "center" }}>
-          <h2 className="font-serif text-navy" style={{ fontSize: 28, fontWeight: 500, margin: "0 0 5px", letterSpacing: "-0.015em", lineHeight: 1.05 }}>
-            {mode === "signin" ? t.headingIn : t.headingUp}
-          </h2>
-          <div className="text-text-mute" style={{ fontSize: 13 }}>
-            {mode === "signin" ? t.subIn : t.subUp}
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-
-          {mode === "signup" && (
-            <div>
-              <label style={{ display: "block", marginBottom: 7 }}>
-                <span className="font-mono text-text-mute uppercase" style={{ fontSize: 10, letterSpacing: "0.22em" }}>{t.storeName}</span>
-              </label>
-              <div className="bg-white border border-warm-border flex items-center gap-[10px]" style={{ borderRadius: 11, padding: "0 14px", height: 46 }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                <input type="text" value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="Toko Sembako Maju" required className="flex-1 bg-transparent border-0 outline-none text-navy" style={{ fontSize: 14.5, padding: 0 }} />
-              </div>
+          {/* Backoffice tile (locked) */}
+          <div style={{ position: "relative", background: "#F7F4EE", border: "1.5px dashed rgba(201,165,95,0.40)", borderRadius: 11, padding: "12px 14px 12px", opacity: 0.8, cursor: "not-allowed" }}>
+            <span style={{ position: "absolute", top: -1, right: -1, background: "#C9A55F", color: "white", fontSize: 7, letterSpacing: "0.12em", fontWeight: 700, padding: "3px 8px", borderRadius: "0 10px 0 7px", textTransform: "uppercase" as const }}>PREMIUM</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C4C0B8" strokeWidth="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
             </div>
-          )}
+            <div style={{ fontSize: 13.5, fontWeight: 600, color: "#C4C0B8", marginBottom: 2 }}>Backoffice</div>
+            <div style={{ fontSize: 10.5, color: "#D4CEBE" }}>Inventory, staff</div>
+          </div>
+        </div>
+      </div>
 
+      {/* Form */}
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+        {mode === "signup" && (
           <div>
-            <label style={{ display: "block", marginBottom: 7 }}>
-              <span className="font-mono text-text-mute uppercase" style={{ fontSize: 10, letterSpacing: "0.22em" }}>{t.emailLabel}</span>
-            </label>
-            <div className="bg-white border border-warm-border flex items-center gap-[10px]" style={{ borderRadius: 11, padding: "0 14px", height: 46 }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="anthony@tokomaju.id" required className="flex-1 bg-transparent border-0 outline-none text-navy" style={{ fontSize: 14.5, padding: 0 }} />
+            <label style={{ display: "block", fontFamily: "Inter, sans-serif", fontSize: 9.5, letterSpacing: "0.22em", textTransform: "uppercase" as const, color: "#7A776F", fontWeight: 600, marginBottom: 7 }}>NAMA TOKO</label>
+            <div style={{ background: "white", border: "1px solid #ECE7DD", borderRadius: 10, padding: "0 13px", height: 46, display: "flex", alignItems: "center", gap: 9 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A39B" strokeWidth="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+              <input type="text" value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="Toko Sembako Maju" required style={{ flex: 1, border: "none", outline: "none", fontSize: 14, color: "#0B1129", background: "transparent", fontFamily: "Inter, sans-serif" }} />
             </div>
           </div>
+        )}
 
-          <div>
-            <label style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 7 }}>
-              <span className="font-mono text-text-mute uppercase" style={{ fontSize: 10, letterSpacing: "0.22em" }}>{t.pwLabel}</span>
-              {mode === "signin" && (
-                <button type="button" className="text-text-mute" style={{ background: "transparent", border: "none", padding: 0, fontSize: 11, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "rgba(122,119,111,0.3)" }}>{t.forgot}</button>
-              )}
-            </label>
-            <div className="bg-white border border-warm-border flex items-center gap-[10px]" style={{ borderRadius: 11, padding: "0 14px", height: 46 }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-              <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required className="flex-1 bg-transparent border-0 outline-none text-navy" style={{ fontSize: 14.5, letterSpacing: showPw ? 0 : "0.1em", padding: 0 }} />
-              <button type="button" onClick={() => setShowPw(p => !p)} className="text-text-mute" style={{ background: "transparent", border: "none", cursor: "pointer", padding: 4 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </div>
-            {mode === "signup" && <p className="text-text-mute mt-1" style={{ fontSize: 10.5 }}>{t.pwMin}</p>}
+        <div>
+          <label style={{ display: "block", fontFamily: "Inter, sans-serif", fontSize: 9.5, letterSpacing: "0.22em", textTransform: "uppercase" as const, color: "#7A776F", fontWeight: 600, marginBottom: 7 }}>EMAIL · NOMOR WA</label>
+          <div style={{ background: "white", border: "1px solid #ECE7DD", borderRadius: 10, padding: "0 13px", height: 46, display: "flex", alignItems: "center", gap: 9 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A39B" strokeWidth="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="anthony@tokomaju.id" required style={{ flex: 1, border: "none", outline: "none", fontSize: 14, color: "#0B1129", background: "transparent", fontFamily: "Inter, sans-serif" }} />
           </div>
-
-          {error && (
-            <div style={{ fontSize: 11.5, color: "#C25E3D", background: "rgba(194,94,61,0.06)", border: "1px solid rgba(194,94,61,0.2)", borderRadius: 8, padding: "7px 12px" }}>{error}</div>
-          )}
-          {success && (
-            <div style={{ fontSize: 11.5, color: "#5C9E7E", background: "rgba(92,158,126,0.06)", border: "1px solid rgba(92,158,126,0.2)", borderRadius: 8, padding: "7px 12px" }}>{success}</div>
-          )}
-
-          <button type="submit" disabled={loading} className="bg-navy text-cream-text flex items-center justify-center gap-3 hover:bg-navy-soft transition-colors" style={{ marginTop: 2, border: "none", borderRadius: 12, padding: "0 22px", height: 50, cursor: loading ? "not-allowed" : "pointer", fontSize: 14, fontWeight: 600, letterSpacing: "0.02em", opacity: loading ? 0.75 : 1 }}>
-            <span>{loading ? t.ctaLoading : mode === "signin" ? t.cta : t.ctaUp}</span>
-            {!loading && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
-          </button>
-        </form>
-
-        <div style={{ marginTop: 10, padding: "7px 12px", background: "rgba(201,165,95,0.07)", border: "1px dashed rgba(201,165,95,0.35)", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span className="text-text-mute" style={{ fontSize: 11 }}>{t.demoPrompt}</span>
-          <button type="button" onClick={() => setScreen("login")} className="font-mono text-gold" style={{ background: "transparent", border: "none", fontSize: 9.5, letterSpacing: "0.14em", cursor: "pointer", fontWeight: 600, textTransform: "uppercase" }}>
-            {t.demoBtn}
-          </button>
         </div>
 
-        <div className="border-t border-warm-border flex justify-between items-center" style={{ marginTop: 12, paddingTop: 11 }}>
-          <div className="text-text-mute" style={{ fontSize: 11.5 }}>
-            {mode === "signin" ? (
-              <>{t.noAccount}{" "}
-                <button type="button" onClick={() => { setMode("signup"); setError(""); setSuccess(""); }} className="text-navy" style={{ background: "transparent", border: "none", padding: "0 0 0 3px", fontSize: 11.5, cursor: "pointer", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#C9A55F" }}>{t.register}</button>
-              </>
-            ) : (
-              <>{t.hasAccount}{" "}
-                <button type="button" onClick={() => { setMode("signin"); setError(""); setSuccess(""); }} className="text-navy" style={{ background: "transparent", border: "none", padding: "0 0 0 3px", fontSize: 11.5, cursor: "pointer", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#C9A55F" }}>{t.signIn}</button>
-              </>
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 7 }}>
+            <label style={{ fontFamily: "Inter, sans-serif", fontSize: 9.5, letterSpacing: "0.22em", textTransform: "uppercase" as const, color: "#7A776F", fontWeight: 600 }}>KATA SANDI</label>
+            {mode === "signin" && (
+              <button type="button" style={{ background: "transparent", border: "none", padding: 0, fontSize: 11.5, color: "#7A776F", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 2 }}>Lupa?</button>
             )}
           </div>
-          <div className="font-mono text-text-mute uppercase" style={{ fontSize: 9.5, letterSpacing: "0.18em" }}>© 2026 STERITH</div>
+          <div style={{ background: "white", border: "1.5px solid #0B1129", borderRadius: 10, padding: "0 13px", height: 46, display: "flex", alignItems: "center", gap: 9 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A39B" strokeWidth="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required style={{ flex: 1, border: "none", outline: "none", fontSize: 14, color: "#0B1129", background: "transparent", letterSpacing: showPw ? 0 : "0.12em", fontFamily: "Inter, sans-serif" }} />
+            <button type="button" onClick={() => setShowPw(p => !p)} style={{ background: "transparent", border: "none", cursor: "pointer", padding: 3, color: "#A8A39B", display: "flex" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          {mode === "signup" && <p style={{ marginTop: 4, fontSize: 10.5, color: "#A8A39B", fontFamily: "Inter, sans-serif" }}>Minimal 6 karakter</p>}
+        </div>
+
+        {mode === "signin" && (
+          <label style={{ display: "flex", alignItems: "center", gap: 9, cursor: "pointer" }}>
+            <div onClick={() => setRememberMe(r => !r)} style={{ width: 17, height: 17, borderRadius: 4, border: rememberMe ? "none" : "1.5px solid #D8D2C4", background: rememberMe ? "#0B1129" : "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {rememberMe && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5"><path d="M20 6L9 17l-5-5"/></svg>}
+            </div>
+            <span style={{ fontSize: 12.5, color: "#0B1129", fontFamily: "Inter, sans-serif" }}>Ingat saya selama 30 hari</span>
+          </label>
+        )}
+
+        {error && <div style={{ fontSize: 11.5, color: "#C25E3D", background: "rgba(194,94,61,0.06)", border: "1px solid rgba(194,94,61,0.2)", borderRadius: 8, padding: "7px 12px", fontFamily: "Inter, sans-serif" }}>{error}</div>}
+        {success && <div style={{ fontSize: 11.5, color: "#5C9E7E", background: "rgba(92,158,126,0.06)", border: "1px solid rgba(92,158,126,0.2)", borderRadius: 8, padding: "7px 12px", fontFamily: "Inter, sans-serif" }}>{success}</div>}
+
+        <button type="submit" disabled={loading} style={{ background: "#0B1129", color: "#FAFAF7", border: "none", borderRadius: 11, height: 50, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, fontSize: 13.5, fontWeight: 600, letterSpacing: "0.06em", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.75 : 1, fontFamily: "Inter, sans-serif", marginTop: 2 }}>
+          {loading ? "Memproses…" : mode === "signin" ? "MASUK" : "DAFTAR SEKARANG"}
+          {!loading && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
+        </button>
+      </form>
+
+      {/* Footer */}
+      <div style={{ marginTop: 14, textAlign: "center" as const }}>
+        {mode === "signin" ? (
+          <p style={{ fontSize: 12.5, color: "#7A776F", margin: 0, fontFamily: "Inter, sans-serif" }}>
+            Belum punya akun?{" "}
+            <button type="button" onClick={() => { setMode("signup"); setError(""); }}
+              style={{ background: "transparent", border: "none", padding: "0 0 0 2px", fontSize: 12.5, color: "#0B1129", fontWeight: 600, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#C9A55F" }}>
+              Daftar gratis
+            </button>
+          </p>
+        ) : (
+          <p style={{ fontSize: 12.5, color: "#7A776F", margin: 0, fontFamily: "Inter, sans-serif" }}>
+            Sudah punya akun?{" "}
+            <button type="button" onClick={() => { setMode("signin"); setError(""); }}
+              style={{ background: "transparent", border: "none", padding: "0 0 0 2px", fontSize: 12.5, color: "#0B1129", fontWeight: 600, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#C9A55F" }}>
+              Masuk
+            </button>
+          </p>
+        )}
+        <button type="button" onClick={() => setScreen("login")} style={{ marginTop: 8, background: "transparent", border: "none", fontSize: 10.5, color: "#C4C0B8", cursor: "pointer", letterSpacing: "0.08em", fontFamily: "Inter, sans-serif" }}>
+          Coba tanpa akun →
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", flexDirection: "column", fontFamily: "Inter, system-ui, sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');`}</style>
+
+      {/* Top bar */}
+      <header style={{ height: 50, borderBottom: "1px solid #ECE7DD", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#5C9E7E", boxShadow: "0 0 0 3px rgba(92,158,126,0.18)", display: "inline-block", flexShrink: 0 }} />
+          <span style={{ fontSize: 9.5, letterSpacing: "0.2em", textTransform: "uppercase" as const, color: "#7A776F", fontWeight: 500 }}>SYSTEM READY</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 12.5, color: "#0B1129" }}>{timeStr} · {dayStr}</span>
+          <span style={{ width: 1, height: 13, background: "#ECE7DD", display: "inline-block" }} />
+          <button onClick={() => setLang(l => l === "id" ? "en" : "id")}
+            style={{ display: "flex", alignItems: "center", gap: 5, background: "white", border: "1px solid #ECE7DD", borderRadius: 8, padding: "4px 10px", fontSize: 11.5, fontWeight: 500, color: "#0B1129", cursor: "pointer" }}>
+            {lang.toUpperCase()}
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+        </div>
+      </header>
+
+      {/* Desktop: split layout */}
+      <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+
+        {/* Left brand */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "48px 56px 48px 72px" }}>
+          <img src="/horizontal-dark.png" alt="Sterith Business Consulting" style={{ height: 40, width: "auto", objectFit: "contain", objectPosition: "left", display: "block", marginBottom: 24 }} />
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
+            <span style={{ flex: 1, height: 1, maxWidth: 36, background: "linear-gradient(to right, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
+            <span style={{ fontSize: 9.5, letterSpacing: "0.32em", textTransform: "uppercase" as const, color: "#C9A55F", fontWeight: 500 }}>POS · POINT OF SALE</span>
+            <span style={{ flex: 1, height: 1, maxWidth: 36, background: "linear-gradient(to left, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
+          </div>
+
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 46, fontWeight: 500, color: "#0B1129", lineHeight: 1.1, margin: "0 0 14px", letterSpacing: "-0.01em" }}>
+            Selamat datang<br />kembali
+          </h1>
+          <p style={{ fontSize: 14, color: "#7A776F", lineHeight: 1.65, margin: 0, maxWidth: 340 }}>
+            Pilih ke mana Anda ingin masuk, lalu isi email dan kata sandi. Kasir akan login dengan PIN setelah Anda buka shift.
+          </p>
+        </div>
+
+        {/* Right: card */}
+        <div style={{ padding: "40px 72px 40px 24px", display: "flex", justifyContent: "center", alignItems: "center" }}>
+          {card}
         </div>
       </div>
     </div>
