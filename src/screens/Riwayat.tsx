@@ -105,26 +105,26 @@ export default function Riwayat() {
         {/* Header + tabs */}
         <div className="px-5 lg:px-10 pt-5 lg:pt-7 pb-0 shrink-0">
           <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute mb-0.5">LAPORAN</p>
-          <div className="flex items-end justify-between">
-            <h1 className="font-serif text-display-l font-medium text-navy">Performa toko</h1>
-            <div className="flex gap-0.5 bg-cream-bg border border-warm-border rounded-[10px] p-0.5 mb-1">
-              <button className="px-4 py-2 rounded-[8px] text-[12px] font-semibold bg-navy text-cream-text transition-colors">
+          <div className="flex items-start justify-between gap-2">
+            <h1 className="font-serif text-[24px] lg:text-display-l font-medium text-navy leading-tight">Performa toko</h1>
+            <div className="flex gap-0.5 bg-cream-bg border border-warm-border rounded-[10px] p-0.5 shrink-0 mt-0.5">
+              <button className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-semibold bg-navy text-cream-text transition-colors border-0">
                 Riwayat
               </button>
               <button onClick={() => setScreen("kas")}
-                className="px-4 py-2 rounded-[8px] text-[12px] font-medium text-text-mute hover:text-navy transition-colors bg-transparent border-0 cursor-pointer">
+                className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-medium text-text-mute hover:text-navy transition-colors bg-transparent border-0 cursor-pointer">
                 Kasir
               </button>
             </div>
           </div>
         </div>
 
-        {/* Filter row */}
-        <div className="flex flex-wrap items-center gap-2 px-5 lg:px-10 pt-3 pb-0 shrink-0">
+        {/* Date filter chips */}
+        <div className="flex items-center gap-2 px-5 lg:px-10 pt-3 pb-0 shrink-0 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           {FILTER_LABELS.map((f, i) => (
-            <div key={f.label} className="relative">
+            <div key={f.label} className="relative shrink-0">
               <button onClick={() => setActiveFilter(i)}
-                className={`px-3.5 py-[6px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors ${activeFilter === i ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border hover:border-navy/40 cursor-pointer"}`}>
+                className={`px-3.5 py-[6px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors cursor-pointer ${activeFilter === i ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border hover:border-navy/40"}`}>
                 {f.label}
               </button>
               {f.tier && (
@@ -134,26 +134,27 @@ export default function Riwayat() {
               )}
             </div>
           ))}
+        </div>
 
-          <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
-            <div style={{ position: "relative" }}>
-              <select value={shiftFilter} onChange={e => setShiftFilter(e.target.value)} style={selectStyle}>
-                <option value="Semua">Shift: Semua</option>
-                <option value="1">Shift 1 · Pagi</option>
-                <option value="2">Shift 2 · Siang</option>
-                <option value="3">Shift 3 · Malam</option>
-              </select>
-              <svg style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
-            </div>
-            <div style={{ position: "relative" }}>
-              <select value={kasirFilter} onChange={e => setKasirFilter(e.target.value)} style={selectStyle}>
-                <option value="Semua">Kasir: Semua</option>
-                <option value="AE">Aerith D.</option>
-                <option value="ST">Stevany C.</option>
-                <option value="AN">Anthony D.</option>
-              </select>
-              <svg style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
-            </div>
+        {/* Shift / Kasir dropdowns — own row on all screen sizes */}
+        <div className="flex gap-2 px-5 lg:px-10 pt-2 pb-0 shrink-0">
+          <div style={{ position: "relative" }}>
+            <select value={shiftFilter} onChange={e => setShiftFilter(e.target.value)} style={selectStyle}>
+              <option value="Semua">Shift: Semua</option>
+              <option value="1">Shift 1 · Pagi</option>
+              <option value="2">Shift 2 · Siang</option>
+              <option value="3">Shift 3 · Malam</option>
+            </select>
+            <svg style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
+          </div>
+          <div style={{ position: "relative" }}>
+            <select value={kasirFilter} onChange={e => setKasirFilter(e.target.value)} style={selectStyle}>
+              <option value="Semua">Kasir: Semua</option>
+              <option value="AE">Aerith D.</option>
+              <option value="ST">Stevany C.</option>
+              <option value="AN">Anthony D.</option>
+            </select>
+            <svg style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
           </div>
         </div>
 

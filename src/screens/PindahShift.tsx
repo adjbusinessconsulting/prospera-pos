@@ -45,19 +45,20 @@ export default function PindahShift() {
     <div className="w-full h-full flex flex-col bg-cream-bg animate-screen-in overflow-hidden">
 
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 lg:px-8 py-4 border-b border-warm-border shrink-0">
+      <div className="flex items-center gap-3 px-5 lg:px-8 py-3.5 lg:py-4 border-b border-warm-border shrink-0">
         <button onClick={() => setScreen("kas")}
-          className="flex items-center gap-2 text-[12.5px] text-text-mute hover:text-navy transition-colors bg-transparent border-0 p-0 cursor-pointer">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          className="flex items-center gap-1.5 text-[12px] text-text-mute hover:text-navy transition-colors bg-transparent border-0 p-0 cursor-pointer shrink-0">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
           Batal
         </button>
-        <div className="text-center">
-          <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-gold mb-0.5">
+        <div className="flex-1 text-center min-w-0">
+          <p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-gold leading-tight">
             SERAH TERIMA · SHIFT {selectedShift} → SHIFT {next}
           </p>
-          <p className="text-[12px] text-text-mute">{cashierName} · {dateStr} · {timeStr}</p>
+          <p className="text-[11px] text-text-mute hidden lg:block mt-0.5">{cashierName} · {dateStr} · {timeStr}</p>
+          <p className="text-[10.5px] text-text-mute lg:hidden mt-0.5">{cashierName} · {timeStr}</p>
         </div>
-        <span style={{ background: "rgba(122,119,111,0.10)", border: "1px solid rgba(122,119,111,0.28)", color: "#7A776F", fontSize: 9.5, letterSpacing: "0.18em", fontWeight: 600, padding: "3px 9px", borderRadius: 9999, textTransform: "uppercase" as const }}>FREE</span>
+        <span style={{ background: "rgba(122,119,111,0.10)", border: "1px solid rgba(122,119,111,0.28)", color: "#7A776F", fontSize: 9, letterSpacing: "0.16em", fontWeight: 600, padding: "3px 8px", borderRadius: 9999, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>FREE</span>
       </div>
 
       {/* Main */}

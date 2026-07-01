@@ -33,19 +33,19 @@ export default function Kas() {
         {/* Header + tabs */}
         <div className="px-5 lg:px-10 pt-5 lg:pt-7 pb-0 shrink-0">
           <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute mb-0.5">LAPORAN · UANG KAS</p>
-          <div className="flex items-end justify-between">
-            <div>
-              <h1 className="font-serif text-display-l font-medium text-navy">Uang Kas · {cashierName}</h1>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h1 className="font-serif text-[24px] lg:text-display-l font-medium text-navy leading-tight truncate">Uang Kas · {cashierName}</h1>
               <p style={{ fontSize: 10, letterSpacing: "0.12em", color: "#C9A55F" }} className="font-sans uppercase font-semibold mt-0.5">
-                {SHIFT_LABEL[selectedShift]} · DIBUKA {bukaTime} · 2 KASIR AKTIF
+                {SHIFT_LABEL[selectedShift]} · DIBUKA {bukaTime}
               </p>
             </div>
-            <div className="flex gap-0.5 bg-cream-bg border border-warm-border rounded-[10px] p-0.5 mb-1">
+            <div className="flex gap-0.5 bg-cream-bg border border-warm-border rounded-[10px] p-0.5 shrink-0 mt-0.5">
               <button onClick={() => setScreen("riwayat")}
-                className="px-4 py-2 rounded-[8px] text-[12px] font-medium text-text-mute hover:text-navy transition-colors bg-transparent border-0 cursor-pointer">
+                className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-medium text-text-mute hover:text-navy transition-colors bg-transparent border-0 cursor-pointer">
                 Riwayat
               </button>
-              <button className="px-4 py-2 rounded-[8px] text-[12px] font-semibold bg-navy text-cream-text border-0">
+              <button className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-semibold bg-navy text-cream-text border-0">
                 Kasir
               </button>
             </div>
@@ -55,8 +55,8 @@ export default function Kas() {
         {/* Main content: two columns on desktop */}
         <div className="flex-1 flex flex-col lg:flex-row gap-0 min-h-0 overflow-hidden">
 
-          {/* Left column: saldo + actions */}
-          <div className="lg:w-[340px] flex flex-col gap-4 px-5 lg:px-10 pt-4 pb-0 lg:pb-0 shrink-0 overflow-auto lg:overflow-visible">
+          {/* Left column: saldo + actions (full on mobile, fixed-width on desktop) */}
+          <div className="flex-1 lg:flex-none lg:w-[340px] flex flex-col gap-4 px-5 lg:px-10 pt-4 pb-4 lg:pb-0 overflow-auto">
 
             {/* Saldo card */}
             <div className="bg-navy rounded-card px-6 py-6">

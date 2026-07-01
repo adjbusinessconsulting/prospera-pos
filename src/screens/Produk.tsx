@@ -30,19 +30,19 @@ export default function Produk() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Header */}
-        <div className="flex justify-between items-end px-5 lg:px-10 pt-5 lg:pt-8 pb-0 shrink-0">
-          <div>
+        <div className="flex justify-between items-start px-5 lg:px-10 pt-5 lg:pt-8 pb-0 shrink-0 gap-3">
+          <div className="min-w-0">
             <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute mb-1">
               KATALOG · {PRODUCTS.length} ITEM
             </p>
-            <h1 className="font-serif text-display-l font-medium text-navy">Produk toko</h1>
-            <p className="text-[12px] text-text-mute mt-0.5">Kelola produk, harga, dan stok</p>
+            <h1 className="font-serif text-[24px] lg:text-display-l font-medium text-navy leading-tight">Produk toko</h1>
+            <p className="text-[12px] text-text-mute mt-0.5 hidden lg:block">Kelola produk, harga, dan stok</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span style={{ background: "rgba(122,119,111,0.10)", border: "1px solid rgba(122,119,111,0.28)", color: "#7A776F", fontSize: 9.5, letterSpacing: "0.18em", fontWeight: 600, padding: "3px 9px", borderRadius: 9999, textTransform: "uppercase" as const }}>FREE</span>
-            <button className="bg-navy border-0 rounded-card h-[38px] px-4 flex items-center gap-2 text-[12px] text-cream-text hover:opacity-90 transition-opacity cursor-pointer">
+          <div className="flex items-center gap-2 shrink-0 mt-1">
+            <span style={{ background: "rgba(122,119,111,0.10)", border: "1px solid rgba(122,119,111,0.28)", color: "#7A776F", fontSize: 9.5, letterSpacing: "0.18em", fontWeight: 600, padding: "3px 9px", borderRadius: 9999, textTransform: "uppercase" as const }} className="hidden lg:inline">FREE</span>
+            <button className="bg-navy border-0 rounded-card h-[36px] lg:h-[38px] px-3 lg:px-4 flex items-center gap-2 text-[12px] text-cream-text hover:opacity-90 transition-opacity cursor-pointer">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
-              Produk baru
+              <span className="hidden lg:inline">Produk baru</span>
             </button>
           </div>
         </div>

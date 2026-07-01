@@ -16,17 +16,17 @@ export default function TutupToko() {
     <div className="w-full h-full flex flex-col bg-cream-bg animate-screen-in overflow-hidden">
 
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 lg:px-8 py-4 border-b border-warm-border shrink-0">
+      <div className="flex items-center gap-3 px-5 lg:px-8 py-3.5 lg:py-4 border-b border-warm-border shrink-0">
         <button onClick={() => setScreen("kas")}
-          className="flex items-center gap-2 text-[12.5px] text-text-mute hover:text-navy transition-colors bg-transparent border-0 p-0 cursor-pointer">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          className="flex items-center gap-1.5 text-[12px] text-text-mute hover:text-navy transition-colors bg-transparent border-0 p-0 cursor-pointer shrink-0">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
           Batal
         </button>
-        <div className="text-center">
-          <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-gold mb-0.5">TUTUP TOKO · END OF DAY</p>
-          <p className="text-[12px] text-text-mute">{dateStr}</p>
+        <div className="flex-1 text-center min-w-0">
+          <p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-gold leading-tight">TUTUP TOKO · END OF DAY</p>
+          <p className="text-[11px] text-text-mute hidden lg:block mt-0.5">{dateStr}</p>
         </div>
-        <span style={{ background: "rgba(122,119,111,0.10)", border: "1px solid rgba(122,119,111,0.28)", color: "#7A776F", fontSize: 9.5, letterSpacing: "0.18em", fontWeight: 600, padding: "3px 9px", borderRadius: 9999, textTransform: "uppercase" as const }}>FREE</span>
+        <span style={{ background: "rgba(122,119,111,0.10)", border: "1px solid rgba(122,119,111,0.28)", color: "#7A776F", fontSize: 9, letterSpacing: "0.16em", fontWeight: 600, padding: "3px 8px", borderRadius: 9999, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>FREE</span>
       </div>
 
       {/* Main */}
@@ -42,7 +42,7 @@ export default function TutupToko() {
           {/* Navy omzet card */}
           <div className="bg-navy rounded-card px-7 py-7">
             <p style={{ fontSize: 9.5, letterSpacing: "0.22em" }} className="font-sans uppercase text-gold/70 mb-3">TOTAL OMZET HARI INI</p>
-            <p className="font-serif text-[44px] lg:text-[52px] font-semibold text-cream-text leading-none mb-6" style={{ fontVariantNumeric: "tabular-nums" }}>
+            <p className="font-serif text-[34px] lg:text-[52px] font-semibold text-cream-text leading-none mb-6" style={{ fontVariantNumeric: "tabular-nums" }}>
               {formatRp(totalOmzet)}
             </p>
             <div className="flex gap-8 pt-5 border-t border-white/10">
