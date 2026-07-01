@@ -20,41 +20,43 @@ interface Props {
 
 export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDemoBack = false }: Props) {
   return (
-    <aside className="hidden lg:flex w-[80px] bg-white border-r border-warm-border flex-col items-center py-5 shrink-0">
-      <div className="mb-5 flex items-center justify-center">
-        <img src="/mark-gold-512.png" alt="Sterith" style={{ width: 34, height: 34, objectFit: "contain" }} />
+    <aside className="flex w-[58px] lg:w-[80px] bg-white border-r border-warm-border flex-col items-center py-3 lg:py-5 shrink-0">
+      <div className="mb-3 lg:mb-5 flex items-center justify-center">
+        <img src="/mark-gold-512.png" alt="Sterith" style={{ width: 28, height: 28, objectFit: "contain" }} className="lg:hidden" />
+        <img src="/mark-gold-512.png" alt="Sterith" style={{ width: 34, height: 34, objectFit: "contain" }} className="hidden lg:block" />
       </div>
-      <div className="flex flex-col gap-0.5 flex-1 items-center w-full px-2">
+      <div className="flex flex-col gap-0.5 flex-1 items-center w-full px-1.5 lg:px-2">
         {NAV.map(({ id, label, Icon }) => {
           const isActive = active === id;
           return (
             <button key={id} onClick={() => setScreen(id)}
-              className={`w-full h-[50px] rounded-card flex flex-col items-center justify-center gap-[5px] border-0 transition-colors ${isActive ? "bg-navy text-cream-text" : "bg-transparent text-text-mute hover:text-navy hover:bg-cream-bg"}`}>
-              <Icon size={17} strokeWidth={isActive ? 2 : 1.6} />
-              <span style={{ fontSize: 7.5, letterSpacing: "0.12em" }} className="font-medium uppercase leading-none">{label}</span>
+              className={`w-full h-[46px] lg:h-[50px] rounded-card flex flex-col items-center justify-center gap-[4px] lg:gap-[5px] border-0 transition-colors ${isActive ? "bg-navy text-cream-text" : "bg-transparent text-text-mute hover:text-navy hover:bg-cream-bg"}`}>
+              <Icon size={16} strokeWidth={isActive ? 2 : 1.6} />
+              <span style={{ fontSize: 7, letterSpacing: "0.10em" }} className="font-medium uppercase leading-none hidden lg:block">{label}</span>
+              <span style={{ fontSize: 6.5, letterSpacing: "0.08em" }} className="font-medium uppercase leading-none lg:hidden">{label}</span>
             </button>
           );
         })}
       </div>
-      <div className="flex flex-col items-center gap-2.5 mt-2">
+      <div className="flex flex-col items-center gap-2 mt-2">
         <div className="flex flex-col items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-success block" />
-          <span style={{ fontSize: 7, letterSpacing: "0.1em" }} className="text-text-mute uppercase">SYNC</span>
+          <span style={{ fontSize: 6.5, letterSpacing: "0.08em" }} className="text-text-mute uppercase hidden lg:block">SYNC</span>
         </div>
-        <div className="w-[34px] h-[34px] rounded-full bg-cream-pill border border-warm-border flex items-center justify-center font-semibold text-[12px] text-navy">
+        <div className="w-[30px] h-[30px] lg:w-[34px] lg:h-[34px] rounded-full bg-cream-pill border border-warm-border flex items-center justify-center font-semibold text-[11px] lg:text-[12px] text-navy">
           {cashierInitials}
         </div>
         {showDemoBack && (
           <button onClick={() => setScreen("login")}
-            className="w-[34px] h-[34px] rounded-card flex items-center justify-center text-text-mute hover:text-navy hover:bg-cream-pill transition-colors border border-warm-border bg-transparent"
-            title="Kembali ke PIN (Demo)">
-            <ChevronLeft size={15} strokeWidth={1.8} />
+            className="w-[30px] h-[30px] lg:w-[34px] lg:h-[34px] rounded-card flex items-center justify-center text-text-mute hover:text-navy hover:bg-cream-pill transition-colors border border-warm-border bg-transparent"
+            title="Kembali ke PIN">
+            <ChevronLeft size={13} strokeWidth={1.8} />
           </button>
         )}
         <button onClick={async () => { await supabase.auth.signOut(); signOut(); }}
-          className="w-[34px] h-[34px] rounded-card flex items-center justify-center text-text-mute hover:text-warning hover:bg-cream-pill transition-colors border-0 bg-transparent"
+          className="w-[30px] h-[30px] lg:w-[34px] lg:h-[34px] rounded-card flex items-center justify-center text-text-mute hover:text-warning hover:bg-cream-pill transition-colors border-0 bg-transparent"
           title="Keluar">
-          <LogOut size={14} strokeWidth={1.8} />
+          <LogOut size={13} strokeWidth={1.8} />
         </button>
       </div>
     </aside>
