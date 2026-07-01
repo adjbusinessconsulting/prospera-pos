@@ -179,9 +179,12 @@ export default function OwnerLogin() {
             </button>
           </p>
         )}
-        <button type="button" onClick={() => setScreen("login")} style={{ marginTop: 8, background: "transparent", border: "none", fontSize: 10.5, color: "#C4C0B8", cursor: "pointer", letterSpacing: "0.08em", fontFamily: "Inter, sans-serif" }}>
-          Coba tanpa akun →
-        </button>
+        <div style={{ marginTop: 12, padding: "8px 12px", background: "rgba(201,165,95,0.07)", border: "1px dashed rgba(201,165,95,0.40)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 11, color: "#7A776F", fontFamily: "Inter, sans-serif" }}>Coba tanpa akun?</span>
+          <button type="button" onClick={() => setScreen("login")} style={{ background: "transparent", border: "none", fontSize: 9.5, color: "#C9A55F", cursor: "pointer", letterSpacing: "0.14em", fontWeight: 600, textTransform: "uppercase" as const, fontFamily: "Inter, sans-serif" }}>
+            COBA DEMO →
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -207,12 +210,13 @@ export default function OwnerLogin() {
         </div>
       </header>
 
-      {/* Desktop: split layout */}
-      <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+      {/* Desktop: split layout — centered container */}
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 64, width: "100%", maxWidth: 940, padding: "40px 40px" }}>
 
         {/* Left brand */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "48px 56px 48px 72px" }}>
-          <img src="/horizontal-dark.png" alt="Sterith Business Consulting" style={{ height: 40, width: "auto", objectFit: "contain", objectPosition: "left", display: "block", marginBottom: 24 }} />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          <img src="/horizontal-light.png" alt="Sterith Business Consulting" style={{ height: 40, width: "auto", objectFit: "contain", objectPosition: "left", display: "block", marginBottom: 24 }} />
 
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
             <span style={{ flex: 1, height: 1, maxWidth: 36, background: "linear-gradient(to right, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
@@ -229,8 +233,10 @@ export default function OwnerLogin() {
         </div>
 
         {/* Right: card */}
-        <div style={{ padding: "40px 72px 40px 24px", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <div style={{ flexShrink: 0 }}>
           {card}
+        </div>
+
         </div>
       </div>
     </div>
