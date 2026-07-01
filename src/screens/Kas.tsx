@@ -87,6 +87,39 @@ export default function Kas() {
                 </div>
               ))}
             </div>
+
+            {/* Mobile: quick actions + tier note + shift buttons */}
+            <div className="lg:hidden mt-5 flex flex-col gap-3">
+              <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute">AKSI CEPAT</p>
+              <div className="grid grid-cols-2 gap-2.5">
+                {QUICK_ACTIONS.map(a => (
+                  <button key={a.label}
+                    className="relative bg-white border border-warm-border rounded-card h-[64px] flex flex-col items-center justify-center gap-1.5 transition-colors hover:border-navy/30 cursor-pointer">
+                    {a.tier && (
+                      <span style={{ position: "absolute", top: 6, right: 8, background: "rgba(201,165,95,0.10)", border: "1px solid rgba(201,165,95,0.30)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 600, padding: "1px 5px", borderRadius: 3, textTransform: "uppercase" as const }}>
+                        STD
+                      </span>
+                    )}
+                    <span className="text-[18px] leading-none text-navy">{a.icon}</span>
+                    <span className="text-[11px] font-medium text-navy">{a.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="bg-cream-bg border border-warm-border rounded-card px-4 py-3.5">
+                <p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-1">FITUR PAKET STANDARD</p>
+                <p className="text-[11.5px] text-text-mute leading-relaxed">Tarik Tunai, Setoran, dan Penyesuaian tersedia di paket Standard ke atas.</p>
+              </div>
+
+              <button onClick={() => setScreen("login")} className="w-full bg-cream-bg border border-warm-border rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-navy hover:border-navy/30 transition-colors">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18V5l12-2v13M9 9l12-2"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                Pindah Shift
+              </button>
+              <button className="w-full bg-navy rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-cream-text mb-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2"><path d="M18.36 6.64A9 9 0 015.64 19.36M6.16 17.84A9 9 0 0119.84 6.16M2 12h2M20 12h2M12 2v2M12 20v2"/></svg>
+                Tutup Toko
+              </button>
+            </div>
           </div>
         </div>
 
