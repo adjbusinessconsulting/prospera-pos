@@ -79,31 +79,31 @@ export default function OwnerLogin() {
   }
 
   const card = (
-    <div style={{ width: "100%", maxWidth: 340, background: "white", borderRadius: 18, padding: "28px 28px 24px", boxShadow: "0 8px 48px rgba(11,17,41,0.10), 0 2px 8px rgba(11,17,41,0.04)" }}>
+    <div style={{ width: "100%", maxWidth: isMobile ? "100%" : 340, background: "white", borderRadius: 18, padding: "28px 28px 24px", boxShadow: "0 8px 48px rgba(11,17,41,0.10), 0 2px 8px rgba(11,17,41,0.04)" }}>
 
       {/* MASUK SEBAGAI */}
       <div style={{ marginBottom: 18 }}>
-        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9.5, letterSpacing: "0.22em", textTransform: "uppercase" as const, color: "#7A776F", fontWeight: 600, margin: "0 0 9px" }}>MASUK SEBAGAI</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9.5, letterSpacing: "0.22em", textTransform: "uppercase" as const, color: "#7A776F", fontWeight: 600, margin: "0 0 9px", textAlign: isMobile ? "center" : "left" as const }}>MASUK SEBAGAI</p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
 
           {/* Toko tile */}
-          <button onClick={() => setLoginAs("toko")} style={{ position: "relative", background: loginAs === "toko" ? "white" : "#FAFAF7", border: loginAs === "toko" ? "2px solid #0B1129" : "1.5px solid #ECE7DD", borderRadius: 11, padding: "12px 14px 12px", cursor: "pointer", textAlign: "left" as const }}>
+          <button onClick={() => setLoginAs("toko")} style={{ position: "relative", background: loginAs === "toko" ? "white" : "#FAFAF7", border: loginAs === "toko" ? "2px solid #0B1129" : "1.5px solid #ECE7DD", borderRadius: 11, padding: "12px 14px 12px", cursor: "pointer", textAlign: isMobile ? "center" as const : "left" as const }}>
             {loginAs === "toko" && (
               <span style={{ position: "absolute", top: 10, right: 10, width: 20, height: 20, borderRadius: "50%", background: "#0B1129", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
               </span>
             )}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={loginAs === "toko" ? "#0B1129" : "#A8A39B"} strokeWidth="1.8" style={{ marginBottom: 6 }}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={loginAs === "toko" ? "#0B1129" : "#A8A39B"} strokeWidth="1.8" style={{ marginBottom: 6, display: "block", margin: isMobile ? "0 auto 6px" : "0 0 6px" }}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             <div style={{ fontSize: 13.5, fontWeight: 600, color: loginAs === "toko" ? "#0B1129" : "#A8A39B", marginBottom: 2 }}>Toko</div>
             <div style={{ fontSize: 10.5, color: loginAs === "toko" ? "#7A776F" : "#C4C0B8" }}>POS, kasir, jualan</div>
           </button>
 
           {/* Backoffice tile (locked) */}
-          <div style={{ position: "relative", background: "#F7F4EE", border: "1.5px dashed rgba(201,165,95,0.40)", borderRadius: 11, padding: "12px 14px 12px", opacity: 0.8, cursor: "not-allowed" }}>
+          <div style={{ position: "relative", background: "#F7F4EE", border: "1.5px dashed rgba(201,165,95,0.40)", borderRadius: 11, padding: "12px 14px 12px", opacity: 0.8, cursor: "not-allowed", textAlign: isMobile ? "center" as const : "left" as const }}>
             <span style={{ position: "absolute", top: -1, right: -1, background: "#C9A55F", color: "white", fontSize: 7, letterSpacing: "0.12em", fontWeight: 700, padding: "3px 8px", borderRadius: "0 10px 0 7px", textTransform: "uppercase" as const }}>PREMIUM</span>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+            <div style={{ display: "flex", justifyContent: isMobile ? "center" : "space-between", alignItems: "flex-start", marginBottom: 6 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C4C0B8" strokeWidth="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              {!isMobile && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
             </div>
             <div style={{ fontSize: 13.5, fontWeight: 600, color: "#C4C0B8", marginBottom: 2 }}>Backoffice</div>
             <div style={{ fontSize: 10.5, color: "#D4CEBE" }}>Inventory, staff</div>
@@ -213,7 +213,7 @@ export default function OwnerLogin() {
 
         {/* Scrollable content */}
         <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 20px 40px" }}>
-          <img src="/horizontal-light.png" alt="Sterith" style={{ height: 44, width: "auto", marginBottom: 18 }} />
+          <img src="/horizontal-light.png" alt="Sterith" style={{ height: 80, width: "auto", marginBottom: 22 }} />
           <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", maxWidth: 400, marginBottom: 24 }}>
             <span style={{ flex: 1, height: 1, background: "linear-gradient(to right, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
             <span style={{ fontSize: 8.5, letterSpacing: "0.28em", textTransform: "uppercase" as const, color: "#C9A55F", fontWeight: 500, whiteSpace: "nowrap" as const }}>POS · POINT OF SALE</span>
