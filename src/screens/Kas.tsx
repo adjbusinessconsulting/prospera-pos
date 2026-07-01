@@ -167,7 +167,7 @@ export default function Kas() {
               <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-2.5">PERGERAKAN HARI INI</p>
               <div className="bg-white border border-warm-border rounded-card overflow-hidden">
                 {pergerakan.map((p, i) => (
-                  <div key={i} className={`flex items-center gap-3 px-4 py-3 ${i < PERGERAKAN.length - 1 ? "border-b border-[#F2EDE3]" : ""}`}>
+                  <div key={i} className={`flex items-center gap-3 px-4 py-3 ${i < pergerakan.length - 1 ? "border-b border-[#F2EDE3]" : ""}`}>
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${p.amount > 0 ? "bg-[#5C9E7E20]" : "bg-[#C25E3D14]"}`}>
                       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={p.amount > 0 ? "#5C9E7E" : "#C25E3D"} strokeWidth="2.5">
                         {p.amount > 0 ? <path d="M12 5v14M5 12h14" /> : <path d="M5 12h14" />}
@@ -210,7 +210,7 @@ export default function Kas() {
             <div className="flex-1 overflow-auto">
               <div className="bg-white border border-warm-border rounded-card overflow-hidden">
                 {pergerakan.map((p, i) => (
-                  <div key={i} className={`flex items-center gap-3 px-5 py-4 ${i < PERGERAKAN.length - 1 ? "border-b border-[#F2EDE3]" : ""}`}>
+                  <div key={i} className={`flex items-center gap-3 px-5 py-4 ${i < pergerakan.length - 1 ? "border-b border-[#F2EDE3]" : ""}`}>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${p.amount > 0 ? "bg-[#5C9E7E14]" : "bg-[#C25E3D14]"}`}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={p.amount > 0 ? "#5C9E7E" : "#C25E3D"} strokeWidth="2.5">
                         {p.amount > 0 ? <path d="M12 5v14M5 12h14" /> : <path d="M5 12h14" />}
