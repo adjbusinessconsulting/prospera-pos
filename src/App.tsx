@@ -9,6 +9,8 @@ import Riwayat from "./screens/Riwayat";
 import Produk from "./screens/Produk";
 import Kas from "./screens/Kas";
 import Laporan from "./screens/Laporan";
+import PindahShift from "./screens/PindahShift";
+import TutupToko from "./screens/TutupToko";
 
 const DEMO_CASHIER = {
   id: "ae",
@@ -61,14 +63,16 @@ export default function App() {
   if (isMobile) {
     return (
       <div className="fixed inset-0 bg-cream-bg overflow-hidden">
-        {screen === "login"   && <PinLogin />}
-        {screen === "sales"   && <Sales />}
-        {screen === "payment" && <Payment />}
-        {screen === "receipt" && <Receipt />}
-        {screen === "riwayat" && <Riwayat />}
-        {screen === "produk"  && <Produk />}
-        {screen === "kas"     && <Kas />}
-        {screen === "laporan" && <Laporan />}
+        {screen === "login"        && <PinLogin />}
+        {screen === "sales"        && <Sales />}
+        {screen === "payment"      && <Payment />}
+        {screen === "receipt"      && <Receipt />}
+        {screen === "riwayat"      && <Riwayat />}
+        {screen === "produk"       && <Produk />}
+        {screen === "kas"          && <Kas />}
+        {screen === "laporan"      && <Laporan />}
+        {screen === "pindah-shift" && <PindahShift />}
+        {screen === "tutup-toko"   && <TutupToko />}
       </div>
     );
   }
@@ -80,14 +84,16 @@ export default function App() {
         style={{ width: Math.round(1366 * scale), height: Math.round(900 * scale) }}
       >
         <div style={{ width: 1366, height: 900, transformOrigin: "top left", transform: `scale(${scale})` }}>
-          {screen === "login"   && <PinLogin />}
-          {screen === "sales"   && <Sales />}
-          {screen === "payment" && <Payment />}
-          {screen === "receipt" && <Receipt />}
-          {screen === "riwayat" && <Riwayat />}
-          {screen === "produk"  && <Produk />}
-          {screen === "kas"     && <Kas />}
-          {screen === "laporan" && <Laporan />}
+          {screen === "login"        && <PinLogin />}
+          {screen === "sales"        && <Sales />}
+          {screen === "payment"      && <Payment />}
+          {screen === "receipt"      && <Receipt />}
+          {screen === "riwayat"      && <Riwayat />}
+          {screen === "produk"       && <Produk />}
+          {screen === "kas"          && <Kas />}
+          {screen === "laporan"      && <Laporan />}
+          {screen === "pindah-shift" && <PindahShift />}
+          {screen === "tutup-toko"   && <TutupToko />}
         </div>
       </div>
     </div>

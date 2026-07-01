@@ -106,7 +106,7 @@ export default function Sales() {
 
           {/* Product grid */}
           <div className="flex-1 overflow-auto px-4 lg:px-8 pt-4 pb-[80px] lg:pb-6">
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 content-start">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 content-start">
               {filtered.map(p => {
                 const qty = cartQty(p.id);
                 return (
@@ -175,8 +175,11 @@ export default function Sales() {
           </div>
 
           <div className="px-6 pb-5 pt-4 border-t border-warm-border bg-cream-bg shrink-0">
-            <div className="flex justify-between text-[12.5px] text-text-mute mb-3.5">
+            <div className="flex justify-between text-[12.5px] text-text-mute mb-2">
               <span>Subtotal</span><span style={{ fontVariantNumeric: "tabular-nums" }}>Rp {total.toLocaleString("id-ID")}</span>
+            </div>
+            <div className="flex justify-between text-[12.5px] text-text-mute mb-3.5">
+              <span>Diskon</span><span style={{ fontVariantNumeric: "tabular-nums" }}>Rp 0</span>
             </div>
             <div className="flex justify-between items-end pt-3.5 border-t border-dashed border-warm-dashed mb-4">
               <div>
@@ -243,6 +246,9 @@ export default function Sales() {
               <div className="px-6 py-4 border-t border-warm-border shrink-0" style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}>
                 <div className="flex justify-between text-[13px] text-text-mute mb-1">
                   <span>Subtotal</span><span style={{ fontVariantNumeric: "tabular-nums" }}>Rp {total.toLocaleString("id-ID")}</span>
+                </div>
+                <div className="flex justify-between text-[13px] text-text-mute mb-1">
+                  <span>Diskon</span><span style={{ fontVariantNumeric: "tabular-nums" }}>Rp 0</span>
                 </div>
                 <div className="flex justify-between items-center pt-3 border-t border-dashed border-warm-dashed mb-3.5">
                   <span style={{ fontSize: 9.5, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute">TOTAL</span>
