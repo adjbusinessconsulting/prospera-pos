@@ -25,6 +25,13 @@ export default function OwnerLogin() {
     return () => clearInterval(t);
   }, []);
 
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
   const dayStr = DAY_ID[now.getDay()];
 
@@ -189,9 +196,40 @@ export default function OwnerLogin() {
     </div>
   );
 
+  const fonts = <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');`}</style>;
+
+  if (isMobile) {
+    return (
+      <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", flexDirection: "column", fontFamily: "Inter, system-ui, sans-serif" }}>
+        {fonts}
+        {/* Mobile header */}
+        <header style={{ height: 46, borderBottom: "1px solid #ECE7DD", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#5C9E7E", boxShadow: "0 0 0 3px rgba(92,158,126,0.18)", display: "inline-block" }} />
+            <span style={{ fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "#7A776F", fontWeight: 500 }}>ONLINE</span>
+          </div>
+          <span style={{ fontSize: 12, color: "#7A776F" }}>{timeStr} · {dayStr}</span>
+        </header>
+
+        {/* Scrollable content */}
+        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 20px 40px" }}>
+          <img src="/horizontal-light.png" alt="Sterith" style={{ height: 44, width: "auto", marginBottom: 18 }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", maxWidth: 400, marginBottom: 24 }}>
+            <span style={{ flex: 1, height: 1, background: "linear-gradient(to right, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
+            <span style={{ fontSize: 8.5, letterSpacing: "0.28em", textTransform: "uppercase" as const, color: "#C9A55F", fontWeight: 500, whiteSpace: "nowrap" as const }}>POS · POINT OF SALE</span>
+            <span style={{ flex: 1, height: 1, background: "linear-gradient(to left, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
+          </div>
+          <div style={{ width: "100%", maxWidth: 400 }}>
+            {card}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", flexDirection: "column", fontFamily: "Inter, system-ui, sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');`}</style>
+      {fonts}
 
       {/* Top bar */}
       <header style={{ height: 50, borderBottom: "1px solid #ECE7DD", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px", flexShrink: 0 }}>
@@ -210,33 +248,26 @@ export default function OwnerLogin() {
         </div>
       </header>
 
-      {/* Desktop: split layout — centered container */}
+      {/* Desktop: split layout */}
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 64, width: "100%", maxWidth: 940, padding: "40px 40px" }}>
-
-        {/* Left brand */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-          <img src="/horizontal-light.png" alt="Sterith Business Consulting" style={{ width: "100%", height: "auto", objectFit: "contain", objectPosition: "left", display: "block", marginBottom: 20 }} />
-
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
-            <span style={{ flex: 1, height: 1, background: "linear-gradient(to right, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
-            <span style={{ fontSize: 9.5, letterSpacing: "0.32em", textTransform: "uppercase" as const, color: "#C9A55F", fontWeight: 500, whiteSpace: "nowrap" as const }}>POS · POINT OF SALE</span>
-            <span style={{ flex: 1, height: 1, background: "linear-gradient(to left, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            <img src="/horizontal-light.png" alt="Sterith Business Consulting" style={{ width: "100%", height: "auto", objectFit: "contain", objectPosition: "left", display: "block", marginBottom: 20 }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
+              <span style={{ flex: 1, height: 1, background: "linear-gradient(to right, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
+              <span style={{ fontSize: 9.5, letterSpacing: "0.32em", textTransform: "uppercase" as const, color: "#C9A55F", fontWeight: 500, whiteSpace: "nowrap" as const }}>POS · POINT OF SALE</span>
+              <span style={{ flex: 1, height: 1, background: "linear-gradient(to left, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
+            </div>
+            <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 46, fontWeight: 500, color: "#0B1129", lineHeight: 1.1, margin: "0 0 14px", letterSpacing: "-0.01em" }}>
+              Selamat datang<br />kembali
+            </h1>
+            <p style={{ fontSize: 14, color: "#7A776F", lineHeight: 1.65, margin: 0, maxWidth: 340 }}>
+              Pilih ke mana Anda ingin masuk, lalu isi email dan kata sandi. Kasir akan login dengan PIN setelah Anda buka shift.
+            </p>
           </div>
-
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 46, fontWeight: 500, color: "#0B1129", lineHeight: 1.1, margin: "0 0 14px", letterSpacing: "-0.01em" }}>
-            Selamat datang<br />kembali
-          </h1>
-          <p style={{ fontSize: 14, color: "#7A776F", lineHeight: 1.65, margin: 0, maxWidth: 340 }}>
-            Pilih ke mana Anda ingin masuk, lalu isi email dan kata sandi. Kasir akan login dengan PIN setelah Anda buka shift.
-          </p>
-        </div>
-
-        {/* Right: card */}
-        <div style={{ flexShrink: 0 }}>
-          {card}
-        </div>
-
+          <div style={{ flexShrink: 0 }}>
+            {card}
+          </div>
         </div>
       </div>
     </div>
