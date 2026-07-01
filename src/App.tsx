@@ -25,15 +25,21 @@ export default function App() {
   const setScreen = useStore(s => s.setScreen);
   const setStoreData = useStore(s => s.setStoreData);
   const [scale, setScale] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const calc = () => {
-      const s = Math.min(
-        (window.innerWidth * 0.96) / 1366,
-        (window.innerHeight - 32) / 900,
-        1
-      );
-      setScale(s);
+      const w = window.innerWidth;
+      const mobile = w < 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        const s = Math.min(
+          (w * 0.96) / 1366,
+          (window.innerHeight - 32) / 900,
+          1
+        );
+        setScale(s);
+      }
     };
     calc();
     window.addEventListener("resize", calc);
@@ -50,6 +56,21 @@ export default function App() {
 
   if (screen === "owner-login") {
     return <OwnerLogin />;
+  }
+
+  if (isMobile) {
+    return (
+      <div className="fixed inset-0 bg-cream-bg overflow-hidden">
+        {screen === "login"   && <PinLogin />}
+        {screen === "sales"   && <Sales />}
+        {screen === "payment" && <Payment />}
+        {screen === "receipt" && <Receipt />}
+        {screen === "riwayat" && <Riwayat />}
+        {screen === "produk"  && <Produk />}
+        {screen === "kas"     && <Kas />}
+        {screen === "laporan" && <Laporan />}
+      </div>
+    );
   }
 
   return (

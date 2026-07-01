@@ -49,7 +49,7 @@ export default function PinLogin() {
   return (
     <div className="w-full h-full bg-cream-bg flex flex-col">
       {/* Top bar */}
-      <div className="flex justify-between items-center px-12 py-5 shrink-0">
+      <div className="flex justify-between items-center px-5 lg:px-12 py-4 lg:py-5 shrink-0">
         <div className="flex items-center gap-3">
           <img src="/horizontal-light.png" alt="Sterith Business Consulting" style={{ height: 52, width: "auto", display: "block" }} />
         </div>
