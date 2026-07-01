@@ -1,4 +1,4 @@
-import { useStore, getTrxId } from "../store";
+import { useStore } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar, MobileBottomNav } from "../components/AppSidebar";
 
@@ -110,7 +110,7 @@ export default function Riwayat() {
 
           {/* Mobile: cards */}
           <div className="lg:hidden flex flex-col gap-2.5">
-            {MOCK_TRX.map((t, i) => (
+            {MOCK_TRX.map((t) => (
               <div key={t.trxId} className="bg-white border border-warm-border rounded-card px-4 py-3.5">
                 <div className="flex justify-between items-start">
                   <div>
