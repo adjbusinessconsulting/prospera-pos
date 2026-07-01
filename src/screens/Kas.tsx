@@ -18,10 +18,10 @@ const PERGERAKAN = [
 ];
 
 const QUICK_ACTIONS = [
-  { label: "Tarik Tunai",   icon: "↑", locked: true  },
-  { label: "Setoran",       icon: "↓", locked: true  },
-  { label: "Penyesuaian",   icon: "≈", locked: true  },
-  { label: "Pindah Shift",  icon: "→", locked: false },
+  { label: "Tarik Tunai",  icon: "↑", tier: "std" },
+  { label: "Setoran",      icon: "↓", tier: "std" },
+  { label: "Penyesuaian",  icon: "≈", tier: "std" },
+  { label: "Pindah Shift", icon: "→", tier: null  },
 ];
 
 export default function Kas() {
@@ -96,9 +96,8 @@ export default function Kas() {
           <div className="grid grid-cols-2 gap-2.5 mb-6">
             {QUICK_ACTIONS.map(a => (
               <button key={a.label}
-                className="relative bg-cream-bg border border-warm-border rounded-card h-[68px] flex flex-col items-center justify-center gap-1.5 transition-colors"
-                style={a.locked ? { opacity: 0.6, cursor: "not-allowed", border: "1.5px dashed rgba(201,165,95,0.55)" } : { cursor: "pointer" }}>
-                {a.locked && (
+                className="relative bg-cream-bg border border-warm-border rounded-card h-[68px] flex flex-col items-center justify-center gap-1.5 transition-colors hover:border-navy/30 cursor-pointer">
+                {a.tier && (
                   <span style={{ position: "absolute", top: 6, right: 8, background: "rgba(201,165,95,0.10)", border: "1px solid rgba(201,165,95,0.30)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 600, padding: "1px 5px", borderRadius: 3, textTransform: "uppercase" as const }}>
                     STD
                   </span>
@@ -109,16 +108,15 @@ export default function Kas() {
             ))}
           </div>
 
-          {/* Upgrade banner */}
-          <div className="bg-cream-bg border border-dashed rounded-card px-4 py-4 mb-6" style={{ borderColor: "rgba(201,165,95,0.4)" }}>
-            <p style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-gold mb-1.5">UPGRADE STANDARD</p>
-            <p className="text-[12px] text-text-mute leading-relaxed">Akses Tarik Tunai, Setoran, Penyesuaian, dan Laporan Kas lengkap.</p>
+          <div className="bg-cream-bg border border-warm-border rounded-card px-4 py-4 mb-6">
+            <p style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-1">FITUR PAKET STANDARD</p>
+            <p className="text-[12px] text-text-mute leading-relaxed">Tarik Tunai, Setoran, dan Penyesuaian tersedia di paket Standard ke atas.</p>
           </div>
 
           <div className="flex-1" />
 
           <div className="flex flex-col gap-2.5">
-            <button className="w-full bg-cream-bg border border-warm-border rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-navy">
+            <button onClick={() => setScreen("login")} className="w-full bg-cream-bg border border-warm-border rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-navy hover:border-navy/30 transition-colors">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18V5l12-2v13M9 9l12-2"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
               Pindah Shift
             </button>

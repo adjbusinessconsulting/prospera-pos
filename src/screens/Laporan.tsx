@@ -163,20 +163,21 @@ export default function Laporan() {
             </div>
           </div>
 
-          {/* Locked chart */}
-          <div className="mt-4 bg-white border rounded-card px-6 py-5 relative"
-            style={{ border: "1.5px dashed rgba(201,165,95,0.55)", opacity: 0.8 }}>
+          {/* Chart — STANDARD tier */}
+          <div className="mt-4 bg-white border border-warm-border rounded-card px-6 py-5 relative">
             <span style={{ position: "absolute", top: 12, right: 14, background: "rgba(201,165,95,0.10)", border: "1px solid rgba(201,165,95,0.30)", color: "#A6843F", fontSize: 8, letterSpacing: "0.12em", fontWeight: 600, padding: "3px 8px", borderRadius: 4, textTransform: "uppercase" as const }}>
               STANDARD
             </span>
             <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-3">GRAFIK PENJUALAN PER JAM</p>
             <div className="h-[80px] flex items-end gap-1.5">
               {[20, 35, 55, 80, 95, 70, 60, 85, 100, 75, 50, 30].map((h, i) => (
-                <div key={i} className="flex-1 bg-gold/20 rounded-t-sm" style={{ height: `${h}%` }} />
+                <div key={i} className="flex-1 bg-navy/20 rounded-t-sm transition-all hover:bg-navy/40" style={{ height: `${h}%` }} />
               ))}
             </div>
-            <div className="absolute inset-0 flex items-center justify-center rounded-card" style={{ background: "rgba(250,250,247,0.5)" }}>
-              <p className="text-[12px] text-text-mute font-medium">Upgrade ke STANDARD untuk melihat grafik lengkap</p>
+            <div className="flex justify-between mt-2">
+              {["06", "08", "10", "12", "13", "14", "15", "16", "17", "18", "19", "20"].map(h => (
+                <span key={h} style={{ fontSize: 8, color: "#B0A99A" }} className="flex-1 text-center">{h}</span>
+              ))}
             </div>
           </div>
         </div>

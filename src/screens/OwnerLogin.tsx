@@ -98,16 +98,20 @@ export default function OwnerLogin() {
             <div style={{ fontSize: 10.5, color: loginAs === "toko" ? "#7A776F" : "#C4C0B8" }}>POS, kasir, jualan</div>
           </button>
 
-          {/* Backoffice tile (locked) */}
-          <div style={{ position: "relative", background: "#F7F4EE", border: "1.5px dashed rgba(201,165,95,0.40)", borderRadius: 11, padding: "12px 14px 12px", opacity: 0.8, cursor: "not-allowed", textAlign: isMobile ? "center" as const : "left" as const }}>
+          {/* Backoffice tile — PREMIUM tier */}
+          <button onClick={() => setLoginAs("backoffice")} style={{ position: "relative", background: loginAs === "backoffice" ? "white" : "#FAFAF7", border: loginAs === "backoffice" ? "2px solid #0B1129" : "1.5px solid #ECE7DD", borderRadius: 11, padding: "12px 14px 12px", cursor: "pointer", textAlign: isMobile ? "center" as const : "left" as const }}>
             <span style={{ position: "absolute", top: -1, right: -1, background: "#C9A55F", color: "white", fontSize: 7, letterSpacing: "0.12em", fontWeight: 700, padding: "3px 8px", borderRadius: "0 10px 0 7px", textTransform: "uppercase" as const }}>PREMIUM</span>
+            {loginAs === "backoffice" && (
+              <span style={{ position: "absolute", top: 10, right: 10, width: 20, height: 20, borderRadius: "50%", background: "#0B1129", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
+              </span>
+            )}
             <div style={{ display: "flex", justifyContent: isMobile ? "center" : "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C4C0B8" strokeWidth="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-              {!isMobile && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={loginAs === "backoffice" ? "#0B1129" : "#A8A39B"} strokeWidth="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
             </div>
-            <div style={{ fontSize: 13.5, fontWeight: 600, color: "#C4C0B8", marginBottom: 2 }}>Backoffice</div>
-            <div style={{ fontSize: 10.5, color: "#D4CEBE" }}>Inventory, staff</div>
-          </div>
+            <div style={{ fontSize: 13.5, fontWeight: 600, color: loginAs === "backoffice" ? "#0B1129" : "#A8A39B", marginBottom: 2 }}>Backoffice</div>
+            <div style={{ fontSize: 10.5, color: loginAs === "backoffice" ? "#7A776F" : "#C4C0B8" }}>Inventory, staff</div>
+          </button>
         </div>
       </div>
 

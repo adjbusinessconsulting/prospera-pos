@@ -25,8 +25,7 @@ export default function Produk() {
             <h1 className="font-serif text-display-l font-medium text-navy">Produk</h1>
           </div>
           <div className="relative">
-            <button className="bg-white border border-warm-border rounded-card h-[38px] px-4 flex items-center gap-2 text-[12px] text-text-mute"
-              style={{ cursor: "not-allowed", opacity: 0.7 }}>
+            <button className="bg-white border border-warm-border rounded-card h-[38px] px-4 flex items-center gap-2 text-[12px] text-navy hover:border-navy/30 transition-colors">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
               Tambah Produk
             </button>

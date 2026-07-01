@@ -21,7 +21,7 @@ const METHODS = [
     icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1.5" fill="currentColor"/></svg>,
   },
   {
-    id: "hutang", label: "Hutang / Bon", sub: "Bayar nanti", locked: true,
+    id: "hutang", label: "Hutang / Bon", sub: "Bayar nanti", locked: false, tier: "std",
     icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 10h8M8 14h5"/></svg>,
   },
   {
@@ -118,31 +118,20 @@ export default function Payment() {
           <p style={{ fontSize: 10, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-3">METODE PEMBAYARAN</p>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {METHODS.map(m => {
-              if (m.locked) {
-                return (
-                  <div key={m.id} className="bg-white rounded-method p-4 relative"
-                    style={{ border: "1.5px dashed rgba(201,165,95,0.55)", opacity: 0.75, cursor: "not-allowed" }}>
-                    <span style={{ position: "absolute", top: 10, right: 10, background: "rgba(201,165,95,0.10)", border: "1px solid rgba(201,165,95,0.30)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.12em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const }}>
-                      STANDARD
-                    </span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="1.6" style={{ position: "absolute", top: 10, right: 60 }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                    <div className="w-[36px] h-[36px] rounded-[10px] flex items-center justify-center bg-gold-soft text-gold mb-4">
-                      {m.icon}
-                    </div>
-                    <div className="text-[13.5px] font-semibold text-navy mb-0.5 opacity-60">{m.label}</div>
-                    <div className="text-[11px] text-text-mute opacity-70">{m.sub}</div>
-                  </div>
-                );
-              }
               const active = paymentMethod === m.id;
               return (
                 <div key={m.id} onClick={() => setPaymentMethod(m.id)}
                   className={`bg-white rounded-method p-4 cursor-pointer relative border transition-all ${active ? "border-navy border-[1.5px] shadow-method" : "border-warm-border hover:border-navy/30"}`}>
+                  {"tier" in m && m.tier && (
+                    <span style={{ position: "absolute", top: 10, right: 10, background: "rgba(201,165,95,0.10)", border: "1px solid rgba(201,165,95,0.30)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.12em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const }}>
+                      STANDARD
+                    </span>
+                  )}
                   <div className="flex justify-between items-start mb-4">
                     <div className={`w-[36px] h-[36px] rounded-[10px] flex items-center justify-center ${active ? "bg-navy text-gold" : "bg-cream-pill text-navy"}`}>
                       {m.icon}
                     </div>
-                    <div className={`w-[17px] h-[17px] rounded-full border flex items-center justify-center shrink-0 ${active ? "bg-navy border-navy" : "border-warm-dashed"}`}>
+                    <div className={`w-[17px] h-[17px] rounded-full border flex items-center justify-center shrink-0 ${"tier" in m && m.tier ? "mt-4" : ""} ${active ? "bg-navy border-navy" : "border-warm-dashed"}`}>
                       {active && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="3.5"><path d="M20 6L9 17l-5-5"/></svg>}
                     </div>
                   </div>

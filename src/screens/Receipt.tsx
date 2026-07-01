@@ -8,7 +8,7 @@ function SterithWatermark() {
       <img src="/mark-gold-512.png" alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />
       <div>
         <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.08em", color: "#0B1129", lineHeight: 1 }}>STERITH POS</div>
-        <div style={{ fontVariantNumeric: "tabular-nums", fontFamily: "Inter, system-ui, sans-serif", fontSize: 7, letterSpacing: "0.14em", color: "#7A776F", marginTop: 3, textTransform: "uppercase", lineHeight: 1 }}>UPGRADE STANDARD UNTUK CUSTOM BRANDING</div>
+        <div style={{ fontVariantNumeric: "tabular-nums", fontFamily: "Inter, system-ui, sans-serif", fontSize: 7, letterSpacing: "0.14em", color: "#A6843F", marginTop: 3, textTransform: "uppercase", lineHeight: 1 }}>CUSTOM BRANDING · PAKET STANDARD</div>
       </div>
     </div>
   );
@@ -115,10 +115,10 @@ export default function Receipt() {
             <span className="text-[11px]">Cetak</span>
           </button>
 
-          {/* WhatsApp — locked with STANDARD tag */}
+          {/* WhatsApp — STANDARD tier badge, enabled in demo */}
           <div className="relative">
-            <button className="w-full bg-white rounded-button py-3.5 flex flex-col items-center gap-1.5 text-text-mute cursor-not-allowed"
-              style={{ border: "1.5px dashed #C9A55F", opacity: 0.7 }}>
+            <button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Struk dari toko kami\nTotal: Rp ${total.toLocaleString("id-ID")}\nTerima kasih!`)}`, "_blank")}
+              className="w-full bg-white border border-warm-border rounded-button py-3.5 flex flex-col items-center gap-1.5 text-navy hover:border-navy/30 transition-colors">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
               <span className="text-[11px]">WhatsApp</span>
             </button>
