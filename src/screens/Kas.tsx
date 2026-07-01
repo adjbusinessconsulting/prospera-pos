@@ -1,3 +1,5 @@
+import { useState, useRef } from "react";
+import { X, Camera, Image as ImageIcon } from "lucide-react";
 import { useStore } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
@@ -9,20 +11,62 @@ const SHIFT_LABEL: Record<1 | 2 | 3, string> = {
 };
 
 const PERGERAKAN = [
-  { time: "16:42", label: "18 trx tunai",       desc: "14:00–16:42 · otomatis dari penjualan",   amount: +2680000, icon: "auto"   },
-  { time: "15:30", label: "Bayar parkir & retribusi", desc: "Aerith D. · operasional",            amount: -15000,   icon: "keluar" },
-  { time: "14:48", label: "Beli es batu",        desc: "Aerith D. · supplier",                   amount: -100000,  icon: "keluar" },
-  { time: "14:00", label: "Modal awal shift",    desc: "Dibuka oleh Anthony D. (owner)",         amount: +500000,  icon: "masuk"  },
+  { time: "16:42", label: "18 trx tunai",            desc: "14:00–16:42 · otomatis dari penjualan", amount: +2680000, icon: "auto",   photo: false },
+  { time: "15:30", label: "Bayar parkir & retribusi", desc: "Aerith D. · operasional",              amount: -15000,   icon: "keluar", photo: true  },
+  { time: "14:48", label: "Beli es batu",             desc: "Aerith D. · supplier",                 amount: -100000,  icon: "keluar", photo: true  },
+  { time: "14:00", label: "Modal awal shift",         desc: "Dibuka oleh Anthony D. (owner)",       amount: +500000,  icon: "masuk",  photo: false },
 ];
 
 const kasKeluar = PERGERAKAN.filter(p => p.amount < 0).reduce((s, p) => s + Math.abs(p.amount), 0);
-const kasMasuk = PERGERAKAN.filter(p => p.amount > 0 && p.icon !== "auto").reduce((s, p) => s + p.amount, 0);
-const saldo = PERGERAKAN.reduce((s, p) => s + p.amount, 0);
+const kasMasuk  = PERGERAKAN.filter(p => p.amount > 0 && p.icon !== "auto").reduce((s, p) => s + p.amount, 0);
+const saldo     = PERGERAKAN.reduce((s, p) => s + p.amount, 0);
+
+function PhotoThumb({ size = "sm" }: { size?: "sm" | "md" }) {
+  const dim = size === "md" ? "w-10 h-10" : "w-8 h-8";
+  const iconSize = size === "md" ? 14 : 11;
+  return (
+    <div className={`${dim} rounded-[6px] flex items-center justify-center shrink-0 border border-warm-border`}
+      style={{ background: "linear-gradient(135deg, #F2EDE3, #E8DFC9)" }}>
+      <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#B0A99A" strokeWidth="1.8">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <polyline points="21 15 16 10 5 21" />
+      </svg>
+    </div>
+  );
+}
 
 export default function Kas() {
   const { cashierInitials, cashierName, selectedShift, setScreen, signOut } = useStore();
 
+  const [showMasuk, setShowMasuk] = useState(false);
+  const [showKeluar, setShowKeluar] = useState(false);
+  const [kasNominal, setKasNominal] = useState("");
+  const [kasKet, setKasKet] = useState("");
+  const [kasPhoto, setKasPhoto] = useState<string | null>(null);
+  const kasCamera = useRef<HTMLInputElement>(null);
+  const kasGallery = useRef<HTMLInputElement>(null);
+
   const bukaTime = "14:00";
+  const isModalOpen = showMasuk || showKeluar;
+  const modalType = showMasuk ? "masuk" : "keluar";
+
+  function handleKasFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setKasPhoto(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  function closeKasModal() {
+    setShowMasuk(false);
+    setShowKeluar(false);
+    setKasNominal("");
+    setKasKet("");
+    setKasPhoto(null);
+  }
 
   return (
     <div className="w-full h-full flex animate-screen-in bg-cream-bg">
@@ -55,7 +99,7 @@ export default function Kas() {
         {/* Main content: two columns on desktop */}
         <div className="flex-1 flex flex-col lg:flex-row gap-0 min-h-0 overflow-hidden">
 
-          {/* Left column: saldo + actions (full on mobile, fixed-width on desktop) */}
+          {/* Left column */}
           <div className="flex-1 lg:flex-none lg:w-[340px] flex flex-col gap-4 px-5 lg:px-10 pt-4 pb-4 lg:pb-0 overflow-auto">
 
             {/* Saldo card */}
@@ -79,17 +123,19 @@ export default function Kas() {
 
             {/* Kas Masuk / Kas Keluar */}
             <div className="flex gap-2.5">
-              <button className="flex-1 bg-[#5C9E7E14] border border-[#5C9E7E40] rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-[#3D7A5E] hover:bg-[#5C9E7E20] transition-colors cursor-pointer">
+              <button onClick={() => setShowMasuk(true)}
+                className="flex-1 bg-[#5C9E7E14] border border-[#5C9E7E40] rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-[#3D7A5E] hover:bg-[#5C9E7E20] transition-colors cursor-pointer">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
                 Kas Masuk
               </button>
-              <button className="flex-1 bg-[#C25E3D14] border border-[#C25E3D40] rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-[#C25E3D] hover:bg-[#C25E3D20] transition-colors cursor-pointer">
+              <button onClick={() => setShowKeluar(true)}
+                className="flex-1 bg-[#C25E3D14] border border-[#C25E3D40] rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-[#C25E3D] hover:bg-[#C25E3D20] transition-colors cursor-pointer">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14" /></svg>
                 Kas Keluar
               </button>
             </div>
 
-            {/* Mobile: STANDARD foto banner + pergerakan */}
+            {/* Mobile: foto banner + pergerakan */}
             <div className="lg:hidden">
               <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-card border border-dashed mb-3"
                 style={{ borderColor: "rgba(201,165,95,0.45)", background: "rgba(201,165,95,0.06)" }}>
@@ -105,8 +151,8 @@ export default function Kas() {
               <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-2.5">PERGERAKAN HARI INI</p>
               <div className="bg-white border border-warm-border rounded-card overflow-hidden">
                 {PERGERAKAN.map((p, i) => (
-                  <div key={i} className={`flex items-start gap-3 px-4 py-3.5 ${i < PERGERAKAN.length - 1 ? "border-b border-[#F2EDE3]" : ""}`}>
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${p.amount > 0 ? "bg-[#5C9E7E20]" : "bg-[#C25E3D14]"}`}>
+                  <div key={i} className={`flex items-center gap-3 px-4 py-3 ${i < PERGERAKAN.length - 1 ? "border-b border-[#F2EDE3]" : ""}`}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${p.amount > 0 ? "bg-[#5C9E7E20]" : "bg-[#C25E3D14]"}`}>
                       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={p.amount > 0 ? "#5C9E7E" : "#C25E3D"} strokeWidth="2.5">
                         {p.amount > 0 ? <path d="M12 5v14M5 12h14" /> : <path d="M5 12h14" />}
                       </svg>
@@ -115,6 +161,7 @@ export default function Kas() {
                       <div className="text-[12.5px] font-medium text-navy">{p.label}</div>
                       <div className="text-[10.5px] text-text-mute mt-0.5">{p.time} · {p.desc}</div>
                     </div>
+                    {p.photo && <PhotoThumb size="sm" />}
                     <span className={`font-serif text-[13px] font-semibold shrink-0 ${p.amount > 0 ? "text-[#5C9E7E]" : "text-[#C25E3D]"}`} style={{ fontVariantNumeric: "tabular-nums" }}>
                       {p.amount > 0 ? "+" : "−"}{formatRp(Math.abs(p.amount))}
                     </span>
@@ -147,8 +194,8 @@ export default function Kas() {
             <div className="flex-1 overflow-auto">
               <div className="bg-white border border-warm-border rounded-card overflow-hidden">
                 {PERGERAKAN.map((p, i) => (
-                  <div key={i} className={`flex items-start gap-3 px-5 py-4 ${i < PERGERAKAN.length - 1 ? "border-b border-[#F2EDE3]" : ""}`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${p.amount > 0 ? "bg-[#5C9E7E14]" : "bg-[#C25E3D14]"}`}>
+                  <div key={i} className={`flex items-center gap-3 px-5 py-4 ${i < PERGERAKAN.length - 1 ? "border-b border-[#F2EDE3]" : ""}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${p.amount > 0 ? "bg-[#5C9E7E14]" : "bg-[#C25E3D14]"}`}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={p.amount > 0 ? "#5C9E7E" : "#C25E3D"} strokeWidth="2.5">
                         {p.amount > 0 ? <path d="M12 5v14M5 12h14" /> : <path d="M5 12h14" />}
                       </svg>
@@ -157,6 +204,7 @@ export default function Kas() {
                       <div className="text-[13px] font-medium text-navy">{p.label}</div>
                       <div className="text-[11px] text-text-mute mt-0.5">{p.time} · {p.desc}</div>
                     </div>
+                    {p.photo && <PhotoThumb size="md" />}
                     <span className={`font-serif text-[15px] font-semibold shrink-0 ${p.amount > 0 ? "text-[#5C9E7E]" : "text-[#C25E3D]"}`} style={{ fontVariantNumeric: "tabular-nums" }}>
                       {p.amount > 0 ? "+" : "−"}{formatRp(Math.abs(p.amount))}
                     </span>
@@ -181,6 +229,113 @@ export default function Kas() {
           </button>
         </div>
       </div>
+
+      {/* Hidden file inputs */}
+      <input ref={kasCamera} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleKasFile} />
+      <input ref={kasGallery} type="file" accept="image/*" className="hidden" onChange={handleKasFile} />
+
+      {/* Kas Masuk / Kas Keluar Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={closeKasModal} />
+          <div className="relative bg-white w-full lg:max-w-[420px] lg:mx-4 rounded-t-[20px] lg:rounded-card flex flex-col shadow-xl">
+
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-warm-border">
+              <div>
+                <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-0.5">UANG KAS</p>
+                <h3 className={`font-serif text-[20px] font-medium leading-tight ${modalType === "masuk" ? "text-[#3D7A5E]" : "text-[#C25E3D]"}`}>
+                  {modalType === "masuk" ? "Kas Masuk" : "Kas Keluar"}
+                </h3>
+              </div>
+              <button onClick={closeKasModal} className="w-8 h-8 rounded-card flex items-center justify-center text-text-mute hover:text-navy hover:bg-cream-bg transition-colors border-0 bg-transparent cursor-pointer">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="px-6 py-5 flex flex-col gap-4">
+
+              {/* Nominal */}
+              <div>
+                <label className="block mb-2">
+                  <span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">NOMINAL <span className="text-warning">*</span></span>
+                </label>
+                <div className="flex items-center bg-cream-bg border rounded-button px-4 h-[50px] gap-2 transition-colors"
+                  style={{ borderColor: kasNominal ? (modalType === "masuk" ? "#3D7A5E" : "#C25E3D") : "#ECE7DD" }}>
+                  <span className="font-serif text-[16px] text-text-mute font-medium shrink-0">Rp</span>
+                  <input
+                    type="number"
+                    value={kasNominal}
+                    onChange={e => setKasNominal(e.target.value)}
+                    placeholder="0"
+                    autoFocus
+                    className="flex-1 bg-transparent border-0 outline-none font-serif text-[20px] text-navy"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  />
+                </div>
+              </div>
+
+              {/* Keterangan */}
+              <div>
+                <label className="block mb-2">
+                  <span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">KETERANGAN <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></span>
+                </label>
+                <input
+                  value={kasKet}
+                  onChange={e => setKasKet(e.target.value)}
+                  placeholder={modalType === "masuk" ? "Modal tambahan, setoran..." : "Supplier, parkir, operasional..."}
+                  className="w-full bg-cream-bg border border-warm-border rounded-button px-4 h-[44px] text-[13.5px] text-navy outline-none placeholder:text-text-mute"
+                />
+              </div>
+
+              {/* Foto bukti */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">FOTO BUKTI <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></span>
+                  <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 600, padding: "1px 5px", borderRadius: 3, textTransform: "uppercase" as const }}>STANDARD</span>
+                </div>
+                {kasPhoto ? (
+                  <div className="flex items-center gap-3">
+                    <img src={kasPhoto} alt="Preview" className="w-[60px] h-[60px] rounded-[8px] object-cover border border-warm-border shrink-0" />
+                    <div className="flex flex-col gap-1.5">
+                      <button onClick={() => kasGallery.current?.click()} className="text-[12px] text-navy font-medium underline underline-offset-2 bg-transparent border-0 p-0 cursor-pointer text-left">Ganti foto</button>
+                      <button onClick={() => setKasPhoto(null)} className="text-[12px] text-text-mute hover:text-navy bg-transparent border-0 p-0 cursor-pointer text-left">Hapus foto</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button onClick={() => kasCamera.current?.click()}
+                      className="flex items-center justify-center gap-2 bg-cream-bg border border-warm-border rounded-card h-[42px] text-[12px] font-medium text-navy hover:border-navy/40 transition-colors cursor-pointer">
+                      <Camera size={14} strokeWidth={1.8} className="text-text-mute" />
+                      Kamera
+                    </button>
+                    <button onClick={() => kasGallery.current?.click()}
+                      className="flex items-center justify-center gap-2 bg-cream-bg border border-warm-border rounded-card h-[42px] text-[12px] font-medium text-navy hover:border-navy/40 transition-colors cursor-pointer">
+                      <ImageIcon size={14} strokeWidth={1.8} className="text-text-mute" />
+                      Galeri
+                    </button>
+                  </div>
+                )}
+                <p className="text-[10.5px] text-text-mute mt-1.5">Foto bukti tersedia di tier Standard ke atas.</p>
+              </div>
+            </div>
+
+            <div className="px-6 pb-7 pt-3 border-t border-warm-border flex gap-2.5">
+              <button onClick={closeKasModal}
+                className="flex-1 bg-cream-bg border border-warm-border rounded-card h-[46px] text-[13px] font-medium text-navy hover:border-navy/40 transition-colors cursor-pointer">
+                Batal
+              </button>
+              <button
+                disabled={!kasNominal}
+                onClick={closeKasModal}
+                className={`flex-1 rounded-card h-[46px] text-[13px] font-semibold border-0 transition-opacity ${kasNominal
+                  ? `${modalType === "masuk" ? "bg-[#3D7A5E]" : "bg-[#C25E3D]"} text-white hover:opacity-90 cursor-pointer`
+                  : "bg-navy/20 text-navy/40 cursor-not-allowed"}`}>
+                Catat {modalType === "masuk" ? "Kas Masuk" : "Kas Keluar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

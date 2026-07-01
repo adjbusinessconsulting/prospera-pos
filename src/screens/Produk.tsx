@@ -1,5 +1,5 @@
-import { Search } from "lucide-react";
-import { useState } from "react";
+import { Search, X, Camera, Image as ImageIcon } from "lucide-react";
+import { useState, useRef } from "react";
 import { useStore } from "../store";
 import { PRODUCTS, getCatLabel, formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
@@ -15,13 +15,37 @@ const LOW_STOCK_THRESHOLD = 5;
 
 export default function Produk() {
   const [search, setSearch] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addName, setAddName] = useState("");
+  const [addPrice, setAddPrice] = useState("");
+  const [addDesc, setAddDesc] = useState("");
+  const [addPhoto, setAddPhoto] = useState<string | null>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
   const { cashierInitials, setScreen, signOut } = useStore();
 
   const filtered = PRODUCTS.filter(p =>
     !search || p.name.toLowerCase().includes(search.toLowerCase())
   );
-
   const lowStockItems = PRODUCTS.filter(p => p.stock <= LOW_STOCK_THRESHOLD);
+  const canSave = addName.trim().length > 0 && addPrice.trim().length > 0;
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setAddPhoto(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  function closeModal() {
+    setShowAddModal(false);
+    setAddName("");
+    setAddPrice("");
+    setAddDesc("");
+    setAddPhoto(null);
+  }
 
   return (
     <div className="w-full h-full flex animate-screen-in bg-cream-bg">
@@ -40,7 +64,7 @@ export default function Produk() {
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
             <span style={{ background: "rgba(122,119,111,0.10)", border: "1px solid rgba(122,119,111,0.28)", color: "#7A776F", fontSize: 9.5, letterSpacing: "0.18em", fontWeight: 600, padding: "3px 9px", borderRadius: 9999, textTransform: "uppercase" as const }} className="hidden lg:inline">FREE</span>
-            <button className="bg-navy border-0 rounded-card h-[36px] lg:h-[38px] px-3 lg:px-4 flex items-center gap-2 text-[12px] text-cream-text hover:opacity-90 transition-opacity cursor-pointer">
+            <button onClick={() => setShowAddModal(true)} className="bg-navy border-0 rounded-card h-[36px] lg:h-[38px] px-3 lg:px-4 flex items-center gap-2 text-[12px] text-cream-text hover:opacity-90 transition-opacity cursor-pointer">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
               <span className="hidden lg:inline">Produk baru</span>
             </button>
@@ -155,6 +179,125 @@ export default function Produk() {
           </div>
         </div>
       </div>
+
+      {/* Hidden file inputs */}
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
+      <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+
+      {/* Add Product Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={closeModal} />
+          <div className="relative bg-white w-full lg:max-w-[460px] lg:mx-4 rounded-t-[20px] lg:rounded-card max-h-[92vh] flex flex-col shadow-xl">
+
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-warm-border shrink-0">
+              <div>
+                <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-0.5">KATALOG</p>
+                <h3 className="font-serif text-[20px] font-medium text-navy leading-tight">Produk Baru</h3>
+              </div>
+              <button onClick={closeModal} className="w-8 h-8 rounded-card flex items-center justify-center text-text-mute hover:text-navy hover:bg-cream-bg transition-colors border-0 bg-transparent cursor-pointer">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto px-6 py-5 flex flex-col gap-5">
+
+              {/* Photo */}
+              <div>
+                <p style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-2.5">
+                  FOTO PRODUK <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span>
+                </p>
+                {addPhoto ? (
+                  <div className="flex items-center gap-4">
+                    <img src={addPhoto} alt="Preview" className="w-[72px] h-[72px] rounded-[10px] object-cover border border-warm-border shrink-0" />
+                    <div className="flex flex-col gap-2">
+                      <button onClick={() => galleryRef.current?.click()} className="text-[12px] text-navy font-medium underline underline-offset-2 bg-transparent border-0 p-0 cursor-pointer text-left">Ganti foto</button>
+                      <button onClick={() => setAddPhoto(null)} className="text-[12px] text-text-mute hover:text-navy bg-transparent border-0 p-0 cursor-pointer text-left">Hapus foto</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <button onClick={() => cameraRef.current?.click()}
+                      className="flex items-center justify-center gap-2.5 bg-cream-bg border border-warm-border rounded-card h-[48px] text-[12.5px] font-medium text-navy hover:border-navy/40 transition-colors cursor-pointer">
+                      <Camera size={16} strokeWidth={1.8} className="text-text-mute" />
+                      Kamera
+                    </button>
+                    <button onClick={() => galleryRef.current?.click()}
+                      className="flex items-center justify-center gap-2.5 bg-cream-bg border border-warm-border rounded-card h-[48px] text-[12.5px] font-medium text-navy hover:border-navy/40 transition-colors cursor-pointer">
+                      <ImageIcon size={16} strokeWidth={1.8} className="text-text-mute" />
+                      Galeri
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Name */}
+              <div>
+                <label className="block mb-2">
+                  <span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">NAMA PRODUK <span className="text-warning">*</span></span>
+                </label>
+                <input
+                  value={addName}
+                  onChange={e => setAddName(e.target.value)}
+                  placeholder="Contoh: Beras Pandan 5kg"
+                  className="w-full bg-cream-bg border border-warm-border rounded-button px-4 h-[46px] text-[13.5px] text-navy outline-none placeholder:text-text-mute transition-colors"
+                  style={{ borderColor: addName.trim() ? "#0B1129" : undefined }}
+                />
+              </div>
+
+              {/* Price */}
+              <div>
+                <label className="block mb-2">
+                  <span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">HARGA JUAL <span className="text-warning">*</span></span>
+                </label>
+                <div className="flex items-center bg-cream-bg border border-warm-border rounded-button px-4 h-[46px] gap-2 transition-colors"
+                  style={{ borderColor: addPrice.trim() ? "#0B1129" : undefined }}>
+                  <span className="font-serif text-[15px] text-text-mute font-medium shrink-0">Rp</span>
+                  <input
+                    type="number"
+                    value={addPrice}
+                    onChange={e => setAddPrice(e.target.value)}
+                    placeholder="0"
+                    className="flex-1 bg-transparent border-0 outline-none font-serif text-[16px] text-navy"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block mb-2">
+                  <span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">DESKRIPSI <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></span>
+                </label>
+                <textarea
+                  value={addDesc}
+                  onChange={e => setAddDesc(e.target.value)}
+                  placeholder="Satuan, berat, catatan stok, variasi..."
+                  rows={3}
+                  className="w-full bg-cream-bg border border-warm-border rounded-button px-4 py-3 text-[13.5px] text-navy outline-none placeholder:text-text-mute transition-colors resize-none"
+                />
+              </div>
+
+              {(addName || addPrice) && !canSave && (
+                <p className="text-[11px] text-text-mute -mt-2">Nama produk dan harga wajib diisi untuk menyimpan.</p>
+              )}
+            </div>
+
+            <div className="px-6 pb-7 pt-3 border-t border-warm-border shrink-0 flex gap-2.5">
+              <button onClick={closeModal}
+                className="flex-1 bg-cream-bg border border-warm-border rounded-card h-[46px] text-[13px] font-medium text-navy hover:border-navy/40 transition-colors cursor-pointer">
+                Batal
+              </button>
+              <button
+                disabled={!canSave}
+                onClick={closeModal}
+                className={`flex-1 rounded-card h-[46px] text-[13px] font-semibold border-0 transition-opacity ${canSave ? "bg-navy text-cream-text hover:opacity-90 cursor-pointer" : "bg-navy/20 text-navy/40 cursor-not-allowed"}`}>
+                Simpan Produk
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
