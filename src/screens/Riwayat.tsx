@@ -1,17 +1,52 @@
+import { useState } from "react";
 import { useStore } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar, MobileBottomNav } from "../components/AppSidebar";
 
-const MOCK_TRX = [
-  { trxId: "#TRX-0042", time: "14:32", cashier: "AE", cashierName: "Aerith D.", items: 3, total: 89000,  method: "Tunai",  change: 11000 },
-  { trxId: "#TRX-0041", time: "13:15", cashier: "ST", cashierName: "Stevany C.", items: 1, total: 38000,  method: "QRIS",   change: 0 },
-  { trxId: "#TRX-0040", time: "12:47", cashier: "AE", cashierName: "Aerith D.", items: 5, total: 152500, method: "Tunai",  change: 47500 },
-  { trxId: "#TRX-0039", time: "11:30", cashier: "AN", cashierName: "Anthony D.", items: 2, total: 43000,  method: "Debit",  change: 0 },
-  { trxId: "#TRX-0038", time: "10:52", cashier: "ST", cashierName: "Stevany C.", items: 4, total: 67000,  method: "Tunai",  change: 33000 },
-  { trxId: "#TRX-0037", time: "10:21", cashier: "AE", cashierName: "Aerith D.", items: 2, total: 11000,  method: "QRIS",   change: 0 },
-  { trxId: "#TRX-0036", time: "09:44", cashier: "AN", cashierName: "Anthony D.", items: 7, total: 228500, method: "Tunai",  change: 71500 },
-  { trxId: "#TRX-0035", time: "09:10", cashier: "AE", cashierName: "Aerith D.", items: 1, total: 75000,  method: "Transfer", change: 0 },
+const TODAY = [
+  { trxId: "#TRX-0042", date: "Hari ini", time: "14:32", cashier: "AE", cashierName: "Aerith D.",   items: 3, total: 89000,  method: "Tunai",    change: 11000 },
+  { trxId: "#TRX-0041", date: "Hari ini", time: "13:15", cashier: "ST", cashierName: "Stevany C.",  items: 1, total: 38000,  method: "QRIS",     change: 0 },
+  { trxId: "#TRX-0040", date: "Hari ini", time: "12:47", cashier: "AE", cashierName: "Aerith D.",   items: 5, total: 152500, method: "Tunai",    change: 47500 },
+  { trxId: "#TRX-0039", date: "Hari ini", time: "11:30", cashier: "AN", cashierName: "Anthony D.",  items: 2, total: 43000,  method: "Debit",    change: 0 },
+  { trxId: "#TRX-0038", date: "Hari ini", time: "10:52", cashier: "ST", cashierName: "Stevany C.",  items: 4, total: 67000,  method: "Tunai",    change: 33000 },
+  { trxId: "#TRX-0037", date: "Hari ini", time: "10:21", cashier: "AE", cashierName: "Aerith D.",   items: 2, total: 11000,  method: "QRIS",     change: 0 },
+  { trxId: "#TRX-0036", date: "Hari ini", time: "09:44", cashier: "AN", cashierName: "Anthony D.",  items: 7, total: 228500, method: "Tunai",    change: 71500 },
+  { trxId: "#TRX-0035", date: "Hari ini", time: "09:10", cashier: "AE", cashierName: "Aerith D.",   items: 1, total: 75000,  method: "Transfer", change: 0 },
 ];
+
+const YESTERDAY = [
+  { trxId: "#TRX-0034", date: "Kemarin", time: "16:05", cashier: "ST", cashierName: "Stevany C.",  items: 3, total: 54000,  method: "QRIS",  change: 0 },
+  { trxId: "#TRX-0033", date: "Kemarin", time: "14:20", cashier: "AE", cashierName: "Aerith D.",   items: 6, total: 187000, method: "Tunai", change: 13000 },
+  { trxId: "#TRX-0032", date: "Kemarin", time: "12:08", cashier: "AN", cashierName: "Anthony D.",  items: 2, total: 29000,  method: "Debit", change: 0 },
+  { trxId: "#TRX-0031", date: "Kemarin", time: "10:44", cashier: "AE", cashierName: "Aerith D.",   items: 4, total: 96500,  method: "Tunai", change: 3500 },
+  { trxId: "#TRX-0030", date: "Kemarin", time: "09:30", cashier: "ST", cashierName: "Stevany C.",  items: 1, total: 38000,  method: "QRIS",  change: 0 },
+];
+
+const WEEK_EXTRA = [
+  { trxId: "#TRX-0029", date: "2 hari lalu", time: "15:11", cashier: "AN", cashierName: "Anthony D.",  items: 5, total: 143000, method: "Tunai",    change: 7000 },
+  { trxId: "#TRX-0028", date: "2 hari lalu", time: "11:33", cashier: "AE", cashierName: "Aerith D.",   items: 2, total: 47000,  method: "Transfer", change: 0 },
+  { trxId: "#TRX-0027", date: "3 hari lalu", time: "13:45", cashier: "ST", cashierName: "Stevany C.",  items: 8, total: 312000, method: "Tunai",    change: 88000 },
+  { trxId: "#TRX-0026", date: "4 hari lalu", time: "10:20", cashier: "AE", cashierName: "Aerith D.",   items: 3, total: 67500,  method: "QRIS",     change: 0 },
+  { trxId: "#TRX-0025", date: "5 hari lalu", time: "09:55", cashier: "AN", cashierName: "Anthony D.",  items: 1, total: 75000,  method: "Debit",    change: 0 },
+];
+
+const MONTH_EXTRA = [
+  { trxId: "#TRX-0024", date: "8 hari lalu",  time: "14:00", cashier: "AE", cashierName: "Aerith D.",   items: 4, total: 128000, method: "Tunai", change: 22000 },
+  { trxId: "#TRX-0023", date: "10 hari lalu", time: "11:20", cashier: "ST", cashierName: "Stevany C.",  items: 2, total: 59000,  method: "QRIS",  change: 0 },
+  { trxId: "#TRX-0022", date: "14 hari lalu", time: "10:05", cashier: "AN", cashierName: "Anthony D.",  items: 6, total: 215500, method: "Tunai", change: 84500 },
+  { trxId: "#TRX-0021", date: "20 hari lalu", time: "15:30", cashier: "AE", cashierName: "Aerith D.",   items: 3, total: 91000,  method: "Debit", change: 0 },
+  { trxId: "#TRX-0020", date: "25 hari lalu", time: "09:15", cashier: "ST", cashierName: "Stevany C.",  items: 5, total: 176000, method: "Tunai", change: 24000 },
+];
+
+const FILTER_DATA = [
+  TODAY,
+  YESTERDAY,
+  [...TODAY, ...YESTERDAY, ...WEEK_EXTRA],
+  [...TODAY, ...YESTERDAY, ...WEEK_EXTRA, ...MONTH_EXTRA],
+];
+
+const FILTER_LABELS = ["Hari ini", "Kemarin", "7 hari", "30 hari"];
+const SUMMARY_LABELS = ["TOTAL HARI INI", "TOTAL KEMARIN", "TOTAL 7 HARI", "TOTAL 30 HARI"];
 
 const METHOD_COLOR: Record<string, string> = {
   Tunai: "#5C9E7E",
@@ -21,12 +56,12 @@ const METHOD_COLOR: Record<string, string> = {
   "E-Wallet": "#C9A55F",
 };
 
-const FILTERS = ["Hari ini", "Kemarin", "7 hari", "30 hari"];
-
 export default function Riwayat() {
   const { cashierInitials, setScreen, signOut } = useStore();
+  const [activeFilter, setActiveFilter] = useState(0);
 
-  const dayTotal = MOCK_TRX.reduce((s, t) => s + t.total, 0);
+  const trxList = FILTER_DATA[activeFilter];
+  const total = trxList.reduce((s, t) => s + t.total, 0);
 
   return (
     <div className="w-full h-full flex animate-screen-in bg-cream-bg">
@@ -43,24 +78,24 @@ export default function Riwayat() {
         {/* Summary strip */}
         <div className="flex gap-4 px-5 lg:px-10 pt-4 pb-0 shrink-0">
           <div className="bg-white border border-warm-border rounded-card px-5 py-3.5 flex-1">
-            <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-0.5">TOTAL HARI INI</p>
-            <p className="font-serif text-[22px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(dayTotal)}</p>
+            <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-0.5">{SUMMARY_LABELS[activeFilter]}</p>
+            <p className="font-serif text-[22px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</p>
           </div>
           <div className="bg-white border border-warm-border rounded-card px-5 py-3.5 flex-1">
             <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-0.5">TRANSAKSI</p>
-            <p className="font-serif text-[22px] font-semibold text-navy">{MOCK_TRX.length} trx</p>
+            <p className="font-serif text-[22px] font-semibold text-navy">{trxList.length} trx</p>
           </div>
           <div className="bg-white border border-warm-border rounded-card px-5 py-3.5 flex-1 hidden lg:block">
             <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-0.5">RATA-RATA</p>
-            <p className="font-serif text-[22px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(Math.round(dayTotal / MOCK_TRX.length))}</p>
+            <p className="font-serif text-[22px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(Math.round(total / trxList.length))}</p>
           </div>
         </div>
 
         {/* Filter chips */}
         <div className="flex gap-2 px-5 lg:px-10 pt-4 pb-0 shrink-0 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-          {FILTERS.map((f, i) => (
-            <button key={f}
-              className={`px-3.5 py-[7px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors ${i === 0 ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border"}`}>
+          {FILTER_LABELS.map((f, i) => (
+            <button key={f} onClick={() => setActiveFilter(i)}
+              className={`px-3.5 py-[7px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors ${activeFilter === i ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border hover:border-navy/40"}`}>
               {f}
             </button>
           ))}
@@ -83,9 +118,12 @@ export default function Riwayat() {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_TRX.map((t, i) => (
+                {trxList.map((t, i) => (
                   <tr key={t.trxId} className={`border-b border-[#F2EDE3] hover:bg-cream-bg transition-colors cursor-pointer ${i === 0 ? "bg-gold-soft" : ""}`}>
-                    <td className="px-5 py-3.5 text-[12.5px] text-text-mute" style={{ fontVariantNumeric: "tabular-nums" }}>{t.time}</td>
+                    <td className="px-5 py-3.5 text-[12.5px] text-text-mute" style={{ fontVariantNumeric: "tabular-nums" }}>
+                      <div>{t.time}</div>
+                      {activeFilter > 0 && <div style={{ fontSize: 10, color: "#B0A99A" }}>{t.date}</div>}
+                    </td>
                     <td className="px-5 py-3.5">
                       <span className="font-sans text-[12.5px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{t.trxId}</span>
                     </td>
@@ -110,12 +148,14 @@ export default function Riwayat() {
 
           {/* Mobile: cards */}
           <div className="lg:hidden flex flex-col gap-2.5">
-            {MOCK_TRX.map((t) => (
+            {trxList.map((t) => (
               <div key={t.trxId} className="bg-white border border-warm-border rounded-card px-4 py-3.5">
                 <div className="flex justify-between items-start">
                   <div>
                     <span className="font-sans text-[13px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{t.trxId}</span>
-                    <p className="text-[11px] text-text-mute mt-0.5">{t.time} · {t.cashierName} · {t.items} item</p>
+                    <p className="text-[11px] text-text-mute mt-0.5">
+                      {activeFilter > 0 && <span>{t.date} · </span>}{t.time} · {t.cashierName} · {t.items} item
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="font-serif text-[16px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</p>
