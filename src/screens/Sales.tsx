@@ -1,4 +1,4 @@
-import { Search, Plus, User, ChevronUp, X } from "lucide-react";
+import { Search, User, ChevronUp, X } from "lucide-react";
 import { useState } from "react";
 import { useStore, getTotal, getItemCount, getTrxId } from "../store";
 import { PRODUCTS, CATEGORIES, getCatLabel, formatRp } from "../data";
@@ -35,6 +35,8 @@ export default function Sales() {
   const now = new Date();
   const dateStr = now.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+  const h = now.getHours();
+  const greeting = h < 11 ? "Selamat pagi" : h < 15 ? "Selamat siang" : h < 19 ? "Selamat sore" : "Selamat malam";
 
   return (
     <div className="w-full h-full flex animate-screen-in">
@@ -48,10 +50,10 @@ export default function Sales() {
           {/* Desktop header */}
           <div className="hidden lg:flex justify-between items-start shrink-0 px-8 pt-6 pb-0">
             <div>
-              <p style={{ fontSize: 10, letterSpacing: "0.22em", fontVariantNumeric: "tabular-nums" }} className="font-sans uppercase text-text-mute mb-1">PENJUALAN · NEW SALE</p>
-              <h1 className="font-serif text-display-m font-medium text-navy">Selamat siang, {cashierName}</h1>
+              <p style={{ fontSize: 10, letterSpacing: "0.22em", fontVariantNumeric: "tabular-nums" }} className="font-sans uppercase text-text-mute mb-1">PENJUALAN · {trxId}</p>
+              <h1 className="font-serif text-display-m font-medium text-navy">{greeting}, {cashierName}</h1>
               <p className="text-[13px] text-text-mute mt-1">
-                {dateStr} · Transaksi ke <span style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans font-medium text-navy">{trxId}</span>
+                {dateStr} · {SHIFT_LABELS[selectedShift]} · {timeStr}
               </p>
             </div>
             <div className="flex items-center gap-2.5 mt-1">
@@ -170,20 +172,11 @@ export default function Sales() {
                 </div>
               </div>
             ))}
-            {cart.length > 0 && (
-              <button className="mt-3.5 flex items-center gap-1.5 text-[12px] text-gold font-medium">
-                <Plus size={13} strokeWidth={2} />
-                Tambah diskon / catatan
-              </button>
-            )}
           </div>
 
           <div className="px-6 pb-5 pt-4 border-t border-warm-border bg-cream-bg shrink-0">
-            <div className="flex justify-between text-[12.5px] text-text-mute mb-1.5">
-              <span>Subtotal</span><span style={{ fontVariantNumeric: "tabular-nums" }}>Rp {total.toLocaleString("id-ID")}</span>
-            </div>
             <div className="flex justify-between text-[12.5px] text-text-mute mb-3.5">
-              <span>Diskon</span><span style={{ fontVariantNumeric: "tabular-nums" }}>− Rp 0</span>
+              <span>Subtotal</span><span style={{ fontVariantNumeric: "tabular-nums" }}>Rp {total.toLocaleString("id-ID")}</span>
             </div>
             <div className="flex justify-between items-end pt-3.5 border-t border-dashed border-warm-dashed mb-4">
               <div>
