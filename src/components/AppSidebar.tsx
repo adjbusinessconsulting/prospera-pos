@@ -20,7 +20,7 @@ interface Props {
 
 export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDemoBack = false }: Props) {
   return (
-    <aside className="flex w-[58px] lg:w-[80px] bg-white border-r border-warm-border flex-col items-center py-3 lg:py-5 shrink-0">
+    <aside className="flex w-[58px] lg:w-[80px] bg-white border-r border-warm-border flex-col items-center pt-3 pb-[72px] lg:py-5 shrink-0">
       <div className="mb-3 lg:mb-5 flex items-center justify-center">
         <img src="/mark-gold-512.png" alt="Sterith" style={{ width: 28, height: 28, objectFit: "contain" }} className="lg:hidden" />
         <img src="/mark-gold-512.png" alt="Sterith" style={{ width: 34, height: 34, objectFit: "contain" }} className="hidden lg:block" />
