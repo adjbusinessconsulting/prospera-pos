@@ -216,7 +216,7 @@ export default function OwnerLogin() {
 
         {/* Left brand */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-          <img src="/horizontal-light.png" alt="Sterith Business Consulting" style={{ height: 40, width: "auto", objectFit: "contain", objectPosition: "left", display: "block", marginBottom: 24 }} />
+          <img src="/horizontal-light.png" alt="Sterith Business Consulting" style={{ height: 64, width: "auto", objectFit: "contain", objectPosition: "left", display: "block", marginBottom: 24 }} />
 
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
             <span style={{ flex: 1, height: 1, maxWidth: 36, background: "linear-gradient(to right, rgba(201,165,95,0.6), rgba(201,165,95,0))" }} />
