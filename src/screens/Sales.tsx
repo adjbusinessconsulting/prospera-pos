@@ -70,9 +70,14 @@ export default function Sales() {
           </div>
 
           {/* Mobile top bar */}
-          <div className="lg:hidden flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
-            <h1 className="font-serif text-[20px] font-medium text-navy">Sales · Jual</h1>
-            <div className="flex items-center gap-2">
+          <div className="lg:hidden flex items-start justify-between px-5 pt-5 pb-0 shrink-0 gap-3">
+            <div className="min-w-0">
+              <p style={{ fontSize: 10, letterSpacing: "0.22em", fontVariantNumeric: "tabular-nums" }} className="font-sans uppercase text-text-mute mb-1">
+                PENJUALAN · {trxId}
+              </p>
+              <h1 className="font-serif text-[24px] font-medium text-navy leading-tight">Jual</h1>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 mt-1">
               <span className="w-1.5 h-1.5 rounded-full bg-success inline-block" />
               <FreePill />
               <div className="w-[30px] h-[30px] rounded-full bg-cream-pill border border-warm-border flex items-center justify-center font-semibold text-[11px] text-navy">{cashierInitials}</div>
