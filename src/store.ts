@@ -19,6 +19,7 @@ interface POSState {
   storeId: string;
   storeName: string;
   storeAddress: string;
+  storePhone: string;
   dbCashiers: CashierDB[];
   checkinPhoto: string | null;
   products: Product[];
@@ -42,7 +43,7 @@ interface POSState {
   setCheckinPhoto: (photo: string) => void;
   addProduct: (p: Product) => void;
   updateProduct: (id: string, updates: Partial<Product>) => void;
-  setStoreData: (id: string, name: string, address: string, cashiers: CashierDB[]) => void;
+  setStoreData: (id: string, name: string, address: string, cashiers: CashierDB[], phone?: string) => void;
 }
 
 function currentShiftFromTime(): 1 | 2 | 3 {
@@ -69,6 +70,7 @@ export const useStore = create<POSState>((set) => ({
   storeId: '',
   storeName: '',
   storeAddress: '',
+  storePhone: '',
   dbCashiers: [],
   checkinPhoto: null,
   products: [...PRODUCTS],
@@ -138,10 +140,11 @@ export const useStore = create<POSState>((set) => ({
     cart: s.cart.map(i => i.product.id === id ? { ...i, product: { ...i.product, ...updates } } : i),
   })),
 
-  setStoreData: (id, name, address, cashiers) => set({
+  setStoreData: (id, name, address, cashiers, phone = '') => set({
     storeId: id,
     storeName: name,
     storeAddress: address,
+    storePhone: phone,
     dbCashiers: cashiers,
     selectedCashier: cashiers.length > 0 ? cashiers[0].id : 'ae',
   }),

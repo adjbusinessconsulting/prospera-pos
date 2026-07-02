@@ -62,7 +62,7 @@ export default function OwnerLogin() {
     if (userId) {
       const { data: storeRows } = await supabase
         .from("stores")
-        .select("id, name, address")
+        .select("id, name, address, phone")
         .eq("owner_id", userId)
         .limit(1);
       if (storeRows && storeRows.length > 0) {
@@ -72,7 +72,7 @@ export default function OwnerLogin() {
           .select("*")
           .eq("store_id", store.id)
           .eq("active", true);
-        setStoreData(store.id, store.name, store.address || "", (cashierRows ?? []) as CashierDB[]);
+        setStoreData(store.id, store.name, store.address || "", (cashierRows ?? []) as CashierDB[], store.phone || "");
       }
     }
     setScreen("login");

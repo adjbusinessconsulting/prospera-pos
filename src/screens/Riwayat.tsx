@@ -59,7 +59,7 @@ const METHOD_COLOR: Record<string, string> = {
 };
 
 export default function Riwayat() {
-  const { cashierInitials, selectedShift, setScreen, signOut } = useStore();
+  const { cashierInitials, selectedShift, storePhone, setScreen, signOut } = useStore();
   const [activeFilter, setActiveFilter] = useState(0);
   const [methodFilter, setMethodFilter] = useState("Semua");
   const [shiftFilter, setShiftFilter] = useState("Semua");
@@ -116,7 +116,10 @@ export default function Riwayat() {
       `*Detail Transaksi:*`,
       ...filtered.map(t => `• ${t.trxId}  ${t.time}  ${t.cashierName}  ${t.method}  ${formatRp(t.total)}`),
     ];
-    window.open(`https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
+    const text = encodeURIComponent(lines.join("\n"));
+    const phone = storePhone.replace(/\D/g, "").replace(/^0/, "62");
+    const url = phone ? `https://wa.me/${phone}?text=${text}` : `https://wa.me/?text=${text}`;
+    window.open(url, "_blank");
   }
 
   function exportPDF() {
