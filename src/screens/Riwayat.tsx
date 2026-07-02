@@ -64,6 +64,7 @@ export default function Riwayat() {
   const [methodFilter, setMethodFilter] = useState("Semua");
   const [shiftFilter, setShiftFilter] = useState("Semua");
   const [kasirFilter, setKasirFilter] = useState("Semua");
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   const trxAll = FILTER_DATA[activeFilter];
 
@@ -101,6 +102,68 @@ export default function Riwayat() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  function exportWhatsApp() {
+    const period = FILTER_LABELS[activeFilter].label;
+    const lines = [
+      `*Laporan Riwayat — ${period}*`,
+      `Sterith POS`,
+      ``,
+      `Total Omzet: ${formatRp(total)}`,
+      `Transaksi: ${filtered.length}  |  Rata-rata: ${formatRp(avg)}`,
+      ``,
+      `*Detail Transaksi:*`,
+      ...filtered.map(t => `• ${t.trxId}  ${t.time}  ${t.cashierName}  ${t.method}  ${formatRp(t.total)}`),
+    ];
+    window.open(`https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
+  }
+
+  function exportPDF() {
+    const period = FILTER_LABELS[activeFilter].label;
+    const rows = filtered.map((t, i) => `
+      <tr>
+        <td>${i + 1}</td><td>${t.trxId}</td><td>${t.date}</td><td>${t.time}</td>
+        <td>${t.cashierName}</td><td style="text-align:center">${t.items}</td>
+        <td style="text-align:right">${formatRp(t.total)}</td><td>${t.method}</td><td>Shift ${t.shift}</td>
+      </tr>`).join("");
+    const printed = new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
+    const html = `<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"/>
+<title>Riwayat Transaksi – ${period}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#0B1129;padding:32px}
+  .brand{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#7A776F;margin-bottom:4px}
+  h1{font-size:22px;font-weight:700;margin-bottom:3px}
+  .meta{font-size:11px;color:#7A776F;margin-bottom:22px}
+  .summary{display:flex;gap:28px;margin-bottom:22px;padding:14px 18px;background:#F8F5EF;border-radius:8px}
+  .s-label{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#7A776F;margin-bottom:2px}
+  .s-value{font-size:18px;font-weight:700}
+  table{width:100%;border-collapse:collapse}
+  thead tr{background:#0B1129;color:#F8F5EF}
+  th{text-align:left;padding:9px 11px;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+  td{padding:8px 11px;border-bottom:1px solid #ECE7DD}
+  tr:nth-child(even) td{background:#FAF8F4}
+  .footer{margin-top:18px;font-size:9px;color:#B0A99A;text-align:right}
+  @media print{body{padding:20px}}
+</style></head><body>
+<div class="brand">Sterith POS · Laporan</div>
+<h1>Riwayat Transaksi</h1>
+<div class="meta">Periode: ${period} · Dicetak ${printed}</div>
+<div class="summary">
+  <div><div class="s-label">Total Omzet</div><div class="s-value">${formatRp(total)}</div></div>
+  <div><div class="s-label">Transaksi</div><div class="s-value">${filtered.length}</div></div>
+  <div><div class="s-label">Rata-rata</div><div class="s-value">${formatRp(avg)}</div></div>
+</div>
+<table><thead><tr>
+  <th>No</th><th>TRX ID</th><th>Tanggal</th><th>Jam</th><th>Kasir</th>
+  <th style="text-align:center">Item</th><th style="text-align:right">Total</th><th>Metode</th><th>Shift</th>
+</tr></thead><tbody>${rows}</tbody></table>
+<div class="footer">Sterith POS — digenerate otomatis · ${new Date().toLocaleString("id-ID")}</div>
+<script>setTimeout(()=>{window.print();},250);</script>
+</body></html>`;
+    const win = window.open("", "_blank");
+    if (win) { win.document.write(html); win.document.close(); }
   }
 
   const selectStyle: React.CSSProperties = {
@@ -213,13 +276,38 @@ export default function Riwayat() {
             <p className="font-serif text-[18px] lg:text-[20px] font-semibold text-cream-text">{SHIFT_LABELS[selectedShift]}</p>
           </div>
           <div className="ml-auto relative">
-            <button onClick={exportCSV} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors border-0 rounded-[8px] px-3 py-2 cursor-pointer">
+            <button onClick={() => setShowExportMenu(v => !v)}
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors border-0 rounded-[8px] px-3 py-2 cursor-pointer">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>
               <span className="text-[11.5px] font-medium text-white">Export</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ opacity: 0.7 }}><path d="M6 9l6 6 6-6" /></svg>
             </button>
             <span style={{ position: "absolute", top: -7, right: -2, background: "rgba(201,165,95,0.20)", border: "1px solid rgba(201,165,95,0.5)", color: "#C9A55F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 600, padding: "1px 4px", borderRadius: 3, textTransform: "uppercase" as const }}>
               STD
             </span>
+            {showExportMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)} />
+                <div className="absolute right-0 top-[calc(100%+8px)] z-50 bg-white border border-warm-border rounded-card shadow-xl py-1.5 min-w-[168px]">
+                  <button onClick={() => { exportWhatsApp(); setShowExportMenu(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-[12.5px] text-navy hover:bg-cream-bg transition-colors bg-transparent border-0 cursor-pointer text-left">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.979-1.406A9.944 9.944 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
+                    WhatsApp
+                  </button>
+                  <button onClick={() => { exportPDF(); setShowExportMenu(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-[12.5px] text-navy hover:bg-cream-bg transition-colors bg-transparent border-0 cursor-pointer text-left">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#E5534B" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+                    PDF
+                  </button>
+                  <div style={{ height: 1, background: "#ECE7DD", margin: "4px 0" }} />
+                  <button onClick={() => { exportCSV(); setShowExportMenu(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-[12.5px] text-navy hover:bg-cream-bg transition-colors bg-transparent border-0 cursor-pointer text-left">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5C9E7E" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    CSV
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
