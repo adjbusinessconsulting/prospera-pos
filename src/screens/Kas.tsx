@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { X, Camera, Image as ImageIcon } from "lucide-react";
 import { useStore } from "../store";
-import { formatRp } from "../data";
+import { formatRp, formatIDRInput } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 
 const SHIFT_LABEL: Record<1 | 2 | 3, string> = {
@@ -279,9 +279,10 @@ export default function Kas() {
                   style={{ borderColor: kasNominal ? (modalType === "masuk" ? "#3D7A5E" : "#C25E3D") : "#ECE7DD" }}>
                   <span className="font-serif text-[16px] text-text-mute font-medium shrink-0">Rp</span>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     value={kasNominal}
-                    onChange={e => setKasNominal(e.target.value)}
+                    onChange={e => setKasNominal(formatIDRInput(e.target.value))}
                     placeholder="0"
                     autoFocus
                     className="flex-1 bg-transparent border-0 outline-none font-serif text-[20px] text-navy"

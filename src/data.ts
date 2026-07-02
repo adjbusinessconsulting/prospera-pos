@@ -29,3 +29,13 @@ export const getCatLabel = (cat: string) => CAT_MAP[cat] || cat;
 
 export const formatRp = (n: number) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
+
+export function formatIDRInput(raw: string): string {
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return '';
+  return parseInt(digits, 10).toLocaleString('id-ID');
+}
+
+export function parseIDRInput(formatted: string): number {
+  return parseInt(formatted.replace(/\./g, ''), 10) || 0;
+}

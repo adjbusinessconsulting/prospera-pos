@@ -1,8 +1,9 @@
 import { Search, X, Camera, Image as ImageIcon } from "lucide-react";
 import { useState, useRef } from "react";
 import { useStore } from "../store";
-import { PRODUCTS, getCatLabel, formatRp } from "../data";
+import { PRODUCTS, getCatLabel, formatRp, formatIDRInput, parseIDRInput } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
+import type { Product } from "../types";
 
 const SKU_MAP: Record<string, string> = {
   bp: "BRS001", bm: "MNY008", ig: "IDM012", is: "IDM013",
@@ -20,14 +21,15 @@ export default function Produk() {
   const [addPrice, setAddPrice] = useState("");
   const [addDesc, setAddDesc] = useState("");
   const [addPhoto, setAddPhoto] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([...PRODUCTS]);
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const { cashierInitials, setScreen, signOut } = useStore();
 
-  const filtered = PRODUCTS.filter(p =>
+  const filtered = products.filter(p =>
     !search || p.name.toLowerCase().includes(search.toLowerCase())
   );
-  const lowStockItems = PRODUCTS.filter(p => p.stock <= LOW_STOCK_THRESHOLD);
+  const lowStockItems = products.filter(p => p.stock <= LOW_STOCK_THRESHOLD);
   const canSave = addName.trim().length > 0 && addPrice.trim().length > 0;
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -47,6 +49,27 @@ export default function Produk() {
     setAddPhoto(null);
   }
 
+  function handleSave() {
+    if (!canSave) return;
+    const price = parseIDRInput(addPrice);
+    const words = addName.trim().split(/\s+/);
+    const monogram = words.length >= 2
+      ? (words[0][0].toUpperCase() + words[1][0].toLowerCase())
+      : addName.trim().slice(0, 2);
+    const newProduct: Product = {
+      id: `u${Date.now()}`,
+      name: addName.trim(),
+      monogram,
+      emoji: "📦",
+      category: "SBK",
+      unit: addDesc.trim() || "pcs",
+      price,
+      stock: 0,
+    };
+    setProducts(prev => [...prev, newProduct]);
+    closeModal();
+  }
+
   return (
     <div className="w-full h-full flex animate-screen-in bg-cream-bg">
       <AppSidebar active="produk" cashierInitials={cashierInitials} setScreen={setScreen} signOut={signOut} showDemoBack />
@@ -57,7 +80,7 @@ export default function Produk() {
         <div className="flex justify-between items-start px-5 lg:px-10 pt-5 lg:pt-8 pb-0 shrink-0 gap-3">
           <div className="min-w-0">
             <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute mb-1">
-              KATALOG · {PRODUCTS.length} ITEM
+              KATALOG · {products.length} ITEM
             </p>
             <h1 className="font-serif text-[24px] lg:text-display-l font-medium text-navy leading-tight">Produk toko</h1>
             <p className="text-[12px] text-text-mute mt-0.5 hidden lg:block">Kelola produk, harga, dan stok</p>
@@ -254,9 +277,10 @@ export default function Produk() {
                   style={{ borderColor: addPrice.trim() ? "#0B1129" : undefined }}>
                   <span className="font-serif text-[15px] text-text-mute font-medium shrink-0">Rp</span>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     value={addPrice}
-                    onChange={e => setAddPrice(e.target.value)}
+                    onChange={e => setAddPrice(formatIDRInput(e.target.value))}
                     placeholder="0"
                     className="flex-1 bg-transparent border-0 outline-none font-serif text-[16px] text-navy"
                     style={{ fontVariantNumeric: "tabular-nums" }}
@@ -290,7 +314,7 @@ export default function Produk() {
               </button>
               <button
                 disabled={!canSave}
-                onClick={closeModal}
+                onClick={handleSave}
                 className={`flex-1 rounded-card h-[46px] text-[13px] font-semibold border-0 transition-opacity ${canSave ? "bg-navy text-cream-text hover:opacity-90 cursor-pointer" : "bg-navy/20 text-navy/40 cursor-not-allowed"}`}>
                 Simpan Produk
               </button>
