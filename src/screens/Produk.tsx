@@ -1,7 +1,7 @@
 import { Search, X, Camera, Image as ImageIcon } from "lucide-react";
 import { useState, useRef } from "react";
 import { useStore } from "../store";
-import { PRODUCTS, getCatLabel, formatRp, formatIDRInput, parseIDRInput, CATEGORY_OPTIONS } from "../data";
+import { getCatLabel, formatRp, formatIDRInput, parseIDRInput, CATEGORY_OPTIONS } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import type { Product } from "../types";
 
@@ -22,10 +22,11 @@ export default function Produk() {
   const [addDesc, setAddDesc] = useState("");
   const [addPhoto, setAddPhoto] = useState<string | null>(null);
   const [addCategory, setAddCategory] = useState("SBK");
-  const [products, setProducts] = useState<Product[]>([...PRODUCTS]);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
-  const { cashierInitials, setScreen, signOut } = useStore();
+  const editPhotoRef = useRef<HTMLInputElement>(null);
+  const { cashierInitials, setScreen, signOut, products, addProduct, updateProduct } = useStore();
 
   const filtered = products.filter(p =>
     !search || p.name.toLowerCase().includes(search.toLowerCase())
@@ -40,6 +41,23 @@ export default function Produk() {
     reader.onload = () => setAddPhoto(reader.result as string);
     reader.readAsDataURL(file);
     e.target.value = "";
+  }
+
+  function handleEditPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !editingId) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      updateProduct(editingId, { photo: reader.result as string });
+      setEditingId(null);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  function openEditPhoto(id: string) {
+    setEditingId(id);
+    editPhotoRef.current?.click();
   }
 
   function closeModal() {
@@ -69,7 +87,7 @@ export default function Produk() {
       stock: 0,
       ...(addPhoto ? { photo: addPhoto } : {}),
     };
-    setProducts(prev => [...prev, newProduct]);
+    addProduct(newProduct);
     closeModal();
   }
 
@@ -149,14 +167,19 @@ export default function Produk() {
                   <tr key={p.id} className="border-b border-[#F2EDE3] hover:bg-cream-bg transition-colors">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        {p.photo ? (
-                          <img src={p.photo} alt={p.name} className="w-9 h-9 rounded-[8px] object-cover shrink-0 border border-warm-border" />
-                        ) : (
-                          <div className="w-9 h-9 rounded-[8px] flex items-center justify-center shrink-0"
-                            style={{ background: "linear-gradient(135deg, #F2EDE3, #E8DFC9)" }}>
-                            <span className="font-serif text-[13px] font-semibold text-navy/60">{p.monogram}</span>
+                        <button onClick={() => openEditPhoto(p.id)} title="Ubah foto" className="relative group shrink-0 rounded-[8px] overflow-hidden border-0 bg-transparent p-0 cursor-pointer">
+                          {p.photo ? (
+                            <img src={p.photo} alt={p.name} className="w-9 h-9 object-cover block" />
+                          ) : (
+                            <div className="w-9 h-9 flex items-center justify-center"
+                              style={{ background: "linear-gradient(135deg, #F2EDE3, #E8DFC9)" }}>
+                              <span className="font-serif text-[13px] font-semibold text-navy/60">{p.monogram}</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Camera size={12} strokeWidth={2} color="#fff" />
                           </div>
-                        )}
+                        </button>
                         <span className="text-[13px] font-medium text-navy">{p.name}</span>
                       </div>
                     </td>
@@ -192,14 +215,19 @@ export default function Produk() {
           <div className="lg:hidden flex flex-col gap-2">
             {filtered.map(p => (
               <div key={p.id} className="bg-white border border-warm-border rounded-card px-4 py-3 flex items-center gap-3">
-                {p.photo ? (
-                  <img src={p.photo} alt={p.name} className="w-10 h-10 rounded-[10px] object-cover shrink-0 border border-warm-border" />
-                ) : (
-                  <div className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0"
-                    style={{ background: "linear-gradient(135deg, #F2EDE3, #E8DFC9)" }}>
-                    <span className="font-serif text-[15px] font-semibold text-navy/60">{p.monogram}</span>
+                <button onClick={() => openEditPhoto(p.id)} className="relative shrink-0 rounded-[10px] overflow-hidden border-0 bg-transparent p-0 cursor-pointer">
+                  {p.photo ? (
+                    <img src={p.photo} alt={p.name} className="w-10 h-10 object-cover block" />
+                  ) : (
+                    <div className="w-10 h-10 flex items-center justify-center"
+                      style={{ background: "linear-gradient(135deg, #F2EDE3, #E8DFC9)" }}>
+                      <span className="font-serif text-[15px] font-semibold text-navy/60">{p.monogram}</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                    <Camera size={11} strokeWidth={2} color="rgba(255,255,255,0.85)" />
                   </div>
-                )}
+                </button>
                 <div className="flex-1 min-w-0">
                   <div className="text-[13px] font-medium text-navy">{p.name}</div>
                   <div className="text-[11px] text-text-mute">{getCatLabel(p.category)} · {SKU_MAP[p.id]}</div>
@@ -217,6 +245,7 @@ export default function Produk() {
       {/* Hidden file inputs */}
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
       <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      <input ref={editPhotoRef} type="file" accept="image/*" className="hidden" onChange={handleEditPhoto} />
 
       {/* Add Product Modal */}
       {showAddModal && (

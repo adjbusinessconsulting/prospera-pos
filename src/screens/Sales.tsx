@@ -1,7 +1,7 @@
 import { Search, User, ChevronUp, X } from "lucide-react";
 import { useState } from "react";
 import { useStore, getTotal, getItemCount, getTrxId } from "../store";
-import { PRODUCTS, CATEGORIES, getCatLabel, formatRp } from "../data";
+import { CATEGORIES, getCatLabel, formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 
 const SHIFT_LABELS: Record<1 | 2 | 3, string> = {
@@ -20,12 +20,12 @@ function FreePill() {
 
 export default function Sales() {
   const [cartOpen, setCartOpen] = useState(false);
-  const { cart, category, search, cashierName, cashierInitials, selectedShift, trxCounter, setCategory, setSearch, addToCart, updateQty, clearCart, setScreen, signOut } = useStore();
+  const { cart, category, search, cashierName, cashierInitials, selectedShift, trxCounter, products, setCategory, setSearch, addToCart, updateQty, clearCart, setScreen, signOut } = useStore();
   const total = getTotal(cart);
   const itemCount = getItemCount(cart);
   const trxId = getTrxId(trxCounter);
 
-  const filtered = PRODUCTS.filter(p => {
+  const filtered = products.filter(p => {
     const matchCat = category === "Semua" || getCatLabel(p.category) === category;
     const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
@@ -104,7 +104,7 @@ export default function Sales() {
             {CATEGORIES.map(c => (
               <button key={c} onClick={() => setCategory(c)}
                 className={`px-3.5 py-[7px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors ${category === c ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border"}`}>
-                {c === "Semua" ? `Semua · ${PRODUCTS.length}` : c}
+                {c === "Semua" ? `Semua · ${products.length}` : c}
               </button>
             ))}
           </div>
@@ -117,9 +117,12 @@ export default function Sales() {
                 return (
                   <button key={p.id} onClick={() => addToCart(p)}
                     className="bg-white border border-warm-border rounded-card p-2.5 text-left hover:border-navy/30 active:scale-[0.98] transition-all">
-                    <div className="relative aspect-square rounded-[9px] flex items-center justify-center mb-2.5"
+                    <div className="relative aspect-square rounded-[9px] overflow-hidden flex items-center justify-center mb-2.5"
                       style={{ background: "linear-gradient(135deg, #F2EDE3 0%, #E8DFC9 100%)" }}>
-                      <span className="text-[36px] lg:text-[30px] leading-none select-none">{p.emoji}</span>
+                      {p.photo
+                        ? <img src={p.photo} alt={p.name} className="absolute inset-0 w-full h-full object-cover" />
+                        : <span className="text-[36px] lg:text-[30px] leading-none select-none">{p.emoji}</span>
+                      }
                       <span className={`absolute top-1.5 left-2 text-[8.5px] ${p.stock <= 5 ? "text-warning" : "text-text-mute"}`} style={{ fontVariantNumeric: "tabular-nums" }}>×{p.stock}</span>
                       {qty > 0 && <span className="absolute top-1.5 right-1.5 bg-navy text-gold text-[9px] px-[7px] py-[3px] rounded-[5px] font-semibold" style={{ fontVariantNumeric: "tabular-nums" }}>×{qty}</span>}
                     </div>
@@ -159,9 +162,12 @@ export default function Sales() {
             {cart.length === 0 && <p className="text-center text-warm-dashed text-[13px] pt-10">Keranjang kosong</p>}
             {cart.map(item => (
               <div key={item.product.id} className="flex gap-3 py-3 border-b border-[#F2EDE3]">
-                <div className="w-10 h-10 rounded-thumb flex items-center justify-center shrink-0"
+                <div className="w-10 h-10 rounded-thumb flex items-center justify-center shrink-0 overflow-hidden"
                   style={{ background: "linear-gradient(135deg, #F2EDE3 0%, #E8DFC9 100%)" }}>
-                  <span className="text-[20px] leading-none">{item.product.emoji}</span>
+                  {item.product.photo
+                    ? <img src={item.product.photo} alt={item.product.name} className="w-full h-full object-cover" />
+                    : <span className="text-[20px] leading-none">{item.product.emoji}</span>
+                  }
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[12.5px] font-medium text-navy">{item.product.name}</div>
@@ -233,8 +239,11 @@ export default function Sales() {
                 {cart.length === 0 && <p className="text-center text-text-mute text-[13px] py-8">Keranjang kosong</p>}
                 {cart.map(item => (
                   <div key={item.product.id} className="flex gap-3 py-3 border-b border-[#F2EDE3]">
-                    <div className="w-10 h-10 rounded-thumb flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #F2EDE3 0%, #E8DFC9 100%)" }}>
-                      <span className="text-[20px] leading-none">{item.product.emoji}</span>
+                    <div className="w-10 h-10 rounded-thumb flex items-center justify-center shrink-0 overflow-hidden" style={{ background: "linear-gradient(135deg, #F2EDE3 0%, #E8DFC9 100%)" }}>
+                      {item.product.photo
+                        ? <img src={item.product.photo} alt={item.product.name} className="w-full h-full object-cover" />
+                        : <span className="text-[20px] leading-none">{item.product.emoji}</span>
+                      }
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-medium text-navy">{item.product.name}</div>

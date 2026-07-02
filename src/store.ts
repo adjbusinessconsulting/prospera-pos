@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { CartItem, CashierDB, Product, Screen } from './types';
+import { PRODUCTS } from './data';
 
 interface POSState {
   screen: Screen;
@@ -20,6 +21,7 @@ interface POSState {
   storeAddress: string;
   dbCashiers: CashierDB[];
   checkinPhoto: string | null;
+  products: Product[];
 
   setScreen: (s: Screen) => void;
   selectCashier: (id: string) => void;
@@ -38,6 +40,8 @@ interface POSState {
   restart: () => void;
   signOut: () => void;
   setCheckinPhoto: (photo: string) => void;
+  addProduct: (p: Product) => void;
+  updateProduct: (id: string, updates: Partial<Product>) => void;
   setStoreData: (id: string, name: string, address: string, cashiers: CashierDB[]) => void;
 }
 
@@ -67,6 +71,7 @@ export const useStore = create<POSState>((set) => ({
   storeAddress: '',
   dbCashiers: [],
   checkinPhoto: null,
+  products: [...PRODUCTS],
 
   setScreen: (screen) => set({ screen }),
 
@@ -127,6 +132,11 @@ export const useStore = create<POSState>((set) => ({
   }),
 
   setCheckinPhoto: (photo) => set({ checkinPhoto: photo }),
+  addProduct: (product) => set(s => ({ products: [...s.products, product] })),
+  updateProduct: (id, updates) => set(s => ({
+    products: s.products.map(p => p.id === id ? { ...p, ...updates } : p),
+    cart: s.cart.map(i => i.product.id === id ? { ...i, product: { ...i.product, ...updates } } : i),
+  })),
 
   setStoreData: (id, name, address, cashiers) => set({
     storeId: id,
