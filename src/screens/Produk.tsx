@@ -1,7 +1,7 @@
 import { Search, X, Camera, Image as ImageIcon } from "lucide-react";
 import { useState, useRef } from "react";
 import { useStore } from "../store";
-import { PRODUCTS, getCatLabel, formatRp, formatIDRInput, parseIDRInput } from "../data";
+import { PRODUCTS, getCatLabel, formatRp, formatIDRInput, parseIDRInput, CATEGORY_OPTIONS } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import type { Product } from "../types";
 
@@ -21,6 +21,7 @@ export default function Produk() {
   const [addPrice, setAddPrice] = useState("");
   const [addDesc, setAddDesc] = useState("");
   const [addPhoto, setAddPhoto] = useState<string | null>(null);
+  const [addCategory, setAddCategory] = useState("SBK");
   const [products, setProducts] = useState<Product[]>([...PRODUCTS]);
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
@@ -47,6 +48,7 @@ export default function Produk() {
     setAddPrice("");
     setAddDesc("");
     setAddPhoto(null);
+    setAddCategory("SBK");
   }
 
   function handleSave() {
@@ -61,10 +63,11 @@ export default function Produk() {
       name: addName.trim(),
       monogram,
       emoji: "📦",
-      category: "SBK",
-      unit: addDesc.trim() || "pcs",
+      category: addCategory,
+      unit: "pcs",
       price,
       stock: 0,
+      ...(addPhoto ? { photo: addPhoto } : {}),
     };
     setProducts(prev => [...prev, newProduct]);
     closeModal();
@@ -146,10 +149,14 @@ export default function Produk() {
                   <tr key={p.id} className="border-b border-[#F2EDE3] hover:bg-cream-bg transition-colors">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-[8px] flex items-center justify-center shrink-0"
-                          style={{ background: "linear-gradient(135deg, #F2EDE3, #E8DFC9)" }}>
-                          <span className="font-serif text-[13px] font-semibold text-navy/60">{p.monogram}</span>
-                        </div>
+                        {p.photo ? (
+                          <img src={p.photo} alt={p.name} className="w-9 h-9 rounded-[8px] object-cover shrink-0 border border-warm-border" />
+                        ) : (
+                          <div className="w-9 h-9 rounded-[8px] flex items-center justify-center shrink-0"
+                            style={{ background: "linear-gradient(135deg, #F2EDE3, #E8DFC9)" }}>
+                            <span className="font-serif text-[13px] font-semibold text-navy/60">{p.monogram}</span>
+                          </div>
+                        )}
                         <span className="text-[13px] font-medium text-navy">{p.name}</span>
                       </div>
                     </td>
@@ -185,10 +192,14 @@ export default function Produk() {
           <div className="lg:hidden flex flex-col gap-2">
             {filtered.map(p => (
               <div key={p.id} className="bg-white border border-warm-border rounded-card px-4 py-3 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0"
-                  style={{ background: "linear-gradient(135deg, #F2EDE3, #E8DFC9)" }}>
-                  <span className="font-serif text-[15px] font-semibold text-navy/60">{p.monogram}</span>
-                </div>
+                {p.photo ? (
+                  <img src={p.photo} alt={p.name} className="w-10 h-10 rounded-[10px] object-cover shrink-0 border border-warm-border" />
+                ) : (
+                  <div className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0"
+                    style={{ background: "linear-gradient(135deg, #F2EDE3, #E8DFC9)" }}>
+                    <span className="font-serif text-[15px] font-semibold text-navy/60">{p.monogram}</span>
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="text-[13px] font-medium text-navy">{p.name}</div>
                   <div className="text-[11px] text-text-mute">{getCatLabel(p.category)} · {SKU_MAP[p.id]}</div>
@@ -285,6 +296,24 @@ export default function Produk() {
                     className="flex-1 bg-transparent border-0 outline-none font-serif text-[16px] text-navy"
                     style={{ fontVariantNumeric: "tabular-nums" }}
                   />
+                </div>
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block mb-2.5">
+                  <span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">KATEGORI <span className="text-warning">*</span></span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORY_OPTIONS.map(c => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setAddCategory(c.id)}
+                      className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors cursor-pointer ${addCategory === c.id ? "bg-navy text-cream-text border-navy" : "bg-cream-bg text-navy border-warm-border hover:border-navy/40"}`}>
+                      {c.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 

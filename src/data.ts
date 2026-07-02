@@ -26,6 +26,14 @@ export const PRODUCTS: Product[] = [
 export const CATEGORIES = ['Semua', 'Sembako', 'Minuman', 'Snack', 'Rokok', 'Bumbu', 'Personal'];
 const CAT_MAP: Record<string, string> = { SBK: 'Sembako', MIN: 'Minuman', SNC: 'Snack', RKK: 'Rokok', BMB: 'Bumbu', PRS: 'Personal' };
 export const getCatLabel = (cat: string) => CAT_MAP[cat] || cat;
+export const CATEGORY_OPTIONS = [
+  { id: 'SBK', label: 'Sembako' },
+  { id: 'MIN', label: 'Minuman' },
+  { id: 'SNC', label: 'Snack' },
+  { id: 'RKK', label: 'Rokok' },
+  { id: 'BMB', label: 'Bumbu' },
+  { id: 'PRS', label: 'Personal' },
+];
 
 export const formatRp = (n: number) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);

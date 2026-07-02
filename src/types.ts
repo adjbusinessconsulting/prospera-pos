@@ -9,6 +9,7 @@ export interface Product {
   unit: string;
   price: number;
   stock: number;
+  photo?: string;
 }
 
 export interface CartItem {
