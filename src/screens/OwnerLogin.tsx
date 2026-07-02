@@ -6,7 +6,7 @@ import type { CashierDB } from "../types";
 const DAY_ID = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
 export default function OwnerLogin() {
-  const { setScreen, setStoreData } = useStore();
+  const { setScreen, setStoreData, setProductsFromDB, setTrxCounter } = useStore();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [loginAs, setLoginAs] = useState<"toko" | "backoffice">("toko");
   const [email, setEmail] = useState("");
@@ -73,6 +73,13 @@ export default function OwnerLogin() {
           .eq("store_id", store.id)
           .eq("active", true);
         setStoreData(store.id, store.name, store.address || "", (cashierRows ?? []) as CashierDB[], store.phone || "");
+
+        const [{ data: productRows }, { count: saleCount }] = await Promise.all([
+          supabase.from("products").select("*").eq("store_id", store.id).eq("active", true).order("name"),
+          supabase.from("sales").select("*", { count: "exact", head: true }).eq("store_id", store.id),
+        ]);
+        if (productRows && productRows.length > 0) setProductsFromDB(productRows as import("../types").Product[]);
+        setTrxCounter((saleCount ?? 0) + 1);
       }
     }
     setScreen("login");

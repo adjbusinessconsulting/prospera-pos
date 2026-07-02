@@ -1,85 +1,98 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
-
-const TODAY = [
-  { trxId: "#TRX-0042", date: "Hari ini",   time: "14:32", cashier: "AE", cashierName: "Aerith D.",   items: 3, total: 89000,  method: "Tunai",    shift: 2 },
-  { trxId: "#TRX-0041", date: "Hari ini",   time: "13:15", cashier: "ST", cashierName: "Stevany C.",  items: 1, total: 38000,  method: "QRIS",     shift: 2 },
-  { trxId: "#TRX-0040", date: "Hari ini",   time: "12:47", cashier: "AE", cashierName: "Aerith D.",   items: 5, total: 152500, method: "Tunai",    shift: 2 },
-  { trxId: "#TRX-0039", date: "Hari ini",   time: "11:30", cashier: "AN", cashierName: "Anthony D.",  items: 2, total: 43000,  method: "Debit",    shift: 1 },
-  { trxId: "#TRX-0038", date: "Hari ini",   time: "10:52", cashier: "ST", cashierName: "Stevany C.",  items: 4, total: 67000,  method: "Tunai",    shift: 1 },
-  { trxId: "#TRX-0037", date: "Hari ini",   time: "10:21", cashier: "AE", cashierName: "Aerith D.",   items: 2, total: 11000,  method: "QRIS",     shift: 1 },
-  { trxId: "#TRX-0036", date: "Hari ini",   time: "09:44", cashier: "AN", cashierName: "Anthony D.",  items: 7, total: 228500, method: "Tunai",    shift: 1 },
-  { trxId: "#TRX-0035", date: "Hari ini",   time: "09:10", cashier: "AE", cashierName: "Aerith D.",   items: 1, total: 75000,  method: "Transfer", shift: 1 },
-];
-
-const YESTERDAY = [
-  { trxId: "#TRX-0034", date: "Kemarin",    time: "16:05", cashier: "ST", cashierName: "Stevany C.",  items: 3, total: 54000,  method: "QRIS",     shift: 2 },
-  { trxId: "#TRX-0033", date: "Kemarin",    time: "14:20", cashier: "AE", cashierName: "Aerith D.",   items: 6, total: 187000, method: "Tunai",    shift: 2 },
-  { trxId: "#TRX-0032", date: "Kemarin",    time: "12:08", cashier: "AN", cashierName: "Anthony D.",  items: 2, total: 29000,  method: "Debit",    shift: 1 },
-  { trxId: "#TRX-0031", date: "Kemarin",    time: "10:44", cashier: "AE", cashierName: "Aerith D.",   items: 4, total: 96500,  method: "Tunai",    shift: 1 },
-  { trxId: "#TRX-0030", date: "Kemarin",    time: "09:30", cashier: "ST", cashierName: "Stevany C.",  items: 1, total: 38000,  method: "QRIS",     shift: 1 },
-];
-
-const WEEK_EXTRA = [
-  { trxId: "#TRX-0029", date: "2 hari lalu", time: "15:11", cashier: "AN", cashierName: "Anthony D.",  items: 5, total: 143000, method: "Tunai",    shift: 2 },
-  { trxId: "#TRX-0028", date: "2 hari lalu", time: "11:33", cashier: "AE", cashierName: "Aerith D.",   items: 2, total: 47000,  method: "Transfer", shift: 1 },
-  { trxId: "#TRX-0027", date: "3 hari lalu", time: "13:45", cashier: "ST", cashierName: "Stevany C.",  items: 8, total: 312000, method: "Tunai",    shift: 2 },
-  { trxId: "#TRX-0026", date: "4 hari lalu", time: "10:20", cashier: "AE", cashierName: "Aerith D.",   items: 3, total: 67500,  method: "QRIS",     shift: 1 },
-  { trxId: "#TRX-0025", date: "5 hari lalu", time: "09:55", cashier: "AN", cashierName: "Anthony D.",  items: 1, total: 75000,  method: "Debit",    shift: 1 },
-];
-
-const MONTH_EXTRA = [
-  { trxId: "#TRX-0024", date: "8 hari lalu",  time: "14:00", cashier: "AE", cashierName: "Aerith D.",   items: 4, total: 128000, method: "Tunai",    shift: 2 },
-  { trxId: "#TRX-0023", date: "10 hari lalu", time: "11:20", cashier: "ST", cashierName: "Stevany C.",  items: 2, total: 59000,  method: "QRIS",     shift: 1 },
-  { trxId: "#TRX-0022", date: "14 hari lalu", time: "10:05", cashier: "AN", cashierName: "Anthony D.",  items: 6, total: 215500, method: "Tunai",    shift: 1 },
-  { trxId: "#TRX-0021", date: "20 hari lalu", time: "15:30", cashier: "AE", cashierName: "Aerith D.",   items: 3, total: 91000,  method: "Debit",    shift: 2 },
-  { trxId: "#TRX-0020", date: "25 hari lalu", time: "09:15", cashier: "ST", cashierName: "Stevany C.",  items: 5, total: 176000, method: "Tunai",    shift: 1 },
-];
-
-const FILTER_DATA = [
-  TODAY,
-  YESTERDAY,
-  [...TODAY, ...YESTERDAY, ...WEEK_EXTRA],
-  [...TODAY, ...YESTERDAY, ...WEEK_EXTRA, ...MONTH_EXTRA],
-];
+import { supabase } from "../lib/supabase";
+import type { SaleRecord } from "../types";
 
 const FILTER_LABELS = [
-  { label: "Hari ini", tier: null as string | null },
-  { label: "Kemarin",  tier: "STD" },
-  { label: "7 hari",   tier: "STD" },
-  { label: "30 hari",  tier: "STD" },
+  { label: "Hari ini",  days: 0,  tier: null as string | null },
+  { label: "Kemarin",   days: 1,  tier: "STD" },
+  { label: "7 hari",    days: 7,  tier: "STD" },
+  { label: "30 hari",   days: 30, tier: "STD" },
 ];
 
-const SHIFT_LABELS: Record<1 | 2 | 3, string> = { 1: "Shift 1 · Pagi", 2: "Shift 2 · Siang", 3: "Shift 3 · Malam" };
+const SHIFT_LABELS: Record<number, string> = { 1: "Shift 1 · Pagi", 2: "Shift 2 · Siang", 3: "Shift 3 · Malam" };
 
 const METHOD_COLOR: Record<string, string> = {
-  Tunai: "#5C9E7E", QRIS: "#0B1129", Debit: "#7A776F", Transfer: "#7A776F",
+  tunai: "#5C9E7E", Tunai: "#5C9E7E",
+  qris: "#0B1129",  QRIS: "#0B1129",
+  debit: "#7A776F", Debit: "#7A776F",
+  transfer: "#7A776F", Transfer: "#7A776F",
 };
 
+function fmtTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+}
+function fmtDate(iso: string) {
+  const d = new Date(iso);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const yest = new Date(today); yest.setDate(yest.getDate() - 1);
+  const day = new Date(d); day.setHours(0,0,0,0);
+  if (day.getTime() === today.getTime()) return "Hari ini";
+  if (day.getTime() === yest.getTime()) return "Kemarin";
+  return d.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+}
+function methodLabel(m: string) {
+  return m.charAt(0).toUpperCase() + m.slice(1).toLowerCase();
+}
+
 export default function Riwayat() {
-  const { cashierInitials, selectedShift, storePhone, setScreen, signOut } = useStore();
+  const { cashierInitials, selectedShift, storeId, storePhone, setScreen, signOut } = useStore();
+  const [sales, setSales]           = useState<SaleRecord[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
   const [activeFilter, setActiveFilter] = useState(0);
   const [methodFilter, setMethodFilter] = useState("Semua");
-  const [shiftFilter, setShiftFilter] = useState("Semua");
-  const [kasirFilter, setKasirFilter] = useState("Semua");
+  const [shiftFilter, setShiftFilter]   = useState("Semua");
+  const [kasirFilter, setKasirFilter]   = useState("Semua");
   const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const trxAll = FILTER_DATA[activeFilter];
+  useEffect(() => {
+    if (!storeId) { setLoadingData(false); return; }
+    const from = new Date();
+    from.setDate(from.getDate() - 30);
+    from.setHours(0, 0, 0, 0);
+    supabase
+      .from("sales")
+      .select("*, sale_items(*)")
+      .eq("store_id", storeId)
+      .gte("created_at", from.toISOString())
+      .order("created_at", { ascending: false })
+      .limit(500)
+      .then(({ data }) => {
+        setSales((data as SaleRecord[]) ?? []);
+        setLoadingData(false);
+      });
+  }, [storeId]);
 
-  const filtered = trxAll.filter(t => {
-    const matchMethod = methodFilter === "Semua" || t.method === methodFilter;
-    const matchShift = shiftFilter === "Semua" || t.shift === parseInt(shiftFilter);
-    const matchKasir = kasirFilter === "Semua" || t.cashier === kasirFilter;
+  function filterByDays(list: SaleRecord[], days: number) {
+    if (days === 0) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      return list.filter(s => new Date(s.created_at) >= today);
+    }
+    if (days === 1) {
+      const yest = new Date(); yest.setDate(yest.getDate() - 1); yest.setHours(0,0,0,0);
+      const today = new Date(); today.setHours(0,0,0,0);
+      return list.filter(s => { const d = new Date(s.created_at); return d >= yest && d < today; });
+    }
+    const from = new Date(); from.setDate(from.getDate() - (days - 1)); from.setHours(0,0,0,0);
+    return list.filter(s => new Date(s.created_at) >= from);
+  }
+
+  const periodSales = filterByDays(sales, FILTER_LABELS[activeFilter].days);
+
+  const filtered = periodSales.filter(s => {
+    const m = methodLabel(s.payment_method);
+    const matchMethod = methodFilter === "Semua" || m === methodFilter;
+    const matchShift  = shiftFilter === "Semua" || s.shift === parseInt(shiftFilter);
+    const matchKasir  = kasirFilter === "Semua" || s.cashier_name === kasirFilter;
     return matchMethod && matchShift && matchKasir;
   });
 
   const total = filtered.reduce((s, t) => s + t.total, 0);
   const avg = filtered.length > 0 ? Math.round(total / filtered.length) : 0;
 
-  const tunaiCount = trxAll.filter(t => t.method === "Tunai").length;
-  const qrisCount = trxAll.filter(t => t.method === "QRIS").length;
+  const uniqueCashiers = [...new Set(sales.map(s => s.cashier_name).filter(Boolean))];
 
   const now = new Date();
   const hoursLeft = 23 - now.getHours();
@@ -89,7 +102,8 @@ export default function Riwayat() {
     const period = FILTER_LABELS[activeFilter].label;
     const header = ["No", "TRX ID", "Tanggal", "Jam", "Kasir", "Item", "Total (Rp)", "Metode", "Shift"];
     const rows = filtered.map((t, i) => [
-      i + 1, t.trxId, t.date, t.time, t.cashierName, t.items, t.total, t.method, `Shift ${t.shift}`,
+      i + 1, t.trx_id, fmtDate(t.created_at), fmtTime(t.created_at), t.cashier_name,
+      t.sale_items?.length ?? 0, t.total, methodLabel(t.payment_method), `Shift ${t.shift}`,
     ]);
     const BOM = "﻿";
     const csv = BOM + [header, ...rows].map(r => r.join(",")).join("\n");
@@ -114,7 +128,7 @@ export default function Riwayat() {
       `Transaksi: ${filtered.length}  |  Rata-rata: ${formatRp(avg)}`,
       ``,
       `*Detail Transaksi:*`,
-      ...filtered.map(t => `• ${t.trxId}  ${t.time}  ${t.cashierName}  ${t.method}  ${formatRp(t.total)}`),
+      ...filtered.map(t => `• ${t.trx_id}  ${fmtTime(t.created_at)}  ${t.cashier_name}  ${methodLabel(t.payment_method)}  ${formatRp(t.total)}`),
     ];
     const text = encodeURIComponent(lines.join("\n"));
     const phone = storePhone.replace(/\D/g, "").replace(/^0/, "62");
@@ -126,9 +140,9 @@ export default function Riwayat() {
     const period = FILTER_LABELS[activeFilter].label;
     const rows = filtered.map((t, i) => `
       <tr>
-        <td>${i + 1}</td><td>${t.trxId}</td><td>${t.date}</td><td>${t.time}</td>
-        <td>${t.cashierName}</td><td style="text-align:center">${t.items}</td>
-        <td style="text-align:right">${formatRp(t.total)}</td><td>${t.method}</td><td>Shift ${t.shift}</td>
+        <td>${i + 1}</td><td>${t.trx_id}</td><td>${fmtDate(t.created_at)}</td><td>${fmtTime(t.created_at)}</td>
+        <td>${t.cashier_name}</td><td style="text-align:center">${t.sale_items?.length ?? 0}</td>
+        <td style="text-align:right">${formatRp(t.total)}</td><td>${methodLabel(t.payment_method)}</td><td>Shift ${t.shift}</td>
       </tr>`).join("");
     const printed = new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
     const html = `<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"/>
@@ -170,15 +184,9 @@ export default function Riwayat() {
   }
 
   const selectStyle: React.CSSProperties = {
-    background: "white",
-    border: "1px solid #ECE7DD",
-    borderRadius: 8,
-    padding: "6px 32px 6px 10px",
-    fontSize: 12,
-    color: "#0B1129",
-    appearance: "none" as const,
-    outline: "none",
-    cursor: "pointer",
+    background: "white", border: "1px solid #ECE7DD", borderRadius: 8,
+    padding: "6px 32px 6px 10px", fontSize: 12, color: "#0B1129",
+    appearance: "none" as const, outline: "none", cursor: "pointer",
   };
 
   return (
@@ -187,7 +195,7 @@ export default function Riwayat() {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-        {/* Header + tabs */}
+        {/* Header */}
         <div className="px-5 lg:px-10 pt-5 lg:pt-7 pb-0 shrink-0">
           <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute mb-0.5">LAPORAN</p>
           <div className="flex items-start justify-between gap-2">
@@ -221,7 +229,7 @@ export default function Riwayat() {
           ))}
         </div>
 
-        {/* Shift / Kasir dropdowns — own row on all screen sizes */}
+        {/* Filters row */}
         <div className="flex gap-2 px-5 lg:px-10 pt-2 pb-0 shrink-0">
           <div style={{ position: "relative" }}>
             <select value={shiftFilter} onChange={e => setShiftFilter(e.target.value)} style={selectStyle}>
@@ -235,15 +243,13 @@ export default function Riwayat() {
           <div style={{ position: "relative" }}>
             <select value={kasirFilter} onChange={e => setKasirFilter(e.target.value)} style={selectStyle}>
               <option value="Semua">Kasir: Semua</option>
-              <option value="AE">Aerith D.</option>
-              <option value="ST">Stevany C.</option>
-              <option value="AN">Anthony D.</option>
+              {uniqueCashiers.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <svg style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
           </div>
         </div>
 
-        {/* FREE expiry banner */}
+        {/* Free expiry banner */}
         {activeFilter === 0 && (
           <div className="mx-5 lg:mx-10 mt-3 shrink-0 flex items-center justify-between gap-3 px-4 py-3 rounded-card border border-dashed"
             style={{ borderColor: "rgba(201,165,95,0.45)", background: "rgba(201,165,95,0.06)" }}>
@@ -251,7 +257,7 @@ export default function Riwayat() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
               <p className="text-[12px] text-navy">
                 <span className="font-semibold">Free tier</span> — riwayat 1 hari.
-                <span className="text-text-mute"> Transaksi hari ini hilang setelah {hoursLeft}j {minsLeft}m. Upgrade Standard untuk simpan 3 hari.</span>
+                <span className="text-text-mute"> Transaksi hari ini hilang setelah {hoursLeft}j {minsLeft}m. Upgrade Standard untuk simpan 30 hari.</span>
               </p>
             </div>
             <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>
@@ -285,9 +291,7 @@ export default function Riwayat() {
               <span className="text-[11.5px] font-medium text-white">Export</span>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ opacity: 0.7 }}><path d="M6 9l6 6 6-6" /></svg>
             </button>
-            <span style={{ position: "absolute", top: -7, right: -2, background: "rgba(201,165,95,0.20)", border: "1px solid rgba(201,165,95,0.5)", color: "#C9A55F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 600, padding: "1px 4px", borderRadius: 3, textTransform: "uppercase" as const }}>
-              STD
-            </span>
+            <span style={{ position: "absolute", top: -7, right: -2, background: "rgba(201,165,95,0.20)", border: "1px solid rgba(201,165,95,0.5)", color: "#C9A55F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 600, padding: "1px 4px", borderRadius: 3, textTransform: "uppercase" as const }}>STD</span>
             {showExportMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)} />
@@ -317,11 +321,12 @@ export default function Riwayat() {
         {/* Method pills */}
         <div className="flex gap-2 px-5 lg:px-10 pt-3 pb-0 shrink-0 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           {[
-            { key: "Semua",  count: trxAll.length },
-            { key: "Tunai",  count: tunaiCount },
-            { key: "QRIS",   count: qrisCount },
-            { key: "Debit",  count: trxAll.filter(t => t.method === "Debit").length },
-          ].map(m => (
+            { key: "Semua",    count: periodSales.length },
+            { key: "Tunai",    count: periodSales.filter(t => t.payment_method.toLowerCase() === "tunai").length },
+            { key: "QRIS",     count: periodSales.filter(t => t.payment_method.toLowerCase() === "qris").length },
+            { key: "Debit",    count: periodSales.filter(t => t.payment_method.toLowerCase() === "debit").length },
+            { key: "Transfer", count: periodSales.filter(t => t.payment_method.toLowerCase() === "transfer").length },
+          ].filter(m => m.key === "Semua" || m.count > 0).map(m => (
             <button key={m.key} onClick={() => setMethodFilter(m.key)}
               className={`px-3.5 py-[6px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors cursor-pointer ${methodFilter === m.key ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border hover:border-navy/40"}`}>
               {m.key} · {m.count}
@@ -329,70 +334,92 @@ export default function Riwayat() {
           ))}
         </div>
 
-        {/* Desktop table / Mobile cards */}
+        {/* Table / Cards */}
         <div className="flex-1 overflow-auto px-5 lg:px-10 pt-3 pb-4 lg:pb-6">
 
-          {/* Desktop: table */}
-          <div className="hidden lg:block bg-white border border-warm-border rounded-card overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-warm-border">
-                  <th className="text-left px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">NO. TRX</th>
-                  <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Waktu</th>
-                  <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Kasir</th>
-                  <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Item</th>
-                  <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Metode</th>
-                  <th className="text-right px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((t, i) => (
-                  <tr key={t.trxId} className={`border-b border-[#F2EDE3] hover:bg-cream-bg transition-colors cursor-pointer ${i === 0 ? "bg-gold-soft" : ""}`}>
-                    <td className="px-5 py-3.5">
-                      <span className="font-sans text-[12.5px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{t.trxId}</span>
-                    </td>
-                    <td className="px-4 py-3.5 text-[12px] text-text-mute" style={{ fontVariantNumeric: "tabular-nums" }}>
-                      <div>{t.time}</div>
-                      {activeFilter > 0 && <div style={{ fontSize: 10, color: "#B0A99A" }}>{t.date}</div>}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-cream-pill border border-warm-border flex items-center justify-center text-[9px] font-semibold text-navy">{t.cashier}</span>
-                        <span className="text-[12.5px] text-navy">{t.cashierName}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5 text-[12px] text-text-mute">{t.items} item</td>
-                    <td className="px-4 py-3.5">
-                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: `${METHOD_COLOR[t.method] || "#7A776F"}14`, color: METHOD_COLOR[t.method] || "#7A776F" }}>{t.method}</span>
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <span className="font-serif text-[14px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {loadingData && (
+            <div style={{ padding: "48px 0", textAlign: "center", color: "#B8B0A8", fontSize: 13 }}>Memuat data…</div>
+          )}
 
-          {/* Mobile: cards */}
-          <div className="lg:hidden flex flex-col gap-2.5">
-            {filtered.map(t => (
-              <div key={t.trxId} className="bg-white border border-warm-border rounded-card px-4 py-3.5">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="font-sans text-[13px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{t.trxId}</span>
-                    <p className="text-[11px] text-text-mute mt-0.5">
-                      {activeFilter > 0 && <span>{t.date} · </span>}{t.time} · {t.cashierName} · {t.items} item
-                    </p>
+          {!loadingData && filtered.length === 0 && (
+            <div style={{ padding: "60px 0", textAlign: "center" }}>
+              <p className="font-serif text-[20px] font-medium text-navy mb-2">Belum ada transaksi</p>
+              <p style={{ fontSize: 13, color: "#7A776F" }}>Transaksi yang diselesaikan akan muncul di sini.</p>
+            </div>
+          )}
+
+          {/* Desktop table */}
+          {!loadingData && filtered.length > 0 && (
+            <div className="hidden lg:block bg-white border border-warm-border rounded-card overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-warm-border">
+                    <th className="text-left px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">NO. TRX</th>
+                    <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Waktu</th>
+                    <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Kasir</th>
+                    <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Item</th>
+                    <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Metode</th>
+                    <th className="text-right px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((t, i) => {
+                    const m = methodLabel(t.payment_method);
+                    const initials = (t.cashier_name || "?").split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+                    return (
+                      <tr key={t.id} className={`border-b border-[#F2EDE3] hover:bg-cream-bg transition-colors cursor-pointer ${i === 0 ? "bg-gold-soft" : ""}`}>
+                        <td className="px-5 py-3.5">
+                          <span className="font-sans text-[12.5px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{t.trx_id}</span>
+                        </td>
+                        <td className="px-4 py-3.5 text-[12px] text-text-mute" style={{ fontVariantNumeric: "tabular-nums" }}>
+                          <div>{fmtTime(t.created_at)}</div>
+                          {activeFilter > 0 && <div style={{ fontSize: 10, color: "#B0A99A" }}>{fmtDate(t.created_at)}</div>}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-full bg-cream-pill border border-warm-border flex items-center justify-center text-[9px] font-semibold text-navy">{initials}</span>
+                            <span className="text-[12.5px] text-navy">{t.cashier_name}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 text-[12px] text-text-mute">{t.sale_items?.length ?? 0} item</td>
+                        <td className="px-4 py-3.5">
+                          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: `${METHOD_COLOR[m] || "#7A776F"}14`, color: METHOD_COLOR[m] || "#7A776F" }}>{m}</span>
+                        </td>
+                        <td className="px-5 py-3.5 text-right">
+                          <span className="font-serif text-[14px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Mobile cards */}
+          {!loadingData && filtered.length > 0 && (
+            <div className="lg:hidden flex flex-col gap-2.5">
+              {filtered.map(t => {
+                const m = methodLabel(t.payment_method);
+                return (
+                  <div key={t.id} className="bg-white border border-warm-border rounded-card px-4 py-3.5">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="font-sans text-[13px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{t.trx_id}</span>
+                        <p className="text-[11px] text-text-mute mt-0.5">
+                          {activeFilter > 0 && <span>{fmtDate(t.created_at)} · </span>}{fmtTime(t.created_at)} · {t.cashier_name} · {t.sale_items?.length ?? 0} item
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-serif text-[16px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</p>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: `${METHOD_COLOR[m] || "#7A776F"}14`, color: METHOD_COLOR[m] || "#7A776F" }}>{m}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-serif text-[16px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</p>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: `${METHOD_COLOR[t.method] || "#7A776F"}14`, color: METHOD_COLOR[t.method] || "#7A776F" }}>{t.method}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

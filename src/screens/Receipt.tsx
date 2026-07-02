@@ -2,6 +2,7 @@ import { useStore, getTotal, getTrxId } from "../store";
 import { formatRp } from "../data";
 import { Printer, Check, ChevronLeft } from "lucide-react";
 import { AppSidebar } from "../components/AppSidebar";
+import { supabase } from "../lib/supabase";
 
 function SterithWatermark() {
   return (
@@ -16,7 +17,7 @@ function SterithWatermark() {
 }
 
 export default function Receipt() {
-  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, trxCounter, restart, setScreen, signOut } = useStore();
+  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, trxCounter, paymentMethod, selectedCashier, storeId, restart, setScreen, signOut } = useStore();
   const total = getTotal(cart);
   const change = cashReceived - total;
   const trxId = getTrxId(trxCounter);
@@ -26,6 +27,35 @@ export default function Receipt() {
   const dateStr = now.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
   const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
   const SHIFT_LABELS: Record<1 | 2 | 3, string> = { 1: "Shift 1 (Pagi)", 2: "Shift 2 (Siang)", 3: "Shift 3 (Malam)" };
+
+  async function handleNewTrx() {
+    if (storeId) {
+      const { data: sale } = await supabase.from("sales").insert({
+        store_id: storeId,
+        trx_id: trxId,
+        cashier_id: selectedCashier,
+        cashier_name: cashierName,
+        shift: selectedShift,
+        total,
+        payment_method: paymentMethod,
+        cash_received: cashReceived,
+        change_amount: change,
+      }).select("id").single();
+      if (sale?.id) {
+        await supabase.from("sale_items").insert(
+          cart.map(i => ({
+            sale_id: sale.id,
+            product_id: i.product.id,
+            product_name: i.product.name,
+            price: i.product.price,
+            qty: i.qty,
+            subtotal: i.product.price * i.qty,
+          }))
+        );
+      }
+    }
+    restart();
+  }
 
   const waText = encodeURIComponent(
     `*Struk dari Toko Sembako Maju*\nNo: ${trxId}\nTanggal: ${dateStr} ${timeStr}\n\n` +
@@ -177,7 +207,7 @@ export default function Receipt() {
 
       {/* Bottom: full-width Transaksi Baru */}
       <div className="px-6 lg:px-8 pb-6 lg:pb-8 pt-3 shrink-0">
-        <button onClick={restart}
+        <button onClick={handleNewTrx}
           className="w-full bg-navy rounded-card h-[54px] flex items-center justify-center gap-3 text-[14px] font-semibold text-cream-text hover:opacity-90 transition-opacity cursor-pointer border-0">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
           TRANSAKSI BARU — {nextTrxId}

@@ -40,3 +40,25 @@ export interface StoreData {
   name: string;
   address: string;
 }
+
+export interface SaleItem {
+  product_id: string;
+  product_name: string;
+  price: number;
+  qty: number;
+  subtotal: number;
+}
+
+export interface SaleRecord {
+  id: string;
+  trx_id: string;
+  cashier_id: string;
+  cashier_name: string;
+  shift: number;
+  total: number;
+  payment_method: string;
+  cash_received: number;
+  change_amount: number;
+  created_at: string;
+  sale_items: SaleItem[];
+}

@@ -41,9 +41,13 @@ interface POSState {
   restart: () => void;
   signOut: () => void;
   setCheckinPhoto: (photo: string) => void;
+  setProductsFromDB: (products: Product[]) => void;
+  setTrxCounter: (n: number) => void;
   addProduct: (p: Product) => void;
   updateProduct: (id: string, updates: Partial<Product>) => void;
   setStoreData: (id: string, name: string, address: string, cashiers: CashierDB[], phone?: string) => void;
+  setProductsFromDB: (products: Product[]) => void;
+  setTrxCounter: (n: number) => void;
 }
 
 function currentShiftFromTime(): 1 | 2 | 3 {
@@ -134,6 +138,8 @@ export const useStore = create<POSState>((set) => ({
   }),
 
   setCheckinPhoto: (photo) => set({ checkinPhoto: photo }),
+  setProductsFromDB: (products) => set({ products }),
+  setTrxCounter: (n) => set({ trxCounter: n }),
   addProduct: (product) => set(s => ({ products: [...s.products, product] })),
   updateProduct: (id, updates) => set(s => ({
     products: s.products.map(p => p.id === id ? { ...p, ...updates } : p),

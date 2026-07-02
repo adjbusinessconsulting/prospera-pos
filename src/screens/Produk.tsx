@@ -1,6 +1,7 @@
 import { Search, X, Camera, Image as ImageIcon } from "lucide-react";
 import { useState, useRef } from "react";
 import { useStore } from "../store";
+import { supabase } from "../lib/supabase";
 import { getCatLabel, formatRp, formatIDRInput, parseIDRInput, CATEGORY_OPTIONS } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import type { Product } from "../types";
@@ -26,7 +27,7 @@ export default function Produk() {
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
-  const { cashierInitials, setScreen, signOut, products, addProduct, updateProduct } = useStore();
+  const { cashierInitials, setScreen, signOut, storeId, products, addProduct, updateProduct } = useStore();
 
   const filtered = products.filter(p =>
     !search || p.name.toLowerCase().includes(search.toLowerCase())
@@ -88,6 +89,14 @@ export default function Produk() {
       ...(addPhoto ? { photo: addPhoto } : {}),
     };
     addProduct(newProduct);
+    if (storeId) {
+      supabase.from("products").insert({
+        id: newProduct.id, store_id: storeId,
+        name: newProduct.name, monogram: newProduct.monogram,
+        emoji: newProduct.emoji, category: newProduct.category,
+        unit: newProduct.unit, price: newProduct.price, stock: 0,
+      });
+    }
     closeModal();
   }
 
