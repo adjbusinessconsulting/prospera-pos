@@ -19,6 +19,7 @@ interface POSState {
   storeName: string;
   storeAddress: string;
   dbCashiers: CashierDB[];
+  checkinPhoto: string | null;
 
   setScreen: (s: Screen) => void;
   selectCashier: (id: string) => void;
@@ -36,6 +37,7 @@ interface POSState {
   addCash: (n: number) => void;
   restart: () => void;
   signOut: () => void;
+  setCheckinPhoto: (photo: string) => void;
   setStoreData: (id: string, name: string, address: string, cashiers: CashierDB[]) => void;
 }
 
@@ -64,6 +66,7 @@ export const useStore = create<POSState>((set) => ({
   storeName: '',
   storeAddress: '',
   dbCashiers: [],
+  checkinPhoto: null,
 
   setScreen: (screen) => set({ screen }),
 
@@ -122,6 +125,8 @@ export const useStore = create<POSState>((set) => ({
     dbCashiers: [],
     trxCounter: 42,
   }),
+
+  setCheckinPhoto: (photo) => set({ checkinPhoto: photo }),
 
   setStoreData: (id, name, address, cashiers) => set({
     storeId: id,

@@ -11,6 +11,7 @@ import Kas from "./screens/Kas";
 import Laporan from "./screens/Laporan";
 import PindahShift from "./screens/PindahShift";
 import TutupToko from "./screens/TutupToko";
+import CheckIn from "./screens/CheckIn";
 
 const DEMO_CASHIER = {
   id: "ae",
@@ -56,9 +57,8 @@ export default function App() {
     }
   }, []);
 
-  if (screen === "owner-login") {
-    return <OwnerLogin />;
-  }
+  if (screen === "owner-login") return <OwnerLogin />;
+  if (screen === "checkin")     return <CheckIn />;
 
   if (isMobile) {
     return (

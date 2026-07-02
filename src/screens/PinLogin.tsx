@@ -35,10 +35,10 @@ export default function PinLogin() {
 
   function handleLogin() {
     setPinError("");
-    if (dbCashiers.length === 0) { setScreen("sales"); return; }
+    if (dbCashiers.length === 0) { setScreen("checkin"); return; }
     const cashier = dbCashiers.find(c => c.id === selectedCashier);
     if (!cashier) return;
-    if (cashier.pin === pin) { setScreen("sales"); }
+    if (cashier.pin === pin) { setScreen("checkin"); }
     else { setPinError("PIN salah. Coba lagi."); clearPin(); }
   }
 

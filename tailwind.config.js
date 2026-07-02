@@ -24,7 +24,7 @@ export default {
       fontFamily: {
         sans:  ['Inter', 'system-ui', 'sans-serif'],
         serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
-        mono:  ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        mono:  ['Inter', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         stepper: '6px',
