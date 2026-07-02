@@ -84,6 +84,25 @@ export default function Riwayat() {
   const hoursLeft = 23 - now.getHours();
   const minsLeft = 59 - now.getMinutes();
 
+  function exportCSV() {
+    const period = FILTER_LABELS[activeFilter].label;
+    const header = ["No", "TRX ID", "Tanggal", "Jam", "Kasir", "Item", "Total (Rp)", "Metode", "Shift"];
+    const rows = filtered.map((t, i) => [
+      i + 1, t.trxId, t.date, t.time, t.cashierName, t.items, t.total, t.method, `Shift ${t.shift}`,
+    ]);
+    const BOM = "﻿";
+    const csv = BOM + [header, ...rows].map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `sterith-riwayat-${period.toLowerCase().replace(/ /g, "-")}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   const selectStyle: React.CSSProperties = {
     background: "white",
     border: "1px solid #ECE7DD",
@@ -194,7 +213,7 @@ export default function Riwayat() {
             <p className="font-serif text-[18px] lg:text-[20px] font-semibold text-cream-text">{SHIFT_LABELS[selectedShift]}</p>
           </div>
           <div className="ml-auto relative">
-            <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors border-0 rounded-[8px] px-3 py-2 cursor-pointer">
+            <button onClick={exportCSV} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors border-0 rounded-[8px] px-3 py-2 cursor-pointer">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>
               <span className="text-[11.5px] font-medium text-white">Export</span>
             </button>

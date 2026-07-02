@@ -158,7 +158,12 @@ export default function Produk() {
                   <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Kategori</th>
                   <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Satuan</th>
                   <th className="text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Harga</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Stok</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">
+                    <span className="inline-flex items-center gap-1.5 justify-end">
+                      Stok
+                      <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 700, padding: "2px 5px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>PREMIUM</span>
+                    </span>
+                  </th>
                   <th className="px-4 py-3 w-8"></th>
                 </tr>
               </thead>
@@ -196,9 +201,7 @@ export default function Produk() {
                       <span className="font-serif text-[14px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.price)}</span>
                     </td>
                     <td className="px-4 py-3.5 text-right">
-                      <span className={`text-[12.5px] font-semibold ${p.stock <= LOW_STOCK_THRESHOLD ? "text-warning" : "text-navy"}`} style={{ fontVariantNumeric: "tabular-nums" }}>
-                        {p.stock <= LOW_STOCK_THRESHOLD && <span className="text-warning mr-1">⚠</span>}{p.stock}
-                      </span>
+                      <span className="text-[13px] text-text-mute/40 tracking-widest select-none">—</span>
                     </td>
                     <td className="px-4 py-3.5">
                       <button className="w-7 h-7 rounded-[6px] flex items-center justify-center text-text-mute hover:text-navy hover:bg-cream-bg transition-colors bg-transparent border-0 cursor-pointer">
@@ -234,7 +237,9 @@ export default function Produk() {
                 </div>
                 <div className="text-right shrink-0">
                   <div className="font-serif text-[14px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.price)}</div>
-                  <div className={`text-[11px] ${p.stock <= LOW_STOCK_THRESHOLD ? "text-warning" : "text-text-mute"}`} style={{ fontVariantNumeric: "tabular-nums" }}>Stok: {p.stock}</div>
+                  <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                    <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 700, padding: "2px 5px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>PREMIUM</span>
+                  </div>
                 </div>
               </div>
             ))}
