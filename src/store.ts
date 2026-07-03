@@ -46,8 +46,6 @@ interface POSState {
   addProduct: (p: Product) => void;
   updateProduct: (id: string, updates: Partial<Product>) => void;
   setStoreData: (id: string, name: string, address: string, cashiers: CashierDB[], phone?: string) => void;
-  setProductsFromDB: (products: Product[]) => void;
-  setTrxCounter: (n: number) => void;
 }
 
 function currentShiftFromTime(): 1 | 2 | 3 {

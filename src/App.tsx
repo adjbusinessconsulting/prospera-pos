@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useStore } from "./store";
 import OwnerLogin from "./screens/OwnerLogin";
+import UpdateBanner from "./components/UpdateBanner";
 import PinLogin from "./screens/PinLogin";
 import Sales from "./screens/Sales";
 import Payment from "./screens/Payment";
@@ -57,12 +58,13 @@ export default function App() {
     }
   }, []);
 
-  if (screen === "owner-login") return <OwnerLogin />;
+  if (screen === "owner-login") return <><OwnerLogin /><UpdateBanner /></>;
   if (screen === "checkin")     return <CheckIn />;
 
   if (isMobile) {
     return (
       <div className="fixed inset-0 bg-cream-bg overflow-hidden">
+        <UpdateBanner />
         {screen === "login"        && <PinLogin />}
         {screen === "sales"        && <Sales />}
         {screen === "payment"      && <Payment />}
@@ -79,6 +81,7 @@ export default function App() {
 
   return (
     <div className="fixed inset-0 bg-cream-deep flex items-center justify-center overflow-hidden">
+      <UpdateBanner />
       <div
         className="rounded-card shadow-tablet overflow-hidden bg-cream-bg"
         style={{ width: Math.round(1366 * scale), height: Math.round(900 * scale) }}

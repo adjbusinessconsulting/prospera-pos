@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useStore } from "../store";
 import { supabase } from "../lib/supabase";
 import type { CashierDB } from "../types";
+import { BUILD } from "../version";
 
 const DAY_ID = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
@@ -219,7 +220,10 @@ export default function OwnerLogin() {
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#5C9E7E", boxShadow: "0 0 0 3px rgba(92,158,126,0.18)", display: "inline-block" }} />
             <span style={{ fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "#7A776F", fontWeight: 500 }}>ONLINE</span>
           </div>
-          <span style={{ fontSize: 12, color: "#7A776F" }}>{timeStr} · {dayStr}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 12, color: "#7A776F" }}>{timeStr} · {dayStr}</span>
+            <span style={{ fontSize: 9, letterSpacing: "0.14em", color: "#C4C0B8", fontFamily: "Inter, sans-serif" }}>build {BUILD}</span>
+          </div>
         </header>
 
         {/* Scrollable content */}
@@ -250,6 +254,7 @@ export default function OwnerLogin() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 12.5, color: "#0B1129" }}>{timeStr} · {dayStr}</span>
+          <span style={{ fontSize: 9, letterSpacing: "0.14em", color: "#C4C0B8", fontFamily: "Inter, sans-serif" }}>build {BUILD}</span>
           <span style={{ width: 1, height: 13, background: "#ECE7DD", display: "inline-block" }} />
           <button onClick={() => setLang(l => l === "id" ? "en" : "id")}
             style={{ display: "flex", alignItems: "center", gap: 5, background: "white", border: "1px solid #ECE7DD", borderRadius: 8, padding: "4px 10px", fontSize: 11.5, fontWeight: 500, color: "#0B1129", cursor: "pointer" }}>
