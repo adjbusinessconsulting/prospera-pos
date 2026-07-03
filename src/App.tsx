@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useStore } from "./store";
 import OwnerLogin from "./screens/OwnerLogin";
 import UpdateBanner from "./components/UpdateBanner";
+import SplashScreen from "./components/SplashScreen";
 import PinLogin from "./screens/PinLogin";
 import Sales from "./screens/Sales";
 import Payment from "./screens/Payment";
@@ -30,6 +31,7 @@ export default function App() {
   const setStoreData = useStore(s => s.setStoreData);
   const [scale, setScale] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     const calc = () => {
@@ -58,6 +60,7 @@ export default function App() {
     }
   }, []);
 
+  if (showSplash) return <SplashScreen onDone={() => setShowSplash(false)} />;
   if (screen === "owner-login") return <><OwnerLogin /><UpdateBanner /></>;
   if (screen === "checkin")     return <CheckIn />;
 
