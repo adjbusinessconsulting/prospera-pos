@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.svg', 'app-banner-reference.png'],
+      includeAssets: ['favicon.svg', 'app-banner-POS-reference.png'],
       manifest: {
         name: 'Sterith POS',
         short_name: 'Sterith POS',
@@ -18,8 +18,8 @@ export default defineConfig({
         orientation: 'portrait',
         start_url: '/',
         icons: [
-          { src: 'app-banner-reference.png', sizes: '192x192', type: 'image/png' },
-          { src: 'app-banner-reference.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: 'app-banner-POS-reference.png', sizes: '192x192', type: 'image/png' },
+          { src: 'app-banner-POS-reference.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
       workbox: {
