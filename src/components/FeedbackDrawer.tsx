@@ -7,10 +7,8 @@ interface Props {
 }
 
 type Step = "email" | "message" | "done";
-type FbType = "feedback" | "complain";
 
 export default function FeedbackDrawer({ open, onClose }: Props) {
-  const [type, setType]       = useState<FbType>("feedback");
   const [step, setStep]       = useState<Step>("email");
   const [email, setEmail]     = useState("");
   const [message, setMessage] = useState("");
@@ -48,7 +46,7 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
     setLoading(true);
     setError("");
     const { error: insertError } = await supabase.from("feedback").insert({
-      type,
+      type: "feedback",
       email: email.trim().toLowerCase(),
       message: message.trim(),
       status: "pending",
@@ -60,17 +58,14 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
 
   if (!open) return null;
 
-  const isComplain = type === "complain";
-  const accentColor = isComplain ? "#C25E3D" : "#5C9E7E";
-
   const content = (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
 
       {/* Header */}
       <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid #ECE7DD", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
         <div>
-          <p style={{ margin: 0, fontFamily: "Inter, sans-serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#7A776F" }}>STERITH POS</p>
-          <p style={{ margin: "2px 0 0", fontFamily: "Inter, sans-serif", fontSize: 16, fontWeight: 700, color: "#0B1129" }}>Kirim Pesan</p>
+          <p style={{ margin: 0, fontFamily: "Inter, sans-serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#7A776F" }}>STERITH POS · BANTUAN</p>
+          <p style={{ margin: "2px 0 0", fontFamily: "Inter, sans-serif", fontSize: 16, fontWeight: 700, color: "#0B1129" }}>Kritik & Saran</p>
         </div>
         <button onClick={handleClose} style={{ background: "transparent", border: "none", cursor: "pointer", padding: 6, color: "#B8B0A8" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -84,7 +79,7 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
           </div>
           <p style={{ fontFamily: "Inter, sans-serif", fontSize: 15, fontWeight: 700, color: "#0B1129", margin: "0 0 6px" }}>Terima kasih!</p>
           <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12.5, color: "#7A776F", margin: "0 0 24px", lineHeight: 1.6 }}>
-            {type === "feedback" ? "Masukan Anda sudah kami terima dan akan ditinjau oleh tim Sterith." : "Komplain Anda sudah kami terima. Tim kami akan menghubungi Anda segera."}
+            Kritik dan saran Anda sudah kami terima dan akan ditinjau oleh tim Sterith.
           </p>
           <button onClick={handleClose} style={{ background: "#0B1129", color: "#F2EDE3", border: "none", borderRadius: 10, height: 42, padding: "0 28px", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
             Tutup
@@ -93,24 +88,9 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
       ) : (
         <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
 
-          {/* Type selector */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 20 }}>
-            {(["feedback", "complain"] as FbType[]).map(t => {
-              const active = type === t;
-              const color = t === "complain" ? "#C25E3D" : "#5C9E7E";
-              return (
-                <button key={t} onClick={() => setType(t)}
-                  style={{ padding: "10px 12px", borderRadius: 10, border: active ? `2px solid ${color}` : "1.5px solid #ECE7DD", background: active ? (t === "complain" ? "rgba(194,94,61,0.06)" : "rgba(92,158,126,0.06)") : "#FAFAF7", cursor: "pointer", textAlign: "left" }}>
-                  <p style={{ margin: "0 0 2px", fontFamily: "Inter, sans-serif", fontSize: 12.5, fontWeight: 700, color: active ? color : "#A8A39B" }}>
-                    {t === "feedback" ? "Feedback" : "Komplain"}
-                  </p>
-                  <p style={{ margin: 0, fontFamily: "Inter, sans-serif", fontSize: 10.5, color: active ? color : "#C4C0B8" }}>
-                    {t === "feedback" ? "Saran atau ide perbaikan" : "Ada masalah atau kendala?"}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12.5, color: "#7A776F", lineHeight: 1.6, margin: "0 0 20px" }}>
+            Ada masukan, saran, atau kendala? Tulis di sini dan tim kami akan meninjau secepatnya.
+          </p>
 
           {/* Email step */}
           {step === "email" && (
@@ -144,20 +124,18 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
                 <button onClick={() => { setStep("email"); setError(""); }} style={{ marginLeft: "auto", background: "transparent", border: "none", fontSize: 11, color: "#7A776F", cursor: "pointer", fontFamily: "Inter, sans-serif", textDecoration: "underline" }}>Ganti</button>
               </div>
               <div>
-                <label style={{ display: "block", fontFamily: "Inter, sans-serif", fontSize: 9.5, letterSpacing: "0.18em", textTransform: "uppercase", color: "#7A776F", fontWeight: 600, marginBottom: 7 }}>
-                  {isComplain ? "CERITAKAN MASALAH ANDA" : "MASUKAN ANDA"}
-                </label>
+                <label style={{ display: "block", fontFamily: "Inter, sans-serif", fontSize: 9.5, letterSpacing: "0.18em", textTransform: "uppercase", color: "#7A776F", fontWeight: 600, marginBottom: 7 }}>KRITIK & SARAN ANDA</label>
                 <textarea
                   value={message} onChange={e => setMessage(e.target.value)}
-                  placeholder={isComplain ? "Ceritakan apa yang terjadi dan kapan masalah ini terjadi…" : "Apa yang ingin Anda tambahkan atau perbaiki?"}
-                  rows={5}
-                  style={{ width: "100%", background: "white", border: `1.5px solid ${message.trim() ? accentColor : "#ECE7DD"}`, borderRadius: 10, padding: "12px 13px", fontSize: 13.5, color: "#0B1129", fontFamily: "Inter, sans-serif", resize: "none", outline: "none", lineHeight: 1.6, boxSizing: "border-box" }}
+                  placeholder="Tulis masukan, saran, atau kendala yang Anda alami…"
+                  rows={6}
+                  style={{ width: "100%", background: "white", border: `1.5px solid ${message.trim() ? "#C9A55F" : "#ECE7DD"}`, borderRadius: 10, padding: "12px 13px", fontSize: 13.5, color: "#0B1129", fontFamily: "Inter, sans-serif", resize: "none", outline: "none", lineHeight: 1.6, boxSizing: "border-box" }}
                 />
                 {error && <p style={{ margin: "4px 0 0", fontSize: 11.5, color: "#C25E3D", fontFamily: "Inter, sans-serif" }}>{error}</p>}
               </div>
               <button onClick={handleSubmit} disabled={loading || !message.trim()}
-                style={{ height: 46, background: accentColor, color: "white", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: loading || !message.trim() ? "not-allowed" : "pointer", opacity: !message.trim() ? 0.6 : 1, fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                {loading ? "Mengirim…" : `Kirim ${isComplain ? "Komplain" : "Feedback"} →`}
+                style={{ height: 46, background: "#0B1129", color: "#F2EDE3", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: loading || !message.trim() ? "not-allowed" : "pointer", opacity: !message.trim() ? 0.5 : 1, fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                {loading ? "Mengirim…" : "Kirim →"}
               </button>
             </div>
           )}
@@ -168,7 +146,6 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
 
   return (
     <>
-      {/* Backdrop */}
       <div onClick={handleClose} style={{ position: "fixed", inset: 0, background: "rgba(11,17,41,0.4)", zIndex: 900 }} />
 
       {/* Desktop: right drawer */}

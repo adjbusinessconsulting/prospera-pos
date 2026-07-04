@@ -47,11 +47,12 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
             <span style={{ fontSize: 6.5, letterSpacing: "0.08em" }} className="text-text-mute uppercase hidden lg:block">SYNC</span>
           </div>
 
-          {/* Feedback button */}
+          {/* Bantuan button */}
           <button onClick={() => setFeedbackOpen(true)}
-            className="w-[30px] h-[30px] lg:w-[34px] lg:h-[34px] rounded-card flex items-center justify-center text-text-mute hover:text-navy hover:bg-cream-pill transition-colors border border-warm-border bg-transparent"
-            title="Feedback">
-            <MessageCircle size={13} strokeWidth={1.8} />
+            className="w-full h-[46px] lg:h-[50px] rounded-card flex flex-col items-center justify-center gap-[4px] lg:gap-[5px] border-0 bg-transparent text-text-mute hover:text-navy hover:bg-cream-bg transition-colors">
+            <MessageCircle size={16} strokeWidth={1.6} />
+            <span style={{ fontSize: 7, letterSpacing: "0.10em" }} className="font-medium uppercase leading-none hidden lg:block">BANTUAN</span>
+            <span style={{ fontSize: 6.5, letterSpacing: "0.08em" }} className="font-medium uppercase leading-none lg:hidden">BANTUAN</span>
           </button>
 
           <div className="w-[30px] h-[30px] lg:w-[34px] lg:h-[34px] rounded-full bg-cream-pill border border-warm-border flex items-center justify-center font-semibold text-[11px] lg:text-[12px] text-navy">
