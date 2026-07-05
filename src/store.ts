@@ -20,6 +20,8 @@ interface POSState {
   storeName: string;
   storeAddress: string;
   storePhone: string;
+  qrisImageUrl: string;
+  midtransClientKey: string;
   dbCashiers: CashierDB[];
   checkinPhoto: string | null;
   products: Product[];
@@ -45,7 +47,7 @@ interface POSState {
   setTrxCounter: (n: number) => void;
   addProduct: (p: Product) => void;
   updateProduct: (id: string, updates: Partial<Product>) => void;
-  setStoreData: (id: string, name: string, address: string, cashiers: CashierDB[], phone?: string) => void;
+  setStoreData: (id: string, name: string, address: string, cashiers: CashierDB[], phone?: string, qrisImageUrl?: string, midtransClientKey?: string) => void;
 }
 
 function currentShiftFromTime(): 1 | 2 | 3 {
@@ -73,6 +75,8 @@ export const useStore = create<POSState>((set) => ({
   storeName: '',
   storeAddress: '',
   storePhone: '',
+  qrisImageUrl: '',
+  midtransClientKey: '',
   dbCashiers: [],
   checkinPhoto: null,
   products: [...PRODUCTS],
@@ -131,6 +135,8 @@ export const useStore = create<POSState>((set) => ({
     storeId: '',
     storeName: '',
     storeAddress: '',
+    qrisImageUrl: '',
+    midtransClientKey: '',
     dbCashiers: [],
     trxCounter: 42,
   }),
@@ -144,11 +150,13 @@ export const useStore = create<POSState>((set) => ({
     cart: s.cart.map(i => i.product.id === id ? { ...i, product: { ...i.product, ...updates } } : i),
   })),
 
-  setStoreData: (id, name, address, cashiers, phone = '') => set({
+  setStoreData: (id, name, address, cashiers, phone = '', qrisImageUrl = '', midtransClientKey = '') => set({
     storeId: id,
     storeName: name,
     storeAddress: address,
     storePhone: phone,
+    qrisImageUrl,
+    midtransClientKey,
     dbCashiers: cashiers,
     selectedCashier: cashiers.length > 0 ? cashiers[0].id : 'ae',
   }),

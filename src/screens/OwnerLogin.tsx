@@ -63,7 +63,7 @@ export default function OwnerLogin() {
     if (userId) {
       const { data: storeRows } = await supabase
         .from("stores")
-        .select("id, name, address, phone")
+        .select("id, name, address, phone, qris_image_url, midtrans_client_key")
         .eq("owner_id", userId)
         .limit(1);
       if (storeRows && storeRows.length > 0) {
@@ -73,7 +73,15 @@ export default function OwnerLogin() {
           .select("*")
           .eq("store_id", store.id)
           .eq("active", true);
-        setStoreData(store.id, store.name, store.address || "", (cashierRows ?? []) as CashierDB[], store.phone || "");
+        setStoreData(
+          store.id,
+          store.name,
+          store.address || "",
+          (cashierRows ?? []) as CashierDB[],
+          store.phone || "",
+          store.qris_image_url || "",
+          store.midtrans_client_key || "",
+        );
 
         const [{ data: productRows }, { count: saleCount }] = await Promise.all([
           supabase.from("products").select("*").eq("store_id", store.id).eq("active", true).order("name"),

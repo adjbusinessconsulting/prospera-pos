@@ -1,7 +1,9 @@
-import { ChevronLeft } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ChevronLeft, QrCode, CheckCircle2, XCircle, Loader2, Clock } from "lucide-react";
 import { useStore, getTotal, getItemCount, getTrxId } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
+import { supabase } from "../lib/supabase";
 
 const METHODS = [
   {
@@ -32,8 +34,15 @@ const METHODS = [
 
 const QUICK = [50000, 100000, 200000, 500000];
 
+type QrisState = "idle" | "loading" | "show" | "confirmed" | "error";
+
 export default function Payment() {
-  const { cart, paymentMethod, cashReceived, cashierName, cashierInitials, trxCounter, setPaymentMethod, setCashReceived, setScreen, signOut } = useStore();
+  const {
+    cart, paymentMethod, cashReceived, cashierName, cashierInitials,
+    trxCounter, storeId, qrisImageUrl, midtransClientKey,
+    setPaymentMethod, setCashReceived, setScreen, signOut,
+  } = useStore();
+
   const total = getTotal(cart);
   const itemCount = getItemCount(cart);
   const change = cashReceived - total;
@@ -41,6 +50,128 @@ export default function Payment() {
 
   const now = new Date();
   const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+
+  // QRIS overlay state
+  const [qrisState, setQrisState] = useState<QrisState>("idle");
+  const [qrImageUrl, setQrImageUrl] = useState<string | null>(null);
+  const [qrisError, setQrisError] = useState<string>("");
+  const [expiresAt, setExpiresAt] = useState<Date | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Detect QRIS mode
+  const hasMidtrans = Boolean(midtransClientKey);
+  const hasStatic = Boolean(qrisImageUrl);
+  const [useStaticFallback, setUseStaticFallback] = useState(false);
+  const qrisMode: "midtrans" | "static" | "none" = (hasMidtrans && !useStaticFallback)
+    ? "midtrans"
+    : hasStatic
+    ? "static"
+    : "none";
+
+  function stopPolling() {
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+  }
+
+  // Countdown timer for Midtrans QR
+  useEffect(() => {
+    if (qrisState !== "show" || !expiresAt || qrisMode !== "midtrans") return;
+    timerRef.current = setInterval(() => {
+      const left = Math.max(0, Math.floor((expiresAt.getTime() - Date.now()) / 1000));
+      setTimeLeft(left);
+      if (left === 0) {
+        stopPolling();
+        setQrisState("error");
+        setQrisError("QR sudah kadaluarsa. Coba lagi.");
+      }
+    }, 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [qrisState, expiresAt, qrisMode]);
+
+  // Poll qris_payments table every 4s for Midtrans mode
+  function startPolling(orderId: string) {
+    pollRef.current = setInterval(async () => {
+      try {
+        const { data } = await supabase
+          .from("qris_payments")
+          .select("status")
+          .eq("order_id", orderId)
+          .single();
+        if (data?.status === "paid") {
+          stopPolling();
+          setQrisState("confirmed");
+          setTimeout(() => setScreen("receipt"), 1200);
+        }
+      } catch {
+        // silent fail, keep polling
+      }
+    }, 4000);
+  }
+
+  async function handleSelesaikan() {
+    if (paymentMethod !== "qris") {
+      setScreen("receipt");
+      return;
+    }
+
+    if (qrisMode === "none") {
+      setQrisState("show"); // will show "not configured" message
+      return;
+    }
+
+    if (qrisMode === "static") {
+      setQrisState("show");
+      return;
+    }
+
+    // Midtrans: generate dynamic QR
+    setQrisState("loading");
+    setQrisError("");
+    const orderId = `QRIS-${storeId.slice(0, 8)}-${Date.now()}`;
+    try {
+      const { data, error } = await supabase.functions.invoke("create-qris", {
+        body: { store_id: storeId, amount: total, order_id: orderId },
+      });
+
+      if (error || !data?.ok) {
+        setQrisError(data?.error || "Gagal membuat QR. Coba lagi atau gunakan QRIS statis.");
+        setQrisState("error");
+        return;
+      }
+
+      setQrImageUrl(data.qr_url ?? null);
+      setExpiresAt(new Date(data.expires_at));
+      setTimeLeft(15 * 60);
+      setQrisState("show");
+      startPolling(orderId);
+    } catch {
+      setQrisError("Koneksi bermasalah. Coba lagi.");
+      setQrisState("error");
+    }
+  }
+
+  function handleCancelQris() {
+    stopPolling();
+    setQrisState("idle");
+    setQrImageUrl(null);
+    setQrisError("");
+    setExpiresAt(null);
+    setUseStaticFallback(false);
+  }
+
+  function handleManualConfirm() {
+    stopPolling();
+    setQrisState("confirmed");
+    setTimeout(() => setScreen("receipt"), 800);
+  }
+
+  const formatCountdown = (secs: number) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, "0");
+    const s = (secs % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
 
   return (
     <div className="w-full h-full flex animate-screen-in bg-cream-bg">
@@ -179,14 +310,194 @@ export default function Payment() {
               <p style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">TOTAL</p>
               <span className="font-serif text-[22px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</span>
             </div>
-            <button onClick={() => setScreen("receipt")}
-              className="flex-1 bg-navy rounded-card h-[50px] flex items-center justify-center gap-3 text-cream-text text-[14px] font-semibold tracking-[0.02em] hover:opacity-90 transition-opacity">
-              <span>SELESAIKAN · {formatRp(total)}</span>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            <button
+              onClick={handleSelesaikan}
+              disabled={qrisState === "loading"}
+              className="flex-1 bg-navy rounded-card h-[50px] flex items-center justify-center gap-3 text-cream-text text-[14px] font-semibold tracking-[0.02em] hover:opacity-90 transition-opacity disabled:opacity-60">
+              {qrisState === "loading" ? (
+                <><Loader2 size={16} className="animate-spin" /> Membuat QR…</>
+              ) : (
+                <><span>SELESAIKAN · {formatRp(total)}</span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+                </>
+              )}
             </button>
           </div>
         </div>
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════
+          QRIS OVERLAY
+          Shown when paymentMethod === "qris" and user taps SELESAIKAN
+      ═══════════════════════════════════════════════════════════ */}
+      {(qrisState === "show" || qrisState === "confirmed" || qrisState === "error") && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 200,
+            background: "rgba(11,17,41,0.80)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "20px",
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) handleCancelQris(); }}
+        >
+          <div style={{
+            background: "white", borderRadius: 24,
+            width: "100%", maxWidth: 420,
+            boxShadow: "0 24px 80px rgba(11,17,41,0.24)",
+            overflow: "hidden",
+          }}>
+            {/* Header */}
+            <div style={{ background: "#0B1129", padding: "20px 24px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 9, letterSpacing: "0.22em", color: "#C9A55F", textTransform: "uppercase", fontWeight: 600, marginBottom: 4 }}>
+                  {qrisMode === "midtrans" ? "QRIS · AUTO KONFIRMASI" : "QRIS · KONFIRMASI MANUAL"}
+                </div>
+                <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 500, color: "#f8f6ef" }}>
+                  {formatRp(total)}
+                </div>
+              </div>
+              <button
+                onClick={handleCancelQris}
+                style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 8, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#8f9cb3" }}>
+                <XCircle size={18} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: "24px" }}>
+
+              {/* Not configured */}
+              {qrisMode === "none" && (
+                <div style={{ textAlign: "center", padding: "20px 0" }}>
+                  <QrCode size={40} color="#c8c0b0" style={{ margin: "0 auto 12px" }} />
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "#14203a", marginBottom: 6 }}>QRIS belum dikonfigurasi</p>
+                  <p style={{ fontSize: 12.5, color: "#8f897a", lineHeight: 1.6 }}>
+                    Minta pemilik toko untuk mengatur QRIS di Backoffice → Pengaturan.
+                  </p>
+                </div>
+              )}
+
+              {/* Static mode: show image */}
+              {qrisMode === "static" && qrisState === "show" && (
+                <>
+                  <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+                    <div style={{ width: 240, height: 240, background: "#f6f3ea", borderRadius: 16, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e8e3d5" }}>
+                      <img
+                        src={qrisImageUrl}
+                        alt="QRIS"
+                        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                        onError={e => {
+                          const t = e.target as HTMLImageElement;
+                          t.style.display = "none";
+                          t.parentElement!.innerHTML = '<div style="text-align:center;padding:20px;color:#8f897a;font-size:12px">Gambar tidak dapat dimuat</div>';
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <p style={{ textAlign: "center", fontSize: 12, color: "#8f897a", marginBottom: 20, lineHeight: 1.6 }}>
+                    Minta pelanggan scan QR ini lalu konfirmasi setelah pembayaran berhasil.
+                  </p>
+                  <button
+                    onClick={handleManualConfirm}
+                    style={{
+                      width: "100%", height: 52, background: "#14203a", color: "#f8f6ef",
+                      border: "none", borderRadius: 12, fontSize: 14, fontWeight: 700,
+                      letterSpacing: "0.04em", cursor: "pointer", display: "flex",
+                      alignItems: "center", justifyContent: "center", gap: 10,
+                    }}>
+                    <CheckCircle2 size={17} color="#C9A55F" />
+                    Sudah Dibayar ✓
+                  </button>
+                </>
+              )}
+
+              {/* Midtrans mode: dynamic QR */}
+              {qrisMode === "midtrans" && qrisState === "show" && (
+                <>
+                  {/* Countdown */}
+                  {timeLeft > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 14 }}>
+                      <Clock size={13} color="#8f897a" />
+                      <span style={{ fontSize: 12, color: "#8f897a" }}>QR aktif selama</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: timeLeft < 60 ? "#c25e3d" : "#14203a", fontFamily: "monospace" }}>
+                        {formatCountdown(timeLeft)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* QR Image */}
+                  <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+                    <div style={{ width: 240, height: 240, background: "#f6f3ea", borderRadius: 16, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e8e3d5", position: "relative" }}>
+                      {qrImageUrl ? (
+                        <img
+                          src={qrImageUrl}
+                          alt="QRIS Dinamis"
+                          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                        />
+                      ) : (
+                        <div style={{ textAlign: "center", padding: 20 }}>
+                          <Loader2 size={28} color="#b8934a" style={{ margin: "0 auto 8px", animation: "spin 1s linear infinite" }} />
+                          <p style={{ fontSize: 11, color: "#8f897a" }}>Memuat QR…</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 20 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#5C9E7E", animation: "pulse 1.5s ease-in-out infinite" }} />
+                    <p style={{ fontSize: 12.5, color: "#8f897a" }}>Menunggu konfirmasi pembayaran…</p>
+                  </div>
+
+                  <div style={{ padding: "10px 14px", background: "#fdf8ee", border: "1px solid #edd99a", borderRadius: 10, fontSize: 11.5, color: "#7c6430", textAlign: "center", marginBottom: 8 }}>
+                    Konfirmasi otomatis saat pelanggan selesai bayar
+                  </div>
+                </>
+              )}
+
+              {/* Confirmed (auto or manual) */}
+              {qrisState === "confirmed" && (
+                <div style={{ textAlign: "center", padding: "20px 0" }}>
+                  <CheckCircle2 size={52} color="#5C9E7E" style={{ margin: "0 auto 14px" }} />
+                  <p style={{ fontSize: 16, fontWeight: 700, color: "#14203a", marginBottom: 6 }}>Pembayaran Diterima!</p>
+                  <p style={{ fontSize: 12.5, color: "#8f897a" }}>Mencetak struk…</p>
+                </div>
+              )}
+
+              {/* Error */}
+              {qrisState === "error" && (
+                <div style={{ textAlign: "center", padding: "12px 0 4px" }}>
+                  <XCircle size={40} color="#c25e3d" style={{ margin: "0 auto 12px" }} />
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "#14203a", marginBottom: 6 }}>Gagal</p>
+                  <p style={{ fontSize: 12.5, color: "#8f897a", lineHeight: 1.6, marginBottom: 20 }}>{qrisError}</p>
+                  {hasStatic && (
+                    <button
+                      onClick={() => { setUseStaticFallback(true); setQrisState("show"); setQrisError(""); }}
+                      style={{ width: "100%", height: 46, background: "#f6f3ea", color: "#14203a", border: "1px solid #e8e3d5", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", marginBottom: 10 }}>
+                      Gunakan QRIS Statis
+                    </button>
+                  )}
+                  <button
+                    onClick={handleCancelQris}
+                    style={{ width: "100%", height: 46, background: "transparent", color: "#8f897a", border: "1px solid #e8e3d5", borderRadius: 10, fontSize: 13, cursor: "pointer" }}>
+                    Kembali
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(0.85); }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
