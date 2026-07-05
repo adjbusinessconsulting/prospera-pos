@@ -1,4 +1,4 @@
-import { useStore } from "../store";
+import { useStore, isAtLeast } from "../store";
 import { CASHIERS } from "../data";
 import { useState, useEffect } from "react";
 
@@ -16,7 +16,10 @@ const SHIFT_LABELS: Record<1 | 2 | 3, string> = {
 };
 
 export default function PinLogin() {
-  const { selectedCashier, selectedShift, selectCashier, setShift, pin, addPin, removePin, clearPin, setScreen, storeName, storeAddress, dbCashiers } = useStore();
+  const { selectedCashier, selectedShift, selectCashier, setShift, pin, addPin, removePin, clearPin, setScreen, storeName, storeAddress, storeTier, storeId, dbCashiers } = useStore();
+  // Demo shows all features; Free locks non-current shifts
+  const effectiveTier = storeId ? storeTier : 'premium';
+  const canChangeShift = isAtLeast(effectiveTier, 'standard');
   const [pinError, setPinError] = useState("");
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
 
@@ -73,10 +76,12 @@ export default function PinLogin() {
             {([1, 2, 3] as const).map(n => {
               const isNow = nowShift === n;
               const isActive = selectedShift === n;
+              const shiftLocked = !canChangeShift && !isNow;
               return (
-                <button key={n} onClick={() => setShift(n)} style={{ flex: 1, padding: "8px 4px", borderRadius: 9, fontSize: 11.5, fontWeight: 500, border: isActive ? "2px solid #0B1129" : "1px solid #ECE7DD", background: isActive ? "#0B1129" : "white", color: isActive ? "#F5F0E8" : "#0B1129", position: "relative" as const, cursor: "pointer" }}>
+                <button key={n} onClick={() => { if (!shiftLocked) setShift(n); }} style={{ flex: 1, padding: "8px 4px", borderRadius: 9, fontSize: 11.5, fontWeight: 500, border: isActive ? "2px solid #0B1129" : "1px solid #ECE7DD", background: isActive ? "#0B1129" : shiftLocked ? "#F7F4EE" : "white", color: isActive ? "#F5F0E8" : shiftLocked ? "#C4C0B8" : "#0B1129", position: "relative" as const, cursor: shiftLocked ? "not-allowed" : "pointer", opacity: shiftLocked ? 0.6 : 1 }}>
                   {SHIFT_LABELS[n]}
                   {isNow && <span style={{ position: "absolute" as const, top: -8, left: "50%", transform: "translateX(-50%)", fontSize: 7, fontWeight: 700, padding: "1px 5px", borderRadius: 99, background: "#C9A55F", color: "white", whiteSpace: "nowrap" as const, letterSpacing: "0.08em" }}>SKRNG</span>}
+                  {shiftLocked && <span style={{ position: "absolute" as const, top: -8, right: 4, fontSize: 6.5, fontWeight: 700, padding: "1px 4px", borderRadius: 99, background: "#ECE7DD", color: "#A8A39B", whiteSpace: "nowrap" as const, letterSpacing: "0.08em" }}>STD</span>}
                 </button>
               );
             })}
@@ -177,14 +182,20 @@ export default function PinLogin() {
             {([1, 2, 3] as const).map(n => {
               const isNow = nowShift === n;
               const isActive = selectedShift === n;
+              const shiftLocked = !canChangeShift && !isNow;
               return (
-                <button key={n} onClick={() => setShift(n)}
-                  className={`flex-1 py-2.5 rounded-button text-[12.5px] font-medium border transition-all relative ${isActive ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border"}`}>
+                <button key={n} onClick={() => { if (!shiftLocked) setShift(n); }}
+                  className={`flex-1 py-2.5 rounded-button text-[12.5px] font-medium border transition-all relative ${isActive ? "bg-navy text-cream-text border-navy" : shiftLocked ? "bg-cream-bg text-text-mute border-warm-border cursor-not-allowed opacity-60" : "bg-white text-navy border-warm-border"}`}>
                   {SHIFT_LABELS[n]}
                   {isNow && (
                     <span className={`absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] font-semibold px-[7px] py-[2px] rounded-full tracking-[0.1em] uppercase ${isActive ? "bg-gold text-navy" : "bg-gold-soft text-gold border border-gold/30"}`}
                       style={{ fontVariantNumeric: "tabular-nums" }}>
                       SEKARANG
+                    </span>
+                  )}
+                  {shiftLocked && (
+                    <span className="absolute -top-2 right-1 text-[7px] font-bold px-[5px] py-[1px] rounded-full tracking-[0.1em] uppercase bg-warm-border text-text-mute">
+                      STD
                     </span>
                   )}
                 </button>

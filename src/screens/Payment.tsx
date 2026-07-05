@@ -1,33 +1,33 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, QrCode, CheckCircle2, XCircle, Loader2, Clock } from "lucide-react";
-import { useStore, getTotal, getItemCount, getTrxId } from "../store";
+import { ChevronLeft, QrCode, CheckCircle2, XCircle, Loader2, Clock, Lock } from "lucide-react";
+import { useStore, getTotal, getItemCount, getTrxId, isAtLeast } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
 
 const METHODS = [
   {
-    id: "tunai", label: "Tunai", sub: "Cash di laci", locked: false,
+    id: "tunai", label: "Tunai", sub: "Cash di laci",
     icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/></svg>,
   },
   {
-    id: "qris", label: "QRIS", sub: "Scan & bayar", locked: false,
+    id: "qris", label: "QRIS", sub: "Scan & bayar",
     icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3v1M17 17v4"/></svg>,
   },
   {
-    id: "debit", label: "Debit / Kartu", sub: "EDC mesin", locked: false,
+    id: "debit", label: "Debit / Kartu", sub: "EDC mesin",
     icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg>,
   },
   {
-    id: "ewallet", label: "E-Wallet", sub: "GoPay · OVO · DANA", locked: false,
+    id: "ewallet", label: "E-Wallet", sub: "GoPay · OVO · DANA",
     icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1.5" fill="currentColor"/></svg>,
   },
   {
-    id: "hutang", label: "Hutang / Bon", sub: "Bayar nanti", locked: false, tier: "std",
+    id: "hutang", label: "Hutang / Bon", sub: "Bayar nanti",
     icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 10h8M8 14h5"/></svg>,
   },
   {
-    id: "transfer", label: "Transfer Bank", sub: "BCA · BRI · Mandiri", locked: false,
+    id: "transfer", label: "Transfer Bank", sub: "BCA · BRI · Mandiri",
     icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/></svg>,
   },
 ];
@@ -39,9 +39,26 @@ type QrisState = "idle" | "loading" | "show" | "confirmed" | "error";
 export default function Payment() {
   const {
     cart, paymentMethod, cashReceived, cashierName, cashierInitials,
-    trxCounter, storeId, qrisImageUrl, midtransClientKey,
+    trxCounter, storeId, storeTier, qrisImageUrl, midtransClientKey,
     setPaymentMethod, setCashReceived, setScreen, signOut,
   } = useStore();
+
+  // Demo mode shows all features (no storeId = demo)
+  const effectiveTier = storeId ? storeTier : 'premium';
+
+  function methodLock(id: string): { locked: boolean; badge?: string } {
+    if (id === 'debit' || id === 'ewallet') {
+      return isAtLeast(effectiveTier, 'premium')
+        ? { locked: false }
+        : { locked: true, badge: 'PREMIUM' };
+    }
+    if (id === 'hutang') {
+      return isAtLeast(effectiveTier, 'standard')
+        ? { locked: false }
+        : { locked: true, badge: 'STANDARD' };
+    }
+    return { locked: false };
+  }
 
   const total = getTotal(cart);
   const itemCount = getItemCount(cart);
@@ -249,25 +266,27 @@ export default function Payment() {
           <p style={{ fontSize: 10, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-3">METODE PEMBAYARAN</p>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {METHODS.map(m => {
-              const active = paymentMethod === m.id;
+              const { locked, badge } = methodLock(m.id);
+              const active = !locked && paymentMethod === m.id;
               return (
-                <div key={m.id} onClick={() => setPaymentMethod(m.id)}
-                  className={`bg-white rounded-method p-4 cursor-pointer relative border transition-all ${active ? "border-navy border-[1.5px] shadow-method" : "border-warm-border hover:border-navy/30"}`}>
-                  {"tier" in m && m.tier && (
+                <div key={m.id}
+                  onClick={() => { if (!locked) setPaymentMethod(m.id); }}
+                  className={`bg-white rounded-method p-4 relative border transition-all ${locked ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${active ? "border-navy border-[1.5px] shadow-method" : "border-warm-border"} ${!locked && !active ? "hover:border-navy/30" : ""}`}>
+                  {badge && (
                     <span style={{ position: "absolute", top: 10, right: 10, background: "rgba(201,165,95,0.10)", border: "1px solid rgba(201,165,95,0.30)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.12em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const }}>
-                      STANDARD
+                      {badge}
                     </span>
                   )}
                   <div className="flex justify-between items-start mb-4">
                     <div className={`w-[36px] h-[36px] rounded-[10px] flex items-center justify-center ${active ? "bg-navy text-gold" : "bg-cream-pill text-navy"}`}>
-                      {m.icon}
+                      {locked ? <Lock size={18} className="text-text-mute" /> : m.icon}
                     </div>
-                    <div className={`w-[17px] h-[17px] rounded-full border flex items-center justify-center shrink-0 ${"tier" in m && m.tier ? "mt-4" : ""} ${active ? "bg-navy border-navy" : "border-warm-dashed"}`}>
+                    <div className={`w-[17px] h-[17px] rounded-full border flex items-center justify-center shrink-0 ${badge ? "mt-4" : ""} ${active ? "bg-navy border-navy" : "border-warm-dashed"}`}>
                       {active && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="3.5"><path d="M20 6L9 17l-5-5"/></svg>}
                     </div>
                   </div>
                   <div className="text-[13.5px] font-semibold text-navy mb-0.5">{m.label}</div>
-                  <div className="text-[11px] text-text-mute">{m.sub}</div>
+                  <div className="text-[11px] text-text-mute">{locked && badge ? `Upgrade ke ${badge}` : m.sub}</div>
                 </div>
               );
             })}

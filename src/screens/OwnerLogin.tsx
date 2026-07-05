@@ -63,7 +63,7 @@ export default function OwnerLogin() {
     if (userId) {
       const { data: storeRows } = await supabase
         .from("stores")
-        .select("id, name, address, phone, qris_image_url, midtrans_client_key")
+        .select("id, name, address, phone, tier, qris_image_url, midtrans_client_key")
         .eq("owner_id", userId)
         .limit(1);
       if (storeRows && storeRows.length > 0) {
@@ -81,6 +81,7 @@ export default function OwnerLogin() {
           store.phone || "",
           store.qris_image_url || "",
           store.midtrans_client_key || "",
+          store.tier || "free",
         );
 
         const [{ data: productRows }, { count: saleCount }] = await Promise.all([

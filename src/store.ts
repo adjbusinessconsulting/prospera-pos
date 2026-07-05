@@ -20,6 +20,7 @@ interface POSState {
   storeName: string;
   storeAddress: string;
   storePhone: string;
+  storeTier: string;
   qrisImageUrl: string;
   midtransClientKey: string;
   dbCashiers: CashierDB[];
@@ -47,7 +48,7 @@ interface POSState {
   setTrxCounter: (n: number) => void;
   addProduct: (p: Product) => void;
   updateProduct: (id: string, updates: Partial<Product>) => void;
-  setStoreData: (id: string, name: string, address: string, cashiers: CashierDB[], phone?: string, qrisImageUrl?: string, midtransClientKey?: string) => void;
+  setStoreData: (id: string, name: string, address: string, cashiers: CashierDB[], phone?: string, qrisImageUrl?: string, midtransClientKey?: string, tier?: string) => void;
 }
 
 function currentShiftFromTime(): 1 | 2 | 3 {
@@ -75,6 +76,7 @@ export const useStore = create<POSState>((set) => ({
   storeName: '',
   storeAddress: '',
   storePhone: '',
+  storeTier: 'free',
   qrisImageUrl: '',
   midtransClientKey: '',
   dbCashiers: [],
@@ -135,6 +137,7 @@ export const useStore = create<POSState>((set) => ({
     storeId: '',
     storeName: '',
     storeAddress: '',
+    storeTier: 'free',
     qrisImageUrl: '',
     midtransClientKey: '',
     dbCashiers: [],
@@ -150,11 +153,12 @@ export const useStore = create<POSState>((set) => ({
     cart: s.cart.map(i => i.product.id === id ? { ...i, product: { ...i.product, ...updates } } : i),
   })),
 
-  setStoreData: (id, name, address, cashiers, phone = '', qrisImageUrl = '', midtransClientKey = '') => set({
+  setStoreData: (id, name, address, cashiers, phone = '', qrisImageUrl = '', midtransClientKey = '', tier = 'free') => set({
     storeId: id,
     storeName: name,
     storeAddress: address,
     storePhone: phone,
+    storeTier: tier,
     qrisImageUrl,
     midtransClientKey,
     dbCashiers: cashiers,
@@ -165,3 +169,7 @@ export const useStore = create<POSState>((set) => ({
 export const getTotal = (cart: CartItem[]) => cart.reduce((sum, i) => sum + i.product.price * i.qty, 0);
 export const getItemCount = (cart: CartItem[]) => cart.reduce((sum, i) => sum + i.qty, 0);
 export const getTrxId = (counter: number) => `#TRX-${counter.toString().padStart(4, '0')}`;
+
+const TIER_LEVELS: Record<string, number> = { free: 0, standard: 1, premium: 2, business: 3, enterprise: 4 };
+export const tierLevel = (tier: string) => TIER_LEVELS[tier?.toLowerCase()] ?? 0;
+export const isAtLeast = (tier: string, required: string) => tierLevel(tier) >= tierLevel(required);

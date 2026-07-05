@@ -1,23 +1,29 @@
-import { useStore, getTotal, getTrxId } from "../store";
+import { useStore, getTotal, getTrxId, isAtLeast } from "../store";
 import { formatRp } from "../data";
 import { Printer, Check, ChevronLeft } from "lucide-react";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
 
-function SterithWatermark() {
+function SterithWatermark({ tier }: { tier: string }) {
+  const isPremiumPlus = isAtLeast(tier, 'premium');
   return (
     <div style={{ background: "#FAFAF7", border: "1px solid #ECE7DD", borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/mark-gold-512.png" alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />
       <div>
         <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.08em", color: "#0B1129", lineHeight: 1 }}>STERITH POS</div>
-        <div style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: 7, letterSpacing: "0.14em", color: "#A6843F", marginTop: 3, textTransform: "uppercase", lineHeight: 1 }}>CUSTOM BRANDING · PAKET STANDARD</div>
+        <div style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: 7, letterSpacing: "0.14em", color: "#A6843F", marginTop: 3, textTransform: "uppercase", lineHeight: 1 }}>
+          {isPremiumPlus ? "Powered by Sterith Business Consulting" : "Sterith POS · sterith.com"}
+        </div>
       </div>
     </div>
   );
 }
 
 export default function Receipt() {
-  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, trxCounter, paymentMethod, selectedCashier, storeId, restart, setScreen, signOut } = useStore();
+  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, restart, setScreen, signOut } = useStore();
+  const effectiveTier = storeId ? storeTier : 'premium';
+  const canWhatsApp = isAtLeast(effectiveTier, 'standard');
   const total = getTotal(cart);
   const change = cashReceived - total;
   const trxId = getTrxId(trxCounter);
@@ -57,8 +63,12 @@ export default function Receipt() {
     restart();
   }
 
+  const displayName = storeName || "Toko Sembako Maju";
+  const displayAddress = storeAddress || "Jl. Diponegoro No. 24, Palu Timur";
+  const displayPhone = storePhone || "0812-3456-7890";
+
   const waText = encodeURIComponent(
-    `*Struk dari Toko Sembako Maju*\nNo: ${trxId}\nTanggal: ${dateStr} ${timeStr}\n\n` +
+    `*Struk dari ${displayName}*\nNo: ${trxId}\nTanggal: ${dateStr} ${timeStr}\n\n` +
     cart.map(i => `${i.product.name} x${i.qty}  ${formatRp(i.product.price * i.qty)}`).join("\n") +
     `\n\nTotal: ${formatRp(total)}\nTerima kasih!`
   );
@@ -103,9 +113,9 @@ export default function Receipt() {
           <div className="bg-white border border-warm-border rounded-card px-[26px] py-6 flex flex-col w-full max-w-[460px]">
 
             <div className="text-center pb-3.5 border-b border-dashed border-warm-dashed">
-              <div className="font-serif text-[20px] font-semibold text-navy">Toko Sembako Maju</div>
-              <div className="text-[10.5px] text-text-mute mt-1">Jl. Diponegoro No. 24, Palu Timur</div>
-              <div className="text-[10.5px] text-text-mute">WhatsApp 0812-3456-7890</div>
+              <div className="font-serif text-[20px] font-semibold text-navy">{displayName}</div>
+              {displayAddress && <div className="text-[10.5px] text-text-mute mt-1">{displayAddress}</div>}
+              {displayPhone && <div className="text-[10.5px] text-text-mute">WhatsApp {displayPhone}</div>}
             </div>
 
             <div className="flex justify-between font-sans text-[10.5px] text-text-mute py-2.5 border-b border-dashed border-warm-dashed" style={{ fontVariantNumeric: "tabular-nums" }}>
@@ -149,7 +159,7 @@ export default function Receipt() {
 
             <div className="pt-3.5 border-t border-dashed border-warm-dashed mt-auto">
               <div className="font-serif italic text-[13px] text-navy text-center mb-3">Terima kasih, sampai jumpa lagi</div>
-              <SterithWatermark />
+              <SterithWatermark tier={effectiveTier} />
             </div>
           </div>
 
@@ -160,8 +170,9 @@ export default function Receipt() {
               <span className="text-[11px]">Cetak struk</span>
             </button>
             <div className="relative">
-              <button onClick={() => window.open(`https://wa.me/?text=${waText}`, "_blank")}
-                className="w-full bg-white border border-warm-border rounded-button py-3.5 flex flex-col items-center gap-1.5 text-navy hover:border-navy/30 transition-colors cursor-pointer">
+              <button
+                onClick={() => canWhatsApp && window.open(`https://wa.me/?text=${waText}`, "_blank")}
+                className={`w-full bg-white border border-warm-border rounded-button py-3.5 flex flex-col items-center gap-1.5 text-navy transition-colors ${canWhatsApp ? "hover:border-navy/30 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" /></svg>
                 <span className="text-[11px]">WhatsApp</span>
               </button>
@@ -190,8 +201,9 @@ export default function Receipt() {
             </button>
 
             <div className="relative">
-              <button onClick={() => window.open(`https://wa.me/?text=${waText}`, "_blank")}
-                className="w-full flex items-center gap-3 bg-cream-bg border border-warm-border rounded-card px-4 py-3.5 text-[13px] font-medium text-navy hover:border-navy/30 transition-colors cursor-pointer">
+              <button
+                onClick={() => canWhatsApp && window.open(`https://wa.me/?text=${waText}`, "_blank")}
+                className={`w-full flex items-center gap-3 bg-cream-bg border border-warm-border rounded-card px-4 py-3.5 text-[13px] font-medium text-navy transition-colors ${canWhatsApp ? "hover:border-navy/30 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="shrink-0"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" /></svg>
                 Kirim via WhatsApp
               </button>
