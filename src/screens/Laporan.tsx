@@ -83,10 +83,10 @@ export default function Laporan() {
   const d = PERIOD_DATA[activeFilter];
 
   return (
-    <div className="w-full h-full flex animate-screen-in bg-cream-bg">
+    <div className="w-full h-full flex flex-col animate-screen-in bg-cream-bg">
       <AppSidebar active="laporan" cashierInitials={cashierInitials} setScreen={setScreen} signOut={signOut} showDemoBack />
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
         {/* Header */}
         <div className="flex justify-between items-end px-5 lg:px-10 pt-5 lg:pt-8 pb-0 shrink-0">

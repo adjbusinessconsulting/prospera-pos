@@ -39,11 +39,11 @@ export default function Sales() {
   const greeting = h < 11 ? "Selamat pagi" : h < 15 ? "Selamat siang" : h < 19 ? "Selamat sore" : "Selamat malam";
 
   return (
-    <div className="w-full h-full flex animate-screen-in">
+    <div className="w-full h-full flex flex-col animate-screen-in">
       <AppSidebar active="sales" cashierInitials={cashierInitials} setScreen={setScreen} signOut={signOut} showDemoBack />
 
       {/* Main + cart */}
-      <div className="flex-1 flex flex-col lg:flex-row min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row min-w-0 min-h-0 overflow-hidden">
 
         {/* Product area */}
         <main className="flex-1 flex flex-col min-w-0 bg-cream-bg overflow-hidden">

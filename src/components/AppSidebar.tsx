@@ -5,9 +5,9 @@ import type { Screen } from "../types";
 import FeedbackDrawer from "./FeedbackDrawer";
 
 const NAV = [
-  { id: "sales"   as Screen, label: "JUAL",    Icon: ShoppingCart },
-  { id: "produk"  as Screen, label: "PRODUK",  Icon: Package },
-  { id: "riwayat" as Screen, label: "LAPORAN", Icon: BarChart2 },
+  { id: "sales"   as Screen, label: "Jual",    Icon: ShoppingCart },
+  { id: "produk"  as Screen, label: "Produk",  Icon: Package },
+  { id: "riwayat" as Screen, label: "Laporan", Icon: BarChart2 },
 ];
 
 interface Props {
@@ -23,88 +23,89 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
 
   return (
     <>
-      <aside className="flex w-[58px] lg:w-[80px] bg-white border-r border-warm-border flex-col items-center pt-3 pb-[72px] lg:py-5 shrink-0">
-        <div className="mb-3 lg:mb-5 flex items-center justify-center">
-          <img src="/mark-gold-512.png" alt="Sterith" style={{ width: 28, height: 28, objectFit: "contain" }} className="lg:hidden" />
-          <img src="/mark-gold-512.png" alt="Sterith" style={{ width: 34, height: 34, objectFit: "contain" }} className="hidden lg:block" />
-        </div>
-        <div className="flex flex-col gap-0.5 flex-1 items-center w-full px-1.5 lg:px-2">
+      <header style={{
+        height: 52, background: "white", borderBottom: "1px solid #ECE7DD",
+        display: "flex", alignItems: "center", padding: "0 14px", gap: 10,
+        flexShrink: 0, zIndex: 30,
+      }}>
+        {/* Logo mark */}
+        <img src="/mark-gold-512.png" alt="Sterith"
+          style={{ width: 28, height: 28, objectFit: "contain", flexShrink: 0 }} />
+
+        {/* Nav items — centred */}
+        <div style={{ display: "flex", gap: 3, flex: 1, justifyContent: "center" }}>
           {NAV.map(({ id, label, Icon }) => {
             const isActive = active === id;
             return (
-              <button key={id} onClick={() => setScreen(id)}
-                className={`w-full h-[46px] lg:h-[50px] rounded-card flex flex-col items-center justify-center gap-[4px] lg:gap-[5px] border-0 transition-colors ${isActive ? "bg-navy text-cream-text" : "bg-transparent text-text-mute hover:text-navy hover:bg-cream-bg"}`}>
-                <Icon size={16} strokeWidth={isActive ? 2 : 1.6} />
-                <span style={{ fontSize: 7, letterSpacing: "0.10em" }} className="font-medium uppercase leading-none hidden lg:block">{label}</span>
-                <span style={{ fontSize: 6.5, letterSpacing: "0.08em" }} className="font-medium uppercase leading-none lg:hidden">{label}</span>
+              <button key={id} onClick={() => setScreen(id)} style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "7px 13px", borderRadius: 9, border: "none",
+                background: isActive ? "#0B1129" : "transparent",
+                color: isActive ? "#f8f6ef" : "#7A776F",
+                cursor: "pointer", fontSize: 11, fontWeight: 600,
+                letterSpacing: "0.09em", textTransform: "uppercase" as const,
+                transition: "background 0.12s, color 0.12s",
+              }}>
+                <Icon size={14} strokeWidth={isActive ? 2 : 1.6} />
+                <span style={{ display: "none" }} className="sm-label">{label}</span>
               </button>
             );
           })}
         </div>
-        <div className="flex flex-col items-center gap-2 mt-2">
-          <div className="flex flex-col items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-success block" />
-            <span style={{ fontSize: 6.5, letterSpacing: "0.08em" }} className="text-text-mute uppercase hidden lg:block">SYNC</span>
+
+        {/* Right: sync · feedback · cashier · demo back · logout */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          {/* Sync dot */}
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#5C9E7E", boxShadow: "0 0 0 3px rgba(92,158,126,0.18)", display: "inline-block", flexShrink: 0 }} />
           </div>
 
-          {/* Bantuan button */}
-          <button onClick={() => setFeedbackOpen(true)}
-            className="w-full h-[46px] lg:h-[50px] rounded-card flex flex-col items-center justify-center gap-[4px] lg:gap-[5px] border-0 bg-transparent text-text-mute hover:text-navy hover:bg-cream-bg transition-colors">
-            <MessageCircle size={16} strokeWidth={1.6} />
-            <span style={{ fontSize: 7, letterSpacing: "0.10em" }} className="font-medium uppercase leading-none hidden lg:block">BANTUAN</span>
-            <span style={{ fontSize: 6.5, letterSpacing: "0.08em" }} className="font-medium uppercase leading-none lg:hidden">BANTUAN</span>
+          {/* Bantuan */}
+          <button onClick={() => setFeedbackOpen(true)} title="Bantuan" style={{
+            background: "transparent", border: "none", cursor: "pointer",
+            color: "#7A776F", display: "flex", alignItems: "center", justifyContent: "center",
+            width: 32, height: 32, borderRadius: 8,
+          }}>
+            <MessageCircle size={15} strokeWidth={1.6} />
           </button>
 
-          <div className="w-[30px] h-[30px] lg:w-[34px] lg:h-[34px] rounded-full bg-cream-pill border border-warm-border flex items-center justify-center font-semibold text-[11px] lg:text-[12px] text-navy">
+          {/* Cashier initials */}
+          <div style={{
+            width: 30, height: 30, borderRadius: "50%",
+            background: "#f0ebe1", border: "1px solid #ECE7DD",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 11, fontWeight: 700, color: "#0B1129", flexShrink: 0,
+            fontFamily: "Inter, sans-serif",
+          }}>
             {cashierInitials}
           </div>
+
+          {/* Demo back to PIN */}
           {showDemoBack && (
-            <button onClick={() => setScreen("login")}
-              className="w-[30px] h-[30px] lg:w-[34px] lg:h-[34px] rounded-card flex items-center justify-center text-text-mute hover:text-navy hover:bg-cream-pill transition-colors border border-warm-border bg-transparent"
-              title="Kembali ke PIN">
+            <button onClick={() => setScreen("login")} title="Kembali ke PIN" style={{
+              background: "transparent", border: "1px solid #ECE7DD",
+              cursor: "pointer", color: "#7A776F",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 30, height: 30, borderRadius: 8,
+            }}>
               <ChevronLeft size={13} strokeWidth={1.8} />
             </button>
           )}
-          <button onClick={async () => { await supabase.auth.signOut(); signOut(); }}
-            className="w-[30px] h-[30px] lg:w-[34px] lg:h-[34px] rounded-card flex items-center justify-center text-text-mute hover:text-warning hover:bg-cream-pill transition-colors border-0 bg-transparent"
-            title="Keluar">
-            <LogOut size={13} strokeWidth={1.8} />
+
+          {/* Logout */}
+          <button onClick={async () => { await supabase.auth.signOut(); signOut(); }} title="Keluar" style={{
+            background: "transparent", border: "none", cursor: "pointer",
+            color: "#7A776F", display: "flex", alignItems: "center", justifyContent: "center",
+            width: 30, height: 30, borderRadius: 8,
+          }}>
+            <LogOut size={14} strokeWidth={1.6} />
           </button>
         </div>
-      </aside>
+      </header>
 
-      <FeedbackDrawer open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
-    </>
-  );
-}
-
-export function MobileBottomNav({ active, setScreen }: { active: string; setScreen: (s: Screen) => void }) {
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-
-  const items = [
-    { id: "sales"   as Screen, label: "Jual",    Icon: ShoppingCart },
-    { id: "produk"  as Screen, label: "Produk",  Icon: Package },
-    { id: "riwayat" as Screen, label: "Laporan", Icon: BarChart2 },
-  ];
-
-  return (
-    <>
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-warm-border flex z-40"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        {items.map(({ id, label, Icon }) => (
-          <button key={id} onClick={() => setScreen(id)}
-            className={`flex-1 flex flex-col items-center gap-1 py-3 border-0 bg-transparent transition-colors ${active === id ? "text-navy" : "text-text-mute"}`}>
-            <Icon size={20} strokeWidth={active === id ? 2 : 1.6} />
-            <span style={{ fontSize: 9.5, letterSpacing: "0.07em" }} className="font-medium">{label}</span>
-          </button>
-        ))}
-        {/* Feedback in mobile nav */}
-        <button onClick={() => setFeedbackOpen(true)}
-          className="flex-1 flex flex-col items-center gap-1 py-3 border-0 bg-transparent transition-colors text-text-mute">
-          <MessageCircle size={20} strokeWidth={1.6} />
-          <span style={{ fontSize: 9.5, letterSpacing: "0.07em" }} className="font-medium">Pesan</span>
-        </button>
-      </nav>
+      <style>{`
+        @media (min-width: 480px) { .sm-label { display: inline !important; } }
+      `}</style>
 
       <FeedbackDrawer open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </>

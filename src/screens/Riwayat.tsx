@@ -190,10 +190,10 @@ export default function Riwayat() {
   };
 
   return (
-    <div className="w-full h-full flex animate-screen-in bg-cream-bg">
+    <div className="w-full h-full flex flex-col animate-screen-in bg-cream-bg">
       <AppSidebar active="riwayat" cashierInitials={cashierInitials} setScreen={setScreen} signOut={signOut} showDemoBack />
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
         {/* Header */}
         <div className="px-5 lg:px-10 pt-5 lg:pt-7 pb-0 shrink-0">

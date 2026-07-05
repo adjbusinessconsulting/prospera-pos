@@ -191,9 +191,12 @@ export default function Payment() {
   };
 
   return (
-    <div className="w-full h-full flex animate-screen-in bg-cream-bg">
-      {/* Sidebar desktop */}
+    <div className="w-full h-full flex flex-col animate-screen-in bg-cream-bg">
+      {/* Top bar */}
       <AppSidebar active="sales" cashierInitials={cashierInitials} setScreen={setScreen} signOut={signOut} />
+
+      {/* Content row: order summary + payment area */}
+      <div className="flex-1 flex min-h-0">
 
       {/* Desktop: order summary left panel */}
       <div className="hidden lg:flex w-[400px] bg-white border-r border-warm-border flex-col shrink-0">
@@ -344,6 +347,8 @@ export default function Payment() {
           </div>
         </div>
       </div>
+
+      </div>{/* end content row */}
 
       {/* ═══════════════════════════════════════════════════════════
           QRIS OVERLAY
