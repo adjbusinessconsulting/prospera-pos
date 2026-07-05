@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useStore } from "../store";
+import { useStore, isAtLeast } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 
@@ -74,10 +74,17 @@ const PERIOD_DATA = [
   },
 ];
 
-const FILTER_LABELS = ["Hari ini", "Kemarin", "7 hari", "30 hari"];
+const FILTER_LABELS = [
+  { label: "Hari ini", tier: null as string | null },
+  { label: "Kemarin",  tier: null },
+  { label: "7 hari",   tier: "STD" },
+  { label: "30 hari",  tier: "STD" },
+];
 
 export default function Laporan() {
-  const { cashierInitials, setScreen, signOut } = useStore();
+  const { cashierInitials, storeId, storeTier, setScreen, signOut } = useStore();
+  const effectiveTier = storeId ? storeTier : 'premium';
+  const canFullBreakdown = isAtLeast(effectiveTier, 'standard');
   const [activeFilter, setActiveFilter] = useState(0);
 
   const d = PERIOD_DATA[activeFilter];
@@ -98,12 +105,23 @@ export default function Laporan() {
 
         {/* Filter chips */}
         <div className="flex gap-2 px-5 lg:px-10 pt-4 pb-0 shrink-0 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-          {FILTER_LABELS.map((f, i) => (
-            <button key={f} onClick={() => setActiveFilter(i)}
-              className={`px-3.5 py-[7px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors ${activeFilter === i ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border hover:border-navy/40"}`}>
-              {f}
-            </button>
-          ))}
+          {FILTER_LABELS.map((f, i) => {
+            const locked = !!f.tier && !canFullBreakdown;
+            return (
+              <div key={f.label} className="relative shrink-0">
+                <button
+                  onClick={() => { if (!locked) setActiveFilter(i); }}
+                  className={`px-3.5 py-[7px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors ${activeFilter === i ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border hover:border-navy/40"} ${locked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
+                  {f.label}
+                </button>
+                {f.tier && (
+                  <span style={{ position: "absolute", top: -6, right: -2, background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 600, padding: "1px 4px", borderRadius: 3, textTransform: "uppercase" as const }}>
+                    {f.tier}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         <div className="flex-1 overflow-auto px-5 lg:px-10 pt-4 pb-4 lg:pb-6">
@@ -145,26 +163,36 @@ export default function Laporan() {
             </div>
 
             {/* Top products */}
-            <div className="flex-1 bg-white border border-warm-border rounded-card px-6 py-5">
+            <div className="flex-1 bg-white border border-warm-border rounded-card px-6 py-5 relative">
+              {!canFullBreakdown && (
+                <span style={{ position: "absolute", top: 12, right: 14, background: "rgba(201,165,95,0.10)", border: "1px solid rgba(201,165,95,0.30)", color: "#A6843F", fontSize: 8, letterSpacing: "0.12em", fontWeight: 600, padding: "3px 8px", borderRadius: 4, textTransform: "uppercase" as const }}>STANDARD</span>
+              )}
               <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-4">PRODUK TERLARIS</p>
-              <div className="flex flex-col gap-3">
-                {d.produk.map((p, i) => (
-                  <div key={p.name} className="flex items-center gap-3">
-                    <span className="text-[12px] font-semibold text-text-mute w-4 shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{i + 1}</span>
-                    <span className="text-[18px] leading-none shrink-0">{p.emoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[12.5px] font-medium text-navy">{p.name}</div>
-                      <div className="text-[11px] text-text-mute">{p.qty} terjual</div>
+              {canFullBreakdown ? (
+                <div className="flex flex-col gap-3">
+                  {d.produk.map((p, i) => (
+                    <div key={p.name} className="flex items-center gap-3">
+                      <span className="text-[12px] font-semibold text-text-mute w-4 shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{i + 1}</span>
+                      <span className="text-[18px] leading-none shrink-0">{p.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[12.5px] font-medium text-navy">{p.name}</div>
+                        <div className="text-[11px] text-text-mute">{p.qty} terjual</div>
+                      </div>
+                      <span className="font-serif text-[13px] font-semibold text-navy shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.total)}</span>
                     </div>
-                    <span className="font-serif text-[13px] font-semibold text-navy shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.total)}</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-6 gap-2">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D4C9B8" strokeWidth="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                  <p className="text-[12px] text-text-mute text-center">Produk terlaris tersedia di<br /><span className="font-semibold text-navy">Standard</span> ke atas.</p>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Chart — STANDARD tier */}
-          <div className="mt-4 bg-white border border-warm-border rounded-card px-6 py-5 relative">
+          <div className={`mt-4 bg-white border border-warm-border rounded-card px-6 py-5 relative ${!canFullBreakdown ? "opacity-50 pointer-events-none select-none" : ""}`}>
             <span style={{ position: "absolute", top: 12, right: 14, background: "rgba(201,165,95,0.10)", border: "1px solid rgba(201,165,95,0.30)", color: "#A6843F", fontSize: 8, letterSpacing: "0.12em", fontWeight: 600, padding: "3px 8px", borderRadius: 4, textTransform: "uppercase" as const }}>
               STANDARD
             </span>

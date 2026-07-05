@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useStore } from "../store";
+import { useStore, isAtLeast } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
@@ -7,7 +7,7 @@ import type { SaleRecord } from "../types";
 
 const FILTER_LABELS = [
   { label: "Hari ini",  days: 0,  tier: null as string | null },
-  { label: "Kemarin",   days: 1,  tier: "STD" },
+  { label: "Kemarin",   days: 1,  tier: null },
   { label: "7 hari",    days: 7,  tier: "STD" },
   { label: "30 hari",   days: 30, tier: "STD" },
 ];
@@ -38,7 +38,10 @@ function methodLabel(m: string) {
 }
 
 export default function Riwayat() {
-  const { cashierInitials, selectedShift, storeId, storePhone, setScreen, signOut } = useStore();
+  const { cashierInitials, selectedShift, storeId, storePhone, storeTier, setScreen, signOut } = useStore();
+  const effectiveTier = storeId ? storeTier : 'premium';
+  const canExport = isAtLeast(effectiveTier, 'standard');
+  const canExtendedHistory = isAtLeast(effectiveTier, 'standard');
   const [sales, setSales]           = useState<SaleRecord[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [activeFilter, setActiveFilter] = useState(0);
@@ -214,19 +217,23 @@ export default function Riwayat() {
 
         {/* Date filter chips */}
         <div className="flex items-center gap-2 px-5 lg:px-10 pt-3 pb-0 shrink-0 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-          {FILTER_LABELS.map((f, i) => (
-            <div key={f.label} className="relative shrink-0">
-              <button onClick={() => setActiveFilter(i)}
-                className={`px-3.5 py-[6px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors cursor-pointer ${activeFilter === i ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border hover:border-navy/40"}`}>
-                {f.label}
-              </button>
-              {f.tier && (
-                <span style={{ position: "absolute", top: -6, right: -2, background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 600, padding: "1px 4px", borderRadius: 3, textTransform: "uppercase" as const }}>
-                  {f.tier}
-                </span>
-              )}
-            </div>
-          ))}
+          {FILTER_LABELS.map((f, i) => {
+            const locked = !!f.tier && !canExtendedHistory;
+            return (
+              <div key={f.label} className="relative shrink-0">
+                <button
+                  onClick={() => { if (!locked) setActiveFilter(i); }}
+                  className={`px-3.5 py-[6px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors ${activeFilter === i ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border hover:border-navy/40"} ${locked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
+                  {f.label}
+                </button>
+                {f.tier && (
+                  <span style={{ position: "absolute", top: -6, right: -2, background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 600, padding: "1px 4px", borderRadius: 3, textTransform: "uppercase" as const }}>
+                    {f.tier}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Filters row */}
@@ -285,8 +292,8 @@ export default function Riwayat() {
             <p className="font-serif text-[18px] lg:text-[20px] font-semibold text-cream-text">{SHIFT_LABELS[selectedShift]}</p>
           </div>
           <div className="ml-auto relative">
-            <button onClick={() => setShowExportMenu(v => !v)}
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors border-0 rounded-[8px] px-3 py-2 cursor-pointer">
+            <button onClick={() => canExport && setShowExportMenu(v => !v)}
+              className={`flex items-center gap-2 bg-white/10 transition-colors border-0 rounded-[8px] px-3 py-2 ${canExport ? "hover:bg-white/20 cursor-pointer" : "opacity-60 cursor-not-allowed"}`}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>
               <span className="text-[11.5px] font-medium text-white">Export</span>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ opacity: 0.7 }}><path d="M6 9l6 6 6-6" /></svg>

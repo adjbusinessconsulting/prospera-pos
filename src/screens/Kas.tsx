@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { X, Camera, Image as ImageIcon } from "lucide-react";
-import { useStore } from "../store";
+import { useStore, isAtLeast } from "../store";
 import { formatRp, formatIDRInput } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 
@@ -33,7 +33,10 @@ function PhotoThumb({ size = "sm" }: { size?: "sm" | "md" }) {
 }
 
 export default function Kas() {
-  const { cashierInitials, cashierName, selectedShift, setScreen, signOut } = useStore();
+  const { cashierInitials, cashierName, selectedShift, storeId, storeTier, setScreen, signOut } = useStore();
+  const effectiveTier = storeId ? storeTier : 'premium';
+  const canKas = isAtLeast(effectiveTier, 'standard');
+  const requiresPhoto = isAtLeast(effectiveTier, 'premium');
 
   const [pergerakan, setPergerakan] = useState(INITIAL_PERGERAKAN);
   const [showMasuk, setShowMasuk] = useState(false);
@@ -139,30 +142,38 @@ export default function Kas() {
 
             {/* Kas Masuk / Kas Keluar */}
             <div className="flex gap-2.5">
-              <button onClick={() => setShowMasuk(true)}
-                className="flex-1 bg-[#5C9E7E14] border border-[#5C9E7E40] rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-[#3D7A5E] hover:bg-[#5C9E7E20] transition-colors cursor-pointer">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
-                Kas Masuk
-              </button>
-              <button onClick={() => setShowKeluar(true)}
-                className="flex-1 bg-[#C25E3D14] border border-[#C25E3D40] rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-[#C25E3D] hover:bg-[#C25E3D20] transition-colors cursor-pointer">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14" /></svg>
-                Kas Keluar
-              </button>
+              <div className="relative flex-1">
+                <button onClick={() => canKas && setShowMasuk(true)}
+                  className={`w-full bg-[#5C9E7E14] border border-[#5C9E7E40] rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-[#3D7A5E] transition-colors ${canKas ? "hover:bg-[#5C9E7E20] cursor-pointer" : "opacity-50 cursor-not-allowed"}`}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
+                  Kas Masuk
+                </button>
+                {!canKas && <span style={{ position: "absolute", top: -7, right: 6, background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const }}>STD</span>}
+              </div>
+              <div className="relative flex-1">
+                <button onClick={() => canKas && setShowKeluar(true)}
+                  className={`w-full bg-[#C25E3D14] border border-[#C25E3D40] rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-[#C25E3D] transition-colors ${canKas ? "hover:bg-[#C25E3D20] cursor-pointer" : "opacity-50 cursor-not-allowed"}`}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14" /></svg>
+                  Kas Keluar
+                </button>
+                {!canKas && <span style={{ position: "absolute", top: -7, right: 6, background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const }}>STD</span>}
+              </div>
             </div>
 
-            {/* Mobile: foto banner + pergerakan */}
+            {/* Mobile: tier banner + pergerakan */}
             <div className="lg:hidden">
-              <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-card border border-dashed mb-3"
-                style={{ borderColor: "rgba(201,165,95,0.45)", background: "rgba(201,165,95,0.06)" }}>
-                <p className="text-[12px] text-navy">
-                  <span className="font-semibold">Foto bukti kas</span>
-                  <span className="text-text-mute"> tidak tersedia di Free · Upgrade Standard</span>
-                </p>
-                <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>
-                  STANDARD
-                </span>
-              </div>
+              {!canKas && (
+                <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-card border border-dashed mb-3"
+                  style={{ borderColor: "rgba(201,165,95,0.45)", background: "rgba(201,165,95,0.06)" }}>
+                  <p className="text-[12px] text-navy">
+                    <span className="font-semibold">Uang Kas</span>
+                    <span className="text-text-mute"> tidak tersedia di Free · Upgrade Standard</span>
+                  </p>
+                  <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>
+                    STANDARD
+                  </span>
+                </div>
+              )}
 
               <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-2.5">PERGERAKAN HARI INI</p>
               <div className="bg-white border border-warm-border rounded-card overflow-hidden">
@@ -190,20 +201,29 @@ export default function Kas() {
           {/* Right column: pergerakan (desktop only) */}
           <div className="hidden lg:flex flex-1 flex-col min-w-0 overflow-hidden pt-4 pb-0 pr-10">
 
-            {/* STANDARD foto banner */}
-            <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-card border border-dashed mb-4 shrink-0"
-              style={{ borderColor: "rgba(201,165,95,0.45)", background: "rgba(201,165,95,0.06)" }}>
-              <div className="flex items-center gap-3">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+            {/* Tier banner: Free locked / Premium mandatory photo */}
+            {!canKas ? (
+              <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-card border border-dashed mb-4 shrink-0"
+                style={{ borderColor: "rgba(201,165,95,0.45)", background: "rgba(201,165,95,0.06)" }}>
+                <div className="flex items-center gap-3">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M18.36 6.64A9 9 0 115.64 19.36M2 12h2M20 12h2M12 2v2M12 20v2" /></svg>
+                  <p className="text-[12.5px] text-navy">
+                    <span className="font-semibold">Uang Kas</span>
+                    <span className="text-text-mute"> tidak tersedia di Free · Upgrade Standard untuk mencatat kas masuk/keluar.</span>
+                  </p>
+                </div>
+                <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>STANDARD</span>
+              </div>
+            ) : requiresPhoto ? (
+              <div className="flex items-center gap-3 px-4 py-3 rounded-card border border-dashed mb-4 shrink-0"
+                style={{ borderColor: "rgba(92,158,126,0.4)", background: "rgba(92,158,126,0.06)" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5C9E7E" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
                 <p className="text-[12.5px] text-navy">
-                  <span className="font-semibold">Foto bukti kas</span>
-                  <span className="text-text-mute"> tidak tersedia di Free · Upgrade Standard untuk lampirkan bukti foto di setiap kas masuk/keluar.</span>
+                  <span className="font-semibold">Foto bukti wajib</span>
+                  <span className="text-text-mute"> · Setiap kas masuk/keluar harus disertai foto bukti.</span>
                 </p>
               </div>
-              <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>
-                STANDARD
-              </span>
-            </div>
+            ) : null}
 
             <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-3 shrink-0">PERGERAKAN HARI INI</p>
 
@@ -307,8 +327,13 @@ export default function Kas() {
               {/* Foto bukti */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">FOTO BUKTI <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></span>
-                  <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 600, padding: "1px 5px", borderRadius: 3, textTransform: "uppercase" as const }}>STANDARD</span>
+                  <span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">
+                    FOTO BUKTI{" "}
+                    {requiresPhoto
+                      ? <span style={{ fontSize: 8, color: "#C25E3D", textTransform: "none" as const, letterSpacing: 0 }}>* wajib</span>
+                      : <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span>
+                    }
+                  </span>
                 </div>
                 {kasPhoto ? (
                   <div className="flex items-center gap-3">
@@ -332,7 +357,7 @@ export default function Kas() {
                     </button>
                   </div>
                 )}
-                <p className="text-[10.5px] text-text-mute mt-1.5">Foto bukti tersedia di tier Standard ke atas.</p>
+                {requiresPhoto && !kasPhoto && <p className="text-[10.5px] text-[#C25E3D] mt-1.5">Foto bukti wajib dilampirkan untuk Premium ke atas.</p>}
               </div>
             </div>
 
@@ -342,9 +367,9 @@ export default function Kas() {
                 Batal
               </button>
               <button
-                disabled={!kasNominal}
+                disabled={!kasNominal || (requiresPhoto && !kasPhoto)}
                 onClick={handleKasConfirm}
-                className={`flex-1 rounded-card h-[46px] text-[13px] font-semibold border-0 transition-opacity ${kasNominal
+                className={`flex-1 rounded-card h-[46px] text-[13px] font-semibold border-0 transition-opacity ${kasNominal && !(requiresPhoto && !kasPhoto)
                   ? `${modalType === "masuk" ? "bg-[#3D7A5E]" : "bg-[#C25E3D]"} text-white hover:opacity-90 cursor-pointer`
                   : "bg-navy/20 text-navy/40 cursor-not-allowed"}`}>
                 Catat {modalType === "masuk" ? "Kas Masuk" : "Kas Keluar"}
