@@ -164,26 +164,26 @@ export default function ResetPassword() {
 
         {done ? (
           /* ── Success screen ── */
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "20px 36px 40px", textAlign: "center", animation: "fadeUp .5s ease both" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "8px 28px 24px", textAlign: "center", animation: "fadeUp .5s ease both" }}>
             <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
 
-            <div style={{ width: 104, height: 104, borderRadius: "50%", background: "#e9f1ea", display: "grid", placeItems: "center", marginBottom: 28, position: "relative", flexShrink: 0 }}>
-              <div style={{ position: "absolute", inset: -12, borderRadius: "50%", border: "1px dashed #cfe0d1" }} />
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3f7d54" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <div style={{ width: 84, height: 84, borderRadius: "50%", background: "#e9f1ea", display: "grid", placeItems: "center", marginBottom: 18, position: "relative", flexShrink: 0 }}>
+              <div style={{ position: "absolute", inset: -10, borderRadius: "50%", border: "1px dashed #cfe0d1" }} />
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3f7d54" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 6L9 17l-5-5"/>
               </svg>
             </div>
 
-            <div style={{ font: `600 10.5px/1.4 ${GK}`, letterSpacing: "0.16em", textTransform: "uppercase", color: "#3f7d54", marginBottom: 12 }}>Berhasil · Kata Sandi Diperbarui</div>
-            <h1 style={{ font: `500 30px/1.15 ${EBG}`, color: "#14203a", margin: "0 0 12px" }}>Kata sandi baru Anda telah tersimpan.</h1>
-            <p style={{ font: `400 13.5px/1.6 ${GK}`, color: "#8f897a", margin: "0 0 32px", maxWidth: 320 }}>Silakan masuk kembali ke Sterith POS menggunakan kata sandi baru Anda.</p>
+            <div style={{ font: `600 10.5px/1.4 ${GK}`, letterSpacing: "0.16em", textTransform: "uppercase", color: "#3f7d54", marginBottom: 10 }}>Berhasil · Kata Sandi Diperbarui</div>
+            <h1 style={{ font: `500 26px/1.15 ${EBG}`, color: "#14203a", margin: "0 0 8px" }}>Kata sandi baru Anda telah tersimpan.</h1>
+            <p style={{ font: `400 13px/1.55 ${GK}`, color: "#8f897a", margin: "0 0 20px", maxWidth: 320 }}>Silakan masuk kembali ke Sterith POS menggunakan kata sandi baru Anda.</p>
 
-            <a href="https://pos.sterith.com" style={{ textDecoration: "none", width: "100%", background: "#14203a", color: "#fff", borderRadius: 11, padding: "14px 18px", font: `600 13.5px/1 ${GK}`, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+            <a href="https://pos.sterith.com" style={{ textDecoration: "none", width: "100%", background: "#14203a", color: "#fff", borderRadius: 11, padding: "13px 18px", font: `600 13.5px/1 ${GK}`, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
               Login ke POS
               <span style={{ color: "#e7c987", fontWeight: 700 }}>→</span>
             </a>
 
-            <div style={{ marginTop: 20, font: `500 12.5px/1 ${GK}`, color: "#8f897a" }}>
+            <div style={{ marginTop: 14, font: `500 12.5px/1 ${GK}`, color: "#8f897a" }}>
               Butuh bantuan? <a href="#" style={{ color: "#14203a", textDecoration: "none", fontWeight: 600 }}>Layanan</a>
             </div>
           </div>
