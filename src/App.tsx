@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useStore } from "./store";
+import { supabase } from "./lib/supabase";
 import OwnerLogin from "./screens/OwnerLogin";
 import ResetPassword from "./screens/ResetPassword";
 import UpdateBanner from "./components/UpdateBanner";
@@ -62,9 +63,16 @@ export default function App() {
       setDemoMode(true);
       setStoreData(DEMO_STORE_ID, "Demo Toko", "Jl. Diponegoro No. 24, Palu Timur", [DEMO_CASHIER], "0812-3456-7890", "", "", "premium");
       setScreen("sales");
-    } else if (params.get("code")) {
-      setScreen("reset-password");
     }
+  }, []);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setScreen("reset-password");
+      }
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   if (showSplash) return <SplashScreen onDone={() => setShowSplash(false)} />;

@@ -19,24 +19,15 @@ export default function ResetPassword() {
   const [done, setDone]           = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ data, error: err }) => {
-        setExchanging(false);
-        if (err) {
-          setError("Link tidak valid atau sudah kadaluarsa. Silakan minta admin mengirim ulang.");
-        } else if (data.user?.email) {
-          setEmail(data.user.email);
-        }
-        window.history.replaceState({}, "", "/");
-      });
-    } else {
-      supabase.auth.getUser().then(({ data }) => {
-        setExchanging(false);
-        if (data.user?.email) setEmail(data.user.email);
-      });
-    }
+    // Supabase already exchanged the code via detectSessionInUrl — just read the session
+    supabase.auth.getUser().then(({ data }) => {
+      setExchanging(false);
+      if (data.user?.email) {
+        setEmail(data.user.email);
+      } else {
+        setError("Link tidak valid atau sudah kadaluarsa. Silakan minta admin mengirim ulang.");
+      }
+    });
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
