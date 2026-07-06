@@ -17,15 +17,16 @@ import PindahShift from "./screens/PindahShift";
 import TutupToko from "./screens/TutupToko";
 import CheckIn from "./screens/CheckIn";
 
-// Read synchronously at module load — before Supabase's async detectSessionInUrl strips the token from the URL.
-// Implicit flow (Supabase default) puts the recovery token in the hash (#...type=recovery);
-// PKCE flow uses ?code= in the query string. Detect both.
+// Read synchronously at module load — before Supabase's async detectSessionInUrl strips the token.
+// Covers every reset-link shape: implicit (#...type=recovery), PKCE (?code=),
+// token_hash (?token_hash=...&type=recovery), and error hashes (#error_code=otp_expired).
 const urlHasResetCode = (() => {
   if (typeof window === "undefined") return false;
-  const hasCode = new URLSearchParams(window.location.search).has("code");
-  const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
-  const isRecoveryHash = new URLSearchParams(hash).get("type") === "recovery";
-  return hasCode || isRecoveryHash;
+  const q = new URLSearchParams(window.location.search);
+  const h = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const has = (k: string) => q.has(k) || h.has(k);
+  const isRecovery = q.get("type") === "recovery" || h.get("type") === "recovery";
+  return has("code") || has("token_hash") || isRecovery || has("error_code") || has("error");
 })();
 
 const DEMO_STORE_ID = "42dea26b-82a2-4b1b-b5fd-c573687df422";

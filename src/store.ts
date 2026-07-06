@@ -61,14 +61,20 @@ function currentShiftFromTime(): 1 | 2 | 3 {
 }
 
 // Synchronous check at store creation time — before any React renders or Supabase async work.
-// Supabase's default implicit flow puts the recovery token in the URL hash (#access_token=...&type=recovery);
-// the PKCE flow uses ?code= in the query string. Detect both so we never miss a reset link.
+// A password-reset link can arrive in several shapes depending on the email flow:
+//   - implicit:   #access_token=...&type=recovery
+//   - PKCE:       ?code=...
+//   - token_hash: ?token_hash=...&type=recovery   (scanner-proof flow)
+//   - errors:     #error=...&error_code=otp_expired  (expired/used link)
+// We route to the reset screen for all of them (errors included, so we can show a
+// friendly "request a new link" message instead of dumping the user on login).
 function _detectResetFlow(): boolean {
   if (typeof window === 'undefined') return false;
-  const hasCode = new URLSearchParams(window.location.search).has('code');
-  const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
-  const isRecoveryHash = new URLSearchParams(hash).get('type') === 'recovery';
-  return hasCode || isRecoveryHash;
+  const q = new URLSearchParams(window.location.search);
+  const h = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const has = (k: string) => q.has(k) || h.has(k);
+  const isRecovery = q.get('type') === 'recovery' || h.get('type') === 'recovery';
+  return has('code') || has('token_hash') || isRecovery || has('error_code') || has('error');
 }
 const _startsAsReset = _detectResetFlow();
 

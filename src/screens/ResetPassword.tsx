@@ -21,30 +21,55 @@ export default function ResetPassword() {
   useEffect(() => {
     let resolved = false;
 
-    function resolve(userEmail: string | undefined) {
+    function resolve(userEmail: string | undefined, customError?: string) {
       if (resolved) return;
       resolved = true;
       setExchanging(false);
       if (userEmail) {
         setEmail(userEmail);
       } else {
-        setError("Link tidak valid atau sudah kadaluarsa. Silakan minta admin mengirim ulang.");
+        setError(customError ?? "Link tidak valid atau sudah kadaluarsa. Silakan minta link reset baru.");
       }
     }
 
-    // Check immediately in case Supabase already finished the exchange
+    const q = new URLSearchParams(window.location.search);
+    const h = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const pick = (k: string) => q.get(k) ?? h.get(k);
+
+    // 1) Supabase already rejected the link (expired / already used / scanner-consumed).
+    if (pick("error") || pick("error_code")) {
+      const code = pick("error_code");
+      const msg = code === "otp_expired"
+        ? "Link reset sudah kadaluarsa atau sudah dipakai. Silakan minta link reset baru."
+        : "Link tidak valid. Silakan minta link reset baru.";
+      resolve(undefined, msg);
+      return;
+    }
+
+    // 2) Scanner-proof flow: the email link carries a token_hash we verify ourselves.
+    //    (Email scanners loading the page don't run this call, so the token survives.)
+    const tokenHash = pick("token_hash");
+    if (tokenHash && pick("type") === "recovery") {
+      supabase.auth.verifyOtp({ type: "recovery", token_hash: tokenHash }).then(({ data, error: otpError }) => {
+        if (otpError) {
+          resolve(undefined, "Link reset sudah kadaluarsa atau sudah dipakai. Silakan minta link reset baru.");
+        } else if (data.session?.user?.email) {
+          resolve(data.session.user.email);
+        }
+      });
+    }
+
+    // 3) Implicit / PKCE flow: Supabase establishes the session from the URL itself.
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user?.email) resolve(session.user.email);
     });
-
-    // Also listen for the exchange completing (handles the race where we mount before exchange finishes)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
         resolve(session?.user?.email);
       }
     });
 
-    // Fallback: if nothing fires in 10s, show an error
+    // Fallback: if nothing resolves in 10s, show a generic error
     const timeout = setTimeout(() => resolve(undefined), 10000);
 
     return () => {
