@@ -19,15 +19,38 @@ export default function ResetPassword() {
   const [done, setDone]           = useState(false);
 
   useEffect(() => {
-    // Supabase already exchanged the code via detectSessionInUrl — just read the session
-    supabase.auth.getUser().then(({ data }) => {
+    let resolved = false;
+
+    function resolve(userEmail: string | undefined) {
+      if (resolved) return;
+      resolved = true;
       setExchanging(false);
-      if (data.user?.email) {
-        setEmail(data.user.email);
+      if (userEmail) {
+        setEmail(userEmail);
       } else {
         setError("Link tidak valid atau sudah kadaluarsa. Silakan minta admin mengirim ulang.");
       }
+    }
+
+    // Check immediately in case Supabase already finished the exchange
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.email) resolve(session.user.email);
     });
+
+    // Also listen for the exchange completing (handles the race where we mount before exchange finishes)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+        resolve(session?.user?.email);
+      }
+    });
+
+    // Fallback: if nothing fires in 10s, show an error
+    const timeout = setTimeout(() => resolve(undefined), 10000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {

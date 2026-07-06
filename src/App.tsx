@@ -17,6 +17,9 @@ import PindahShift from "./screens/PindahShift";
 import TutupToko from "./screens/TutupToko";
 import CheckIn from "./screens/CheckIn";
 
+// Read synchronously at module load — before Supabase's async detectSessionInUrl strips ?code= from the URL
+const urlHasResetCode = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("code");
+
 const DEMO_STORE_ID = "42dea26b-82a2-4b1b-b5fd-c573687df422";
 
 const DEMO_CASHIER = {
@@ -67,6 +70,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // If ?code= was in the URL when the page loaded, this is a password reset flow
+    if (urlHasResetCode) {
+      setScreen("reset-password");
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setScreen("reset-password");
