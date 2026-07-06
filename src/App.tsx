@@ -31,6 +31,7 @@ export default function App() {
   const screen = useStore(s => s.screen);
   const setScreen = useStore(s => s.setScreen);
   const setStoreData = useStore(s => s.setStoreData);
+  const setDemoMode = useStore(s => s.setDemoMode);
   const [scale, setScale] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -57,7 +58,8 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("demo") === "true") {
-      setStoreData(DEMO_STORE_ID, "Toko Sembako Maju", "Jl. Diponegoro No. 24, Palu Timur", [DEMO_CASHIER], "0812-3456-7890", "", "", "premium");
+      setDemoMode(true);
+      setStoreData(DEMO_STORE_ID, "Demo Toko", "Jl. Diponegoro No. 24, Palu Timur", [DEMO_CASHIER], "0812-3456-7890", "", "", "premium");
       setScreen("sales");
     }
   }, []);

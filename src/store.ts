@@ -26,8 +26,10 @@ interface POSState {
   dbCashiers: CashierDB[];
   checkinPhoto: string | null;
   products: Product[];
+  isDemoMode: boolean;
 
   setScreen: (s: Screen) => void;
+  setDemoMode: (v: boolean) => void;
   selectCashier: (id: string) => void;
   setShift: (n: 1 | 2 | 3) => void;
   addPin: (digit: string) => void;
@@ -82,8 +84,10 @@ export const useStore = create<POSState>((set) => ({
   dbCashiers: [],
   checkinPhoto: null,
   products: [...PRODUCTS],
+  isDemoMode: false,
 
   setScreen: (screen) => set({ screen }),
+  setDemoMode: (isDemoMode) => set({ isDemoMode }),
 
   selectCashier: (id) => set((s) => {
     const cashier = s.dbCashiers.find(c => c.id === id);
@@ -142,6 +146,7 @@ export const useStore = create<POSState>((set) => ({
     midtransClientKey: '',
     dbCashiers: [],
     trxCounter: 42,
+    isDemoMode: false,
   }),
 
   setCheckinPhoto: (photo) => set({ checkinPhoto: photo }),

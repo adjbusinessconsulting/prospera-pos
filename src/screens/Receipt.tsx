@@ -21,7 +21,7 @@ function SterithWatermark({ tier }: { tier: string }) {
 }
 
 export default function Receipt() {
-  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, restart, setScreen, signOut } = useStore();
+  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, restart, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'premium';
   const canWhatsApp = isAtLeast(effectiveTier, 'standard');
   const total = getTotal(cart);
@@ -35,7 +35,7 @@ export default function Receipt() {
   const SHIFT_LABELS: Record<1 | 2 | 3, string> = { 1: "Shift 1 (Pagi)", 2: "Shift 2 (Siang)", 3: "Shift 3 (Malam)" };
 
   async function handleNewTrx() {
-    if (storeId) {
+    if (storeId && !isDemoMode) {
       const { data: sale } = await supabase.from("sales").insert({
         store_id: storeId,
         trx_id: trxId,
@@ -213,7 +213,7 @@ export default function Receipt() {
             </div>
           </div>
 
-          <p className="text-[11px] text-text-mute text-center mt-6">Struk tersimpan di Riwayat</p>
+          <p className="text-[11px] text-text-mute text-center mt-6">{isDemoMode ? "Mode Demo · data tidak tersimpan" : "Struk tersimpan di Riwayat"}</p>
         </div>
       </div>
 
