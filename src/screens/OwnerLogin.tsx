@@ -6,8 +6,19 @@ import { BUILD } from "../version";
 
 const DAY_ID = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
+interface StoreRow {
+  id: string;
+  name: string;
+  address: string | null;
+  phone: string | null;
+  tier: string | null;
+  qris_image_url: string | null;
+  midtrans_client_key: string | null;
+}
+
 export default function OwnerLogin() {
   const { setScreen, setStoreData, setProductsFromDB, setTrxCounter } = useStore();
+  const [storeChoices, setStoreChoices] = useState<StoreRow[]>([]);
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [loginAs, setLoginAs] = useState<"toko" | "backoffice">("toko");
   const [email, setEmail] = useState("");
@@ -91,33 +102,40 @@ export default function OwnerLogin() {
         .from("stores")
         .select("id, name, address, phone, tier, qris_image_url, midtrans_client_key")
         .eq("owner_id", userId)
-        .limit(1);
-      if (storeRows && storeRows.length > 0) {
-        const store = storeRows[0];
-        const { data: cashierRows } = await supabase
-          .from("cashiers")
-          .select("*")
-          .eq("store_id", store.id)
-          .eq("active", true);
-        setStoreData(
-          store.id,
-          store.name,
-          store.address || "",
-          (cashierRows ?? []) as CashierDB[],
-          store.phone || "",
-          store.qris_image_url || "",
-          store.midtrans_client_key || "",
-          store.tier || "free",
-        );
-
-        const [{ data: productRows }, { count: saleCount }] = await Promise.all([
-          supabase.from("products").select("*").eq("store_id", store.id).eq("active", true).order("name"),
-          supabase.from("sales").select("*", { count: "exact", head: true }).eq("store_id", store.id),
-        ]);
-        if (productRows && productRows.length > 0) setProductsFromDB(productRows as import("../types").Product[]);
-        setTrxCounter((saleCount ?? 0) + 1);
+        .order("created_at");
+      // Multi-store: let the owner pick which store to enter
+      if (storeRows && storeRows.length > 1) {
+        setStoreChoices(storeRows as StoreRow[]);
+        setLoading(false);
+        return;
+      }
+      if (storeRows && storeRows.length === 1) {
+        await enterStore(storeRows[0] as StoreRow);
+        return;
       }
     }
+    setScreen("login");
+  }
+
+  async function enterStore(store: StoreRow) {
+    const { data: cashierRows } = await supabase
+      .from("cashiers").select("*").eq("store_id", store.id).eq("active", true);
+    setStoreData(
+      store.id,
+      store.name,
+      store.address || "",
+      (cashierRows ?? []) as CashierDB[],
+      store.phone || "",
+      store.qris_image_url || "",
+      store.midtrans_client_key || "",
+      store.tier || "free",
+    );
+    const [{ data: productRows }, { count: saleCount }] = await Promise.all([
+      supabase.from("products").select("*").eq("store_id", store.id).eq("active", true).order("name"),
+      supabase.from("sales").select("*", { count: "exact", head: true }).eq("store_id", store.id),
+    ]);
+    if (productRows && productRows.length > 0) setProductsFromDB(productRows as import("../types").Product[]);
+    setTrxCounter((saleCount ?? 0) + 1);
     setScreen("login");
   }
 
@@ -264,6 +282,41 @@ export default function OwnerLogin() {
   );
 
   const fonts = <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');`}</style>;
+
+  // ── Multi-store picker (shown after login when the account has >1 store) ──
+  if (storeChoices.length > 0) {
+    return (
+      <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px", fontFamily: "Inter, system-ui, sans-serif" }}>
+        {fonts}
+        <img src="/horizontal-light.png" alt="Sterith" style={{ height: 56, width: "auto", marginBottom: 24 }} />
+        <div style={{ width: "100%", maxWidth: 420 }}>
+          <p style={{ fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "#C9A55F", fontWeight: 600, textAlign: "center", marginBottom: 8 }}>PILIH TOKO</p>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 30, fontWeight: 500, color: "#0B1129", textAlign: "center", margin: "0 0 6px" }}>Toko mana hari ini?</h1>
+          <p style={{ fontSize: 13, color: "#7A776F", textAlign: "center", margin: "0 0 24px" }}>Akun Anda memiliki {storeChoices.length} toko. Pilih satu untuk masuk.</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {storeChoices.map(s => (
+              <button key={s.id} onClick={() => { setLoading(true); enterStore(s); }} disabled={loading}
+                style={{ display: "flex", alignItems: "center", gap: 14, background: "white", border: "1px solid #ECE7DD", borderRadius: 14, padding: "14px 16px", cursor: loading ? "default" : "pointer", textAlign: "left", width: "100%", opacity: loading ? 0.7 : 1 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 11, background: "#F0EBE1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B1129" strokeWidth="1.7"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "#0B1129" }}>{s.name}</div>
+                  <div style={{ fontSize: 12, color: "#7A776F", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.address || "—"}</div>
+                </div>
+                <span style={{ fontSize: 8, letterSpacing: "0.12em", fontWeight: 700, textTransform: "uppercase", color: "#A6843F", background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", padding: "2px 7px", borderRadius: 5, flexShrink: 0 }}>{s.tier || "free"}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5" style={{ flexShrink: 0 }}><path d="M5 12h14M13 5l7 7-7 7" /></svg>
+              </button>
+            ))}
+          </div>
+          <button onClick={() => { setStoreChoices([]); supabase.auth.signOut(); }}
+            style={{ display: "block", margin: "20px auto 0", background: "none", border: "none", fontSize: 12.5, color: "#7A776F", cursor: "pointer", textDecoration: "underline" }}>
+            ← Keluar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (isMobile) {
     return (
