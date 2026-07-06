@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useStore } from "./store";
 import OwnerLogin from "./screens/OwnerLogin";
+import ResetPassword from "./screens/ResetPassword";
 import UpdateBanner from "./components/UpdateBanner";
 import SplashScreen from "./components/SplashScreen";
 import PinLogin from "./screens/PinLogin";
@@ -61,10 +62,13 @@ export default function App() {
       setDemoMode(true);
       setStoreData(DEMO_STORE_ID, "Demo Toko", "Jl. Diponegoro No. 24, Palu Timur", [DEMO_CASHIER], "0812-3456-7890", "", "", "premium");
       setScreen("sales");
+    } else if (params.get("code")) {
+      setScreen("reset-password");
     }
   }, []);
 
   if (showSplash) return <SplashScreen onDone={() => setShowSplash(false)} />;
+  if (screen === "reset-password") return <ResetPassword />;
   if (screen === "owner-login") return <><OwnerLogin /><UpdateBanner /></>;
   if (screen === "checkin")     return <CheckIn />;
 

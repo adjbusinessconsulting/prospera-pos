@@ -8,7 +8,7 @@ const DAY_ID = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
 export default function OwnerLogin() {
   const { setScreen, setStoreData, setProductsFromDB, setTrxCounter } = useStore();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [loginAs, setLoginAs] = useState<"toko" | "backoffice">("toko");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,6 +35,17 @@ export default function OwnerLogin() {
 
   const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
   const dayStr = DAY_ID[now.getDay()];
+
+  async function handleForgot(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true); setError(""); setSuccess("");
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: "https://pos.sterith.com",
+    });
+    setLoading(false);
+    if (resetError) { setError(resetError.message); return; }
+    setSuccess("Link reset password sudah dikirim ke email Anda. Cek inbox atau folder spam.");
+  }
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
@@ -132,8 +143,28 @@ export default function OwnerLogin() {
         </div>
       </div>
 
+      {/* Forgot password form */}
+      {mode === "forgot" && (
+        <form onSubmit={handleForgot} style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 4 }}>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13.5, fontWeight: 600, color: "#0B1129", margin: "0 0 2px", textAlign: isMobile ? "center" : "left" as const }}>Lupa Password?</p>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#7A776F", margin: "0 0 4px", lineHeight: 1.5, textAlign: isMobile ? "center" : "left" as const }}>Masukkan email akun Anda dan kami akan mengirim link untuk mengatur ulang password.</p>
+          <div style={{ background: "white", border: "1px solid #ECE7DD", borderRadius: 10, padding: "0 13px", height: 46, display: "flex", alignItems: "center", gap: 9 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A39B" strokeWidth="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@toko.com" required style={{ flex: 1, border: "none", outline: "none", fontSize: 14, color: "#0B1129", background: "transparent", fontFamily: "Inter, sans-serif" }} />
+          </div>
+          {error   && <div style={{ fontSize: 11.5, color: "#C25E3D", background: "rgba(194,94,61,0.06)", border: "1px solid rgba(194,94,61,0.2)", borderRadius: 8, padding: "7px 12px", fontFamily: "Inter, sans-serif" }}>{error}</div>}
+          {success && <div style={{ fontSize: 11.5, color: "#5C9E7E", background: "rgba(92,158,126,0.06)", border: "1px solid rgba(92,158,126,0.2)", borderRadius: 8, padding: "7px 12px", fontFamily: "Inter, sans-serif" }}>{success}</div>}
+          <button type="submit" disabled={loading} style={{ background: "#0B1129", color: "#FAFAF7", border: "none", borderRadius: 11, height: 50, fontSize: 13.5, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.75 : 1, fontFamily: "Inter, sans-serif" }}>
+            {loading ? "Mengirim…" : "Kirim Link Reset"}
+          </button>
+          <button type="button" onClick={() => { setMode("signin"); setError(""); setSuccess(""); }} style={{ background: "transparent", border: "none", fontSize: 12.5, color: "#7A776F", cursor: "pointer", fontFamily: "Inter, sans-serif", textDecoration: "underline", textUnderlineOffset: 3 }}>
+            ← Kembali ke login
+          </button>
+        </form>
+      )}
+
       {/* Form */}
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {mode !== "forgot" && <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
         {mode === "signup" && (
           <div>
@@ -157,7 +188,7 @@ export default function OwnerLogin() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 7 }}>
             <label style={{ fontFamily: "Inter, sans-serif", fontSize: 9.5, letterSpacing: "0.22em", textTransform: "uppercase" as const, color: "#7A776F", fontWeight: 600 }}>KATA SANDI</label>
             {mode === "signin" && (
-              <button type="button" style={{ background: "transparent", border: "none", padding: 0, fontSize: 11.5, color: "#7A776F", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 2 }}>Lupa?</button>
+              <button type="button" onClick={() => { setMode("forgot"); setError(""); setSuccess(""); }} style={{ background: "transparent", border: "none", padding: 0, fontSize: 11.5, color: "#7A776F", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 2 }}>Lupa?</button>
             )}
           </div>
           <div style={{ background: "white", border: "1.5px solid #0B1129", borderRadius: 10, padding: "0 13px", height: 46, display: "flex", alignItems: "center", gap: 9 }}>
@@ -186,10 +217,10 @@ export default function OwnerLogin() {
           {loading ? "Memproses…" : mode === "signin" ? "MASUK" : "DAFTAR SEKARANG"}
           {!loading && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
         </button>
-      </form>
+      </form>}
 
       {/* Footer */}
-      <div style={{ marginTop: 14, textAlign: "center" as const }}>
+      {mode !== "forgot" && <div style={{ marginTop: 14, textAlign: "center" as const }}>
         {mode === "signin" ? (
           <p style={{ fontSize: 12.5, color: "#7A776F", margin: 0, fontFamily: "Inter, sans-serif" }}>
             Belum punya akun?{" "}
@@ -213,7 +244,7 @@ export default function OwnerLogin() {
             COBA DEMO →
           </button>
         </div>
-      </div>
+      </div>}
     </div>
   );
 
