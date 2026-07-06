@@ -39,12 +39,27 @@ export default function OwnerLogin() {
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true); setError(""); setSuccess("");
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://pos.sterith.com",
-    });
-    setLoading(false);
-    if (resetError) { setError(resetError.message); return; }
-    setSuccess("Link reset password sudah dikirim ke email Anda. Cek inbox atau folder spam.");
+    try {
+      const res = await fetch("https://masteroffice.sterith.com/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const json = await res.json().catch(() => ({}));
+      setLoading(false);
+      if (!res.ok) {
+        setError(json.error || "Terjadi kesalahan. Silakan coba lagi.");
+        return;
+      }
+      if (!json.registered) {
+        setError("Email ini belum terdaftar. Periksa kembali, atau daftar terlebih dahulu.");
+        return;
+      }
+      setSuccess("Link reset password sudah dikirim ke email Anda. Cek inbox atau folder spam.");
+    } catch {
+      setLoading(false);
+      setError("Tidak dapat terhubung ke server. Periksa koneksi internet Anda.");
+    }
   }
 
   async function handleSubmit(e: React.SyntheticEvent) {
