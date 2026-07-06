@@ -26,6 +26,19 @@ function genId(): string {
   return "s_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+// Shift time overlap detection (handles overnight shifts that cross midnight)
+function toMin(t: string) { const [h, m] = t.split(":").map(Number); return h * 60 + (m || 0); }
+function segments(start: string, end: string): [number, number][] {
+  const a = toMin(start), b = toMin(end);
+  if (a === b) return [[0, 1440]];
+  if (a < b) return [[a, b]];
+  return [[a, 1440], [0, b]];
+}
+function shiftsOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
+  const A = segments(aStart, aEnd), B = segments(bStart, bEnd);
+  return A.some(([a1, a2]) => B.some(([b1, b2]) => a1 < b2 && b1 < a2));
+}
+
 export default function ManageStaff({ onClose }: { onClose: () => void }) {
   const { storeId, storeTier, dbCashiers, setDbCashiers } = useStore();
 
@@ -119,6 +132,9 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
     if (sAtLimit) { setShiftErr(`Batas ${sLimit} shift tercapai. Upgrade ke ${nextTierLabel(storeTier)}.`); return; }
     if (!shiftName.trim())        { setShiftErr("Nama shift wajib diisi."); return; }
     if (!startTime || !endTime)   { setShiftErr("Jam mulai & selesai wajib diisi."); return; }
+    if (startTime === endTime)    { setShiftErr("Jam mulai dan selesai tidak boleh sama."); return; }
+    const clash = shifts.find(s => shiftsOverlap(startTime, endTime, s.start_time, s.end_time));
+    if (clash) { setShiftErr(`Jam bertabrakan dengan "${clash.name}" (${clash.start_time}–${clash.end_time}). Shift tidak boleh tumpang tindih.`); return; }
     setAddingShift(true);
     const { error } = await supabase.from("shifts").insert({
       id: genId(), store_id: storeId, name: shiftName.trim(), start_time: startTime, end_time: endTime, assigned_cashier_id: null,

@@ -17,7 +17,7 @@ interface StoreRow {
 }
 
 export default function OwnerLogin() {
-  const { setScreen, setStoreData, setProductsFromDB, setTrxCounter } = useStore();
+  const { setScreen, setStoreData, setProductsFromDB, setTrxCounter, setDbShifts } = useStore();
   const [storeChoices, setStoreChoices] = useState<StoreRow[]>([]);
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [loginAs, setLoginAs] = useState<"toko" | "backoffice">("toko");
@@ -130,11 +130,13 @@ export default function OwnerLogin() {
       store.midtrans_client_key || "",
       store.tier || "free",
     );
-    const [{ data: productRows }, { count: saleCount }] = await Promise.all([
+    const [{ data: productRows }, { count: saleCount }, { data: shiftRows }] = await Promise.all([
       supabase.from("products").select("*").eq("store_id", store.id).eq("active", true).order("name"),
       supabase.from("sales").select("*", { count: "exact", head: true }).eq("store_id", store.id),
+      supabase.from("shifts").select("id, name, start_time, end_time").eq("store_id", store.id).order("start_time"),
     ]);
     if (productRows && productRows.length > 0) setProductsFromDB(productRows as import("../types").Product[]);
+    setDbShifts((shiftRows ?? []) as import("../types").ShiftDef[]);
     setTrxCounter((saleCount ?? 0) + 1);
     setScreen("login");
   }

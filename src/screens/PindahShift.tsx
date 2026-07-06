@@ -1,19 +1,10 @@
 import { useState } from "react";
-import { useStore } from "../store";
+import { useStore, shiftNameFor } from "../store";
 import { CASHIERS, formatRp } from "../data";
 
-const SHIFT_LABELS: Record<1 | 2 | 3, string> = {
-  1: "Shift 1 · Pagi (06:00–14:00)",
-  2: "Shift 2 · Siang (14:00–22:00)",
-  3: "Shift 3 · Malam (22:00–06:00)",
-};
-
-function nextShift(current: 1 | 2 | 3): 1 | 2 | 3 {
-  return current === 3 ? 1 : ((current + 1) as 1 | 2 | 3);
-}
-
 export default function PindahShift() {
-  const { cashierName, selectedShift, setScreen, setShift, selectCashier } = useStore();
+  const { cashierName, selectedShift, selectedShiftName, dbShifts, setScreen, setShift, selectCashier } = useStore();
+  const shiftCount = dbShifts.length > 0 ? dbShifts.length : 3;
 
   const modalAwal = 500000;
   const penjualanTunai = 2680000;
@@ -24,7 +15,8 @@ export default function PindahShift() {
   const [nextCashierId, setNextCashierId] = useState(CASHIERS[1].id);
   const [catatan, setCatatan] = useState("");
 
-  const next = nextShift(selectedShift);
+  const next = (selectedShift % shiftCount) + 1;
+  const nextName = shiftNameFor(dbShifts, next);
   const fisikNum = parseInt(hitungFisik.replace(/\D/g, "") || "0");
   const selisih = fisikNum - seharusnya;
   const balanced = selisih === 0;
@@ -53,7 +45,7 @@ export default function PindahShift() {
         </button>
         <div className="flex-1 text-center min-w-0">
           <p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-gold leading-tight">
-            SERAH TERIMA · SHIFT {selectedShift} → SHIFT {next}
+            SERAH TERIMA · {selectedShiftName} → {nextName}
           </p>
           <p className="text-[11px] text-text-mute hidden lg:block mt-0.5">{cashierName} · {dateStr} · {timeStr}</p>
           <p className="text-[10.5px] text-text-mute lg:hidden mt-0.5">{cashierName} · {timeStr}</p>
@@ -148,7 +140,7 @@ export default function PindahShift() {
               </div>
               <div>
                 <div className="text-[13px] font-semibold text-navy">{nextCashier.name}</div>
-                <div className="text-[11px] text-text-mute">{SHIFT_LABELS[next]}</div>
+                <div className="text-[11px] text-text-mute">{nextName}</div>
               </div>
             </div>
           </div>

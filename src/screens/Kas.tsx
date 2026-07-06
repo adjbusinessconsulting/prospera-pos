@@ -4,12 +4,6 @@ import { useStore, isAtLeast } from "../store";
 import { formatRp, formatIDRInput } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 
-const SHIFT_LABEL: Record<1 | 2 | 3, string> = {
-  1: "Shift 1 · Pagi",
-  2: "Shift 2 · Siang",
-  3: "Shift 3 · Malam",
-};
-
 const INITIAL_PERGERAKAN = [
   { time: "16:42", label: "18 trx tunai",            desc: "14:00–16:42 · otomatis dari penjualan", amount: +2680000, icon: "auto",   photo: false },
   { time: "15:30", label: "Bayar parkir & retribusi", desc: "Aerith D. · operasional",              amount: -15000,   icon: "keluar", photo: true  },
@@ -33,7 +27,7 @@ function PhotoThumb({ size = "sm" }: { size?: "sm" | "md" }) {
 }
 
 export default function Kas() {
-  const { cashierInitials, cashierName, selectedShift, storeId, storeTier, setScreen, signOut } = useStore();
+  const { cashierInitials, cashierName, selectedShiftName, storeId, storeTier, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'premium';
   const canKas = isAtLeast(effectiveTier, 'standard');
   const requiresPhoto = isAtLeast(effectiveTier, 'premium');
@@ -100,7 +94,7 @@ export default function Kas() {
             <div className="min-w-0">
               <h1 className="font-serif text-[24px] lg:text-display-l font-medium text-navy leading-tight truncate">Uang Kas · {cashierName}</h1>
               <p style={{ fontSize: 10, letterSpacing: "0.12em", color: "#C9A55F" }} className="font-sans uppercase font-semibold mt-0.5">
-                {SHIFT_LABEL[selectedShift]} · DIBUKA {bukaTime}
+                {selectedShiftName} · DIBUKA {bukaTime}
               </p>
             </div>
             <div className="flex gap-0.5 bg-cream-bg border border-warm-border rounded-[10px] p-0.5 shrink-0 mt-0.5">

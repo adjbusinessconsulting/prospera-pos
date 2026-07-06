@@ -22,7 +22,7 @@ function SterithWatermark({ tier }: { tier: string }) {
 }
 
 export default function Receipt() {
-  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, restart, setScreen, signOut } = useStore();
+  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, selectedShiftName, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, restart, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'premium';
   const canWhatsApp = isAtLeast(effectiveTier, 'standard');
   const total = getTotal(cart);
@@ -33,7 +33,6 @@ export default function Receipt() {
   const now = new Date();
   const dateStr = now.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
   const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-  const SHIFT_LABELS: Record<1 | 2 | 3, string> = { 1: "Shift 1 (Pagi)", 2: "Shift 2 (Siang)", 3: "Shift 3 (Malam)" };
 
   async function handleNewTrx() {
     if (storeId && !isDemoMode) {
@@ -121,7 +120,7 @@ export default function Receipt() {
 
             <div className="flex justify-between font-sans text-[10.5px] text-text-mute py-2.5 border-b border-dashed border-warm-dashed" style={{ fontVariantNumeric: "tabular-nums" }}>
               <div><div>{trxId}</div><div className="mt-0.5">{dateStr} · {timeStr}</div></div>
-              <div className="text-right"><div>Kasir: {cashierName}</div><div className="mt-0.5">{SHIFT_LABELS[selectedShift]}</div></div>
+              <div className="text-right"><div>Kasir: {cashierName}</div><div className="mt-0.5">{selectedShiftName}</div></div>
             </div>
 
             <div className="py-3 border-b border-dashed border-warm-dashed">

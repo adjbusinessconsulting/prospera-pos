@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { CartItem, CashierDB, Product, Screen } from './types';
+import type { CartItem, CashierDB, Product, Screen, ShiftDef } from './types';
 import { PRODUCTS } from './data';
 
 interface POSState {
@@ -7,7 +7,9 @@ interface POSState {
   selectedCashier: string;
   cashierName: string;
   cashierInitials: string;
-  selectedShift: 1 | 2 | 3;
+  selectedShift: number;
+  selectedShiftName: string;
+  dbShifts: ShiftDef[];
   pin: string;
   cart: CartItem[];
   category: string;
@@ -31,7 +33,8 @@ interface POSState {
   setScreen: (s: Screen) => void;
   setDemoMode: (v: boolean) => void;
   selectCashier: (id: string) => void;
-  setShift: (n: 1 | 2 | 3) => void;
+  setShift: (n: number) => void;
+  setDbShifts: (shifts: ShiftDef[]) => void;
   addPin: (digit: string) => void;
   removePin: () => void;
   clearPin: () => void;
@@ -61,6 +64,15 @@ function currentShiftFromTime(): 1 | 2 | 3 {
   return 3;
 }
 
+// Fallback labels for stores that haven't configured shift slots yet.
+const FALLBACK_SHIFT_LABELS: Record<number, string> = { 1: 'Shift 1 · Pagi', 2: 'Shift 2 · Siang', 3: 'Shift 3 · Malam' };
+
+// Display name for the shift at 1-based position `n`: configured shift name if any, else fallback.
+export function shiftNameFor(dbShifts: ShiftDef[], n: number): string {
+  if (dbShifts.length > 0) return dbShifts[n - 1]?.name ?? `Shift ${n}`;
+  return FALLBACK_SHIFT_LABELS[n] ?? `Shift ${n}`;
+}
+
 // Synchronous check at store creation time — before any React renders or Supabase async work.
 // A password-reset link can arrive in several shapes depending on the email flow:
 //   - implicit:   #access_token=...&type=recovery
@@ -85,6 +97,8 @@ export const useStore = create<POSState>((set) => ({
   cashierName: 'Aerith',
   cashierInitials: 'AE',
   selectedShift: currentShiftFromTime(),
+  selectedShiftName: FALLBACK_SHIFT_LABELS[currentShiftFromTime()],
+  dbShifts: [],
   pin: '',
   cart: [],
   category: 'Semua',
@@ -115,7 +129,8 @@ export const useStore = create<POSState>((set) => ({
     return { selectedCashier: id, cashierName: name, cashierInitials: initials };
   }),
 
-  setShift: (n) => set({ selectedShift: n }),
+  setShift: (n) => set((s) => ({ selectedShift: n, selectedShiftName: shiftNameFor(s.dbShifts, n) })),
+  setDbShifts: (dbShifts) => set((s) => ({ dbShifts, selectedShiftName: shiftNameFor(dbShifts, s.selectedShift) })),
 
   addPin: (digit) => set(s => ({ pin: s.pin.length < 4 ? s.pin + digit : s.pin })),
   removePin: () => set(s => ({ pin: s.pin.slice(0, -1) })),
@@ -164,6 +179,7 @@ export const useStore = create<POSState>((set) => ({
     qrisImageUrl: '',
     midtransClientKey: '',
     dbCashiers: [],
+    dbShifts: [],
     trxCounter: 42,
     isDemoMode: false,
   }),

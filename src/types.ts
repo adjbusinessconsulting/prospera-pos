@@ -41,6 +41,13 @@ export interface StoreData {
   address: string;
 }
 
+export interface ShiftDef {
+  id: string;
+  name: string;
+  start_time: string;
+  end_time: string;
+}
+
 export interface SaleItem {
   product_id: string;
   product_name: string;

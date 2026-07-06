@@ -16,11 +16,35 @@ const SHIFT_LABELS: Record<1 | 2 | 3, string> = {
   3: "Shift 3 · Malam",
 };
 
+function toMin(t: string) { const [h, m] = t.split(":").map(Number); return h * 60 + (m || 0); }
+function shiftContainsNow(start: string, end: string, nowMin: number) {
+  const a = toMin(start), b = toMin(end);
+  if (a === b) return true;                 // 24h
+  if (a < b) return nowMin >= a && nowMin < b;
+  return nowMin >= a || nowMin < b;         // overnight
+}
+
+interface ShiftOption { pos: number; name: string; time: string; isNow: boolean; }
+
 export default function PinLogin() {
-  const { selectedCashier, selectedShift, selectCashier, setShift, pin, addPin, removePin, clearPin, setScreen, storeName, storeAddress, storeTier, storeId, dbCashiers } = useStore();
-  // Demo shows all features; Free locks non-current shifts
+  const { selectedCashier, selectedShift, selectCashier, setShift, pin, addPin, removePin, clearPin, setScreen, storeName, storeAddress, storeTier, storeId, dbCashiers, dbShifts } = useStore();
+  // Demo shows all features; Free locks non-current shifts (only when shifts aren't configured)
   const effectiveTier = storeId ? storeTier : 'premium';
   const canChangeShift = isAtLeast(effectiveTier, 'standard');
+
+  const hasConfiguredShifts = dbShifts.length > 0;
+  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+  const shiftOptions: ShiftOption[] = hasConfiguredShifts
+    ? dbShifts.map((s, i) => ({ pos: i + 1, name: s.name, time: `${s.start_time}–${s.end_time}`, isNow: shiftContainsNow(s.start_time, s.end_time, nowMinutes) }))
+    : ([1, 2, 3] as const).map(n => ({ pos: n, name: SHIFT_LABELS[n], time: "", isNow: currentShiftLabel() === n }));
+
+  // When the store has configured shifts, default-select the one active right now
+  useEffect(() => {
+    if (dbShifts.length === 0) return;
+    const cur = dbShifts.findIndex(s => shiftContainsNow(s.start_time, s.end_time, new Date().getHours() * 60 + new Date().getMinutes()));
+    setShift(cur >= 0 ? cur + 1 : 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [pinError, setPinError] = useState("");
   const [showManage, setShowManage] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
@@ -45,7 +69,6 @@ export default function PinLogin() {
     : CASHIERS.map(c => ({ ...c, store_id: "", pin: "0000", active: true }));
   const displayName = storeName || "Toko Sembako Maju";
   const displayAddress = storeAddress || "Jl. Diponegoro No. 24, Palu Timur";
-  const nowShift = currentShiftLabel();
 
   function handleLogin() {
     setPinError("");
@@ -83,15 +106,15 @@ export default function PinLogin() {
         {/* Shift picker */}
         <div style={{ padding: "8px 18px", flexShrink: 0 }}>
           <p style={{ fontSize: 8.5, letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "#7A776F", marginBottom: 7, fontWeight: 600 }}>PILIH SHIFT</p>
-          <div style={{ display: "flex", gap: 8 }}>
-            {([1, 2, 3] as const).map(n => {
-              const isNow = nowShift === n;
-              const isActive = selectedShift === n;
-              const shiftLocked = !canChangeShift && !isNow;
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {shiftOptions.map(o => {
+              const isActive = selectedShift === o.pos;
+              const shiftLocked = !hasConfiguredShifts && !canChangeShift && !o.isNow;
               return (
-                <button key={n} onClick={() => { if (!shiftLocked) setShift(n); }} style={{ flex: 1, padding: "8px 4px", borderRadius: 9, fontSize: 11.5, fontWeight: 500, border: isActive ? "2px solid #0B1129" : "1px solid #ECE7DD", background: isActive ? "#0B1129" : shiftLocked ? "#F7F4EE" : "white", color: isActive ? "#F5F0E8" : shiftLocked ? "#C4C0B8" : "#0B1129", position: "relative" as const, cursor: shiftLocked ? "not-allowed" : "pointer", opacity: shiftLocked ? 0.6 : 1 }}>
-                  {SHIFT_LABELS[n]}
-                  {isNow && <span style={{ position: "absolute" as const, top: -8, left: "50%", transform: "translateX(-50%)", fontSize: 7, fontWeight: 700, padding: "1px 5px", borderRadius: 99, background: "#C9A55F", color: "white", whiteSpace: "nowrap" as const, letterSpacing: "0.08em" }}>SKRNG</span>}
+                <button key={o.pos} onClick={() => { if (!shiftLocked) setShift(o.pos); }} style={{ flex: "1 1 28%", minWidth: 90, padding: "8px 6px", borderRadius: 9, fontSize: 11.5, fontWeight: 500, border: isActive ? "2px solid #0B1129" : "1px solid #ECE7DD", background: isActive ? "#0B1129" : shiftLocked ? "#F7F4EE" : "white", color: isActive ? "#F5F0E8" : shiftLocked ? "#C4C0B8" : "#0B1129", position: "relative" as const, cursor: shiftLocked ? "not-allowed" : "pointer", opacity: shiftLocked ? 0.6 : 1 }}>
+                  <span style={{ display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{o.name}</span>
+                  {o.time && <span style={{ display: "block", fontSize: 8.5, opacity: 0.7, marginTop: 1, fontVariantNumeric: "tabular-nums" as const }}>{o.time}</span>}
+                  {o.isNow && <span style={{ position: "absolute" as const, top: -8, left: "50%", transform: "translateX(-50%)", fontSize: 7, fontWeight: 700, padding: "1px 5px", borderRadius: 99, background: "#C9A55F", color: "white", whiteSpace: "nowrap" as const, letterSpacing: "0.08em" }}>SKRNG</span>}
                   {shiftLocked && <span style={{ position: "absolute" as const, top: -8, right: 4, fontSize: 6.5, fontWeight: 700, padding: "1px 4px", borderRadius: 99, background: "#ECE7DD", color: "#A8A39B", whiteSpace: "nowrap" as const, letterSpacing: "0.08em" }}>STD</span>}
                 </button>
               );
@@ -193,16 +216,16 @@ export default function PinLogin() {
           </div>
 
           <p style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans text-[10px] tracking-[0.18em] uppercase text-text-mute mb-2.5">PILIH SHIFT</p>
-          <div className="flex gap-2 mb-6">
-            {([1, 2, 3] as const).map(n => {
-              const isNow = nowShift === n;
-              const isActive = selectedShift === n;
-              const shiftLocked = !canChangeShift && !isNow;
+          <div className="flex gap-2 mb-6 flex-wrap">
+            {shiftOptions.map(o => {
+              const isActive = selectedShift === o.pos;
+              const shiftLocked = !hasConfiguredShifts && !canChangeShift && !o.isNow;
               return (
-                <button key={n} onClick={() => { if (!shiftLocked) setShift(n); }}
-                  className={`flex-1 py-2.5 rounded-button text-[12.5px] font-medium border transition-all relative ${isActive ? "bg-navy text-cream-text border-navy" : shiftLocked ? "bg-cream-bg text-text-mute border-warm-border cursor-not-allowed opacity-60" : "bg-white text-navy border-warm-border"}`}>
-                  {SHIFT_LABELS[n]}
-                  {isNow && (
+                <button key={o.pos} onClick={() => { if (!shiftLocked) setShift(o.pos); }}
+                  className={`flex-1 min-w-[110px] py-2.5 px-2 rounded-button text-[12.5px] font-medium border transition-all relative ${isActive ? "bg-navy text-cream-text border-navy" : shiftLocked ? "bg-cream-bg text-text-mute border-warm-border cursor-not-allowed opacity-60" : "bg-white text-navy border-warm-border"}`}>
+                  <span className="block truncate">{o.name}</span>
+                  {o.time && <span className="block text-[9px] opacity-70 mt-0.5" style={{ fontVariantNumeric: "tabular-nums" }}>{o.time}</span>}
+                  {o.isNow && (
                     <span className={`absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] font-semibold px-[7px] py-[2px] rounded-full tracking-[0.1em] uppercase ${isActive ? "bg-gold text-navy" : "bg-gold-soft text-gold border border-gold/30"}`}
                       style={{ fontVariantNumeric: "tabular-nums" }}>
                       SEKARANG

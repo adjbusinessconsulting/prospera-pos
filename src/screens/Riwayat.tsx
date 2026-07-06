@@ -12,8 +12,6 @@ const FILTER_LABELS = [
   { label: "30 hari",   days: 30, tier: "STD" },
 ];
 
-const SHIFT_LABELS: Record<number, string> = { 1: "Shift 1 · Pagi", 2: "Shift 2 · Siang", 3: "Shift 3 · Malam" };
-
 const METHOD_COLOR: Record<string, string> = {
   tunai: "#5C9E7E", Tunai: "#5C9E7E",
   qris: "#0B1129",  QRIS: "#0B1129",
@@ -38,7 +36,7 @@ function methodLabel(m: string) {
 }
 
 export default function Riwayat() {
-  const { cashierInitials, selectedShift, storeId, storePhone, storeTier, setScreen, signOut } = useStore();
+  const { cashierInitials, selectedShiftName, storeId, storePhone, storeTier, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'premium';
   const canExport = isAtLeast(effectiveTier, 'standard');
   const canExtendedHistory = isAtLeast(effectiveTier, 'standard');
@@ -289,7 +287,7 @@ export default function Riwayat() {
           </div>
           <div className="hidden lg:block">
             <p style={{ fontSize: 8.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">SHIFT AKTIF</p>
-            <p className="font-serif text-[18px] lg:text-[20px] font-semibold text-cream-text">{SHIFT_LABELS[selectedShift]}</p>
+            <p className="font-serif text-[18px] lg:text-[20px] font-semibold text-cream-text">{selectedShiftName}</p>
           </div>
           <div className="ml-auto relative">
             <button onClick={() => canExport && setShowExportMenu(v => !v)}

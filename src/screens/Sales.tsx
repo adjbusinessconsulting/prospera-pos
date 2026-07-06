@@ -4,12 +4,6 @@ import { useStore, getTotal, getItemCount, getTrxId } from "../store";
 import { CATEGORIES, getCatLabel, formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 
-const SHIFT_LABELS: Record<1 | 2 | 3, string> = {
-  1: "Shift 1 · Pagi",
-  2: "Shift 2 · Siang",
-  3: "Shift 3 · Malam",
-};
-
 function FreePill() {
   return (
     <span style={{ background: "rgba(122,119,111,0.10)", border: "1px solid rgba(122,119,111,0.28)", color: "#7A776F", fontSize: 9.5, letterSpacing: "0.18em", fontWeight: 600, padding: "3px 9px", borderRadius: 9999, textTransform: "uppercase" as const, lineHeight: 1 }}>
@@ -20,7 +14,7 @@ function FreePill() {
 
 export default function Sales() {
   const [cartOpen, setCartOpen] = useState(false);
-  const { cart, category, search, cashierName, cashierInitials, selectedShift, trxCounter, products, setCategory, setSearch, addToCart, updateQty, clearCart, setScreen, signOut } = useStore();
+  const { cart, category, search, cashierName, cashierInitials, selectedShiftName, trxCounter, products, setCategory, setSearch, addToCart, updateQty, clearCart, setScreen, signOut } = useStore();
   const total = getTotal(cart);
   const itemCount = getItemCount(cart);
   const trxId = getTrxId(trxCounter);
@@ -53,14 +47,14 @@ export default function Sales() {
               <p style={{ fontSize: 10, letterSpacing: "0.22em", fontVariantNumeric: "tabular-nums" }} className="font-sans uppercase text-text-mute mb-1">PENJUALAN · {trxId}</p>
               <h1 className="font-serif text-display-m font-medium text-navy">{greeting}, {cashierName}</h1>
               <p className="text-[13px] text-text-mute mt-1">
-                {dateStr} · {SHIFT_LABELS[selectedShift]} · {timeStr}
+                {dateStr} · {selectedShiftName} · {timeStr}
               </p>
             </div>
             <div className="flex items-center gap-2.5 mt-1">
               <FreePill />
               <div className="flex items-center gap-2 bg-white border border-warm-border rounded-[10px] px-3.5 py-2.5 text-[12px] text-navy">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                {SHIFT_LABELS[selectedShift]} · {timeStr}
+                {selectedShiftName} · {timeStr}
               </div>
               <button className="w-[38px] h-[38px] bg-white border border-warm-border rounded-[10px] flex items-center justify-center text-text-mute relative">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>

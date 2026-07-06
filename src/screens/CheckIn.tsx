@@ -1,16 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "../store";
 
-const SHIFT_LABELS: Record<1 | 2 | 3, string> = {
-  1: "Shift 1 · Pagi",
-  2: "Shift 2 · Siang",
-  3: "Shift 3 · Malam",
-};
-
 type LocStatus = "loading" | "found" | "denied";
 
 export default function CheckIn() {
-  const { cashierName, selectedShift, storeName, setScreen, setCheckinPhoto } = useStore();
+  const { cashierName, selectedShiftName, storeName, setScreen, setCheckinPhoto } = useStore();
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -128,7 +122,7 @@ export default function CheckIn() {
 
     ctx.fillStyle = "#FFFFFF";
     ctx.font = `bold ${fs(15)}px 'Courier New', monospace`;
-    ctx.fillText(`${cashierName}  ·  ${SHIFT_LABELS[selectedShift]}`, fs(14), boty - lineH * 2.1);
+    ctx.fillText(`${cashierName}  ·  ${selectedShiftName}`, fs(14), boty - lineH * 2.1);
 
     const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
     setCaptured(dataUrl);
@@ -146,7 +140,7 @@ export default function CheckIn() {
     setScreen("sales");
   }
 
-  const shift = SHIFT_LABELS[selectedShift];
+  const shift = selectedShiftName;
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#0B1129", display: "flex", flexDirection: "column", fontFamily: "Inter, system-ui, sans-serif", WebkitFontSmoothing: "antialiased" }}>
