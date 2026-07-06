@@ -132,7 +132,7 @@ export const useStore = create<POSState>((set) => ({
   setShift: (n) => set((s) => ({ selectedShift: n, selectedShiftName: shiftNameFor(s.dbShifts, n) })),
   setDbShifts: (dbShifts) => set((s) => ({ dbShifts, selectedShiftName: shiftNameFor(dbShifts, s.selectedShift) })),
 
-  addPin: (digit) => set(s => ({ pin: s.pin.length < 4 ? s.pin + digit : s.pin })),
+  addPin: (digit) => set(s => ({ pin: s.pin.length < 6 ? s.pin + digit : s.pin })),
   removePin: () => set(s => ({ pin: s.pin.slice(0, -1) })),
   clearPin: () => set({ pin: '' }),
 
