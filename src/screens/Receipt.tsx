@@ -5,7 +5,8 @@ import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
 
 function SterithWatermark({ tier }: { tier: string }) {
-  const isPremiumPlus = isAtLeast(tier, 'premium');
+  // Standard+ gets custom receipt branding (own logo + "Powered by …"); Free keeps plain Sterith branding.
+  const isStandardPlus = isAtLeast(tier, 'standard');
   return (
     <div style={{ background: "#FAFAF7", border: "1px solid #ECE7DD", borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -13,7 +14,7 @@ function SterithWatermark({ tier }: { tier: string }) {
       <div>
         <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.08em", color: "#0B1129", lineHeight: 1 }}>STERITH POS</div>
         <div style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: 7, letterSpacing: "0.14em", color: "#A6843F", marginTop: 3, textTransform: "uppercase", lineHeight: 1 }}>
-          {isPremiumPlus ? "Powered by Sterith Business Consulting" : "Sterith POS · sterith.com"}
+          {isStandardPlus ? "Powered by Sterith Business Consulting POS" : "Sterith POS · sterith.com"}
         </div>
       </div>
     </div>

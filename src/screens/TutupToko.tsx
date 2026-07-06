@@ -98,7 +98,7 @@ export default function TutupToko() {
                 "Rincian omzet per shift (Aerith, Stevany, Anthony)",
                 "Rincian per metode bayar (Tunai, QRIS, Debit)",
                 "Export laporan (PDF / CSV) untuk arsip",
-                "Riwayat 3 hari (bukan 1 hari)",
+                "Riwayat 1 bulan (bukan 1 hari)",
                 "Foto bukti kas & WhatsApp struk",
               ].map(item => (
                 <div key={item} className="flex items-start gap-2.5">
@@ -108,10 +108,10 @@ export default function TutupToko() {
               ))}
             </div>
             <button className="w-full bg-navy rounded-card h-[46px] flex items-center justify-center gap-2 text-[12.5px] font-semibold text-cream-text hover:opacity-90 transition-opacity cursor-pointer border-0 mb-2">
-              UPGRADE · MULAI Rp 50.000/BLN
+              UPGRADE · MULAI Rp 25.000/BLN
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
             </button>
-            <p className="text-center text-[10px] text-text-mute">Launch price · normal Rp 100.000/bln</p>
+            <p className="text-center text-[10px] text-text-mute">Launch price · normal Rp 50.000/bln</p>
           </div>
         </div>
       </div>
