@@ -60,8 +60,17 @@ function currentShiftFromTime(): 1 | 2 | 3 {
   return 3;
 }
 
-// Synchronous check at store creation time — before any React renders or Supabase async work
-const _startsAsReset = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('code');
+// Synchronous check at store creation time — before any React renders or Supabase async work.
+// Supabase's default implicit flow puts the recovery token in the URL hash (#access_token=...&type=recovery);
+// the PKCE flow uses ?code= in the query string. Detect both so we never miss a reset link.
+function _detectResetFlow(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hasCode = new URLSearchParams(window.location.search).has('code');
+  const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
+  const isRecoveryHash = new URLSearchParams(hash).get('type') === 'recovery';
+  return hasCode || isRecoveryHash;
+}
+const _startsAsReset = _detectResetFlow();
 
 export const useStore = create<POSState>((set) => ({
   screen: _startsAsReset ? 'reset-password' : 'owner-login',

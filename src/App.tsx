@@ -17,8 +17,16 @@ import PindahShift from "./screens/PindahShift";
 import TutupToko from "./screens/TutupToko";
 import CheckIn from "./screens/CheckIn";
 
-// Read synchronously at module load — before Supabase's async detectSessionInUrl strips ?code= from the URL
-const urlHasResetCode = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("code");
+// Read synchronously at module load — before Supabase's async detectSessionInUrl strips the token from the URL.
+// Implicit flow (Supabase default) puts the recovery token in the hash (#...type=recovery);
+// PKCE flow uses ?code= in the query string. Detect both.
+const urlHasResetCode = (() => {
+  if (typeof window === "undefined") return false;
+  const hasCode = new URLSearchParams(window.location.search).has("code");
+  const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+  const isRecoveryHash = new URLSearchParams(hash).get("type") === "recovery";
+  return hasCode || isRecoveryHash;
+})();
 
 const DEMO_STORE_ID = "42dea26b-82a2-4b1b-b5fd-c573687df422";
 
