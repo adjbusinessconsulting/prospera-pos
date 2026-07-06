@@ -154,12 +154,12 @@ export default function ResetPassword() {
   );
 
   return (
-    <div style={{ minHeight: "100dvh", background: "#d8d3c2", display: "flex", justifyContent: "center", alignItems: "flex-start", padding: "40px 20px", fontFamily: GK }}>
+    <div style={{ minHeight: "100dvh", background: "#d8d3c2", display: "flex", justifyContent: "center", alignItems: "flex-start", padding: "20px 16px", fontFamily: GK }}>
       <div style={{ width: "100%", maxWidth: 420, background: "#eceadf", borderRadius: 20, boxShadow: "0 20px 60px rgba(15,20,30,.18)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
 
         {/* Logo */}
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "28px 24px 8px", flexShrink: 0 }}>
-          <img src="/logo-pos.png" alt="Sterith Business Consulting — POS" style={{ height: 150, width: "auto", objectFit: "contain" }} />
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "16px 24px 2px", flexShrink: 0 }}>
+          <img src="/logo-pos.png" alt="Sterith Business Consulting — POS" style={{ height: 104, width: "auto", objectFit: "contain" }} />
         </div>
 
         {done ? (
@@ -203,17 +203,17 @@ export default function ResetPassword() {
 
         ) : (
           /* ── Form screen ── */
-          <div style={{ flex: 1, padding: "8px 28px 32px", animation: "fadeUp .4s ease both" }}>
+          <div style={{ flex: 1, padding: "2px 24px 20px", animation: "fadeUp .4s ease both" }}>
             <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
 
-            <div style={{ font: `600 10.5px/1.4 ${GK}`, letterSpacing: "0.16em", textTransform: "uppercase", color: "#b8934a", marginBottom: 10 }}>Akun · Pengaturan Ulang</div>
-            <h1 style={{ font: `500 28px/1.1 ${EBG}`, color: "#14203a", margin: "0 0 10px" }}>Atur ulang kata sandi</h1>
-            <p style={{ font: `400 13.5px/1.55 ${GK}`, color: "#8f897a", margin: "0 0 22px" }}>Masukkan email Anda dan buat kata sandi baru untuk melanjutkan.</p>
+            <div style={{ font: `600 10.5px/1.4 ${GK}`, letterSpacing: "0.16em", textTransform: "uppercase", color: "#b8934a", marginBottom: 7 }}>Akun · Pengaturan Ulang</div>
+            <h1 style={{ font: `500 24px/1.1 ${EBG}`, color: "#14203a", margin: "0 0 6px" }}>Atur ulang kata sandi</h1>
+            <p style={{ font: `400 13px/1.5 ${GK}`, color: "#8f897a", margin: "0 0 14px" }}>Masukkan email Anda dan buat kata sandi baru untuk melanjutkan.</p>
 
-            <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e8e3d5", borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+            <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e8e3d5", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
 
               {/* Email (pre-filled, readonly) */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={labelStyle}>Email</label>
                 <div style={inputWrap}>
                   <span style={iconLeft}><EnvelopeIcon /></span>
@@ -223,7 +223,7 @@ export default function ResetPassword() {
               </div>
 
               {/* New password */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={labelStyle}>Kata sandi baru</label>
                 <div style={inputWrap}>
                   <span style={iconLeft}><LockIcon /></span>
@@ -235,7 +235,7 @@ export default function ResetPassword() {
               </div>
 
               {/* Confirm password */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={labelStyle}>Ketik ulang kata sandi</label>
                 <div style={inputWrap}>
                   <span style={iconLeft}><LockIcon /></span>
@@ -251,13 +251,13 @@ export default function ResetPassword() {
               )}
 
               <button type="submit" disabled={loading}
-                style={{ marginTop: 4, background: "#14203a", color: "#fff", borderRadius: 11, padding: "14px 18px", font: `600 13.5px/1 ${GK}`, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.75 : 1 }}>
+                style={{ marginTop: 2, background: "#14203a", color: "#fff", borderRadius: 11, padding: "13px 18px", font: `600 13.5px/1 ${GK}`, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.75 : 1 }}>
                 {loading ? "Menyimpan…" : "Simpan kata sandi baru"}
                 {!loading && <span style={{ color: "#e7c987", fontWeight: 700 }}>→</span>}
               </button>
             </form>
 
-            <div style={{ textAlign: "center", marginTop: 22, font: `500 12.5px/1 ${GK}`, color: "#8f897a" }}>
+            <div style={{ textAlign: "center", marginTop: 12, font: `500 12.5px/1 ${GK}`, color: "#8f897a" }}>
               Butuh bantuan? <a href="#" style={{ color: "#14203a", textDecoration: "none", fontWeight: 600 }}>Layanan</a>
             </div>
           </div>
