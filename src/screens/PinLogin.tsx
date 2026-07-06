@@ -1,6 +1,7 @@
 import { useStore, isAtLeast } from "../store";
 import { CASHIERS } from "../data";
 import { useState, useEffect } from "react";
+import ManageStaff from "../components/ManageStaff";
 
 function currentShiftLabel(): 1 | 2 | 3 {
   const h = new Date().getHours();
@@ -21,7 +22,17 @@ export default function PinLogin() {
   const effectiveTier = storeId ? storeTier : 'premium';
   const canChangeShift = isAtLeast(effectiveTier, 'standard');
   const [pinError, setPinError] = useState("");
+  const [showManage, setShowManage] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+
+  // Owner-only "Kelola" (manage kasir) button — real stores only, hidden in demo
+  const manageBtn = storeId ? (
+    <button onClick={() => setShowManage(true)}
+      style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: "#A6843F", fontSize: 11, fontWeight: 600, fontFamily: "inherit", padding: 0 }}>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
+      Kelola
+    </button>
+  ) : null;
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -90,7 +101,10 @@ export default function PinLogin() {
 
         {/* Cashier picker */}
         <div style={{ padding: "8px 18px", flexShrink: 0 }}>
-          <p style={{ fontSize: 8.5, letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "#7A776F", marginBottom: 7, fontWeight: 600 }}>PILIH KASIR</p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
+            <p style={{ fontSize: 8.5, letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "#7A776F", fontWeight: 600, margin: 0 }}>PILIH KASIR</p>
+            {manageBtn}
+          </div>
           <div style={{ display: "flex", gap: 8 }}>
             {cashierList.map(c => {
               const active = selectedCashier === c.id;
@@ -150,6 +164,7 @@ export default function PinLogin() {
           </button>
         </div>
 
+        {showManage && <ManageStaff onClose={() => setShowManage(false)} />}
       </div>
     );
   }
@@ -203,7 +218,10 @@ export default function PinLogin() {
             })}
           </div>
 
-          <p style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans text-[10px] tracking-[0.18em] uppercase text-text-mute mb-2.5">PILIH KASIR · SELECT CASHIER</p>
+          <div className="flex items-center justify-between mb-2.5">
+            <p style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans text-[10px] tracking-[0.18em] uppercase text-text-mute">PILIH KASIR · SELECT CASHIER</p>
+            {manageBtn}
+          </div>
           <div className="flex gap-2.5 mb-6">
             {cashierList.map(c => {
               const active = selectedCashier === c.id;
@@ -263,6 +281,8 @@ export default function PinLogin() {
           </div>
         </div>
       </div>
+
+      {showManage && <ManageStaff onClose={() => setShowManage(false)} />}
     </div>
   );
 }

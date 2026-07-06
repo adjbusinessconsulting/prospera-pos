@@ -47,6 +47,7 @@ interface POSState {
   signOut: () => void;
   setCheckinPhoto: (photo: string) => void;
   setProductsFromDB: (products: Product[]) => void;
+  setDbCashiers: (cashiers: CashierDB[]) => void;
   setTrxCounter: (n: number) => void;
   addProduct: (p: Product) => void;
   updateProduct: (id: string, updates: Partial<Product>) => void;
@@ -169,6 +170,7 @@ export const useStore = create<POSState>((set) => ({
 
   setCheckinPhoto: (photo) => set({ checkinPhoto: photo }),
   setProductsFromDB: (products) => set({ products }),
+  setDbCashiers: (dbCashiers) => set({ dbCashiers }),
   setTrxCounter: (n) => set({ trxCounter: n }),
   addProduct: (product) => set(s => ({ products: [...s.products, product] })),
   updateProduct: (id, updates) => set(s => ({
@@ -196,3 +198,18 @@ export const getTrxId = (counter: number) => `#TRX-${counter.toString().padStart
 const TIER_LEVELS: Record<string, number> = { free: 0, standard: 1, premium: 2, business: 3, enterprise: 4 };
 export const tierLevel = (tier: string) => TIER_LEVELS[tier?.toLowerCase()] ?? 0;
 export const isAtLeast = (tier: string, required: string) => tierLevel(tier) >= tierLevel(required);
+
+// Per-tier limits (Jul 6 2026 update). Kasir/karyawan accounts include the owner.
+const KASIR_LIMITS: Record<string, number> = { free: 3, standard: 10, premium: Infinity, business: Infinity, enterprise: Infinity };
+export const kasirLimit = (tier: string) => KASIR_LIMITS[tier?.toLowerCase()] ?? 3;
+
+const SHIFT_SLOT_LIMITS: Record<string, number> = { free: 1, standard: 5, premium: Infinity, business: Infinity, enterprise: Infinity };
+export const shiftSlotLimit = (tier: string) => SHIFT_SLOT_LIMITS[tier?.toLowerCase()] ?? 1;
+
+// The tier that lifts a given limit next — used for upgrade prompts.
+export const nextTierLabel = (tier: string): string => {
+  const lvl = tierLevel(tier);
+  if (lvl < 1) return 'Standard';
+  if (lvl < 2) return 'Premium';
+  return 'Business';
+};
