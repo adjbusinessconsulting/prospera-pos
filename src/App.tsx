@@ -15,9 +15,11 @@ import PindahShift from "./screens/PindahShift";
 import TutupToko from "./screens/TutupToko";
 import CheckIn from "./screens/CheckIn";
 
+const DEMO_STORE_ID = "42dea26b-82a2-4b1b-b5fd-c573687df422";
+
 const DEMO_CASHIER = {
   id: "ae",
-  store_id: "demo",
+  store_id: DEMO_STORE_ID,
   name: "Aerith Djiady",
   initials: "AE",
   role: "cashier",
@@ -55,7 +57,7 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("demo") === "true") {
-      setStoreData("demo", "Toko Sembako Maju", "Jl. Diponegoro No. 24, Palu Timur", [DEMO_CASHIER]);
+      setStoreData(DEMO_STORE_ID, "Toko Sembako Maju", "Jl. Diponegoro No. 24, Palu Timur", [DEMO_CASHIER], "0812-3456-7890", "", "", "premium");
       setScreen("sales");
     }
   }, []);
