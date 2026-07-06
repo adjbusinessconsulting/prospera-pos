@@ -60,8 +60,11 @@ function currentShiftFromTime(): 1 | 2 | 3 {
   return 3;
 }
 
+// Synchronous check at store creation time — before any React renders or Supabase async work
+const _startsAsReset = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('code');
+
 export const useStore = create<POSState>((set) => ({
-  screen: 'owner-login',
+  screen: _startsAsReset ? 'reset-password' : 'owner-login',
   selectedCashier: 'ae',
   cashierName: 'Aerith',
   cashierInitials: 'AE',
