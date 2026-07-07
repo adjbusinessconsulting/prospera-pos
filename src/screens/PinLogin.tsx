@@ -31,6 +31,8 @@ export default function PinLogin() {
   // Demo shows all features; Free locks non-current shifts (only when shifts aren't configured)
   const effectiveTier = storeId ? storeTier : 'premium';
   const canChangeShift = isAtLeast(effectiveTier, 'standard');
+  // Free skips the PIN; Standard+ requires it (multi-kasir attribution)
+  const requiresPin = isAtLeast(effectiveTier, 'standard');
 
   const hasConfiguredShifts = dbShifts.length > 0;
   const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
@@ -75,6 +77,7 @@ export default function PinLogin() {
     if (dbCashiers.length === 0) { setScreen("checkin"); return; }
     const cashier = dbCashiers.find(c => c.id === selectedCashier);
     if (!cashier) return;
+    if (!requiresPin) { setScreen("checkin"); return; }   // Free: no PIN
     if (cashier.pin === pin) { setScreen("checkin"); }
     else { setPinError("PIN salah. Coba lagi."); clearPin(); }
   }
@@ -145,47 +148,61 @@ export default function PinLogin() {
           </div>
         </div>
 
-        {/* PIN dots */}
-        <div style={{ padding: "8px 18px 4px", flexShrink: 0 }}>
-          <p style={{ fontSize: 8.5, letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "#7A776F", marginBottom: 8, fontWeight: 600, textAlign: "center" as const }}>MASUKKAN PIN</p>
-          <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-            {Array(6).fill(0).map((_, i) => {
-              const filled = i < pin.length;
-              const active = i === pin.length && pin.length < 6;
-              return (
-                <div key={i} style={{ width: 42, height: 48, borderRadius: 11, background: "white", display: "flex", alignItems: "center", justifyContent: "center", border: pinError ? "1.5px solid #C25E3D" : active ? "1.5px solid #C9A55F" : "1px solid #ECE7DD", transition: "border-color 0.15s" }}>
-                  {filled && <div style={{ width: 12, height: 12, borderRadius: "50%", background: pinError ? "#C25E3D" : "#0B1129" }} />}
-                </div>
-              );
-            })}
-          </div>
-          <div style={{ minHeight: 20, textAlign: "center" as const, marginTop: 6 }}>
-            {pinError && <p style={{ fontSize: 11, color: "#C25E3D", margin: 0 }}>{pinError}</p>}
-          </div>
-        </div>
+        {requiresPin ? (
+          <>
+            {/* PIN dots */}
+            <div style={{ padding: "8px 18px 4px", flexShrink: 0 }}>
+              <p style={{ fontSize: 8.5, letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "#7A776F", marginBottom: 8, fontWeight: 600, textAlign: "center" as const }}>MASUKKAN PIN</p>
+              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                {Array(6).fill(0).map((_, i) => {
+                  const filled = i < pin.length;
+                  const active = i === pin.length && pin.length < 6;
+                  return (
+                    <div key={i} style={{ width: 42, height: 48, borderRadius: 11, background: "white", display: "flex", alignItems: "center", justifyContent: "center", border: pinError ? "1.5px solid #C25E3D" : active ? "1.5px solid #C9A55F" : "1px solid #ECE7DD", transition: "border-color 0.15s" }}>
+                      {filled && <div style={{ width: 12, height: 12, borderRadius: "50%", background: pinError ? "#C25E3D" : "#0B1129" }} />}
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ minHeight: 20, textAlign: "center" as const, marginTop: 6 }}>
+                {pinError && <p style={{ fontSize: 11, color: "#C25E3D", margin: 0 }}>{pinError}</p>}
+              </div>
+            </div>
 
-        {/* Numpad — flex-1 so it fills all remaining height */}
-        <div style={{ flex: 1, padding: "4px 18px 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gridTemplateRows: "1fr 1fr 1fr 1fr", gap: 8 }}>
-          {["1","2","3","4","5","6","7","8","9"].map(d => (
-            <button key={d} onClick={() => { addPin(d); setPinError(""); }}
-              style={{ background: "white", border: "1px solid #ECE7DD", borderRadius: 12, fontSize: 22, fontWeight: 500, color: "#0B1129", cursor: "pointer", transition: "background 0.1s" }}>
-              {d}
+            {/* Numpad — flex-1 so it fills all remaining height */}
+            <div style={{ flex: 1, padding: "4px 18px 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gridTemplateRows: "1fr 1fr 1fr 1fr", gap: 8 }}>
+              {["1","2","3","4","5","6","7","8","9"].map(d => (
+                <button key={d} onClick={() => { addPin(d); setPinError(""); }}
+                  style={{ background: "white", border: "1px solid #ECE7DD", borderRadius: 12, fontSize: 22, fontWeight: 500, color: "#0B1129", cursor: "pointer", transition: "background 0.1s" }}>
+                  {d}
+                </button>
+              ))}
+              <button onClick={() => { removePin(); setPinError(""); }}
+                style={{ background: "transparent", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#7A776F" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="13" y2="14"/><line x1="13" y1="9" x2="18" y2="14"/></svg>
+              </button>
+              <button onClick={() => { addPin("0"); setPinError(""); }}
+                style={{ background: "white", border: "1px solid #ECE7DD", borderRadius: 12, fontSize: 22, fontWeight: 500, color: "#0B1129", cursor: "pointer" }}>
+                0
+              </button>
+              <button onClick={() => pin.length >= 1 && handleLogin()}
+                style={{ background: pin.length >= 1 ? "#0B1129" : "#ECE7DD", border: "none", borderRadius: 12, fontSize: 13, fontWeight: 700, color: pin.length >= 1 ? "#F5F0E8" : "#7A776F", cursor: pin.length >= 1 ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, letterSpacing: "0.1em", transition: "background 0.15s" }}>
+                MASUK
+                {pin.length >= 1 && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
+              </button>
+            </div>
+          </>
+        ) : (
+          /* Free: no PIN — tap MASUK to start */
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "8px 18px 18px" }}>
+            <p style={{ fontSize: 11.5, color: "#A8A39B", textAlign: "center", margin: "0 0 12px" }}>Pilih kasir &amp; shift, lalu ketuk Masuk</p>
+            <button onClick={handleLogin}
+              style={{ height: 56, background: "#0B1129", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 700, color: "#F5F0E8", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, letterSpacing: "0.08em" }}>
+              MASUK
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
             </button>
-          ))}
-          <button onClick={() => { removePin(); setPinError(""); }}
-            style={{ background: "transparent", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#7A776F" }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="13" y2="14"/><line x1="13" y1="9" x2="18" y2="14"/></svg>
-          </button>
-          <button onClick={() => { addPin("0"); setPinError(""); }}
-            style={{ background: "white", border: "1px solid #ECE7DD", borderRadius: 12, fontSize: 22, fontWeight: 500, color: "#0B1129", cursor: "pointer" }}>
-            0
-          </button>
-          <button onClick={() => pin.length >= 1 && handleLogin()}
-            style={{ background: pin.length >= 1 ? "#0B1129" : "#ECE7DD", border: "none", borderRadius: 12, fontSize: 13, fontWeight: 700, color: pin.length >= 1 ? "#F5F0E8" : "#7A776F", cursor: pin.length >= 1 ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, letterSpacing: "0.1em", transition: "background 0.15s" }}>
-            MASUK
-            {pin.length >= 1 && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
-          </button>
-        </div>
+          </div>
+        )}
 
         {showManage && <ManageStaff onClose={() => setShowManage(false)} />}
       </div>
@@ -264,44 +281,58 @@ export default function PinLogin() {
             })}
           </div>
 
-          <p style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans text-[10px] tracking-[0.18em] uppercase text-text-mute mb-3">MASUKKAN PIN · ENTER PIN</p>
-          <div className="flex gap-2.5 justify-center mb-3">
-            {Array(6).fill(0).map((_, i) => {
-              const filled = i < pin.length;
-              const active = i === pin.length && pin.length < 6;
-              return (
-                <div key={i} className={`w-[56px] h-[64px] rounded-card bg-white flex items-center justify-center border transition-all ${pinError ? "border-warning border-[1.5px]" : active ? "border-gold border-[1.5px] shadow-pin-glow" : "border-warm-border"}`}>
-                  {filled && <div className={`w-4 h-4 rounded-full ${pinError ? "bg-warning" : "bg-navy"}`} />}
-                  {active && !filled && <div className="w-0.5 h-6 bg-navy cursor-blink" />}
-                </div>
-              );
-            })}
-          </div>
+          {requiresPin ? (
+            <>
+              <p style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans text-[10px] tracking-[0.18em] uppercase text-text-mute mb-3">MASUKKAN PIN · ENTER PIN</p>
+              <div className="flex gap-2.5 justify-center mb-3">
+                {Array(6).fill(0).map((_, i) => {
+                  const filled = i < pin.length;
+                  const active = i === pin.length && pin.length < 6;
+                  return (
+                    <div key={i} className={`w-[56px] h-[64px] rounded-card bg-white flex items-center justify-center border transition-all ${pinError ? "border-warning border-[1.5px]" : active ? "border-gold border-[1.5px] shadow-pin-glow" : "border-warm-border"}`}>
+                      {filled && <div className={`w-4 h-4 rounded-full ${pinError ? "bg-warning" : "bg-navy"}`} />}
+                      {active && !filled && <div className="w-0.5 h-6 bg-navy cursor-blink" />}
+                    </div>
+                  );
+                })}
+              </div>
 
-          {pinError && <p className="text-center text-[12px] mb-4" style={{ color: "#C25E3D" }}>{pinError}</p>}
-          {!pinError && <div className="mb-4" />}
+              {pinError && <p className="text-center text-[12px] mb-4" style={{ color: "#C25E3D" }}>{pinError}</p>}
+              {!pinError && <div className="mb-4" />}
 
-          <div className="grid grid-cols-3 gap-2">
-            {["1","2","3","4","5","6","7","8","9"].map(d => (
-              <button key={d} onClick={() => { addPin(d); setPinError(""); }}
-                className="bg-white border border-warm-border rounded-card py-4 text-[22px] font-medium text-navy hover:bg-cream-pill transition-colors">
-                {d}
+              <div className="grid grid-cols-3 gap-2">
+                {["1","2","3","4","5","6","7","8","9"].map(d => (
+                  <button key={d} onClick={() => { addPin(d); setPinError(""); }}
+                    className="bg-white border border-warm-border rounded-card py-4 text-[22px] font-medium text-navy hover:bg-cream-pill transition-colors">
+                    {d}
+                  </button>
+                ))}
+                <button onClick={() => { removePin(); setPinError(""); }}
+                  className="rounded-card py-4 flex items-center justify-center bg-transparent border-0 text-text-mute hover:text-navy transition-colors">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="13" y2="14"/><line x1="13" y1="9" x2="18" y2="14"/></svg>
+                </button>
+                <button onClick={() => { addPin("0"); setPinError(""); }}
+                  className="bg-white border border-warm-border rounded-card py-4 text-[22px] font-medium text-navy hover:bg-cream-pill transition-colors">
+                  0
+                </button>
+                <button onClick={() => pin.length >= 1 && handleLogin()}
+                  className={`rounded-card py-4 flex items-center justify-center gap-2 text-[13px] font-medium tracking-[0.1em] transition-colors ${pin.length >= 1 ? "bg-navy text-cream-text hover:bg-navy-soft" : "bg-warm-border text-text-mute cursor-not-allowed"}`}>
+                  <span>MASUK</span>
+                  {pin.length >= 1 && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
+                </button>
+              </div>
+            </>
+          ) : (
+            /* Free: no PIN — one tap to start */
+            <>
+              <p className="text-center text-[12.5px] text-text-mute mb-4">Pilih kasir &amp; shift, lalu ketuk Masuk untuk mulai.</p>
+              <button onClick={handleLogin}
+                className="w-full rounded-card py-4 flex items-center justify-center gap-2.5 text-[14px] font-semibold tracking-[0.08em] bg-navy text-cream-text hover:bg-navy-soft transition-colors">
+                <span>MASUK</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
               </button>
-            ))}
-            <button onClick={() => { removePin(); setPinError(""); }}
-              className="rounded-card py-4 flex items-center justify-center bg-transparent border-0 text-text-mute hover:text-navy transition-colors">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="13" y2="14"/><line x1="13" y1="9" x2="18" y2="14"/></svg>
-            </button>
-            <button onClick={() => { addPin("0"); setPinError(""); }}
-              className="bg-white border border-warm-border rounded-card py-4 text-[22px] font-medium text-navy hover:bg-cream-pill transition-colors">
-              0
-            </button>
-            <button onClick={() => pin.length >= 1 && handleLogin()}
-              className={`rounded-card py-4 flex items-center justify-center gap-2 text-[13px] font-medium tracking-[0.1em] transition-colors ${pin.length >= 1 ? "bg-navy text-cream-text hover:bg-navy-soft" : "bg-warm-border text-text-mute cursor-not-allowed"}`}>
-              <span>MASUK</span>
-              {pin.length >= 1 && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
-            </button>
-          </div>
+            </>
+          )}
         </div>
       </div>
 
