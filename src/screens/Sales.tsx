@@ -4,10 +4,19 @@ import { useStore, getTotal, getItemCount, getTrxId } from "../store";
 import { CATEGORIES, getCatLabel, formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 
-function FreePill() {
+function TierPill() {
+  const storeId = useStore((s) => s.storeId);
+  const storeTier = useStore((s) => s.storeTier);
+  const tier = storeId ? storeTier : "premium";
+  const style: Record<string, { bg: string; border: string; color: string; label: string }> = {
+    free:     { bg: "rgba(122,119,111,0.10)", border: "rgba(122,119,111,0.28)", color: "#7A776F", label: "FREE" },
+    standard: { bg: "rgba(201,165,95,0.12)",  border: "rgba(201,165,95,0.35)",  color: "#A6843F", label: "STANDARD" },
+    premium:  { bg: "rgba(27,42,74,0.10)",     border: "rgba(27,42,74,0.30)",    color: "#1B2A4A", label: "PREMIUM" },
+  };
+  const s = style[tier] ?? style.free;
   return (
-    <span style={{ background: "rgba(122,119,111,0.10)", border: "1px solid rgba(122,119,111,0.28)", color: "#7A776F", fontSize: 9.5, letterSpacing: "0.18em", fontWeight: 600, padding: "3px 9px", borderRadius: 9999, textTransform: "uppercase" as const, lineHeight: 1 }}>
-      FREE
+    <span style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color, fontSize: 9.5, letterSpacing: "0.18em", fontWeight: 600, padding: "3px 9px", borderRadius: 9999, textTransform: "uppercase" as const, lineHeight: 1 }}>
+      {s.label}
     </span>
   );
 }
@@ -51,7 +60,7 @@ export default function Sales() {
               </p>
             </div>
             <div className="flex items-center gap-2.5 mt-1">
-              <FreePill />
+              <TierPill />
               <div className="flex items-center gap-2 bg-white border border-warm-border rounded-[10px] px-3.5 py-2.5 text-[12px] text-navy">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                 {selectedShiftName} · {timeStr}
@@ -73,7 +82,7 @@ export default function Sales() {
             </div>
             <div className="flex items-center gap-2 shrink-0 mt-1">
               <span className="w-1.5 h-1.5 rounded-full bg-success inline-block" />
-              <FreePill />
+              <TierPill />
               <div className="w-[30px] h-[30px] rounded-full bg-cream-pill border border-warm-border flex items-center justify-center font-semibold text-[11px] text-navy">{cashierInitials}</div>
             </div>
           </div>

@@ -194,7 +194,7 @@ export default function Laporan() {
           {/* Chart — STANDARD tier */}
           <div className={`mt-4 bg-white border border-warm-border rounded-card px-6 py-5 relative ${!canFullBreakdown ? "opacity-50 pointer-events-none select-none" : ""}`}>
             <span style={{ position: "absolute", top: 12, right: 14, background: "rgba(201,165,95,0.10)", border: "1px solid rgba(201,165,95,0.30)", color: "#A6843F", fontSize: 8, letterSpacing: "0.12em", fontWeight: 600, padding: "3px 8px", borderRadius: 4, textTransform: "uppercase" as const }}>
-              STANDARD
+              STD
             </span>
             <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-3">GRAFIK PENJUALAN PER JAM</p>
             <div className="h-[80px] flex items-end gap-1.5">

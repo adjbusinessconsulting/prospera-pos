@@ -46,16 +46,16 @@ export default function Payment() {
   // Demo mode shows all features (no storeId = demo)
   const effectiveTier = storeId ? storeTier : 'premium';
 
-  function methodLock(id: string): { locked: boolean; badge?: string } {
+  function methodLock(id: string): { locked: boolean; badge?: string; tierLabel?: string } {
     if (id === 'debit' || id === 'ewallet') {
       return isAtLeast(effectiveTier, 'premium')
         ? { locked: false }
-        : { locked: true, badge: 'PREMIUM' };
+        : { locked: true, badge: 'PRE', tierLabel: 'Premium' };
     }
     if (id === 'hutang') {
       return isAtLeast(effectiveTier, 'standard')
         ? { locked: false }
-        : { locked: true, badge: 'STANDARD' };
+        : { locked: true, badge: 'STD', tierLabel: 'Standard' };
     }
     return { locked: false };
   }
@@ -269,7 +269,7 @@ export default function Payment() {
           <p style={{ fontSize: 10, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-3">METODE PEMBAYARAN</p>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {METHODS.map(m => {
-              const { locked, badge } = methodLock(m.id);
+              const { locked, badge, tierLabel } = methodLock(m.id);
               const active = !locked && paymentMethod === m.id;
               return (
                 <div key={m.id}
@@ -289,7 +289,7 @@ export default function Payment() {
                     </div>
                   </div>
                   <div className="text-[13.5px] font-semibold text-navy mb-0.5">{m.label}</div>
-                  <div className="text-[11px] text-text-mute">{locked && badge ? `Upgrade ke ${badge}` : m.sub}</div>
+                  <div className="text-[11px] text-text-mute">{locked && tierLabel ? `Upgrade ke ${tierLabel}` : m.sub}</div>
                 </div>
               );
             })}

@@ -1,6 +1,6 @@
 import { Search, X, Camera, Image as ImageIcon } from "lucide-react";
 import { useState, useRef } from "react";
-import { useStore } from "../store";
+import { useStore, isAtLeast } from "../store";
 import { supabase } from "../lib/supabase";
 import { getCatLabel, formatRp, formatIDRInput, parseIDRInput, CATEGORY_OPTIONS } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
@@ -27,7 +27,9 @@ export default function Produk() {
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
-  const { cashierInitials, setScreen, signOut, storeId, isDemoMode, products, addProduct, updateProduct } = useStore();
+  const { cashierInitials, setScreen, signOut, storeId, storeTier, isDemoMode, products, addProduct, updateProduct } = useStore();
+  const effectiveTier = storeId ? storeTier : 'premium';
+  const canStock = isAtLeast(effectiveTier, 'premium');
 
   const filtered = products.filter(p =>
     !search || p.name.toLowerCase().includes(search.toLowerCase())
@@ -124,7 +126,7 @@ export default function Produk() {
           </div>
         </div>
 
-        {/* PREMIUM low-stock banner */}
+        {/* Low-stock banner: real notification on Premium, upgrade prompt below */}
         {lowStockItems.length > 0 && (
           <div className="mx-5 lg:mx-10 mt-4 shrink-0 relative border border-dashed rounded-card px-4 py-3 flex items-center justify-between gap-3"
             style={{ borderColor: "rgba(201,165,95,0.45)", background: "rgba(201,165,95,0.06)" }}>
@@ -135,12 +137,16 @@ export default function Produk() {
                   {lowStockItems.length} produk hampir habis
                   <span className="font-normal text-text-mute"> — {lowStockItems.map(p => p.name.split(" ")[0]).join(", ")}</span>
                 </p>
-                <p className="text-[11px] text-text-mute mt-0.5">Aktifkan notifikasi stok rendah dengan upgrade ke Premium.</p>
+                <p className="text-[11px] text-text-mute mt-0.5">
+                  {canStock ? "Segera lakukan pemesanan ulang untuk menjaga stok." : "Aktifkan notifikasi stok rendah dengan upgrade ke Premium."}
+                </p>
               </div>
             </div>
-            <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>
-              PREMIUM
-            </span>
+            {!canStock && (
+              <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>
+                PRE
+              </span>
+            )}
           </div>
         )}
 
@@ -170,7 +176,7 @@ export default function Produk() {
                   <th className="text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">
                     <span className="inline-flex items-center gap-1.5 justify-end">
                       Stok
-                      <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 700, padding: "2px 5px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>PREMIUM</span>
+                      {!canStock && <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 700, padding: "2px 5px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>PRE</span>}
                     </span>
                   </th>
                   <th className="px-4 py-3 w-8"></th>
@@ -210,7 +216,11 @@ export default function Produk() {
                       <span className="font-serif text-[14px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.price)}</span>
                     </td>
                     <td className="px-4 py-3.5 text-right">
-                      <span className="text-[13px] text-text-mute/40 tracking-widest select-none">—</span>
+                      {canStock ? (
+                        <span className="text-[13px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: p.stock <= LOW_STOCK_THRESHOLD ? "#A6843F" : "#1B2A4A" }}>{p.stock}</span>
+                      ) : (
+                        <span className="text-[13px] text-text-mute/40 tracking-widest select-none">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3.5">
                       <button className="w-7 h-7 rounded-[6px] flex items-center justify-center text-text-mute hover:text-navy hover:bg-cream-bg transition-colors bg-transparent border-0 cursor-pointer">
@@ -247,7 +257,11 @@ export default function Produk() {
                 <div className="text-right shrink-0">
                   <div className="font-serif text-[14px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.price)}</div>
                   <div className="flex items-center justify-end gap-1.5 mt-0.5">
-                    <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 700, padding: "2px 5px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>PREMIUM</span>
+                    {canStock ? (
+                      <span className="text-[11px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: p.stock <= LOW_STOCK_THRESHOLD ? "#A6843F" : "#7A7360" }}>Stok {p.stock}</span>
+                    ) : (
+                      <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 700, padding: "2px 5px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>PRE</span>
+                    )}
                   </div>
                 </div>
               </div>
