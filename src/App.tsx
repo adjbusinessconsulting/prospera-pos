@@ -4,6 +4,7 @@ import { supabase } from "./lib/supabase";
 import OwnerLogin from "./screens/OwnerLogin";
 import ResetPassword from "./screens/ResetPassword";
 import UpdateBanner from "./components/UpdateBanner";
+import { DemoTierSwitcher } from "./components/DemoTierSwitcher";
 import SplashScreen from "./components/SplashScreen";
 import PinLogin from "./screens/PinLogin";
 import Sales from "./screens/Sales";
@@ -47,6 +48,7 @@ export default function App() {
   const setScreen = useStore(s => s.setScreen);
   const setStoreData = useStore(s => s.setStoreData);
   const setDemoMode = useStore(s => s.setDemoMode);
+  const isDemoMode = useStore(s => s.isDemoMode);
   const [scale, setScale] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -102,6 +104,7 @@ export default function App() {
     return (
       <div className="fixed inset-0 bg-cream-bg overflow-hidden">
         <UpdateBanner />
+        {isDemoMode && <DemoTierSwitcher />}
         {screen === "login"        && <PinLogin />}
         {screen === "sales"        && <Sales />}
         {screen === "payment"      && <Payment />}
@@ -119,6 +122,7 @@ export default function App() {
   return (
     <div className="fixed inset-0 bg-cream-deep flex items-center justify-center overflow-hidden">
       <UpdateBanner />
+      {isDemoMode && <DemoTierSwitcher />}
       <div
         className="rounded-card shadow-tablet overflow-hidden bg-cream-bg"
         style={{ width: Math.round(1366 * scale), height: Math.round(900 * scale) }}

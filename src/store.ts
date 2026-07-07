@@ -32,6 +32,7 @@ interface POSState {
 
   setScreen: (s: Screen) => void;
   setDemoMode: (v: boolean) => void;
+  setStoreTier: (tier: string) => void;
   selectCashier: (id: string) => void;
   setShift: (n: number) => void;
   setDbShifts: (shifts: ShiftDef[]) => void;
@@ -128,6 +129,7 @@ export const useStore = create<POSState>((set) => ({
 
   setScreen: (screen) => set({ screen }),
   setDemoMode: (isDemoMode) => set({ isDemoMode }),
+  setStoreTier: (storeTier) => set({ storeTier }),
 
   selectCashier: (id) => set((s) => {
     const cashier = s.dbCashiers.find(c => c.id === id);
