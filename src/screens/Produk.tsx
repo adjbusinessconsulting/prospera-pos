@@ -27,7 +27,7 @@ export default function Produk() {
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
-  const { cashierInitials, setScreen, signOut, storeId, products, addProduct, updateProduct } = useStore();
+  const { cashierInitials, setScreen, signOut, storeId, isDemoMode, products, addProduct, updateProduct } = useStore();
 
   const filtered = products.filter(p =>
     !search || p.name.toLowerCase().includes(search.toLowerCase())
@@ -89,7 +89,7 @@ export default function Produk() {
       ...(addPhoto ? { photo: addPhoto } : {}),
     };
     addProduct(newProduct);
-    if (storeId) {
+    if (storeId && !isDemoMode) {
       supabase.from("products").insert({
         id: newProduct.id, store_id: storeId,
         name: newProduct.name, monogram: newProduct.monogram,

@@ -32,7 +32,7 @@ function shiftsOverlap(aStart: string, aEnd: string, bStart: string, bEnd: strin
 }
 
 export default function ManageStaff({ onClose }: { onClose: () => void }) {
-  const { storeId, storeTier, setDbCashiers, setDbShifts } = useStore();
+  const { storeId, storeTier, isDemoMode, dbCashiers, dbShifts, setDbCashiers, setDbShifts } = useStore();
 
   const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState<"kasir" | "shift">("kasir");
@@ -63,6 +63,13 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
   const [confirmErr, setConfirmErr] = useState("");
 
   useEffect(() => {
+    // Demo: work entirely off local in-memory state — no login, no database.
+    if (isDemoMode) {
+      setKasir(dbCashiers.map((c) => ({ key: c.id, id: c.id, name: c.name, initials: c.initials, role: c.role, pin: c.pin, status: "existing" as DraftStatus })));
+      setShiftsD(dbShifts.map((s) => ({ key: s.id, id: s.id, name: s.name, start_time: s.start_time, end_time: s.end_time, status: "existing" as DraftStatus })));
+      setLoaded(true);
+      return;
+    }
     (async () => {
       const [{ data: cRows }, { data: sRows }] = await Promise.all([
         supabase.from("cashiers").select("*").eq("store_id", storeId).order("created_at"),
@@ -74,6 +81,15 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Demo: apply staged changes to local store state (ephemeral — resets on reload), skip login + DB.
+  function applyLocalAndClose() {
+    const nextCashiers = kasir.filter((k) => k.status !== "deleted").map((k) => ({ id: k.id || genId(), store_id: storeId, name: k.name, initials: k.initials, role: k.role, pin: k.pin, active: true }));
+    const nextShifts = shiftsD.filter((s) => s.status !== "deleted").map((s) => ({ id: s.id, name: s.name, start_time: s.start_time, end_time: s.end_time }));
+    setDbCashiers(nextCashiers as CashierDB[]);
+    setDbShifts(nextShifts as ShiftDef[]);
+    onClose();
+  }
 
   const kLimit = kasirLimit(storeTier);
   const sLimit = shiftSlotLimit(storeTier);
@@ -303,7 +319,7 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
 
             {/* Footer commit */}
             <div style={{ borderTop: "1px solid #ECE7DD", padding: "12px 20px 16px", flexShrink: 0 }}>
-              <button onClick={() => hasChanges ? setShowConfirm(true) : onClose()}
+              <button onClick={() => !hasChanges ? onClose() : isDemoMode ? applyLocalAndClose() : setShowConfirm(true)}
                 style={{ width: "100%", height: 46, borderRadius: 11, border: "none", background: hasChanges ? "#0B1129" : "white", color: hasChanges ? "#F5F0E8" : "#7A776F", boxShadow: hasChanges ? "none" : "inset 0 0 0 1px #ECE7DD", fontSize: 13, fontWeight: 600, cursor: "pointer", letterSpacing: "0.02em" }}>
                 {hasChanges ? "Simpan & Konfirmasi →" : "Tutup"}
               </button>
