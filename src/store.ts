@@ -33,6 +33,7 @@ interface POSState {
   setScreen: (s: Screen) => void;
   setDemoMode: (v: boolean) => void;
   setStoreTier: (tier: string) => void;
+  startDemo: () => void;
   selectCashier: (id: string) => void;
   setShift: (n: number) => void;
   setDbShifts: (shifts: ShiftDef[]) => void;
@@ -99,6 +100,19 @@ export const startedAsInvite = typeof window !== 'undefined' &&
   ((new URLSearchParams(window.location.search).get('type') === 'invite') ||
    (new URLSearchParams(window.location.hash.replace(/^#/, '')).get('type') === 'invite'));
 
+// Demo sandbox identity — shared by the ?demo=true URL flow (App.tsx) and the
+// "Coba Demo" button on the login screen so both enter the exact same demo.
+export const DEMO_STORE_ID = '42dea26b-82a2-4b1b-b5fd-c573687df422';
+export const DEMO_CASHIER: CashierDB = {
+  id: 'ae',
+  store_id: DEMO_STORE_ID,
+  name: 'Aerith Djiady',
+  initials: 'AE',
+  role: 'cashier',
+  pin: '000000',
+  active: true,
+};
+
 export const useStore = create<POSState>((set) => ({
   screen: _startsAsReset ? 'reset-password' : 'owner-login',
   selectedCashier: 'ae',
@@ -130,6 +144,22 @@ export const useStore = create<POSState>((set) => ({
   setScreen: (screen) => set({ screen }),
   setDemoMode: (isDemoMode) => set({ isDemoMode }),
   setStoreTier: (storeTier) => set({ storeTier }),
+
+  // Enter the full demo: premium tier + demo store, straight to Sales.
+  // Ephemeral — nothing is written to Supabase while isDemoMode is true.
+  startDemo: () => set({
+    isDemoMode: true,
+    storeId: DEMO_STORE_ID,
+    storeName: 'Demo Toko',
+    storeAddress: 'Jl. Diponegoro No. 24, Palu Timur',
+    storePhone: '0812-3456-7890',
+    storeTier: 'premium',
+    dbCashiers: [DEMO_CASHIER],
+    selectedCashier: DEMO_CASHIER.id,
+    cashierName: DEMO_CASHIER.name.split(' ')[0],
+    cashierInitials: DEMO_CASHIER.initials,
+    screen: 'sales',
+  }),
 
   selectCashier: (id) => set((s) => {
     const cashier = s.dbCashiers.find(c => c.id === id);

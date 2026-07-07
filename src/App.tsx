@@ -31,23 +31,10 @@ const urlHasResetCode = (() => {
   return has("code") || has("token_hash") || isSetPassword || has("error_code") || has("error");
 })();
 
-const DEMO_STORE_ID = "42dea26b-82a2-4b1b-b5fd-c573687df422";
-
-const DEMO_CASHIER = {
-  id: "ae",
-  store_id: DEMO_STORE_ID,
-  name: "Aerith Djiady",
-  initials: "AE",
-  role: "cashier",
-  pin: "000000",
-  active: true,
-};
-
 export default function App() {
   const screen = useStore(s => s.screen);
   const setScreen = useStore(s => s.setScreen);
-  const setStoreData = useStore(s => s.setStoreData);
-  const setDemoMode = useStore(s => s.setDemoMode);
+  const startDemo = useStore(s => s.startDemo);
   const isDemoMode = useStore(s => s.isDemoMode);
   const [scale, setScale] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
@@ -75,9 +62,7 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("demo") === "true") {
-      setDemoMode(true);
-      setStoreData(DEMO_STORE_ID, "Demo Toko", "Jl. Diponegoro No. 24, Palu Timur", [DEMO_CASHIER], "0812-3456-7890", "", "", "premium");
-      setScreen("sales");
+      startDemo();
     }
   }, []);
 

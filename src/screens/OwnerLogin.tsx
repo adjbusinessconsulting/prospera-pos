@@ -17,7 +17,7 @@ interface StoreRow {
 }
 
 export default function OwnerLogin() {
-  const { setScreen, setStoreData, setProductsFromDB, setTrxCounter, setDbShifts } = useStore();
+  const { setScreen, setStoreData, setProductsFromDB, setTrxCounter, setDbShifts, startDemo } = useStore();
   const [storeChoices, setStoreChoices] = useState<StoreRow[]>([]);
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [loginAs, setLoginAs] = useState<"toko" | "backoffice">("toko");
@@ -275,7 +275,7 @@ export default function OwnerLogin() {
         )}
         <div style={{ marginTop: 12, padding: "8px 12px", background: "rgba(201,165,95,0.07)", border: "1px dashed rgba(201,165,95,0.40)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: 11, color: "#7A776F", fontFamily: "Inter, sans-serif" }}>Coba tanpa akun?</span>
-          <button type="button" onClick={() => setScreen("login")} style={{ background: "transparent", border: "none", fontSize: 9.5, color: "#C9A55F", cursor: "pointer", letterSpacing: "0.14em", fontWeight: 600, textTransform: "uppercase" as const, fontFamily: "Inter, sans-serif" }}>
+          <button type="button" onClick={startDemo} style={{ background: "transparent", border: "none", fontSize: 9.5, color: "#C9A55F", cursor: "pointer", letterSpacing: "0.14em", fontWeight: 600, textTransform: "uppercase" as const, fontFamily: "Inter, sans-serif" }}>
             COBA DEMO →
           </button>
         </div>
