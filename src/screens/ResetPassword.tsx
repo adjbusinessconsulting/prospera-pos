@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { useStore } from "../store";
+import { useStore, startedAsInvite } from "../store";
 
 const GK = "'Hanken Grotesk', system-ui, sans-serif";
 const EBG = "'EB Garamond', Georgia, serif";
@@ -174,8 +174,8 @@ export default function ResetPassword() {
               </svg>
             </div>
 
-            <div style={{ font: `600 10.5px/1.4 ${GK}`, letterSpacing: "0.16em", textTransform: "uppercase", color: "#3f7d54", marginBottom: 10 }}>Berhasil · Kata Sandi Diperbarui</div>
-            <h1 style={{ font: `500 26px/1.15 ${EBG}`, color: "#14203a", margin: "0 0 8px" }}>Kata sandi baru Anda telah tersimpan.</h1>
+            <div style={{ font: `600 10.5px/1.4 ${GK}`, letterSpacing: "0.16em", textTransform: "uppercase", color: "#3f7d54", marginBottom: 10 }}>{startedAsInvite ? "Berhasil · Akun Aktif" : "Berhasil · Kata Sandi Diperbarui"}</div>
+            <h1 style={{ font: `500 26px/1.15 ${EBG}`, color: "#14203a", margin: "0 0 8px" }}>{startedAsInvite ? "Kata sandi Anda telah dibuat." : "Kata sandi baru Anda telah tersimpan."}</h1>
             <p style={{ font: `400 13px/1.55 ${GK}`, color: "#8f897a", margin: "0 0 20px", maxWidth: 320 }}>Silakan masuk kembali ke Sterith POS menggunakan kata sandi baru Anda.</p>
 
             <a href="https://pos.sterith.com" style={{ textDecoration: "none", width: "100%", background: "#14203a", color: "#fff", borderRadius: 11, padding: "13px 18px", font: `600 13.5px/1 ${GK}`, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
@@ -206,9 +206,9 @@ export default function ResetPassword() {
           <div style={{ flex: 1, padding: "2px 24px 20px", animation: "fadeUp .4s ease both" }}>
             <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
 
-            <div style={{ font: `600 10.5px/1.4 ${GK}`, letterSpacing: "0.16em", textTransform: "uppercase", color: "#b8934a", marginBottom: 7 }}>Akun · Pengaturan Ulang</div>
-            <h1 style={{ font: `500 24px/1.1 ${EBG}`, color: "#14203a", margin: "0 0 6px" }}>Atur ulang kata sandi</h1>
-            <p style={{ font: `400 13px/1.5 ${GK}`, color: "#8f897a", margin: "0 0 14px" }}>Masukkan email Anda dan buat kata sandi baru untuk melanjutkan.</p>
+            <div style={{ font: `600 10.5px/1.4 ${GK}`, letterSpacing: "0.16em", textTransform: "uppercase", color: "#b8934a", marginBottom: 7 }}>{startedAsInvite ? "Selamat Datang · Sterith POS" : "Akun · Pengaturan Ulang"}</div>
+            <h1 style={{ font: `500 24px/1.1 ${EBG}`, color: "#14203a", margin: "0 0 6px" }}>{startedAsInvite ? "Buat kata sandi Anda" : "Atur ulang kata sandi"}</h1>
+            <p style={{ font: `400 13px/1.5 ${GK}`, color: "#8f897a", margin: "0 0 14px" }}>{startedAsInvite ? "Buat kata sandi untuk mulai menggunakan Sterith POS." : "Masukkan email Anda dan buat kata sandi baru untuk melanjutkan."}</p>
 
             <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e8e3d5", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
 
@@ -252,7 +252,7 @@ export default function ResetPassword() {
 
               <button type="submit" disabled={loading}
                 style={{ marginTop: 2, background: "#14203a", color: "#fff", borderRadius: 11, padding: "13px 18px", font: `600 13.5px/1 ${GK}`, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.75 : 1 }}>
-                {loading ? "Menyimpan…" : "Simpan kata sandi baru"}
+                {loading ? "Menyimpan…" : startedAsInvite ? "Buat kata sandi & masuk" : "Simpan kata sandi baru"}
                 {!loading && <span style={{ color: "#e7c987", fontWeight: 700 }}>→</span>}
               </button>
             </form>

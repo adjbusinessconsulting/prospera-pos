@@ -86,10 +86,17 @@ function _detectResetFlow(): boolean {
   const q = new URLSearchParams(window.location.search);
   const h = new URLSearchParams(window.location.hash.replace(/^#/, ''));
   const has = (k: string) => q.has(k) || h.has(k);
-  const isRecovery = q.get('type') === 'recovery' || h.get('type') === 'recovery';
-  return has('code') || has('token_hash') || isRecovery || has('error_code') || has('error');
+  const type = q.get('type') || h.get('type');
+  const isSetPassword = type === 'recovery' || type === 'invite';   // reset link OR admin invite
+  return has('code') || has('token_hash') || isSetPassword || has('error_code') || has('error');
 }
 const _startsAsReset = _detectResetFlow();
+
+// Captured synchronously at load (before Supabase strips the hash): was this an admin invite
+// (first-time password set) rather than a password reset? Used to tailor the set-password screen.
+export const startedAsInvite = typeof window !== 'undefined' &&
+  ((new URLSearchParams(window.location.search).get('type') === 'invite') ||
+   (new URLSearchParams(window.location.hash.replace(/^#/, '')).get('type') === 'invite'));
 
 export const useStore = create<POSState>((set) => ({
   screen: _startsAsReset ? 'reset-password' : 'owner-login',

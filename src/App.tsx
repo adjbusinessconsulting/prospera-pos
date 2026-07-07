@@ -25,8 +25,9 @@ const urlHasResetCode = (() => {
   const q = new URLSearchParams(window.location.search);
   const h = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   const has = (k: string) => q.has(k) || h.has(k);
-  const isRecovery = q.get("type") === "recovery" || h.get("type") === "recovery";
-  return has("code") || has("token_hash") || isRecovery || has("error_code") || has("error");
+  const type = q.get("type") || h.get("type");
+  const isSetPassword = type === "recovery" || type === "invite";
+  return has("code") || has("token_hash") || isSetPassword || has("error_code") || has("error");
 })();
 
 const DEMO_STORE_ID = "42dea26b-82a2-4b1b-b5fd-c573687df422";
