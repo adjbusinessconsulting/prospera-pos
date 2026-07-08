@@ -28,7 +28,7 @@ export default function Produk() {
   const galleryRef = useRef<HTMLInputElement>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
   const { cashierInitials, setScreen, signOut, storeId, storeTier, isDemoMode, products, addProduct, updateProduct } = useStore();
-  const effectiveTier = storeId ? storeTier : 'premium';
+  const effectiveTier = storeId ? storeTier : 'free';
   const canStock = isAtLeast(effectiveTier, 'premium');
 
   const filtered = products.filter(p =>

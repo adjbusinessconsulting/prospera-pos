@@ -77,7 +77,8 @@ export default function OwnerLogin() {
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
-    if (loginAs === "backoffice") return;
+    // Backoffice is a separate app (same Supabase login). Send them there to sign in.
+    if (loginAs === "backoffice") { window.location.href = "https://backoffice.sterith.com"; return; }
     setLoading(true);
     setError("");
     setSuccess("");

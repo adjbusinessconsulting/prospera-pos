@@ -49,8 +49,9 @@ export default function ResetPassword() {
     // 2) Scanner-proof flow: the email link carries a token_hash we verify ourselves.
     //    (Email scanners loading the page don't run this call, so the token survives.)
     const tokenHash = pick("token_hash");
-    if (tokenHash && pick("type") === "recovery") {
-      supabase.auth.verifyOtp({ type: "recovery", token_hash: tokenHash }).then(({ data, error: otpError }) => {
+    const linkType = pick("type");
+    if (tokenHash && (linkType === "recovery" || linkType === "invite")) {
+      supabase.auth.verifyOtp({ type: linkType as "recovery" | "invite", token_hash: tokenHash }).then(({ data, error: otpError }) => {
         if (otpError) {
           resolve(undefined, "Link reset sudah kadaluarsa atau sudah dipakai. Silakan minta link reset baru.");
         } else if (data.session?.user?.email) {

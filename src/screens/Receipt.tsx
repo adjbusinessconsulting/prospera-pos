@@ -23,7 +23,7 @@ function SterithWatermark({ tier }: { tier: string }) {
 
 export default function Receipt() {
   const { cart, cashReceived, cashierName, cashierInitials, selectedShift, selectedShiftName, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, restart, setScreen, signOut } = useStore();
-  const effectiveTier = storeId ? storeTier : 'premium';
+  const effectiveTier = storeId ? storeTier : 'free';
   const canWhatsApp = isAtLeast(effectiveTier, 'standard');
   const total = getTotal(cart);
   const change = cashReceived - total;

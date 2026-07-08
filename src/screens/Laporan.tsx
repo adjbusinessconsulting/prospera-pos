@@ -83,7 +83,7 @@ const FILTER_LABELS = [
 
 export default function Laporan() {
   const { cashierInitials, storeId, storeTier, setScreen, signOut } = useStore();
-  const effectiveTier = storeId ? storeTier : 'premium';
+  const effectiveTier = storeId ? storeTier : 'free';
   const canFullBreakdown = isAtLeast(effectiveTier, 'standard');
   const [activeFilter, setActiveFilter] = useState(0);
 

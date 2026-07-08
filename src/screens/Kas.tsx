@@ -28,7 +28,7 @@ function PhotoThumb({ size = "sm" }: { size?: "sm" | "md" }) {
 
 export default function Kas() {
   const { cashierInitials, cashierName, selectedShiftName, storeId, storeTier, setScreen, signOut } = useStore();
-  const effectiveTier = storeId ? storeTier : 'premium';
+  const effectiveTier = storeId ? storeTier : 'free';
   const canKas = isAtLeast(effectiveTier, 'standard');
   const requiresPhoto = isAtLeast(effectiveTier, 'premium');
 

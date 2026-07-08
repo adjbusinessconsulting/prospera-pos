@@ -37,7 +37,7 @@ function methodLabel(m: string) {
 
 export default function Riwayat() {
   const { cashierInitials, selectedShiftName, storeId, storePhone, storeTier, setScreen, signOut } = useStore();
-  const effectiveTier = storeId ? storeTier : 'premium';
+  const effectiveTier = storeId ? storeTier : 'free';
   const canExport = isAtLeast(effectiveTier, 'standard');
   const canExtendedHistory = isAtLeast(effectiveTier, 'standard');
   const [sales, setSales]           = useState<SaleRecord[]>([]);

@@ -29,7 +29,7 @@ interface ShiftOption { pos: number; name: string; time: string; isNow: boolean;
 export default function PinLogin() {
   const { selectedCashier, selectedShift, selectCashier, setShift, pin, addPin, removePin, clearPin, setScreen, storeName, storeAddress, storeTier, storeId, dbCashiers, dbShifts } = useStore();
   // Demo shows all features; Free locks non-current shifts (only when shifts aren't configured)
-  const effectiveTier = storeId ? storeTier : 'premium';
+  const effectiveTier = storeId ? storeTier : 'free';
   const canChangeShift = isAtLeast(effectiveTier, 'standard');
   // Free skips the PIN; Standard+ requires it (multi-kasir attribution)
   const requiresPin = isAtLeast(effectiveTier, 'standard');

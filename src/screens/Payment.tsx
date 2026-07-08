@@ -44,7 +44,7 @@ export default function Payment() {
   } = useStore();
 
   // Demo mode shows all features (no storeId = demo)
-  const effectiveTier = storeId ? storeTier : 'premium';
+  const effectiveTier = storeId ? storeTier : 'free';
 
   function methodLock(id: string): { locked: boolean; badge?: string; tierLabel?: string } {
     if (id === 'debit' || id === 'ewallet') {
