@@ -36,6 +36,8 @@ export default function App() {
   const setScreen = useStore(s => s.setScreen);
   const startDemo = useStore(s => s.startDemo);
   const isDemoMode = useStore(s => s.isDemoMode);
+  const storeId = useStore(s => s.storeId);
+  const signOut = useStore(s => s.signOut);
   const [scale, setScale] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -65,6 +67,23 @@ export default function App() {
       startDemo();
     }
   }, []);
+
+  // Auto-logout when the store is suspended from Masteroffice (checked while the
+  // session is still valid, so it kicks in before the banned token even expires).
+  useEffect(() => {
+    if (!storeId || isDemoMode) return;
+    let cancelled = false;
+    const check = async () => {
+      const { data } = await supabase.from("stores").select("status").eq("id", storeId).maybeSingle();
+      if (!cancelled && data && data.status && data.status !== "active") {
+        await supabase.auth.signOut();
+        signOut();
+      }
+    };
+    check();
+    const t = setInterval(check, 60000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [storeId, isDemoMode, signOut]);
 
   useEffect(() => {
     // If ?code= was in the URL when the page loaded, this is a password reset flow
