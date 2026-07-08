@@ -1,0 +1,686 @@
+<meta charset="utf-8">
+<title>Kopi A'Robi · POS Showcase</title>
+<style>
+  :root {
+    --brown-900:#3A0A10; --brown-800:#5C121C; --brown-700:#A81E2C; --brown-600:#C22A38;
+    --amber-600:#B07A2A; --amber-500:#D19A3A; --amber-400:#E2B45A; --amber-100:#F4E7CE;
+    --parch:#F5EEE4; --parch-deep:#EBE0D0; --card:#FFFDF9;
+    --ink:#2A1216; --mute:#7E6560; --faint:#B0A08F; --line:#EADFD2;
+    --danger:#C2662F; --gold:#C6852F;
+    --font:"Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    --serif:Georgia, "Times New Roman", "Iowan Old Style", serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; }
+  body { font-family:var(--font); background:var(--brown-900); color:var(--ink); -webkit-font-smoothing:antialiased; overflow:hidden; }
+  button { font-family:inherit; cursor:pointer; }
+  ::selection { background:rgba(198,133,47,0.28); }
+  .screen { display:none; height:100dvh; }
+  .screen.active { display:block; }
+  .serif { font-family:var(--serif); }
+
+  /* ============ LOGIN ============ */
+  #login { background:var(--parch); }
+  .login-top { height:50px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; padding:0 26px; }
+  .dot-on { display:flex; align-items:center; gap:7px; font-size:9.5px; letter-spacing:0.2em; text-transform:uppercase; color:var(--mute); font-weight:600; }
+  .dot-on i { width:7px; height:7px; border-radius:50%; background:var(--amber-500); box-shadow:0 0 0 3px rgba(198,133,47,0.18); }
+  .login-wrap { height:calc(100dvh - 50px); display:flex; align-items:center; justify-content:center; padding:40px; }
+  .login-grid { display:flex; align-items:center; gap:60px; max-width:940px; width:100%; }
+  .login-hero { flex:1; }
+  .wordmark { display:flex; align-items:baseline; gap:10px; margin-bottom:18px; }
+  .wordmark .mk { font-family:var(--serif); font-size:46px; font-weight:700; letter-spacing:-0.01em; color:var(--brown-700); font-style:italic; }
+  .wordmark .leaf { width:30px; height:30px; align-self:center; }
+  .rule { display:flex; align-items:center; gap:10px; margin-bottom:24px; }
+  .rule span { font-size:9.5px; letter-spacing:0.3em; text-transform:uppercase; color:var(--amber-600); font-weight:700; white-space:nowrap; }
+  .rule i { flex:1; height:1px; background:linear-gradient(to right, rgba(198,133,47,0.6), transparent); }
+  .login-hero h1 { font-family:var(--serif); font-size:44px; font-weight:700; letter-spacing:-0.01em; line-height:1.1; color:var(--ink); margin-bottom:14px; }
+  .login-hero p { font-size:14px; color:var(--mute); line-height:1.65; max-width:340px; }
+  .login-card { flex-shrink:0; width:344px; background:var(--card); border-radius:20px; padding:28px; box-shadow:0 20px 60px rgba(34,20,12,0.14); }
+  .lbl-cap { font-size:9.5px; letter-spacing:0.22em; text-transform:uppercase; color:var(--mute); font-weight:700; margin-bottom:9px; }
+  .roles { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; }
+  .role { position:relative; background:#FAF4E8; border:1.5px solid var(--line); border-radius:12px; padding:13px; text-align:left; }
+  .role.on { background:#fff; border:2px solid var(--brown-700); }
+  .role svg { width:19px; height:19px; margin-bottom:7px; color:var(--faint); }
+  .role.on svg { color:var(--brown-700); }
+  .role .t { font-size:13.5px; font-weight:700; color:var(--faint); }
+  .role.on .t { color:var(--ink); }
+  .role .s { font-size:10.5px; color:var(--faint); margin-top:2px; }
+  .role .tag { position:absolute; top:-1px; right:-1px; background:var(--gold); color:#fff; font-size:7px; letter-spacing:0.1em; font-weight:800; padding:3px 8px; border-radius:0 11px 0 8px; text-transform:uppercase; }
+  .field { margin-bottom:12px; }
+  .field .lbl-cap { margin-bottom:7px; }
+  .inp { background:#fff; border:1px solid var(--line); border-radius:10px; height:46px; display:flex; align-items:center; gap:9px; padding:0 13px; }
+  .inp.focusable { border:1.5px solid var(--brown-700); }
+  .inp svg { width:14px; height:14px; color:var(--faint); }
+  .inp input { flex:1; border:0; outline:0; font-size:14px; background:transparent; color:var(--ink); }
+  .btn-primary { width:100%; height:50px; border:0; border-radius:12px; background:var(--brown-700); color:#fff; font-size:13.5px; font-weight:700; letter-spacing:0.04em; display:flex; align-items:center; justify-content:center; gap:9px; transition:.15s; }
+  .btn-primary:hover { background:var(--brown-800); }
+  .btn-primary svg { width:15px; height:15px; }
+  .demo-strip { margin-top:13px; padding:9px 13px; background:rgba(198,133,47,0.08); border:1px dashed rgba(198,133,47,0.45); border-radius:9px; display:flex; align-items:center; justify-content:space-between; }
+  .demo-strip span { font-size:11px; color:var(--mute); }
+  .demo-strip button { background:transparent; border:0; color:var(--amber-600); font-size:9.5px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; }
+
+  /* ============ PIN ============ */
+  #pin { background:var(--parch); }
+  .pin-wrap { height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px; }
+  .pin-eyebrow { font-size:10px; letter-spacing:0.24em; text-transform:uppercase; color:var(--amber-600); font-weight:700; margin-bottom:8px; }
+  .pin-wrap h1 { font-family:var(--serif); font-size:28px; font-weight:700; letter-spacing:-0.01em; margin-bottom:4px; }
+  .pin-wrap .psub { font-size:13px; color:var(--mute); margin-bottom:26px; }
+  .shifts { display:flex; gap:10px; margin-bottom:22px; }
+  .shift { background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:11px 18px; text-align:center; }
+  .shift.on { border-color:var(--brown-700); background:#fff; }
+  .shift .sn { font-size:13px; font-weight:700; color:var(--ink); }
+  .shift .sh { font-size:10.5px; color:var(--mute); margin-top:2px; font-variant-numeric:tabular-nums; }
+  .cashiers { display:flex; gap:12px; margin-bottom:22px; }
+  .cash { display:flex; flex-direction:column; align-items:center; gap:7px; background:transparent; border:0; opacity:0.55; transition:.15s; }
+  .cash.on { opacity:1; }
+  .cash .av { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:17px; border:2px solid transparent; }
+  .cash.on .av { border-color:var(--amber-500); box-shadow:0 0 0 3px rgba(198,133,47,0.18); }
+  .cash .cn { font-size:11.5px; font-weight:600; color:var(--ink); }
+  .dots { display:flex; gap:12px; margin-bottom:20px; }
+  .dots i { width:14px; height:14px; border-radius:50%; border:2px solid var(--faint); transition:.15s; }
+  .dots i.f { background:var(--amber-600); border-color:var(--amber-600); }
+  .pad { display:grid; grid-template-columns:repeat(3,72px); gap:12px; }
+  .pad button { height:62px; border:1px solid var(--line); background:var(--card); border-radius:14px; font-size:22px; font-weight:600; color:var(--ink); transition:.1s; }
+  .pad button:hover { border-color:var(--amber-500); }
+  .pad button:active { background:var(--amber-100); }
+  .pad .muted { border:0; background:transparent; color:var(--mute); font-size:13px; font-weight:600; }
+
+  /* ============ APP ============ */
+  .app { display:grid; grid-template-columns:74px 1fr 372px; height:100dvh; background:var(--parch); overflow:hidden; }
+  .app.no-cart { grid-template-columns:74px 1fr; }
+  .rail { background:var(--brown-900); display:flex; flex-direction:column; align-items:center; padding:16px 0 18px; gap:4px; }
+  .rail-logo { width:42px; height:42px; border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:18px; box-shadow:0 6px 18px rgba(0,0,0,0.4); }
+  .rail-logo img { width:100%; height:100%; object-fit:cover; }
+  .wordmark .logo-img { width:118px; height:118px; border-radius:18px; object-fit:cover; display:block; box-shadow:0 12px 30px rgba(168,30,44,0.22); }
+  .rail-nav { display:flex; flex-direction:column; gap:6px; width:100%; align-items:center; }
+  .nav-btn { width:52px; height:52px; border:0; border-radius:14px; background:transparent; color:rgba(255,255,255,0.5); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; transition:.15s; }
+  .nav-btn svg { width:20px; height:20px; }
+  .nav-btn span { font-size:8px; letter-spacing:0.06em; text-transform:uppercase; font-weight:600; }
+  .nav-btn:hover { color:rgba(255,255,255,0.85); background:rgba(255,255,255,0.06); }
+  .nav-btn.active { color:#fff; background:rgba(198,133,47,0.30); }
+  .rail-spacer { flex:1; }
+  .rail-avatar { width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.18); color:#fff; font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center; }
+  .rail-logout { margin-top:10px; width:40px; height:34px; border:0; border-radius:10px; background:transparent; color:rgba(255,255,255,0.45); display:flex; align-items:center; justify-content:center; }
+  .rail-logout:hover { color:#fff; background:rgba(255,255,255,0.06); }
+  .rail-logout svg { width:17px; height:17px; }
+
+  .main { display:flex; flex-direction:column; min-width:0; overflow:hidden; }
+  .topbar { display:flex; align-items:flex-start; justify-content:space-between; padding:22px 28px 0; gap:20px; }
+  .eyebrow { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; color:var(--amber-600); font-weight:700; margin-bottom:5px; font-variant-numeric:tabular-nums; }
+  .greeting { font-family:var(--serif); font-size:27px; font-weight:700; letter-spacing:-0.01em; }
+  .submeta { font-size:12.5px; color:var(--mute); margin-top:4px; }
+  .submeta b { color:var(--brown-700); font-weight:600; }
+  .topbar-right { display:flex; align-items:center; gap:10px; flex-shrink:0; margin-top:2px; }
+  .demo-tier { display:flex; align-items:center; gap:8px; background:var(--brown-900); border-radius:999px; padding:4px 6px 4px 12px; }
+  .demo-tier .l { font-size:8px; letter-spacing:0.16em; text-transform:uppercase; color:var(--amber-400); font-weight:800; }
+  .tier-seg { display:flex; gap:2px; background:rgba(255,255,255,0.08); border-radius:999px; padding:3px; }
+  .tier-seg button { border:0; background:transparent; color:rgba(255,255,255,0.7); font-size:10.5px; font-weight:600; padding:4px 11px; border-radius:999px; transition:.15s; }
+  .tier-seg button.on { background:var(--amber-500); color:var(--brown-900); }
+  .chip { display:flex; align-items:center; gap:7px; background:var(--card); border:1px solid var(--line); border-radius:11px; padding:8px 12px; font-size:12px; font-variant-numeric:tabular-nums; }
+  .chip svg { width:13px; height:13px; color:var(--brown-700); }
+
+  .toolbar { display:flex; gap:10px; padding:18px 28px 0; }
+  .search { flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px; height:46px; display:flex; align-items:center; gap:10px; padding:0 15px; }
+  .search svg { width:16px; height:16px; color:var(--faint); flex-shrink:0; }
+  .search input { flex:1; border:0; outline:0; font-size:14px; background:transparent; color:var(--ink); }
+  .scan { background:var(--card); border:1px solid var(--line); border-radius:12px; height:46px; padding:0 15px; display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink); }
+  .scan svg { width:15px; height:15px; }
+  .cats { display:flex; gap:8px; padding:16px 28px 0; overflow-x:auto; scrollbar-width:none; }
+  .cats::-webkit-scrollbar { display:none; }
+  .cat { border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:999px; padding:8px 15px; font-size:12.5px; font-weight:500; white-space:nowrap; transition:.15s; }
+  .cat:hover { border-color:var(--amber-500); }
+  .cat.on { background:var(--brown-700); border-color:var(--brown-700); color:#fff; }
+
+  .grid-wrap { flex:1; overflow-y:auto; padding:18px 28px 28px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(184px,1fr)); gap:14px; align-content:start; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:12px; text-align:left; display:flex; flex-direction:column; gap:10px; transition:.12s; }
+  .card:hover { border-color:rgba(198,133,47,0.55); transform:translateY(-2px); box-shadow:0 10px 26px rgba(34,20,12,0.10); }
+  .card:active { transform:translateY(0); }
+  .tile { height:96px; border-radius:11px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .tile .mono { font-family:var(--serif); font-size:29px; font-weight:700; color:rgba(255,255,255,0.94); letter-spacing:-0.02em; }
+  .tile .steam { position:absolute; inset:0; opacity:0.18; background:radial-gradient(120px 60px at 70% -10%,#fff,transparent 60%); }
+  .card h3 { font-size:13.5px; font-weight:600; line-height:1.25; }
+  .card .sub { font-size:11px; color:var(--faint); margin-top:-4px; }
+  .card-foot { display:flex; align-items:center; justify-content:space-between; margin-top:auto; }
+  .price { font-size:14px; font-weight:700; color:var(--brown-700); font-variant-numeric:tabular-nums; }
+  .add { width:30px; height:30px; border-radius:9px; border:0; background:var(--amber-100); color:var(--brown-700); display:flex; align-items:center; justify-content:center; transition:.15s; }
+  .add svg { width:16px; height:16px; }
+  .add:hover { background:var(--amber-500); color:#fff; }
+  .qty-badge { font-size:11px; font-weight:700; color:#fff; background:var(--amber-500); border-radius:999px; padding:1px 8px; }
+
+  .cart { background:var(--card); border-left:1px solid var(--line); display:flex; flex-direction:column; min-height:0; }
+  .cart-head { padding:20px 22px 14px; border-bottom:1px solid var(--line); }
+  .cart-head .row { display:flex; align-items:center; justify-content:space-between; }
+  .cart-head h2 { font-family:var(--serif); font-size:17px; font-weight:700; }
+  .cart-head .trx { font-size:11px; color:var(--faint); font-variant-numeric:tabular-nums; margin-top:2px; }
+  .clear { border:0; background:transparent; color:var(--danger); font-size:11.5px; font-weight:600; }
+  .clear:hover { text-decoration:underline; }
+  .cart-items { flex:1; overflow-y:auto; padding:8px 14px; display:flex; flex-direction:column; gap:2px; }
+  .empty { text-align:center; color:var(--faint); font-size:13px; padding:60px 20px; }
+  .empty svg { width:40px; height:40px; opacity:0.4; margin-bottom:12px; }
+  .ci { display:flex; gap:11px; align-items:center; padding:10px 8px; border-radius:12px; }
+  .ci:hover { background:var(--parch); }
+  .ci-tile { width:40px; height:40px; border-radius:9px; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:#fff; font-family:var(--serif); font-weight:700; font-size:14px; }
+  .ci-info { flex:1; min-width:0; }
+  .ci-info .n { font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ci-info .p { font-size:11.5px; color:var(--mute); font-variant-numeric:tabular-nums; }
+  .stepper { display:flex; align-items:center; gap:8px; }
+  .stepper button { width:24px; height:24px; border-radius:7px; border:1px solid var(--line); background:var(--card); color:var(--brown-700); font-size:15px; line-height:1; display:flex; align-items:center; justify-content:center; }
+  .stepper button:hover { border-color:var(--amber-500); }
+  .stepper .q { font-size:13px; font-weight:700; min-width:16px; text-align:center; font-variant-numeric:tabular-nums; }
+  .cart-foot { border-top:1px solid var(--line); padding:16px 22px 20px; background:var(--parch); }
+  .sumrow { display:flex; justify-content:space-between; font-size:12.5px; color:var(--mute); margin-bottom:6px; font-variant-numeric:tabular-nums; }
+  .sumrow.total { color:var(--ink); font-size:18px; font-weight:800; margin:10px 0 14px; }
+  .pay { width:100%; height:54px; border:0; border-radius:14px; color:#fff; font-size:15px; font-weight:700; background:var(--brown-700); display:flex; align-items:center; justify-content:center; gap:10px; transition:.15s; }
+  .pay:hover:not(:disabled) { background:var(--brown-800); }
+  .pay:disabled { opacity:0.45; cursor:not-allowed; }
+  .pay svg { width:17px; height:17px; }
+  .pill-brand { display:inline-flex; align-items:center; gap:6px; font-size:9px; letter-spacing:0.16em; text-transform:uppercase; font-weight:700; color:var(--brown-700); background:var(--amber-100); border-radius:999px; padding:3px 9px; }
+
+  /* ============ PAYMENT ============ */
+  #payment { background:var(--parch); }
+  .pay-head { height:60px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:14px; padding:0 26px; background:var(--card); }
+  .back { width:38px; height:38px; border-radius:10px; border:1px solid var(--line); background:#fff; display:flex; align-items:center; justify-content:center; color:var(--ink); }
+  .back svg { width:17px; height:17px; }
+  .pay-head h2 { font-family:var(--serif); font-size:17px; font-weight:700; }
+  .pay-head .sub { font-size:11.5px; color:var(--mute); }
+  .pay-body { display:grid; grid-template-columns:1fr 400px; height:calc(100dvh - 60px); }
+  .pay-left { padding:32px 40px; overflow-y:auto; }
+  .pay-left h3 { font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--mute); font-weight:700; margin-bottom:16px; }
+  .methods { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:28px; }
+  .method { position:relative; background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:16px; text-align:left; transition:.12s; }
+  .method:hover:not(.locked) { border-color:rgba(198,133,47,0.55); }
+  .method.on { border:2px solid var(--brown-700); }
+  .method.locked { opacity:0.5; cursor:not-allowed; }
+  .method .mi { width:38px; height:38px; border-radius:10px; background:var(--amber-100); color:var(--brown-700); display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
+  .method .mi svg { width:19px; height:19px; }
+  .method .mt { font-size:14px; font-weight:700; }
+  .method .ms { font-size:11.5px; color:var(--mute); margin-top:2px; }
+  .method .badge { position:absolute; top:12px; right:12px; font-size:8px; letter-spacing:0.1em; font-weight:800; color:var(--gold); background:rgba(198,154,91,0.12); border:1px solid rgba(198,154,91,0.4); border-radius:5px; padding:2px 6px; text-transform:uppercase; }
+  .cashquick { display:flex; flex-wrap:wrap; gap:10px; }
+  .cashquick button { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 18px; font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .cashquick button:hover { border-color:var(--amber-500); }
+  .qris { text-align:center; padding:10px 0; }
+  .qris .qbox { width:190px; height:190px; margin:0 auto 12px; border-radius:14px; background:#fff; border:1px solid var(--line); display:grid; place-items:center; }
+  .qris .qbox svg { width:150px; height:150px; }
+  .qris p { font-size:12.5px; color:var(--mute); }
+  .pay-right { background:var(--card); border-left:1px solid var(--line); padding:28px; display:flex; flex-direction:column; }
+  .pay-right h3 { font-family:var(--serif); font-size:16px; font-weight:700; margin-bottom:14px; }
+  .pr-items { flex:1; overflow-y:auto; }
+  .pr-line { display:flex; justify-content:space-between; font-size:12.5px; padding:8px 0; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums; }
+  .pr-line .nm { color:var(--ink); }
+  .pr-sum { padding-top:14px; }
+  .finish { margin-top:16px; width:100%; height:54px; border:0; border-radius:14px; background:var(--brown-700); color:#fff; font-size:15px; font-weight:700; }
+  .finish:hover:not(:disabled) { background:var(--brown-800); }
+  .finish:disabled { opacity:0.45; cursor:not-allowed; }
+
+  /* ============ RECEIPT ============ */
+  #receipt { background:var(--brown-900); }
+  .rc-wrap { height:100dvh; display:flex; align-items:center; justify-content:center; padding:30px; }
+  .rc-card { background:var(--card); border-radius:22px; width:100%; max-width:360px; padding:32px 30px 26px; text-align:center; box-shadow:0 30px 90px rgba(0,0,0,0.5); animation:pop .3s cubic-bezier(.2,.9,.3,1.2); }
+  @keyframes pop { from{transform:scale(.92);opacity:0;} to{transform:scale(1);opacity:1;} }
+  .check { width:62px; height:62px; border-radius:50%; background:var(--amber-100); color:var(--brown-700); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
+  .check svg { width:30px; height:30px; }
+  .rc-card h3 { font-family:var(--serif); font-size:21px; font-weight:700; margin-bottom:3px; }
+  .rc-card .st { font-size:12.5px; color:var(--mute); margin-bottom:6px; }
+  .rc-brand { font-size:9px; letter-spacing:0.18em; text-transform:uppercase; color:var(--amber-600); font-weight:700; margin-bottom:20px; }
+  .rc-lines { text-align:left; border-top:1px dashed var(--line); padding-top:12px; }
+  .rc-line { display:flex; justify-content:space-between; font-size:12.5px; padding:6px 0; color:var(--mute); font-variant-numeric:tabular-nums; }
+  .rc-line.big { color:var(--brown-700); font-weight:800; font-size:16px; border-top:1px dashed var(--line); margin-top:6px; padding-top:12px; }
+  .rc-actions { display:flex; gap:10px; margin-top:22px; }
+  .rc-actions button { flex:1; height:46px; border-radius:12px; font-weight:700; font-size:13.5px; }
+  .rc-actions .ghost { border:1px solid var(--line); background:#fff; color:var(--ink); }
+  .rc-actions .solid { border:0; background:var(--brown-700); color:#fff; }
+
+  /* ============ PRODUK / LAPORAN ============ */
+  .plain-wrap { flex:1; overflow-y:auto; padding:8px 28px 28px; }
+  .ptable { background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+  .ptable .th, .ptable .tr { display:grid; grid-template-columns:2fr 1fr 1fr 90px; padding:13px 20px; align-items:center; }
+  .ptable .th { border-bottom:1px solid var(--line); }
+  .ptable .th div { font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--faint); font-weight:700; }
+  .ptable .tr { border-bottom:1px solid #F1E8D6; }
+  .ptable .tr:last-child { border-bottom:0; }
+  .ptable .tr:hover { background:var(--parch); }
+  .ptable .pn { display:flex; align-items:center; gap:11px; }
+  .ptable .pn .t { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-family:var(--serif); font-weight:700; font-size:12px; }
+  .ptable .pn .nm { font-size:13px; font-weight:600; }
+  .ptable .pp { font-size:13px; font-weight:600; color:var(--brown-700); font-variant-numeric:tabular-nums; }
+  .ptable .pc { font-size:11.5px; color:var(--mute); }
+  .stk { font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; text-align:right; }
+  .cards4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+  .stat { border-radius:16px; padding:18px 20px; }
+  .stat.accent { background:var(--brown-700); color:#fff; }
+  .stat.plain { background:var(--card); border:1px solid var(--line); }
+  .stat .sl { font-size:10px; letter-spacing:0.14em; text-transform:uppercase; font-weight:700; opacity:0.75; }
+  .stat.plain .sl { color:var(--mute); }
+  .stat .sv { font-family:var(--serif); font-size:24px; font-weight:700; margin-top:8px; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
+  .chartcard { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px 24px; }
+  .chartcard .ct { font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--mute); font-weight:700; margin-bottom:16px; }
+  .bars { display:flex; align-items:flex-end; gap:8px; height:120px; }
+  .bars .b { flex:1; background:linear-gradient(to top,var(--brown-700),var(--amber-400)); border-radius:5px 5px 0 0; transition:.6s; }
+  .barx { display:flex; gap:8px; margin-top:8px; }
+  .barx span { flex:1; text-align:center; font-size:9px; color:var(--faint); font-variant-numeric:tabular-nums; }
+
+  /* photos + scroll fix + report */
+  #view-sales, #view-produk, #view-laporan { flex:1; min-height:0; flex-direction:column; }
+  .grid-wrap, .plain-wrap { min-height:0; }
+  .tile .tphoto { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .ci-tile { overflow:hidden; }
+  .ci-tile img { width:100%; height:100%; object-fit:cover; }
+  .ptable .pn .t { overflow:hidden; }
+  .ptable .pn .t img { width:100%; height:100%; object-fit:cover; }
+  .period { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .period button { border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:999px; padding:8px 15px; font-size:12.5px; font-weight:500; }
+  .period button:hover { border-color:var(--amber-500); }
+  .period button.on { background:var(--brown-700); border-color:var(--brown-700); color:#fff; }
+  .pbadge { font-size:7.5px; font-weight:800; letter-spacing:0.1em; margin-left:5px; color:var(--gold); background:rgba(198,133,47,0.14); border:1px solid rgba(198,133,47,0.4); border-radius:4px; padding:1px 4px; }
+  .period button.on .pbadge { color:#fff; background:rgba(255,255,255,0.22); border-color:transparent; }
+  .lap-2col { display:grid; grid-template-columns:1.6fr 1fr; gap:14px; }
+  .topcard { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 22px; }
+  .toprow { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid #F1E8D6; }
+  .toprow:last-child { border-bottom:0; }
+  .toprow .rank { width:18px; font-size:12px; font-weight:800; color:var(--faint); }
+  .toprow .tn { font-size:12.5px; font-weight:600; margin-bottom:5px; }
+  .toprow .tbar { height:5px; border-radius:3px; background:linear-gradient(to right,var(--brown-700),var(--amber-400)); min-width:4px; }
+  .toprow .tq { font-size:12px; color:var(--mute); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  @media (max-width:1000px){ .lap-2col{ grid-template-columns:1fr; } }
+
+  @media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important;} }
+  @media (max-width:1000px){ .app{grid-template-columns:74px 1fr;} .cart{display:none;} .login-hero{display:none;} .pay-body{grid-template-columns:1fr;} .pay-right{display:none;} }
+</style>
+
+<!-- ============ LOGIN ============ -->
+<section class="screen active" id="login">
+  <div class="login-top">
+    <div class="dot-on"><i></i> Buka</div>
+    <div class="dot-on" style="letter-spacing:0.14em;"><span id="loginClock">10.42 · Senin</span></div>
+  </div>
+  <div class="login-wrap">
+    <div class="login-grid">
+      <div class="login-hero">
+        <div class="wordmark">
+          <img class="logo-img" src="img/logos/arobi-fb.png" alt="Kopi A'Robi">
+        </div>
+        <div class="rule"><span>Kopi · Eatery · Palu</span><i></i></div>
+        <h1>Arabica. Robusta.<br>Asli Indonesia.</h1>
+        <p>Masuk untuk membuka shift, atau coba mode demo untuk menjelajah kasir Kopi A'Robi tanpa akun.</p>
+      </div>
+      <div class="login-card">
+        <div class="lbl-cap">Masuk sebagai</div>
+        <div class="roles">
+          <button class="role on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><div class="t">Kedai</div><div class="s">Kasir, jualan</div></button>
+          <button class="role"><span class="tag">Premium</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><div class="t">Backoffice</div><div class="s">Stok, staf</div></button>
+        </div>
+        <div class="field"><div class="lbl-cap">Email · Nomor WA</div>
+          <div class="inp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg><input type="email" value="imambonjol@kopiarobi.id"></div>
+        </div>
+        <div class="field"><div class="lbl-cap">Kata sandi</div>
+          <div class="inp focusable"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><input type="password" value="kopinusantara"></div>
+        </div>
+        <button class="btn-primary" onclick="go('pin')">MASUK <svg viewBox="0 0 24 24" fill="none" stroke="#DDA24A" stroke-width="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button>
+        <div class="demo-strip"><span>Coba tanpa akun?</span><button onclick="startDemo()">Coba Demo →</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PIN ============ -->
+<section class="screen" id="pin">
+  <div class="pin-wrap">
+    <div class="pin-eyebrow">Kopi A'Robi · Imam Bonjol</div>
+    <h1>Buka shift</h1>
+    <div class="psub">Pilih shift &amp; barista, lalu masukkan PIN.</div>
+    <div class="shifts" id="shifts">
+      <button class="shift on" data-s="Siang"><div class="sn">Shift Siang</div><div class="sh">10.00–18.00</div></button>
+      <button class="shift" data-s="Malam"><div class="sn">Shift Malam</div><div class="sh">18.00–01.00</div></button>
+    </div>
+    <div class="cashiers" id="cashiers">
+      <button class="cash on" data-c="FK"><span class="av" style="background:linear-gradient(140deg,#3D2716,#B06C1E)">FK</span><span class="cn">Fikri</span></button>
+      <button class="cash" data-c="NB"><span class="av" style="background:linear-gradient(140deg,#5A3A1E,#DDA24A)">NB</span><span class="cn">Nabila</span></button>
+      <button class="cash" data-c="RZ"><span class="av" style="background:linear-gradient(140deg,#22140C,#7A4E2C)">RZ</span><span class="cn">Rizal</span></button>
+    </div>
+    <div class="dots" id="dots"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="pad" id="pad">
+      <button>1</button><button>2</button><button>3</button>
+      <button>4</button><button>5</button><button>6</button>
+      <button>7</button><button>8</button><button>9</button>
+      <button class="muted" onclick="go('login')">Kembali</button><button>0</button><button class="muted" data-back>⌫</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<section class="screen" id="app">
+  <div class="app" id="appGrid">
+    <aside class="rail">
+      <div class="rail-logo"><img src="img/logos/arobi-fb.png" alt="A'Robi"></div>
+      <nav class="rail-nav" id="railNav">
+        <button class="nav-btn active" data-v="sales"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 4.6A1 1 0 0 0 5.6 19H17"/><circle cx="9" cy="21" r="1"/><circle cx="18" cy="21" r="1"/></svg><span>Jual</span></button>
+        <button class="nav-btn" data-v="produk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><span>Produk</span></button>
+        <button class="nav-btn" data-v="laporan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18M8 14v4M13 10v8M18 6v12"/></svg><span>Laporan</span></button>
+      </nav>
+      <div class="rail-spacer"></div>
+      <div class="rail-avatar" id="railAv">FK</div>
+      <button class="rail-logout" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow" id="eyebrow">PENJUALAN · #TRX-0207</div>
+          <div class="greeting" id="greeting">Selamat siang, Fikri</div>
+          <div class="submeta">Kopi A'Robi · Imam Bonjol &nbsp;·&nbsp; <b id="shiftLabel">Shift Siang</b> · <span id="shiftHours">10.00–18.00</span></div>
+        </div>
+        <div class="topbar-right">
+          <div class="demo-tier"><span class="l">Demo · Tier</span>
+            <div class="tier-seg" id="tierSeg"><button data-t="free">Free</button><button data-t="standard">Standard</button><button data-t="premium" class="on">Premium</button></div>
+          </div>
+          <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span id="clock">10.42 · Senin</span></div>
+        </div>
+      </div>
+
+      <div id="view-sales">
+        <div class="toolbar">
+          <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="search" placeholder="Cari menu atau scan barcode…" autocomplete="off"></label>
+          <button class="scan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M7 5v14M11 5v14M15 5v14M19 5v14"/></svg>Scan</button>
+        </div>
+        <div class="cats" id="cats"></div>
+        <div class="grid-wrap"><div class="grid" id="grid"></div></div>
+      </div>
+
+      <div id="view-produk" style="display:none;">
+        <div class="plain-wrap" style="padding-top:22px;">
+          <div class="ptable">
+            <div class="th"><div>Produk</div><div>Kategori</div><div>Harga</div><div style="text-align:right;">Stok</div></div>
+            <div id="prodRows"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-laporan" style="display:none;">
+        <div class="plain-wrap" style="padding-top:20px;">
+          <div class="period" id="period">
+            <button data-p="today" class="on">Hari ini</button>
+            <button data-p="7">7 Hari</button>
+            <button data-p="30">30 Hari <span class="pbadge">STD</span></button>
+            <button data-p="182">6 Bulan <span class="pbadge">STD</span></button>
+          </div>
+          <div class="cards4">
+            <div class="stat accent"><div class="sl" id="svLabel">Penjualan Hari Ini</div><div class="sv" id="svRev">Rp 0</div></div>
+            <div class="stat plain"><div class="sl">Transaksi</div><div class="sv" id="svTrx">0</div></div>
+            <div class="stat plain"><div class="sl">Rata-rata / trx</div><div class="sv" id="svAvg">Rp 0</div></div>
+            <div class="stat plain"><div class="sl">Menu Terjual</div><div class="sv" id="svItems">0</div></div>
+          </div>
+          <div class="lap-2col">
+            <div class="chartcard">
+              <div class="ct" id="chartTitle">Penjualan per Jam</div>
+              <div class="bars" id="bars"></div>
+              <div class="barx" id="barx"></div>
+            </div>
+            <div class="topcard">
+              <div class="ct">Menu Terlaris</div>
+              <div id="topMenu"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="cart" id="cartPanel">
+      <div class="cart-head"><div class="row"><div><h2>Pesanan</h2><div class="trx">#TRX-0207 · Dine-in</div></div><button class="clear" id="clear">Kosongkan</button></div></div>
+      <div class="cart-items" id="cartItems"></div>
+      <div class="cart-foot">
+        <div class="sumrow"><span>Subtotal</span><span id="subtotal">Rp 0</span></div>
+        <div class="sumrow"><span>Pajak &amp; layanan (10%)</span><span id="tax">Rp 0</span></div>
+        <div class="sumrow total"><span>Total</span><span id="total">Rp 0</span></div>
+        <button class="pay" id="pay" disabled onclick="go('payment')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg><span id="payLabel">Bayar</span></button>
+        <div style="text-align:center;margin-top:14px;"><span class="pill-brand"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="12" rx="5" ry="8"/></svg>Kopi A'Robi POS · Demo</span></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ PAYMENT ============ -->
+<section class="screen" id="payment">
+  <div class="pay-head">
+    <button class="back" onclick="go('app')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+    <div><h2>Pembayaran</h2><div class="sub">#TRX-0207 · Kopi A'Robi Imam Bonjol</div></div>
+  </div>
+  <div class="pay-body">
+    <div class="pay-left">
+      <h3>Metode Pembayaran</h3>
+      <div class="methods" id="methods">
+        <button class="method on" data-m="tunai"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg></div><div class="mt">Tunai</div><div class="ms">Bayar dengan uang</div></button>
+        <button class="method" data-m="qris"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M21 21v-3M17 21h.01M21 14h.01"/></svg></div><div class="mt">QRIS</div><div class="ms">Scan untuk bayar</div></button>
+        <button class="method locked" data-m="debit"><span class="badge">Pre</span><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><div class="mt">Kartu Debit</div><div class="ms">Upgrade ke Premium</div></button>
+        <button class="method locked" data-m="ewallet"><span class="badge">Pre</span><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4z"/></svg></div><div class="mt">E-Wallet</div><div class="ms">Upgrade ke Premium</div></button>
+      </div>
+      <div id="tunaiPanel">
+        <h3>Uang Diterima</h3>
+        <div class="cashquick" id="cashquick"></div>
+      </div>
+      <div id="qrisPanel" style="display:none;">
+        <div class="qris">
+          <div class="qbox"><svg viewBox="0 0 100 100" fill="#22140C"><path d="M0 0h30v30H0zM10 10v10h10V10zM40 0h10v10H40zM60 0h10v10H60zM70 0h30v30H70zM80 10v10h10V10zM40 10h10v10H40zM50 20h10v10H50zM0 40h10v10H0zM20 40h10v10H20zM40 40h20v10H40zM70 40h10v10H70zM90 40h10v10H90zM10 50h10v10H10zM30 50h10v20H30zM50 50h10v10H50zM70 50h20v10H70zM0 60h10v10H0zM60 60h10v10H60zM90 60h10v10H90zM0 70h30v30H0zM10 80v10h10V80zM40 70h10v30H40zM60 70h10v10H60zM80 70h20v10H80zM70 80h10v20H70zM90 90h10v10H90zM50 80h10v20H50z"/></svg></div>
+          <p>Tunjukkan QR ini ke pelanggan.<br>Mendukung semua e-wallet &amp; mobile banking.</p>
+        </div>
+      </div>
+    </div>
+    <div class="pay-right">
+      <h3>Ringkasan Pesanan</h3>
+      <div class="pr-items" id="prItems"></div>
+      <div class="pr-sum">
+        <div class="pr-line"><span class="nm">Subtotal</span><span id="paySub">Rp 0</span></div>
+        <div class="pr-line"><span class="nm">Pajak &amp; layanan</span><span id="payTax">Rp 0</span></div>
+        <div class="pr-line" style="border:0;"><span class="nm" style="font-weight:800;color:var(--ink)">Total</span><span id="payTotal" style="font-weight:800;color:var(--brown-700)">Rp 0</span></div>
+      </div>
+      <button class="finish" id="finish" onclick="finishPay()">Selesaikan Pembayaran</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RECEIPT ============ -->
+<section class="screen" id="receipt">
+  <div class="rc-wrap">
+    <div class="rc-card">
+      <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div>
+      <h3>Pembayaran berhasil</h3>
+      <div class="st">Terima kasih! Struk telah tercetak.</div>
+      <div class="rc-brand">kopi a'robi · imam bonjol palu</div>
+      <div class="rc-lines" id="rcLines"></div>
+      <div class="rc-actions">
+        <button class="ghost" onclick="go('app')">Lihat Struk</button>
+        <button class="solid" onclick="newTrx()">Transaksi Baru</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const fmt = n => "Rp " + n.toLocaleString("id-ID");
+  const MENU = [
+    { id:"arobi", name:"Kopi A'Robi (House)",       cat:"Kopi",     price:22000, mono:"AR", g:["#3D2716","#7A4E2C"], hint:"House blend", stock:120 },
+    { id:"aren",  name:"Kopi Susu Gula Aren",       cat:"Kopi",     price:24000, mono:"GA", g:["#5A3A1E","#B0762E"], hint:"Best seller", stock:98 },
+    { id:"pandan",name:"Kopi Susu Pandan",          cat:"Kopi",     price:25000, mono:"SP", g:["#3E5A2A","#7A9A4A"], hint:"", stock:54 },
+    { id:"kampung",name:"Es Kopi Kampoeng",         cat:"Kopi",     price:20000, mono:"KK", g:["#2E1C10","#6B4A2E"], hint:"", stock:76 },
+    { id:"rempah",name:"Kopi Rempah Nusantara",     cat:"Kopi",     price:26000, mono:"RE", g:["#5A2E1A","#A5561F"], hint:"Signature", stock:33 },
+    { id:"tubruk",name:"Kopi Tubruk Klasik",        cat:"Kopi",     price:15000, mono:"TB", g:["#241811","#4A3018"], hint:"", stock:60 },
+    { id:"coklat",name:"Cokelat Klasik",            cat:"Non-Kopi", price:25000, mono:"CK", g:["#3A2216","#7A4A2E"], hint:"", stock:44 },
+    { id:"matcha",name:"Matcha Latte",              cat:"Non-Kopi", price:27000, mono:"MC", g:["#3E6B34","#7FB56B"], hint:"", stock:29 },
+    { id:"tarik", name:"Teh Tarik",                 cat:"Non-Kopi", price:20000, mono:"TT", g:["#6B4A2A","#C6975B"], hint:"", stock:50 },
+    { id:"leci",  name:"Es Teh Leci",               cat:"Non-Kopi", price:18000, mono:"TL", g:["#8A5A2E","#D9A24A"], hint:"", stock:41 },
+    { id:"nasgor",name:"Nasi Goreng A'Robi",        cat:"Makanan",  price:32000, mono:"NG", g:["#7A3E1E","#C6752F"], hint:"Nusantara", stock:35 },
+    { id:"mie",   name:"Mie Nyemek Pedas",          cat:"Makanan",  price:28000, mono:"MN", g:["#6B3A1E","#B06C2E"], hint:"", stock:30 },
+    { id:"geprek",name:"Ayam Geprek Sambal Matah",  cat:"Makanan",  price:30000, mono:"AG", g:["#8A2E1E","#C6502F"], hint:"Best seller", stock:26 },
+    { id:"indomie",name:"Indomie Kuah Kornet",      cat:"Makanan",  price:22000, mono:"IK", g:["#5A3A1E","#A5762E"], hint:"", stock:48 },
+    { id:"pisang",name:"Pisang Goreng Keju",        cat:"Cemilan",  price:20000, mono:"PG", g:["#8A6A2E","#D9B24A"], hint:"", stock:22 },
+    { id:"roti",  name:"Roti Bakar Srikaya",        cat:"Cemilan",  price:18000, mono:"RB", g:["#6B4A2A","#B08A4A"], hint:"", stock:18 },
+    { id:"kentang",name:"Kentang Goreng",           cat:"Cemilan",  price:18000, mono:"KG", g:["#8A6A2E","#D9B24A"], hint:"", stock:14 },
+  ];
+  MENU.forEach(m => { m.photo = "img/arobi/" + m.id + ".jpg"; });
+  const CATS = ["Semua","Kopi","Non-Kopi","Makanan","Cemilan"];
+  let activeCat = "Semua", query = "", payMethod = "tunai";
+  const cart = {};
+  const tileStyle = g => `background:linear-gradient(145deg, ${g[0]}, ${g[1]})`;
+  const totals = () => { const ids = Object.keys(cart).filter(id=>cart[id]>0);
+    const sub = ids.reduce((s,id)=>s+MENU.find(x=>x.id===id).price*cart[id],0);
+    const tax = Math.round(sub*0.1); return { ids, sub, tax, total: sub+tax }; };
+
+  function go(name){
+    document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+    document.getElementById(name).classList.add("active");
+    if(name==="payment") renderPayment();
+    if(name==="app") setView(currentView);
+    window.scrollTo(0,0);
+  }
+  function startDemo(){ go('app'); setView('sales'); }
+  function logout(){ Object.keys(cart).forEach(k=>delete cart[k]); go('login'); }
+
+  let currentView = "sales";
+  function setView(v){
+    currentView = v;
+    document.getElementById("view-sales").style.display   = v==="sales"?"flex":"none";
+    document.getElementById("view-produk").style.display  = v==="produk"?"flex":"none";
+    document.getElementById("view-laporan").style.display = v==="laporan"?"flex":"none";
+    document.getElementById("cartPanel").style.display    = v==="sales"?"flex":"none";
+    document.getElementById("appGrid").classList.toggle("no-cart", v!=="sales");
+    document.querySelectorAll("#railNav .nav-btn").forEach(b=>b.classList.toggle("active", b.dataset.v===v));
+    const nProd = MENU.filter(m=>m.photo).length;
+    document.getElementById("eyebrow").textContent = v==="sales"?"PENJUALAN · #TRX-0207" : v==="produk"?("KATALOG · "+nProd+" PRODUK") : "LAPORAN · HARI INI";
+    if(v==="laporan") renderReport(reportPeriod);
+  }
+  document.getElementById("railNav").addEventListener("click", e=>{ const b=e.target.closest(".nav-btn"); if(b) setView(b.dataset.v); });
+
+  const grid = document.getElementById("grid"), catsEl = document.getElementById("cats"), cartItems = document.getElementById("cartItems");
+  catsEl.innerHTML = CATS.map((c,i)=>`<button class="cat ${i===0?"on":""}" data-c="${c}">${c==="Semua"?`Semua · ${MENU.length}`:c}</button>`).join("");
+  catsEl.addEventListener("click", e=>{ const b=e.target.closest(".cat"); if(!b) return; activeCat=b.dataset.c; [...catsEl.children].forEach(x=>x.classList.toggle("on",x===b)); renderGrid(); });
+  document.getElementById("search").addEventListener("input", e=>{ query=e.target.value.toLowerCase(); renderGrid(); });
+
+  function renderGrid(){
+    const list = MENU.filter(m=>(activeCat==="Semua"||m.cat===activeCat)&&(!query||m.name.toLowerCase().includes(query)));
+    grid.innerHTML = list.map(m=>{ const q=cart[m.id]||0;
+      return `<button class="card" data-id="${m.id}"><div class="tile" style="${tileStyle(m.g)}">${m.photo?`<img class="tphoto" src="${m.photo}" alt="" loading="lazy" onerror="this.remove()">`:`<div class="steam"></div><div class="mono">${m.mono}</div>`}</div>
+        <div><h3>${m.name}</h3>${m.hint?`<div class="sub">${m.hint}</div>`:``}</div>
+        <div class="card-foot"><span class="price">${fmt(m.price)}</span>${q>0?`<span class="qty-badge">${q} pesan</span>`:`<span class="add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></span>`}</div></button>`;
+    }).join("") || `<div style="grid-column:1/-1;color:var(--faint);padding:50px;text-align:center;">Menu tidak ditemukan.</div>`;
+  }
+  grid.addEventListener("click", e=>{ const c=e.target.closest(".card"); if(!c) return; cart[c.dataset.id]=(cart[c.dataset.id]||0)+1; renderGrid(); renderCart(); });
+
+  function renderCart(){
+    const { ids, sub, tax, total } = totals();
+    cartItems.innerHTML = ids.length ? ids.map(id=>{ const m=MENU.find(x=>x.id===id), q=cart[id];
+      return `<div class="ci"><div class="ci-tile" style="${tileStyle(m.g)}">${m.photo?`<img src="${m.photo}" alt="">`:m.mono}</div>
+        <div class="ci-info"><div class="n">${m.name}</div><div class="p">${fmt(m.price)} · ${fmt(m.price*q)}</div></div>
+        <div class="stepper" data-id="${id}"><button data-d="-1">−</button><span class="q">${q}</span><button data-d="1">+</button></div></div>`;
+    }).join("") : `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 4.6A1 1 0 0 0 5.6 19H17"/><circle cx="9" cy="21" r="1"/><circle cx="18" cy="21" r="1"/></svg><div>Belum ada pesanan.<br>Pilih menu untuk memulai.</div></div>`;
+    document.getElementById("subtotal").textContent = fmt(sub);
+    document.getElementById("tax").textContent = fmt(tax);
+    document.getElementById("total").textContent = fmt(total);
+    const pay = document.getElementById("pay"); pay.disabled = !ids.length;
+    document.getElementById("payLabel").textContent = ids.length ? `Bayar · ${fmt(total)}` : "Bayar";
+  }
+  cartItems.addEventListener("click", e=>{ const b=e.target.closest("button[data-d]"); if(!b) return; const id=b.parentElement.dataset.id; cart[id]=Math.max(0,(cart[id]||0)+Number(b.dataset.d)); renderGrid(); renderCart(); });
+  document.getElementById("clear").addEventListener("click", ()=>{ Object.keys(cart).forEach(k=>delete cart[k]); renderGrid(); renderCart(); });
+
+  document.getElementById("tierSeg").addEventListener("click", e=>{ const b=e.target.closest("button"); if(!b) return; [...b.parentElement.children].forEach(x=>x.classList.toggle("on",x===b)); });
+
+  document.getElementById("prodRows").innerHTML = MENU.filter(m=>m.photo).map(m=>`<div class="tr">
+    <div class="pn"><div class="t" style="${tileStyle(m.g)}">${m.photo?`<img src="${m.photo}" alt="">`:m.mono}</div><div class="nm">${m.name}</div></div>
+    <div class="pc">${m.cat}</div><div class="pp">${fmt(m.price)}</div>
+    <div class="stk" style="color:${m.stock<=15?'#B4472E':'var(--ink)'}">${m.stock}</div></div>`).join("");
+
+  /* ---- Seeded 6-month sales history ---- */
+  const MONTHS_ID = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  const SALES6M = (()=>{ const arr=[]; const today=new Date(); today.setHours(0,0,0,0);
+    for(let i=181;i>=0;i--){ const d=new Date(today); d.setDate(d.getDate()-i);
+      const dow=d.getDay(); const weekend = (dow===5||dow===6)?1.34:(dow===0?1.14:1);
+      const trend = 1 + (181-i)/181*0.42;               // ~42% growth over 6 months
+      const noise = 0.85 + Math.random()*0.30;
+      const rev = Math.round(2850000*weekend*trend*noise/1000)*1000;
+      const trx = Math.round(rev/27500);
+      arr.push({ d, rev, trx, items: Math.round(trx*1.32) });
+    } return arr; })();
+  const HOURLY = [28,40,72,96,88,64,48,44,58,80,90,66];   // 10:00–21:00 shape (today)
+  let reportPeriod = "today";
+
+  function periodData(p){
+    const n = p==="today"?1 : p==="7"?7 : p==="30"?30 : 182;
+    const slice = SALES6M.slice(-n);
+    const rev = slice.reduce((s,x)=>s+x.rev,0);
+    const trx = slice.reduce((s,x)=>s+x.trx,0);
+    const items = slice.reduce((s,x)=>s+x.items,0);
+    return { rev, trx, items, avg: Math.round(rev/Math.max(1,trx)), slice };
+  }
+  function renderReport(p){
+    reportPeriod = p;
+    const pd = periodData(p);
+    document.getElementById("svLabel").textContent = p==="today"?"Penjualan Hari Ini":p==="7"?"Penjualan 7 Hari":p==="30"?"Penjualan 30 Hari":"Penjualan 6 Bulan";
+    document.getElementById("svRev").textContent   = fmt(pd.rev);
+    document.getElementById("svTrx").textContent   = pd.trx.toLocaleString("id-ID");
+    document.getElementById("svAvg").textContent   = fmt(pd.avg);
+    document.getElementById("svItems").textContent = pd.items.toLocaleString("id-ID");
+    let vals=[], labs=[], title="";
+    if(p==="today"){ const t=pd.slice[0].rev; vals=HOURLY.map(v=>Math.round(v/96*t*0.16)); labs=["10","11","12","13","14","15","16","17","18","19","20","21"]; title="Penjualan per Jam"; }
+    else if(p==="182"){ const mo={}; pd.slice.forEach(x=>{ const k=x.d.getFullYear()+"-"+x.d.getMonth(); (mo[k]=mo[k]||{r:0,m:x.d.getMonth()}).r+=x.rev; });
+      const keys=Object.keys(mo); vals=keys.map(k=>mo[k].r); labs=keys.map(k=>MONTHS_ID[mo[k].m]); title="Penjualan per Bulan"; }
+    else { vals=pd.slice.map(x=>x.rev); labs=pd.slice.map((x,i)=> p==="7"?["Min","Sen","Sel","Rab","Kam","Jum","Sab"][x.d.getDay()] : (i%5===0?String(x.d.getDate()):"")); title = p==="7"?"Penjualan 7 Hari":"Penjualan 30 Hari"; }
+    const max=Math.max(...vals,1);
+    document.getElementById("bars").innerHTML = vals.map(v=>`<div class="b" style="height:${Math.max(4,Math.round(v/max*100))}%"></div>`).join("");
+    document.getElementById("barx").innerHTML = labs.map(l=>`<span>${l}</span>`).join("");
+    document.getElementById("chartTitle").textContent = title;
+    const w = MENU.map(m=>1+(/best/i.test(m.hint)?2.2:0)+(/signature/i.test(m.hint)?1.4:0)+(/nusantara/i.test(m.hint)?1.1:0));
+    const tw = w.reduce((a,b)=>a+b,0);
+    const top = MENU.map((m,i)=>({m, sold:Math.round(pd.items*w[i]/tw)})).sort((a,b)=>b.sold-a.sold).slice(0,5);
+    const tmax = top[0].sold||1;
+    document.getElementById("topMenu").innerHTML = top.map((t,i)=>`<div class="toprow"><span class="rank">${i+1}</span><div style="flex:1;min-width:0;"><div class="tn">${t.m.name}</div><div class="tbar" style="width:${Math.round(t.sold/tmax*100)}%"></div></div><span class="tq">${t.sold.toLocaleString("id-ID")} pcs</span></div>`).join("");
+  }
+  document.getElementById("period").addEventListener("click", e=>{ const b=e.target.closest("button"); if(!b) return; [...b.parentElement.children].forEach(x=>x.classList.toggle("on",x===b)); renderReport(b.dataset.p); });
+
+  function renderPayment(){
+    const { ids, sub, tax, total } = totals();
+    document.getElementById("prItems").innerHTML = ids.map(id=>{ const m=MENU.find(x=>x.id===id);
+      return `<div class="pr-line"><span class="nm">${cart[id]}× ${m.name}</span><span>${fmt(m.price*cart[id])}</span></div>`; }).join("");
+    document.getElementById("paySub").textContent = fmt(sub);
+    document.getElementById("payTax").textContent = fmt(tax);
+    document.getElementById("payTotal").textContent = fmt(total);
+    const qs=[total, Math.ceil(total/5000)*5000, Math.ceil(total/10000)*10000, Math.ceil(total/50000)*50000, 100000];
+    const uniq=[...new Set(qs)].filter(v=>v>=total).slice(0,5);
+    document.getElementById("cashquick").innerHTML = uniq.map((v,i)=>`<button>${i===0?"Uang pas · ":""}${fmt(v)}</button>`).join("");
+  }
+  document.getElementById("methods").addEventListener("click", e=>{ const m=e.target.closest(".method"); if(!m||m.classList.contains("locked")) return;
+    payMethod=m.dataset.m; [...m.parentElement.children].forEach(x=>x.classList.toggle("on",x===m));
+    document.getElementById("tunaiPanel").style.display = payMethod==="tunai"?"block":"none";
+    document.getElementById("qrisPanel").style.display  = payMethod==="qris"?"block":"none";
+  });
+  function finishPay(){
+    const { ids, total } = totals(); if(!ids.length){ go('app'); return; }
+    document.getElementById("rcLines").innerHTML = ids.map(id=>{ const m=MENU.find(x=>x.id===id);
+      return `<div class="rc-line"><span>${cart[id]}× ${m.name}</span><span>${fmt(m.price*cart[id])}</span></div>`; }).join("")
+      + `<div class="rc-line"><span>Metode</span><span>${payMethod==="qris"?"QRIS":"Tunai"}</span></div>`
+      + `<div class="rc-line big"><span>Total</span><span>${fmt(total)}</span></div>`;
+    go('receipt');
+  }
+  function newTrx(){ Object.keys(cart).forEach(k=>delete cart[k]); renderGrid(); renderCart(); go('app'); setView('sales'); }
+
+  let pinLen=0;
+  document.getElementById("shifts").addEventListener("click", e=>{ const b=e.target.closest(".shift"); if(!b) return; [...b.parentElement.children].forEach(x=>x.classList.toggle("on",x===b));
+    const s=b.dataset.s; document.getElementById("shiftLabel").textContent="Shift "+s; document.getElementById("shiftHours").textContent = s==="Siang"?"10.00–18.00":"18.00–01.00"; });
+  document.getElementById("cashiers").addEventListener("click", e=>{ const b=e.target.closest(".cash"); if(!b) return; [...b.parentElement.children].forEach(x=>x.classList.toggle("on",x===b));
+    document.getElementById("railAv").textContent=b.dataset.c; window._cn=b.querySelector(".cn").textContent; });
+  document.getElementById("pad").addEventListener("click", e=>{ const b=e.target.closest("button"); if(!b) return;
+    if(b.dataset.back!==undefined){ pinLen=Math.max(0,pinLen-1); }
+    else if(!b.classList.contains("muted")){ pinLen=Math.min(6,pinLen+1); }
+    [...document.getElementById("dots").children].forEach((d,i)=>d.classList.toggle("f",i<pinLen));
+    if(pinLen===6){ setTimeout(()=>{ pinLen=0; [...document.getElementById("dots").children].forEach(d=>d.classList.remove("f"));
+      const nm=window._cn||"Fikri"; document.getElementById("greeting").textContent=greetWord()+", "+nm; go('app'); setView('sales'); }, 220); }
+  });
+
+  const DAYS=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  const greetWord=()=>{ const h=new Date().getHours(); return h<11?"Selamat pagi":h<15?"Selamat siang":h<19?"Selamat sore":"Selamat malam"; };
+  function tick(){ const d=new Date(); const t=d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"}).replace(":","."); const s=`${t} · ${DAYS[d.getDay()]}`;
+    document.getElementById("clock").textContent=s; document.getElementById("loginClock").textContent=s;
+    document.getElementById("greeting").textContent=greetWord()+", "+(window._cn||"Fikri"); }
+  tick(); setInterval(tick,20000);
+
+  renderGrid(); renderCart();
+</script>

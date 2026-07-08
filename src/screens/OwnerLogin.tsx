@@ -3,6 +3,7 @@ import { useStore } from "../store";
 import { supabase } from "../lib/supabase";
 import type { CashierDB } from "../types";
 import { BUILD } from "../version";
+import { DemoChooser } from "../components/DemoChooser";
 
 const DAY_ID = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
@@ -31,6 +32,7 @@ export default function OwnerLogin() {
   const [loading, setLoading] = useState(false);
   const [lang, setLang] = useState<"id" | "en">("id");
   const [now, setNow] = useState(new Date());
+  const [showChooser, setShowChooser] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 20000);
@@ -275,7 +277,7 @@ export default function OwnerLogin() {
         )}
         <div style={{ marginTop: 12, padding: "8px 12px", background: "rgba(201,165,95,0.07)", border: "1px dashed rgba(201,165,95,0.40)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: 11, color: "#7A776F", fontFamily: "Inter, sans-serif" }}>Coba tanpa akun?</span>
-          <button type="button" onClick={startDemo} style={{ background: "transparent", border: "none", fontSize: 9.5, color: "#C9A55F", cursor: "pointer", letterSpacing: "0.14em", fontWeight: 600, textTransform: "uppercase" as const, fontFamily: "Inter, sans-serif" }}>
+          <button type="button" onClick={() => setShowChooser(true)} style={{ background: "transparent", border: "none", fontSize: 9.5, color: "#C9A55F", cursor: "pointer", letterSpacing: "0.14em", fontWeight: 600, textTransform: "uppercase" as const, fontFamily: "Inter, sans-serif" }}>
             COBA DEMO →
           </button>
         </div>
@@ -324,6 +326,7 @@ export default function OwnerLogin() {
     return (
       <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", flexDirection: "column", fontFamily: "Inter, system-ui, sans-serif" }}>
         {fonts}
+        {showChooser && <DemoChooser onClassic={() => { setShowChooser(false); startDemo(); }} onClose={() => setShowChooser(false)} />}
         {/* Mobile header */}
         <header style={{ height: 46, borderBottom: "1px solid #ECE7DD", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -355,6 +358,7 @@ export default function OwnerLogin() {
   return (
     <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", flexDirection: "column", fontFamily: "Inter, system-ui, sans-serif" }}>
       {fonts}
+      {showChooser && <DemoChooser onClassic={() => { setShowChooser(false); startDemo(); }} onClose={() => setShowChooser(false)} />}
 
       {/* Top bar */}
       <header style={{ height: 50, borderBottom: "1px solid #ECE7DD", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px", flexShrink: 0 }}>
