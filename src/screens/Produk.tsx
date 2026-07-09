@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { useStore, isAtLeast, localDateISO } from "../store";
 import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
+import { OwnerConfirm } from "../components/OwnerConfirm";
 import { getCatLabel, formatRp, formatIDRInput, parseIDRInput, CATEGORY_OPTIONS } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import type { Product } from "../types";
@@ -27,6 +28,7 @@ export default function Produk() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [tambahTarget, setTambahTarget] = useState<Product | null>(null);
   const [tambahQty, setTambahQty] = useState("");
+  const [showOwnerConfirm, setShowOwnerConfirm] = useState(false);
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
@@ -101,7 +103,16 @@ export default function Produk() {
     setAddCategory("SBK");
   }
 
+  // Free/Standard: adding a product needs the owner's login password to confirm.
+  const needsOwnerConfirm = !isDemoMode && !!storeId && !isAtLeast(effectiveTier, "premium");
+
   function handleSave() {
+    if (!canSave) return;
+    if (needsOwnerConfirm) { setShowOwnerConfirm(true); return; }
+    doSave();
+  }
+
+  function doSave() {
     if (!canSave) return;
     const price = parseIDRInput(addPrice);
     const words = addName.trim().split(/\s+/);
@@ -333,6 +344,14 @@ export default function Produk() {
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
       <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
       <input ref={editPhotoRef} type="file" accept="image/*" className="hidden" onChange={handleEditPhoto} />
+
+      <OwnerConfirm
+        open={showOwnerConfirm}
+        title="Tambah produk baru"
+        message="Menambah produk perlu izin pemilik. Masukkan kata sandi akun pemilik"
+        onClose={() => setShowOwnerConfirm(false)}
+        onConfirmed={() => { setShowOwnerConfirm(false); doSave(); }}
+      />
 
       {/* Tambah Stok Modal */}
       {tambahTarget && (() => {
