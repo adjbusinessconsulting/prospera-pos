@@ -2,6 +2,7 @@ import { Search, X, Camera, Image as ImageIcon } from "lucide-react";
 import { useState, useRef } from "react";
 import { useStore, isAtLeast, localDateISO } from "../store";
 import { supabase } from "../lib/supabase";
+import { logEvent } from "../lib/auditlog";
 import { getCatLabel, formatRp, formatIDRInput, parseIDRInput, CATEGORY_OPTIONS } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import type { Product } from "../types";
@@ -52,6 +53,7 @@ export default function Produk() {
     const newStock = (p.stock ?? 0) + n;
     const newTambahan = (p.stockTambahan ?? 0) + n;
     updateProduct(p.id, { stock: newStock, stockTambahan: newTambahan, stockDate: today });
+    void logEvent("stock.add", `Tambah stok ${p.name}: +${n} → sisa ${newStock}`);
     if (storeId && !isDemoMode) {
       await supabase.from("products").update({ stock: newStock, stock_tambahan: newTambahan, stock_date: today }).eq("id", p.id);
     }
@@ -118,6 +120,7 @@ export default function Produk() {
       ...(addPhoto ? { photo: addPhoto } : {}),
     };
     addProduct(newProduct);
+    void logEvent("product.add", `Produk baru: ${newProduct.name} — ${formatRp(newProduct.price)}`);
     if (storeId && !isDemoMode) {
       supabase.from("products").insert({
         id: newProduct.id, store_id: storeId,
@@ -154,6 +157,10 @@ export default function Produk() {
               </button>
             )}
             <span style={{ background: "rgba(201,165,95,0.10)", border: "1px solid rgba(201,165,95,0.3)", color: "#A6843F", fontSize: 9.5, letterSpacing: "0.18em", fontWeight: 600, padding: "3px 9px", borderRadius: 9999, textTransform: "uppercase" as const }} className="hidden lg:inline">{effectiveTier}</span>
+            <button onClick={() => setScreen("log")} title="Log aktivitas" className="border rounded-card h-[36px] lg:h-[38px] px-3 flex items-center gap-1.5 text-[12px] text-navy hover:bg-cream-bg transition-colors cursor-pointer" style={{ borderColor: "#ECE7DD", background: "white" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12h6M9 16h4"/></svg>
+              <span className="hidden lg:inline">Log</span>
+            </button>
             <button onClick={() => setShowAddModal(true)} className="bg-navy border-0 rounded-card h-[36px] lg:h-[38px] px-3 lg:px-4 flex items-center gap-2 text-[12px] text-cream-text hover:opacity-90 transition-opacity cursor-pointer">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
               <span className="hidden lg:inline">Produk baru</span>

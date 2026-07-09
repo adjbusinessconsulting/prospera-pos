@@ -7,6 +7,7 @@ import UpdateBanner from "./components/UpdateBanner";
 import { DemoControls } from "./components/DemoControls";
 import { RenewBanner } from "./components/RenewBanner";
 import { initSync } from "./lib/sync";
+import LogAktivitas from "./screens/LogAktivitas";
 import BackofficeDemo from "./screens/BackofficeDemo";
 import SplashScreen from "./components/SplashScreen";
 import PinLogin from "./screens/PinLogin";
@@ -129,6 +130,7 @@ export default function App() {
           {screen === "laporan"      && <Laporan />}
           {screen === "pindah-shift" && <PindahShift />}
           {screen === "tutup-toko"   && <TutupToko />}
+          {screen === "log"          && <LogAktivitas />}
         </div>
       </div>
     );
@@ -154,6 +156,7 @@ export default function App() {
           {screen === "laporan"      && <Laporan />}
           {screen === "pindah-shift" && <PindahShift />}
           {screen === "tutup-toko"   && <TutupToko />}
+          {screen === "log"          && <LogAktivitas />}
         </div>
       </div>
     </div>
