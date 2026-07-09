@@ -147,7 +147,7 @@ export default function Produk() {
           <div className="flex items-center gap-2 shrink-0 mt-1">
             {canStock && (
               <button onClick={toggleInventory} title="Aktif / nonaktifkan inventori"
-                className="hidden lg:flex items-center gap-2 h-[32px] px-3 rounded-full border cursor-pointer"
+                className="flex items-center gap-1.5 lg:gap-2 h-[32px] px-2.5 lg:px-3 rounded-full border cursor-pointer"
                 style={{ borderColor: inventoryEnabled ? "rgba(92,158,126,0.4)" : "rgba(122,119,111,0.28)", background: inventoryEnabled ? "rgba(92,158,126,0.08)" : "rgba(122,119,111,0.06)" }}>
                 <span style={{ fontSize: 10, letterSpacing: "0.12em", fontWeight: 600, textTransform: "uppercase" as const, color: "#7A776F" }}>Inventori</span>
                 <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", color: inventoryEnabled ? "#4E8C6E" : "#A8A39B" }}>{inventoryEnabled ? "ON" : "OFF"}</span>
