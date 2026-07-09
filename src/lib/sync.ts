@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { useStore } from "../store";
+import { flushAuditServer } from "./auditlog";
 
 // Offline-first sale sync: sales are queued locally and replayed to Supabase when
 // online. Writes are idempotent (client-generated ids) so retries never duplicate.
@@ -109,10 +110,11 @@ let started = false;
 export function initSync() {
   if (started) return;
   started = true;
-  const setOnline = (v: boolean) => { useStore.getState().setSyncStatus({ isOnline: v }); if (v) void flushQueue(); };
+  const flushAll = () => { void flushQueue(); void flushAuditServer(); };
+  const setOnline = (v: boolean) => { useStore.getState().setSyncStatus({ isOnline: v }); if (v) flushAll(); };
   window.addEventListener("online", () => setOnline(true));
   window.addEventListener("offline", () => setOnline(false));
   useStore.getState().setSyncStatus({ isOnline: navigator.onLine, pendingSyncCount: read().length });
-  void flushQueue();
-  setInterval(() => { void flushQueue(); }, 30000);
+  flushAll();
+  setInterval(flushAll, 30000);
 }

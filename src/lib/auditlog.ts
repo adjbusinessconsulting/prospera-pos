@@ -1,4 +1,5 @@
-import { useStore } from "../store";
+import { useStore, tierLevel } from "../store";
+import { supabase } from "./supabase";
 
 // Append-only, tamper-EVIDENT activity log. Every entry embeds a hash of the
 // previous one (a hash chain), so deleting or altering any entry breaks the chain
@@ -6,6 +7,7 @@ import { useStore } from "../store";
 // (Premium also mirrors entries to Backoffice's server; added separately.)
 
 const KEY = "sterith_audit_log_v1";
+const SKEY = "sterith_audit_server_queue_v1"; // Premium: pending pushes to Backoffice
 
 export interface AuditEntry {
   seq: number;
@@ -51,7 +53,39 @@ export async function logEvent(type: string, detail: string) {
     const hash = await sha256(chainInput(base));
     list.push({ ...base, hash });
     write(list);
+
+    // Premium: also mirror to Backoffice's activity_logs (offline-safe queue).
+    if (!s.isDemoMode && s.storeId && tierLevel(s.storeTier) >= 2) {
+      const q = readServer();
+      q.push({
+        id: crypto.randomUUID(),
+        store_id: s.storeId,
+        type,
+        meta: { detail: base.detail, actor: base.actor, seq: base.seq, hash, prev_hash: base.prevHash },
+        created_at: base.time,
+      });
+      writeServer(q);
+      void flushAuditServer();
+    }
   } catch { /* never break the action */ }
+}
+
+interface ServerLog { id: string; store_id: string; type: string; meta: Record<string, unknown>; created_at: string }
+function readServer(): ServerLog[] { try { return JSON.parse(localStorage.getItem(SKEY) || "[]"); } catch { return []; } }
+function writeServer(l: ServerLog[]) { localStorage.setItem(SKEY, JSON.stringify(l)); }
+
+let sflushing = false;
+export async function flushAuditServer() {
+  if (sflushing || !navigator.onLine) return;
+  sflushing = true;
+  try {
+    for (const e of [...readServer()]) {
+      const { error } = await supabase.from("activity_logs").insert(e);
+      if (error && (error as { code?: string }).code !== "23505") break; // real error → retry later
+      writeServer(readServer().filter((x) => x.id !== e.id));
+    }
+  } catch { /* retry next tick */ }
+  finally { sflushing = false; }
 }
 
 // Verify the chain. Returns the index of the first broken entry, or -1 if intact.
