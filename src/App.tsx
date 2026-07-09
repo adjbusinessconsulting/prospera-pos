@@ -6,6 +6,7 @@ import ResetPassword from "./screens/ResetPassword";
 import UpdateBanner from "./components/UpdateBanner";
 import { DemoControls } from "./components/DemoControls";
 import { RenewBanner } from "./components/RenewBanner";
+import { initSync } from "./lib/sync";
 import BackofficeDemo from "./screens/BackofficeDemo";
 import SplashScreen from "./components/SplashScreen";
 import PinLogin from "./screens/PinLogin";
@@ -64,6 +65,8 @@ export default function App() {
     window.addEventListener("resize", calc);
     return () => window.removeEventListener("resize", calc);
   }, []);
+
+  useEffect(() => { initSync(); }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

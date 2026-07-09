@@ -34,11 +34,15 @@ interface POSState {
   demoView: 'front' | 'back';
   subscriptionExpired: boolean;
   paidTier: string;
+  isOnline: boolean;
+  pendingSyncCount: number;
+  lastSyncedAt: string | null;
 
   setScreen: (s: Screen) => void;
   setDemoMode: (v: boolean) => void;
   setDemoView: (v: 'front' | 'back') => void;
   setSubscription: (expired: boolean, paidTier: string) => void;
+  setSyncStatus: (s: { isOnline?: boolean; pendingSyncCount?: number; lastSyncedAt?: string | null }) => void;
   setStoreTier: (tier: string) => void;
   setInventoryEnabled: (v: boolean) => void;
   setInventorySettings: (enabled: boolean, threshold: number) => void;
@@ -154,11 +158,19 @@ export const useStore = create<POSState>((set) => ({
   demoView: 'front',
   subscriptionExpired: false,
   paidTier: '',
+  isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+  pendingSyncCount: 0,
+  lastSyncedAt: null,
 
   setScreen: (screen) => set({ screen }),
   setDemoMode: (isDemoMode) => set({ isDemoMode }),
   setDemoView: (demoView) => set({ demoView }),
   setSubscription: (subscriptionExpired, paidTier) => set({ subscriptionExpired, paidTier }),
+  setSyncStatus: (s) => set((st) => ({
+    isOnline: s.isOnline ?? st.isOnline,
+    pendingSyncCount: s.pendingSyncCount ?? st.pendingSyncCount,
+    lastSyncedAt: s.lastSyncedAt !== undefined ? s.lastSyncedAt : st.lastSyncedAt,
+  })),
   setStoreTier: (storeTier) => set({ storeTier }),
   setInventoryEnabled: (inventoryEnabled) => set({ inventoryEnabled }),
   setInventorySettings: (inventoryEnabled, lowStockThreshold) => set({ inventoryEnabled, lowStockThreshold }),

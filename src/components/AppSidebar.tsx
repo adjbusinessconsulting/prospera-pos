@@ -24,6 +24,10 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const storeTier = useStore(s => (s.storeId ? s.storeTier : "free"));
+  const isOnline = useStore(s => s.isOnline);
+  const pendingSyncCount = useStore(s => s.pendingSyncCount);
+  const syncColor = !isOnline ? "#C25E3D" : pendingSyncCount > 0 ? "#C9A55F" : "#5C9E7E";
+  const syncLabel = !isOnline ? "Offline" : pendingSyncCount > 0 ? `${pendingSyncCount} belum sync` : "";
 
   return (
     <>
@@ -59,9 +63,10 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
 
         {/* Right: sync · feedback · cashier · demo back · logout */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-          {/* Sync dot */}
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#5C9E7E", boxShadow: "0 0 0 3px rgba(92,158,126,0.18)", display: "inline-block", flexShrink: 0 }} />
+          {/* Sync status */}
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }} title={isOnline ? (pendingSyncCount > 0 ? `${pendingSyncCount} transaksi menunggu sinkron` : "Tersinkron") : "Offline — transaksi disimpan & disinkron saat online"}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: syncColor, boxShadow: `0 0 0 3px ${syncColor}2E`, display: "inline-block", flexShrink: 0 }} />
+            {syncLabel && <span style={{ fontSize: 9, fontWeight: 600, color: syncColor, letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{syncLabel}</span>}
           </div>
 
           {/* Tier badge → upgrade */}

@@ -82,7 +82,7 @@ const FILTER_LABELS = [
 ];
 
 export default function Laporan() {
-  const { cashierInitials, storeId, storeTier, setScreen, signOut } = useStore();
+  const { cashierInitials, storeId, storeTier, setScreen, signOut, isOnline, pendingSyncCount, lastSyncedAt } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
   const canFullBreakdown = isAtLeast(effectiveTier, 'standard');
   const [activeFilter, setActiveFilter] = useState(0);
@@ -101,6 +101,18 @@ export default function Laporan() {
             <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute mb-1">ANALITIK · REPORTS</p>
             <h1 className="font-serif text-display-l font-medium text-navy">Laporan Penjualan</h1>
           </div>
+          {canFullBreakdown && (() => {
+            const color = !isOnline ? "#C25E3D" : pendingSyncCount > 0 ? "#A6843F" : "#5C9E7E";
+            const label = !isOnline ? `Offline · ${pendingSyncCount} tersimpan` : pendingSyncCount > 0 ? `${pendingSyncCount} belum tersinkron` : "Tersinkron";
+            const t = lastSyncedAt ? new Date(lastSyncedAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : null;
+            return (
+              <div style={{ display: "flex", alignItems: "center", gap: 7, background: "white", border: `1px solid ${color}55`, borderRadius: 10, padding: "6px 11px" }} title="Status sinkronisasi transaksi">
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: color, flexShrink: 0 }} />
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: "#1B2A4A" }}>{label}</span>
+                {isOnline && pendingSyncCount === 0 && t && <span style={{ fontSize: 10.5, color: "#7A7360" }}>· {t}</span>}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Filter chips */}

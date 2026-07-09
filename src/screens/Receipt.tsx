@@ -2,7 +2,7 @@ import { useStore, getTotal, getTrxId, isAtLeast, localDateISO } from "../store"
 import { formatRp } from "../data";
 import { Printer, Check, ChevronLeft } from "lucide-react";
 import { AppSidebar } from "../components/AppSidebar";
-import { supabase } from "../lib/supabase";
+import { recordSale } from "../lib/sync";
 
 function SterithWatermark({ tier }: { tier: string }) {
   // Standard+ gets custom receipt branding (own logo + "Powered by …"); Free keeps plain Sterith branding.
@@ -35,9 +35,12 @@ export default function Receipt() {
   const dateStr = now.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
   const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
 
-  async function handleNewTrx() {
+  function handleNewTrx() {
+    // Queue the sale — works offline; the sync engine replays it (sales, sale_items,
+    // and stock deltas) to Supabase on reconnect. Demo doesn't persist.
     if (storeId && !isDemoMode) {
-      const { data: sale } = await supabase.from("sales").insert({
+      recordSale({
+        id: crypto.randomUUID(),
         store_id: storeId,
         trx_id: trxId,
         cashier_id: selectedCashier,
@@ -47,32 +50,25 @@ export default function Receipt() {
         payment_method: paymentMethod,
         cash_received: cashReceived,
         change_amount: change,
-      }).select("id").single();
-      if (sale?.id) {
-        await supabase.from("sale_items").insert(
-          cart.map(i => ({
-            sale_id: sale.id,
-            product_id: i.product.id,
-            product_name: i.product.name,
-            price: i.product.price,
-            qty: i.qty,
-            subtotal: i.product.price * i.qty,
-          }))
-        );
-      }
+        created_at: new Date().toISOString(),
+        items: cart.map(i => ({
+          id: crypto.randomUUID(),
+          product_id: i.product.id,
+          product_name: i.product.name,
+          price: i.product.price,
+          qty: i.qty,
+          subtotal: i.product.price * i.qty,
+        })),
+        stock: inventoryOn ? cart.map(i => ({ id: i.product.id, qty: i.qty })) : [],
+      });
     }
-    // Basic Inventori: count sold (terjual) and reduce sisa for each item.
+    // Basic Inventori: reflect terjual/sisa locally right away (immediate UI).
     if (inventoryOn) {
       const today = localDateISO();
       cart.forEach(i => {
         const p = products.find(x => x.id === i.product.id);
         if (!p) return;
-        const newStock = (p.stock ?? 0) - i.qty;
-        const newTerjual = (p.stockTerjual ?? 0) + i.qty;
-        updateProduct(i.product.id, { stock: newStock, stockTerjual: newTerjual, stockDate: today });
-        if (storeId && !isDemoMode) {
-          supabase.from("products").update({ stock: newStock, stock_terjual: newTerjual, stock_date: today }).eq("id", i.product.id);
-        }
+        updateProduct(i.product.id, { stock: (p.stock ?? 0) - i.qty, stockTerjual: (p.stockTerjual ?? 0) + i.qty, stockDate: today });
       });
     }
     restart();
