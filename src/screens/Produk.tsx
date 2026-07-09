@@ -28,7 +28,9 @@ export default function Produk() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [tambahTarget, setTambahTarget] = useState<Product | null>(null);
   const [tambahQty, setTambahQty] = useState("");
-  const [showOwnerConfirm, setShowOwnerConfirm] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
+  const [priceTarget, setPriceTarget] = useState<Product | null>(null);
+  const [priceInput, setPriceInput] = useState("");
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
@@ -108,8 +110,23 @@ export default function Produk() {
 
   function handleSave() {
     if (!canSave) return;
-    if (needsOwnerConfirm) { setShowOwnerConfirm(true); return; }
+    if (needsOwnerConfirm) { setConfirmAction(() => doSave); return; }
     doSave();
+  }
+
+  function handleSavePrice() {
+    if (!priceTarget) return;
+    const p = priceTarget;
+    const newPrice = parseIDRInput(priceInput);
+    if (!newPrice || newPrice <= 0 || newPrice === p.price) { setPriceTarget(null); setPriceInput(""); return; }
+    const apply = () => {
+      updateProduct(p.id, { price: newPrice });
+      void logEvent("product.price", `Ubah harga ${p.name}: ${formatRp(p.price)} → ${formatRp(newPrice)}`);
+      if (storeId && !isDemoMode) supabase.from("products").update({ price: newPrice }).eq("id", p.id);
+      setPriceTarget(null); setPriceInput("");
+    };
+    if (needsOwnerConfirm) { setConfirmAction(() => apply); return; }
+    apply();
   }
 
   function doSave() {
@@ -266,7 +283,11 @@ export default function Produk() {
                     </td>
                     <td className="px-4 py-3.5 text-[12.5px] text-text-mute">{p.unit}</td>
                     <td className="px-4 py-3.5 text-right">
-                      <span className="font-serif text-[14px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.price)}</span>
+                      <button onClick={() => { setPriceTarget(p); setPriceInput(formatIDRInput(String(p.price))); }} title="Ubah harga"
+                        className="font-serif text-[14px] font-semibold text-navy inline-flex items-center gap-1.5 border-0 bg-transparent cursor-pointer hover:text-gold transition-colors" style={{ fontVariantNumeric: "tabular-nums" }}>
+                        {formatRp(p.price)}
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-mute"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>
+                      </button>
                     </td>
                     <td className="px-4 py-3.5 text-right">
                       {canStock ? (
@@ -317,7 +338,10 @@ export default function Produk() {
                   <div className="text-[11px] text-text-mute">{getCatLabel(p.category)} · {SKU_MAP[p.id]}</div>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="font-serif text-[14px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.price)}</div>
+                  <button onClick={() => { setPriceTarget(p); setPriceInput(formatIDRInput(String(p.price))); }} className="font-serif text-[14px] font-semibold text-navy inline-flex items-center gap-1 border-0 bg-transparent cursor-pointer p-0" style={{ fontVariantNumeric: "tabular-nums" }}>
+                    {formatRp(p.price)}
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-mute"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>
+                  </button>
                   <div className="flex items-center justify-end gap-1.5 mt-0.5">
                     {canStock ? (
                       <>
@@ -345,12 +369,39 @@ export default function Produk() {
       <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
       <input ref={editPhotoRef} type="file" accept="image/*" className="hidden" onChange={handleEditPhoto} />
 
+      {/* Ubah Harga Modal */}
+      {priceTarget && (
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center" onClick={() => setPriceTarget(null)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div onClick={e => e.stopPropagation()} className="relative bg-white w-full lg:max-w-[360px] lg:mx-4 rounded-t-[20px] lg:rounded-card shadow-xl p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute">Ubah Harga</p>
+                <h3 className="font-serif text-[19px] font-medium text-navy leading-tight mt-1">{priceTarget.name}</h3>
+              </div>
+              <button onClick={() => setPriceTarget(null)} className="w-8 h-8 rounded-card flex items-center justify-center text-text-mute hover:bg-cream-bg border-0 bg-transparent cursor-pointer"><X size={16} /></button>
+            </div>
+            <p className="text-[12px] text-text-mute mb-2">Harga sekarang: <b className="text-navy">{formatRp(priceTarget.price)}</b></p>
+            <label style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute block mb-2">Harga baru</label>
+            <div className="bg-cream-bg border rounded-button h-[46px] flex items-center gap-2 px-4" style={{ borderColor: parseIDRInput(priceInput) > 0 ? "#5C9E7E" : "#ECE7DD" }}>
+              <span className="text-[13px] text-text-mute">Rp</span>
+              <input autoFocus inputMode="numeric" value={priceInput} onChange={e => setPriceInput(formatIDRInput(e.target.value))} onKeyDown={e => e.key === "Enter" && handleSavePrice()}
+                placeholder="0" className="flex-1 border-0 outline-none bg-transparent text-[15px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }} />
+            </div>
+            {needsOwnerConfirm && <p className="text-[11px] text-text-mute mt-2">Perubahan harga perlu konfirmasi kata sandi pemilik.</p>}
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setPriceTarget(null)} className="flex-1 h-[46px] rounded-button border border-warm-border bg-white text-navy text-[13px] font-medium cursor-pointer">Batal</button>
+              <button onClick={handleSavePrice} className="flex-[2] h-[46px] rounded-button border-0 bg-navy text-cream-text text-[13px] font-semibold cursor-pointer">Simpan Harga</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <OwnerConfirm
-        open={showOwnerConfirm}
-        title="Tambah produk baru"
-        message="Menambah produk perlu izin pemilik. Masukkan kata sandi akun pemilik"
-        onClose={() => setShowOwnerConfirm(false)}
-        onConfirmed={() => { setShowOwnerConfirm(false); doSave(); }}
+        open={!!confirmAction}
+        message="Perubahan ini perlu izin pemilik. Masukkan kata sandi akun pemilik"
+        onClose={() => setConfirmAction(null)}
+        onConfirmed={() => { const a = confirmAction; setConfirmAction(null); a?.(); }}
       />
 
       {/* Tambah Stok Modal */}
