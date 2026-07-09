@@ -22,10 +22,11 @@ function SterithWatermark({ tier }: { tier: string }) {
 }
 
 export default function Receipt() {
-  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, selectedShiftName, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, inventoryEnabled, products, updateProduct, restart, setScreen, signOut } = useStore();
+  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, selectedShiftName, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, inventoryEnabled, receiptLogo, products, updateProduct, restart, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
   const inventoryOn = isAtLeast(effectiveTier, 'premium') && inventoryEnabled;
   const canWhatsApp = isAtLeast(effectiveTier, 'standard');
+  const canBranding = isAtLeast(effectiveTier, 'standard');
   const total = getTotal(cart);
   const change = cashReceived - total;
   const trxId = getTrxId(trxCounter);
@@ -124,6 +125,9 @@ export default function Receipt() {
           <div className="bg-white border border-warm-border rounded-card px-[26px] py-6 flex flex-col w-full max-w-[460px]">
 
             <div className="text-center pb-3.5 border-b border-dashed border-warm-dashed">
+              {canBranding && receiptLogo && (
+                <img src={receiptLogo} alt="" style={{ maxHeight: 54, maxWidth: 180, objectFit: "contain", margin: "0 auto 8px", display: "block" }} />
+              )}
               <div className="font-serif text-[20px] font-semibold text-navy">{displayName}</div>
               {displayAddress && <div className="text-[10.5px] text-text-mute mt-1">{displayAddress}</div>}
               {displayPhone && <div className="text-[10.5px] text-text-mute">WhatsApp {displayPhone}</div>}

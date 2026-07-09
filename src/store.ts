@@ -25,6 +25,7 @@ interface POSState {
   storeTier: string;
   inventoryEnabled: boolean;
   lowStockThreshold: number;
+  receiptLogo: string;
   qrisImageUrl: string;
   midtransClientKey: string;
   dbCashiers: CashierDB[];
@@ -46,6 +47,7 @@ interface POSState {
   setStoreTier: (tier: string) => void;
   setInventoryEnabled: (v: boolean) => void;
   setInventorySettings: (enabled: boolean, threshold: number) => void;
+  setReceiptLogo: (v: string) => void;
   startDemo: () => void;
   selectCashier: (id: string) => void;
   setShift: (n: number) => void;
@@ -149,6 +151,7 @@ export const useStore = create<POSState>((set) => ({
   storeTier: 'free',
   inventoryEnabled: true,
   lowStockThreshold: 5,
+  receiptLogo: '',
   qrisImageUrl: '',
   midtransClientKey: '',
   dbCashiers: [],
@@ -174,6 +177,7 @@ export const useStore = create<POSState>((set) => ({
   setStoreTier: (storeTier) => set({ storeTier }),
   setInventoryEnabled: (inventoryEnabled) => set({ inventoryEnabled }),
   setInventorySettings: (inventoryEnabled, lowStockThreshold) => set({ inventoryEnabled, lowStockThreshold }),
+  setReceiptLogo: (receiptLogo) => set({ receiptLogo }),
 
   // Enter the full demo: premium tier + demo store, straight to Sales.
   // Ephemeral — nothing is written to Supabase while isDemoMode is true.
@@ -252,6 +256,7 @@ export const useStore = create<POSState>((set) => ({
     storeTier: 'free',
     inventoryEnabled: true,
     lowStockThreshold: 5,
+    receiptLogo: '',
     qrisImageUrl: '',
     midtransClientKey: '',
     dbCashiers: [],

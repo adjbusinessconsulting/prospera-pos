@@ -22,10 +22,11 @@ interface StoreRow {
   inventory_enabled: boolean | null;
   low_stock_threshold: number | null;
   tier_expires_at: string | null;
+  receipt_logo: string | null;
 }
 
 export default function OwnerLogin() {
-  const { setScreen, setStoreData, setProductsFromDB, setTrxCounter, setDbShifts, startDemo, setInventorySettings, setSubscription } = useStore();
+  const { setScreen, setStoreData, setProductsFromDB, setTrxCounter, setDbShifts, startDemo, setInventorySettings, setSubscription, setReceiptLogo } = useStore();
   const [storeChoices, setStoreChoices] = useState<StoreRow[]>([]);
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [loginAs, setLoginAs] = useState<"toko" | "backoffice">("toko");
@@ -110,7 +111,7 @@ export default function OwnerLogin() {
     if (userId) {
       const { data: storeRows } = await supabase
         .from("stores")
-        .select("id, name, address, phone, tier, qris_image_url, midtrans_client_key, inventory_enabled, low_stock_threshold, tier_expires_at")
+        .select("id, name, address, phone, tier, qris_image_url, midtrans_client_key, inventory_enabled, low_stock_threshold, tier_expires_at, receipt_logo")
         .eq("owner_id", userId)
         .order("created_at");
       // Multi-store: let the owner pick which store to enter
@@ -147,6 +148,7 @@ export default function OwnerLogin() {
       effectiveTier,
     );
     setInventorySettings(store.inventory_enabled ?? true, store.low_stock_threshold ?? 5);
+    setReceiptLogo(store.receipt_logo ?? "");
     const [{ data: productRows }, { count: saleCount }, { data: shiftRows }] = await Promise.all([
       supabase.from("products").select("*").eq("store_id", store.id).eq("active", true).order("name"),
       supabase.from("sales").select("*", { count: "exact", head: true }).eq("store_id", store.id),

@@ -1,10 +1,11 @@
-import { ShoppingCart, Package, BarChart2, ChevronLeft, LogOut, MessageCircle, Sparkles } from "lucide-react";
+import { ShoppingCart, Package, BarChart2, ChevronLeft, LogOut, MessageCircle, Sparkles, Settings } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useStore } from "../store";
 import type { Screen } from "../types";
 import FeedbackDrawer from "./FeedbackDrawer";
 import UpgradeModal from "./UpgradeModal";
+import { ReceiptSettings } from "./ReceiptSettings";
 
 const NAV = [
   { id: "sales"   as Screen, label: "Jual",    Icon: ShoppingCart },
@@ -23,6 +24,7 @@ interface Props {
 export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDemoBack = false }: Props) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const storeTier = useStore(s => (s.storeId ? s.storeTier : "free"));
   const isOnline = useStore(s => s.isOnline);
   const pendingSyncCount = useStore(s => s.pendingSyncCount);
@@ -79,6 +81,15 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
             <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "#A6843F" }}>{storeTier}</span>
           </button>
 
+          {/* Pengaturan struk */}
+          <button onClick={() => setSettingsOpen(true)} title="Pengaturan struk" style={{
+            background: "transparent", border: "none", cursor: "pointer",
+            color: "#7A776F", display: "flex", alignItems: "center", justifyContent: "center",
+            width: 32, height: 32, borderRadius: 8,
+          }}>
+            <Settings size={15} strokeWidth={1.6} />
+          </button>
+
           {/* Bantuan */}
           <button onClick={() => setFeedbackOpen(true)} title="Bantuan" style={{
             background: "transparent", border: "none", cursor: "pointer",
@@ -128,6 +139,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
 
       <FeedbackDrawer open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
+      <ReceiptSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </>
   );
 }
