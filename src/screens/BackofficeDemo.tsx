@@ -47,10 +47,12 @@ export default function BackofficeDemo() {
   ];
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: CREAM, overflowY: "auto", fontFamily: "Inter, system-ui, sans-serif" }}>
-      <div style={{ position: "fixed", top: 10, left: "50%", transform: "translateX(-50%)", zIndex: 210 }}><DemoControls /></div>
-
-      <div style={{ maxWidth: 1120, margin: "0 auto", padding: isMobile ? "70px 16px 40px" : "76px 32px 48px" }}>
+    <div style={{ position: "fixed", inset: 0, background: CREAM, display: "flex", flexDirection: "column", fontFamily: "Inter, system-ui, sans-serif" }}>
+      <div style={{ flexShrink: 0, display: "flex", justifyContent: "center", padding: "8px 10px", background: CREAM, borderBottom: `1px solid ${BORDER}` }}>
+        <DemoControls />
+      </div>
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: isMobile ? "16px 16px 40px" : "24px 32px 48px" }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 20 }}>
           <div>
@@ -140,6 +142,7 @@ export default function BackofficeDemo() {
             </table>
           </div>
         )}
+      </div>
       </div>
 
       {/* Tambah stok modal */}
