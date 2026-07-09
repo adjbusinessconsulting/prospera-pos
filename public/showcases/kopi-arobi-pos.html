@@ -1,4 +1,5 @@
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Kopi A'Robi · POS Showcase</title>
 <style>
   :root {
@@ -304,6 +305,31 @@
     .cart-close{ display:flex; }
     .mbar{ display:flex; }
     .grid-wrap{ padding-bottom:78px; }
+  }
+  /* phones: side rail becomes a top nav bar (classic POS format) */
+  @media (max-width:720px){
+    .app{ grid-template-columns:1fr; grid-template-rows:auto 1fr; }
+    .rail{ flex-direction:row; height:54px; padding:0 12px; gap:8px; align-items:center; }
+    .rail-logo{ width:32px; height:32px; margin-bottom:0; border-radius:9px; box-shadow:none; flex-shrink:0; }
+    .rail-nav{ flex-direction:row; flex:1; justify-content:center; gap:4px; width:auto; }
+    .nav-btn{ width:auto; height:40px; flex-direction:row; gap:7px; padding:0 14px; border-radius:11px; }
+    .nav-btn svg{ width:17px; height:17px; }
+    .nav-btn span{ font-size:11px; letter-spacing:0.04em; }
+    .rail-spacer{ display:none; }
+    .rail-avatar{ width:32px; height:32px; font-size:12px; flex-shrink:0; }
+    .rail-logout{ margin-top:0; width:34px; height:34px; flex-shrink:0; }
+    .topbar{ flex-direction:column; align-items:stretch; padding:16px 18px 0; gap:12px; }
+    .topbar-right{ margin-top:0; flex-wrap:wrap; }
+    .demo-tier{ flex:1; justify-content:space-between; }
+    .greeting{ font-size:22px; }
+    .toolbar{ padding:14px 18px 0; }
+    .scan span{ display:none; }
+    .cats{ padding:14px 18px 0; }
+    .grid-wrap{ padding:16px 18px 90px; }
+    .grid{ grid-template-columns:1fr 1fr; gap:12px; }
+    .tile{ height:84px; }
+    .cards4{ grid-template-columns:1fr 1fr; }
+    .plain-wrap{ padding:8px 18px 28px; }
   }
 </style>
 

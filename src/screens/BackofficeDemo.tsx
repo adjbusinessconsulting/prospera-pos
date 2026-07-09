@@ -17,6 +17,61 @@ const DEMO_BRANCHES: Branch[] = [
   { id: "b5", name: "Toko Sembako Maju · Poso", address: "Jl. Pulau Sumatra No. 3", sales: 2350000, trx: 92, stockValue: 4880000, lowStock: 2 },
 ];
 
+// Per-branch product seeds — each cabang stocks a different mix, to show that
+// one Back Office manages branches that don't sell the same things.
+let _pid = 0;
+const mk = (name: string, category: string, price: number, awal: number, tambahan: number, terjual: number): Product => {
+  _pid++;
+  return {
+    id: `bp${_pid}`, name, monogram: name.slice(0, 2).toUpperCase(), emoji: "📦",
+    category, unit: "pcs", price, stock: awal + tambahan - terjual,
+    stockAwal: awal, stockTambahan: tambahan, stockTerjual: terjual, stockDate: null,
+  };
+};
+// b1 (Pusat) uses the live Kasir catalog from the store. b2–b5 have their own.
+const BRANCH_SEEDS: Record<string, Product[]> = {
+  b2: [ // Palu Barat — dekat pasar, fokus beras & minyak
+    mk("Beras Pandan 5kg", "Sembako", 74000, 40, 20, 18),
+    mk("Beras Merah 5kg", "Sembako", 82000, 18, 6, 9),
+    mk("Minyak Bimoli 2L", "Sembako", 39000, 30, 12, 24),
+    mk("Gula Pasir 1kg", "Sembako", 15500, 35, 10, 28),
+    mk("Tepung Terigu 1kg", "Sembako", 13000, 25, 0, 12),
+    mk("Telur Ayam /kg", "Segar", 29000, 30, 15, 41),
+    mk("Kopi Kapal Api 165g", "Minuman", 12000, 24, 0, 8),
+    mk("Teh Celup 25s", "Minuman", 8500, 20, 0, 3),
+  ],
+  b3: [ // Palu Selatan — dekat sekolah, minuman & rokok laris
+    mk("Indomie Goreng", "Makanan", 3500, 120, 60, 148),
+    mk("Aqua 600ml", "Minuman", 4000, 96, 48, 132),
+    mk("Teh Botol 350ml", "Minuman", 5000, 72, 24, 78),
+    mk("Rokok Sampoerna 16", "Rokok", 32000, 40, 20, 44),
+    mk("Kopi Good Day", "Minuman", 5500, 60, 0, 33),
+    mk("Susu Kental Manis", "Sembako", 12000, 30, 10, 22),
+    mk("Sabun Mandi", "Rumah Tangga", 5000, 40, 0, 6),
+    mk("Beras Pandan 5kg", "Sembako", 75000, 20, 5, 12),
+  ],
+  b4: [ // Donggala — pesisir, banyak ikan asin & bumbu
+    mk("Ikan Teri Asin 250g", "Segar", 18000, 24, 12, 22),
+    mk("Sarden Kaleng", "Makanan", 9500, 48, 0, 15),
+    mk("Minyak Goreng Curah 1L", "Sembako", 17000, 40, 20, 44),
+    mk("Gula Merah 1kg", "Sembako", 20000, 20, 0, 8),
+    mk("Kecap Manis 275ml", "Sembako", 11000, 30, 0, 9),
+    mk("Garam 500g", "Sembako", 4000, 50, 0, 5),
+    mk("Mie Sedaap", "Makanan", 3200, 100, 40, 96),
+    mk("Beras Pandan 5kg", "Sembako", 76000, 15, 5, 14),
+  ],
+  b5: [ // Poso — campur, ada kopi lokal & jajanan
+    mk("Kopi Robusta Lokal 250g", "Minuman", 22000, 30, 10, 18),
+    mk("Cokelat Bubuk", "Minuman", 15000, 24, 0, 7),
+    mk("Kerupuk 1kg", "Makanan", 24000, 20, 0, 6),
+    mk("Gula Pasir 1kg", "Sembako", 15500, 30, 10, 25),
+    mk("Minyak Bimoli 2L", "Sembako", 38000, 25, 10, 20),
+    mk("Telur Ayam /kg", "Segar", 28000, 28, 12, 33),
+    mk("Tepung Beras 500g", "Sembako", 9000, 22, 0, 4),
+    mk("Beras Pandan 5kg", "Sembako", 75000, 24, 8, 19),
+  ],
+};
+
 type Tab = "ringkasan" | "produk" | "stok" | "log";
 const TABS: { id: Tab; label: string }[] = [
   { id: "ringkasan", label: "Ringkasan" },
@@ -50,6 +105,8 @@ export default function BackofficeDemo() {
   const [showAddBranch, setShowAddBranch] = useState(false);
   const [newBranch, setNewBranch] = useState("");
   const [logEntries, setLogEntries] = useState<AuditEntry[]>([]);
+  // Editable per-branch catalogs for b2–b5 (b1/Pusat uses the live store products).
+  const [branchProducts, setBranchProducts] = useState<Record<string, Product[]>>(() => ({ ...BRANCH_SEEDS }));
   useEffect(() => {
     const c = () => setIsMobile(window.innerWidth < 768);
     c(); window.addEventListener("resize", c);
@@ -67,24 +124,42 @@ export default function BackofficeDemo() {
   function addBranch() {
     const name = newBranch.trim();
     if (!name) return;
-    const b: Branch = { id: `b${Date.now()}`, name: `Toko Sembako Maju · ${name}`, address: "Cabang baru — atur alamat nanti", sales: 0, trx: 0, stockValue: 0, lowStock: 0 };
-    setBranches(prev => [...prev, b]); setSelectedBranch(b.id); setShowAddBranch(false); setNewBranch("");
+    const id = `b${Date.now()}`;
+    const b: Branch = { id, name: `Toko Sembako Maju · ${name}`, address: "Cabang baru — atur alamat nanti", sales: 0, trx: 0, stockValue: 0, lowStock: 0 };
+    setBranches(prev => [...prev, b]);
+    setBranchProducts(prev => ({ ...prev, [id]: [] }));
+    setSelectedBranch(id); setShowAddBranch(false); setNewBranch("");
   }
 
-  const list = products.filter(p => !q || p.name.toLowerCase().includes(q.toLowerCase()));
-  const totalProduk = products.length;
-  const stokRendah = products.filter(p => (p.stock ?? 0) <= threshold).length;
-  const terjualHariIni = products.reduce((s, p) => s + (p.stockTerjual ?? 0), 0);
+  // Pusat (b1) reflects the live Kasir catalog; other branches have their own.
+  const isPusat = selectedBranch === "b1";
+  const branchList: Product[] = isPusat ? products : (branchProducts[selectedBranch] ?? []);
+  const list = branchList.filter(p => !q || p.name.toLowerCase().includes(q.toLowerCase()));
+  const totalProduk = branchList.length;
+  const stokRendah = branchList.filter(p => (p.stock ?? 0) <= threshold).length;
+  const terjualHariIni = branchList.reduce((s, p) => s + (p.stockTerjual ?? 0), 0);
 
   function setPrice(id: string, val: string) {
     const n = parseInt(val.replace(/\D/g, ""), 10) || 0;
-    updateProduct(id, { price: n });
+    if (isPusat) { updateProduct(id, { price: n }); return; }
+    setBranchProducts(prev => ({
+      ...prev,
+      [selectedBranch]: (prev[selectedBranch] ?? []).map(p => p.id === id ? { ...p, price: n } : p),
+    }));
   }
   function addStock() {
     const n = parseInt(tambahQty, 10);
     if (!tambahTarget || !n || n <= 0) return;
     const p = tambahTarget;
-    updateProduct(p.id, { stock: (p.stock ?? 0) + n, stockTambahan: (p.stockTambahan ?? 0) + n });
+    if (isPusat) {
+      updateProduct(p.id, { stock: (p.stock ?? 0) + n, stockTambahan: (p.stockTambahan ?? 0) + n });
+    } else {
+      setBranchProducts(prev => ({
+        ...prev,
+        [selectedBranch]: (prev[selectedBranch] ?? []).map(x =>
+          x.id === p.id ? { ...x, stock: (x.stock ?? 0) + n, stockTambahan: (x.stockTambahan ?? 0) + n } : x),
+      }));
+    }
     setTambahTarget(null); setTambahQty("");
   }
 
@@ -290,7 +365,7 @@ export default function BackofficeDemo() {
           </div>
           {isMobile ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {products.map(p => {
+              {branchList.map(p => {
                 const awal = p.stockAwal ?? 0, tambah = p.stockTambahan ?? 0, jual = p.stockTerjual ?? 0, sisa = p.stock ?? 0;
                 return (
                   <div key={p.id} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 14 }}>
@@ -318,7 +393,7 @@ export default function BackofficeDemo() {
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map(p => {
+                  {branchList.map(p => {
                     const awal = p.stockAwal ?? 0, tambah = p.stockTambahan ?? 0, jual = p.stockTerjual ?? 0, sisa = p.stock ?? 0;
                     return (
                       <tr key={p.id} style={{ borderBottom: `1px solid #F2EDE3` }}>
