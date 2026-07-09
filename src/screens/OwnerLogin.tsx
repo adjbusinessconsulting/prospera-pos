@@ -7,6 +7,10 @@ import { DemoChooser } from "../components/DemoChooser";
 
 const DAY_ID = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
+// New sign-ups go through the Daftar POS form on the marketing site (lands as a
+// prospect in Master Office), not an in-app signup.
+const DAFTAR_POS_URL = "https://sterith.com/daftar-pos";
+
 interface StoreRow {
   id: string;
   name: string;
@@ -286,10 +290,10 @@ export default function OwnerLogin() {
       {mode !== "forgot" && <div style={{ marginTop: 14, textAlign: "center" as const }}>
         {mode === "signin" ? (
           <p style={{ fontSize: 12.5, color: "#7A776F", margin: 0, fontFamily: "Inter, sans-serif" }}>
-            Belum punya akun?{" "}
-            <button type="button" onClick={() => { setMode("signup"); setError(""); }}
+            Mau berlangganan?{" "}
+            <button type="button" onClick={() => window.open(DAFTAR_POS_URL, "_blank", "noopener,noreferrer")}
               style={{ background: "transparent", border: "none", padding: "0 0 0 2px", fontSize: 12.5, color: "#0B1129", fontWeight: 600, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#C9A55F" }}>
-              Daftar gratis
+              Daftar Gratis
             </button>
           </p>
         ) : (
