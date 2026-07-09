@@ -23,6 +23,8 @@ interface POSState {
   storeAddress: string;
   storePhone: string;
   storeTier: string;
+  inventoryEnabled: boolean;
+  lowStockThreshold: number;
   qrisImageUrl: string;
   midtransClientKey: string;
   dbCashiers: CashierDB[];
@@ -33,6 +35,8 @@ interface POSState {
   setScreen: (s: Screen) => void;
   setDemoMode: (v: boolean) => void;
   setStoreTier: (tier: string) => void;
+  setInventoryEnabled: (v: boolean) => void;
+  setInventorySettings: (enabled: boolean, threshold: number) => void;
   startDemo: () => void;
   selectCashier: (id: string) => void;
   setShift: (n: number) => void;
@@ -134,6 +138,8 @@ export const useStore = create<POSState>((set) => ({
   storeAddress: '',
   storePhone: '',
   storeTier: 'free',
+  inventoryEnabled: true,
+  lowStockThreshold: 5,
   qrisImageUrl: '',
   midtransClientKey: '',
   dbCashiers: [],
@@ -144,6 +150,8 @@ export const useStore = create<POSState>((set) => ({
   setScreen: (screen) => set({ screen }),
   setDemoMode: (isDemoMode) => set({ isDemoMode }),
   setStoreTier: (storeTier) => set({ storeTier }),
+  setInventoryEnabled: (inventoryEnabled) => set({ inventoryEnabled }),
+  setInventorySettings: (inventoryEnabled, lowStockThreshold) => set({ inventoryEnabled, lowStockThreshold }),
 
   // Enter the full demo: premium tier + demo store, straight to Sales.
   // Ephemeral — nothing is written to Supabase while isDemoMode is true.
@@ -154,6 +162,8 @@ export const useStore = create<POSState>((set) => ({
     storeAddress: 'Jl. Diponegoro No. 24, Palu Timur',
     storePhone: '0812-3456-7890',
     storeTier: 'premium',
+    inventoryEnabled: true,
+    lowStockThreshold: 5,
     dbCashiers: [DEMO_CASHIER],
     selectedCashier: DEMO_CASHIER.id,
     cashierName: DEMO_CASHIER.name.split(' ')[0],
@@ -215,6 +225,8 @@ export const useStore = create<POSState>((set) => ({
     storeName: '',
     storeAddress: '',
     storeTier: 'free',
+    inventoryEnabled: true,
+    lowStockThreshold: 5,
     qrisImageUrl: '',
     midtransClientKey: '',
     dbCashiers: [],

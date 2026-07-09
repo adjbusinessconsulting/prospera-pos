@@ -27,14 +27,25 @@ export default function Produk() {
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
-  const { cashierInitials, setScreen, signOut, storeId, storeTier, isDemoMode, products, addProduct, updateProduct } = useStore();
+  const { cashierInitials, setScreen, signOut, storeId, storeTier, isDemoMode, inventoryEnabled, lowStockThreshold, setInventoryEnabled, products, addProduct, updateProduct } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
   const canStock = isAtLeast(effectiveTier, 'premium');
+  const threshold = lowStockThreshold || LOW_STOCK_THRESHOLD;
+  const inventoryOn = canStock && inventoryEnabled;   // Basic Inventori active (Premium + toggle ON)
+  const showStockValue = inventoryOn || !canStock;    // hide values only when Premium + toggled OFF
+
+  async function toggleInventory() {
+    const next = !inventoryEnabled;
+    setInventoryEnabled(next);
+    if (storeId && !isDemoMode) {
+      await supabase.from("stores").update({ inventory_enabled: next }).eq("id", storeId);
+    }
+  }
 
   const filtered = products.filter(p =>
     !search || p.name.toLowerCase().includes(search.toLowerCase())
   );
-  const lowStockItems = products.filter(p => p.stock <= LOW_STOCK_THRESHOLD);
+  const lowStockItems = products.filter(p => p.stock <= threshold);
   const canSave = addName.trim().length > 0 && addPrice.trim().length > 0;
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -118,7 +129,15 @@ export default function Produk() {
             <p className="text-[12px] text-text-mute mt-0.5 hidden lg:block">Kelola produk, harga, dan stok</p>
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
-            <span style={{ background: "rgba(122,119,111,0.10)", border: "1px solid rgba(122,119,111,0.28)", color: "#7A776F", fontSize: 9.5, letterSpacing: "0.18em", fontWeight: 600, padding: "3px 9px", borderRadius: 9999, textTransform: "uppercase" as const }} className="hidden lg:inline">FREE</span>
+            {canStock && (
+              <button onClick={toggleInventory} title="Aktif / nonaktifkan inventori"
+                className="hidden lg:flex items-center gap-2 h-[32px] px-3 rounded-full border cursor-pointer"
+                style={{ borderColor: inventoryEnabled ? "rgba(92,158,126,0.4)" : "rgba(122,119,111,0.28)", background: inventoryEnabled ? "rgba(92,158,126,0.08)" : "rgba(122,119,111,0.06)" }}>
+                <span style={{ fontSize: 10, letterSpacing: "0.12em", fontWeight: 600, textTransform: "uppercase" as const, color: "#7A776F" }}>Inventori</span>
+                <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", color: inventoryEnabled ? "#4E8C6E" : "#A8A39B" }}>{inventoryEnabled ? "ON" : "OFF"}</span>
+              </button>
+            )}
+            <span style={{ background: "rgba(201,165,95,0.10)", border: "1px solid rgba(201,165,95,0.3)", color: "#A6843F", fontSize: 9.5, letterSpacing: "0.18em", fontWeight: 600, padding: "3px 9px", borderRadius: 9999, textTransform: "uppercase" as const }} className="hidden lg:inline">{effectiveTier}</span>
             <button onClick={() => setShowAddModal(true)} className="bg-navy border-0 rounded-card h-[36px] lg:h-[38px] px-3 lg:px-4 flex items-center gap-2 text-[12px] text-cream-text hover:opacity-90 transition-opacity cursor-pointer">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
               <span className="hidden lg:inline">Produk baru</span>
@@ -127,7 +146,7 @@ export default function Produk() {
         </div>
 
         {/* Low-stock banner: real notification on Premium, upgrade prompt below */}
-        {lowStockItems.length > 0 && (
+        {lowStockItems.length > 0 && (inventoryOn || !canStock) && (
           <div className="mx-5 lg:mx-10 mt-4 shrink-0 relative border border-dashed rounded-card px-4 py-3 flex items-center justify-between gap-3"
             style={{ borderColor: "rgba(201,165,95,0.45)", background: "rgba(201,165,95,0.06)" }}>
             <div className="flex items-center gap-3">
@@ -217,7 +236,7 @@ export default function Produk() {
                     </td>
                     <td className="px-4 py-3.5 text-right">
                       {canStock ? (
-                        <span className="text-[13px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: p.stock <= LOW_STOCK_THRESHOLD ? "#A6843F" : "#1B2A4A" }}>{p.stock}</span>
+                        <span className="text-[13px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: showStockValue && p.stock <= threshold ? "#A6843F" : "#1B2A4A" }}>{showStockValue ? p.stock : "—"}</span>
                       ) : (
                         <span className="text-[13px] text-text-mute/40 tracking-widest select-none">—</span>
                       )}
@@ -258,7 +277,7 @@ export default function Produk() {
                   <div className="font-serif text-[14px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.price)}</div>
                   <div className="flex items-center justify-end gap-1.5 mt-0.5">
                     {canStock ? (
-                      <span className="text-[11px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: p.stock <= LOW_STOCK_THRESHOLD ? "#A6843F" : "#7A7360" }}>Stok {p.stock}</span>
+                      <span className="text-[11px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: showStockValue && p.stock <= threshold ? "#A6843F" : "#7A7360" }}>Stok {showStockValue ? p.stock : "—"}</span>
                     ) : (
                       <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 700, padding: "2px 5px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>PRE</span>
                     )}

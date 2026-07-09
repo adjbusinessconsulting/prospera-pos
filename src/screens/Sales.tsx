@@ -1,6 +1,6 @@
 import { Search, User, ChevronUp, X } from "lucide-react";
 import { useState } from "react";
-import { useStore, getTotal, getItemCount, getTrxId } from "../store";
+import { useStore, getTotal, getItemCount, getTrxId, isAtLeast } from "../store";
 import { CATEGORIES, getCatLabel, formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 
@@ -24,6 +24,10 @@ function TierPill() {
 export default function Sales() {
   const [cartOpen, setCartOpen] = useState(false);
   const { cart, category, search, cashierName, cashierInitials, selectedShiftName, trxCounter, products, setCategory, setSearch, addToCart, updateQty, clearCart, setScreen, signOut } = useStore();
+  const storeId = useStore((s) => s.storeId);
+  const storeTier = useStore((s) => s.storeTier);
+  const inventoryEnabled = useStore((s) => s.inventoryEnabled);
+  const inventoryOn = isAtLeast(storeId ? storeTier : "premium", "premium") && inventoryEnabled; // Basic Inventori: show stock on items
   const total = getTotal(cart);
   const itemCount = getItemCount(cart);
   const trxId = getTrxId(trxCounter);
@@ -126,7 +130,7 @@ export default function Sales() {
                         ? <img src={p.photo} alt={p.name} className="absolute inset-0 w-full h-full object-cover" />
                         : <span className="text-[36px] lg:text-[30px] leading-none select-none">{p.emoji}</span>
                       }
-                      <span className={`absolute top-1.5 left-2 text-[8.5px] ${p.stock <= 5 ? "text-warning" : "text-text-mute"}`} style={{ fontVariantNumeric: "tabular-nums" }}>×{p.stock}</span>
+                      {inventoryOn && <span className={`absolute top-1.5 left-2 text-[8.5px] ${p.stock <= 0 ? "text-warning font-semibold" : p.stock <= 5 ? "text-warning" : "text-text-mute"}`} style={{ fontVariantNumeric: "tabular-nums" }}>{p.stock <= 0 ? "Habis" : `×${p.stock}`}</span>}
                       {qty > 0 && <span className="absolute top-1.5 right-1.5 bg-navy text-gold text-[9px] px-[7px] py-[3px] rounded-[5px] font-semibold" style={{ fontVariantNumeric: "tabular-nums" }}>×{qty}</span>}
                     </div>
                     <div className="text-[12px] font-medium text-navy leading-tight mb-0.5">{p.name}</div>
