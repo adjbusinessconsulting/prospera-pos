@@ -9,7 +9,7 @@ const DAY_ID = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
 // New sign-ups go through the Daftar POS form on the marketing site (lands as a
 // prospect in Master Office), not an in-app signup.
-const DAFTAR_POS_URL = "https://sterith.com/daftar-pos";
+const DAFTAR_POS_URL = "https://sterith.com/form.html?daftar=pos";
 
 interface StoreRow {
   id: string;
