@@ -125,6 +125,33 @@ export default function BackofficeDemo() {
             <span style={{ fontSize: 12.5, color: "#0B1129" }}>Kontrol semua cabang dari satu tempat. Perubahan <b>langsung terlihat di Kasir</b>. Sesi demo sementara — muat ulang untuk reset.</span>
           </div>
 
+          {/* Subscription + add-ons */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+            {/* Subscription (active) */}
+            <div style={{ background: CARD, border: `1px solid ${GOLD}55`, borderRadius: 16, padding: "16px 18px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, color: MUTE }}>Langganan</div>
+                <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: GREEN, background: "rgba(78,140,110,0.12)", borderRadius: 5, padding: "2px 7px" }}>Aktif</span>
+              </div>
+              <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 24, fontWeight: 600, marginTop: 6, color: NAVY }}>Premium</div>
+              <div style={{ fontSize: 11.5, color: MUTE, marginTop: 2 }}>Aktif s/d 9 Agu 2026 · perpanjang otomatis</div>
+            </div>
+            {/* Add-ons (darkened — separate purchase) */}
+            {[
+              { name: "Inventori Lengkap", desc: "Gudang, opname, mutasi antar cabang" },
+              { name: "CRM Pelanggan", desc: "Data pelanggan, poin & riwayat belanja" },
+            ].map(a => (
+              <div key={a.name} style={{ position: "relative", background: "#F4F1EA", border: `1px dashed ${BORDER}`, borderRadius: 16, padding: "16px 18px", opacity: 0.72 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, color: MUTE }}>{a.name}</div>
+                  <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: GOLD, background: "rgba(201,165,95,0.14)", borderRadius: 5, padding: "2px 7px" }}>Add-on</span>
+                </div>
+                <div style={{ fontSize: 12.5, color: MUTE, marginTop: 8 }}>{a.desc}</div>
+                <div style={{ fontSize: 11, color: MUTE, marginTop: 6, fontStyle: "italic" }}>Add-on terpisah — belum aktif. Hubungi Sterith untuk mengaktifkan.</div>
+              </div>
+            ))}
+          </div>
+
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
             {[
               { l: "Penjualan Hari Ini", v: formatRp(totSales), accent: true },
