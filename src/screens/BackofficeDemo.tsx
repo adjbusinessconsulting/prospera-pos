@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useStore } from "../store";
 import { formatRp } from "../data";
-import { DemoOfficeSwitcher } from "../components/DemoOfficeSwitcher";
-import { DemoTierSwitcher } from "../components/DemoTierSwitcher";
+import { DemoControls } from "../components/DemoControls";
 import type { Product } from "../types";
 
 const NAVY = "#0B1129", GOLD = "#A6843F", GREEN = "#4E8C6E", MUTE = "#7A776F",
@@ -49,10 +48,9 @@ export default function BackofficeDemo() {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: CREAM, overflowY: "auto", fontFamily: "Inter, system-ui, sans-serif" }}>
-      {<DemoOfficeSwitcher />}
-      {<DemoTierSwitcher />}
+      <div style={{ position: "fixed", top: 10, left: "50%", transform: "translateX(-50%)", zIndex: 210 }}><DemoControls /></div>
 
-      <div style={{ maxWidth: 1120, margin: "0 auto", padding: isMobile ? "92px 16px 40px" : "104px 32px 48px" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: isMobile ? "70px 16px 40px" : "76px 32px 48px" }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 20 }}>
           <div>

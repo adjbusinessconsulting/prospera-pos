@@ -4,8 +4,7 @@ import { supabase } from "./lib/supabase";
 import OwnerLogin from "./screens/OwnerLogin";
 import ResetPassword from "./screens/ResetPassword";
 import UpdateBanner from "./components/UpdateBanner";
-import { DemoTierSwitcher } from "./components/DemoTierSwitcher";
-import { DemoOfficeSwitcher } from "./components/DemoOfficeSwitcher";
+import { DemoControls } from "./components/DemoControls";
 import BackofficeDemo from "./screens/BackofficeDemo";
 import SplashScreen from "./components/SplashScreen";
 import PinLogin from "./screens/PinLogin";
@@ -110,29 +109,29 @@ export default function App() {
 
   if (isMobile) {
     return (
-      <div className="fixed inset-0 bg-cream-bg overflow-hidden">
+      <div className="fixed inset-0 bg-cream-bg overflow-hidden flex flex-col">
         <UpdateBanner />
-        {isDemoMode && <DemoOfficeSwitcher />}
-        {isDemoMode && <DemoTierSwitcher />}
-        {screen === "login"        && <PinLogin />}
-        {screen === "sales"        && <Sales />}
-        {screen === "payment"      && <Payment />}
-        {screen === "receipt"      && <Receipt />}
-        {screen === "riwayat"      && <Riwayat />}
-        {screen === "produk"       && <Produk />}
-        {screen === "kas"          && <Kas />}
-        {screen === "laporan"      && <Laporan />}
-        {screen === "pindah-shift" && <PindahShift />}
-        {screen === "tutup-toko"   && <TutupToko />}
+        {isDemoMode && <div className="shrink-0 flex justify-center py-1.5 bg-cream-deep"><DemoControls /></div>}
+        <div className="flex-1 min-h-0 relative">
+          {screen === "login"        && <PinLogin />}
+          {screen === "sales"        && <Sales />}
+          {screen === "payment"      && <Payment />}
+          {screen === "receipt"      && <Receipt />}
+          {screen === "riwayat"      && <Riwayat />}
+          {screen === "produk"       && <Produk />}
+          {screen === "kas"          && <Kas />}
+          {screen === "laporan"      && <Laporan />}
+          {screen === "pindah-shift" && <PindahShift />}
+          {screen === "tutup-toko"   && <TutupToko />}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-cream-deep flex items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 bg-cream-deep flex flex-col items-center justify-center gap-2 overflow-hidden">
       <UpdateBanner />
-      {isDemoMode && <DemoOfficeSwitcher />}
-      {isDemoMode && <DemoTierSwitcher />}
+      {isDemoMode && <DemoControls />}
       <div
         className="rounded-card shadow-tablet overflow-hidden bg-cream-bg"
         style={{ width: Math.round(1366 * scale), height: Math.round(900 * scale) }}
