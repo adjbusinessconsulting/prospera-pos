@@ -286,7 +286,25 @@
   @media (max-width:1000px){ .lap-2col{ grid-template-columns:1fr; } }
 
   @media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important;} }
-  @media (max-width:1000px){ .app{grid-template-columns:74px 1fr;} .cart{display:none;} .login-hero{display:none;} .pay-body{grid-template-columns:1fr;} .pay-right{display:none;} }
+  /* mobile: bottom cart bar + slide-up sheet (classic POS format) */
+  .mcart-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:59; opacity:0; visibility:hidden; transition:opacity .2s; }
+  .mcart-backdrop.show{ opacity:1; visibility:visible; }
+  .mbar{ position:fixed; left:0; right:0; bottom:0; z-index:58; display:none; align-items:center; gap:12px; height:62px; padding:0 18px; background:var(--brown-700); color:#fff; border:none; cursor:pointer; box-shadow:0 -8px 30px rgba(0,0,0,0.2); }
+  .mbar .mb-count{ background:rgba(255,255,255,0.2); border-radius:8px; padding:4px 10px; font-weight:800; font-size:13px; }
+  .mbar .mb-total{ flex:1; text-align:left; font-weight:700; font-size:14px; font-variant-numeric:tabular-nums; }
+  .mbar .mb-go{ font-size:12px; opacity:.9; white-space:nowrap; }
+  .cart-close{ display:none; width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--faint); align-items:center; justify-content:center; cursor:pointer; margin-left:8px; font-size:15px; }
+  @media (max-width:1000px){
+    .app{ grid-template-columns:72px 1fr; }
+    .login-hero{ display:none; }
+    .pay-body{ grid-template-columns:1fr; }
+    .pay-right{ display:none; }
+    .cart{ position:fixed; left:0; right:0; bottom:0; top:auto; height:85dvh; max-height:85dvh; transform:translateY(101%); transition:transform .3s cubic-bezier(.3,.8,.3,1); z-index:60; border-left:none; border-top:1px solid var(--line); border-radius:20px 20px 0 0; box-shadow:0 -14px 44px rgba(0,0,0,0.25); }
+    .cart.open{ transform:translateY(0); }
+    .cart-close{ display:flex; }
+    .mbar{ display:flex; }
+    .grid-wrap{ padding-bottom:78px; }
+  }
 </style>
 
 <!-- ============ LOGIN ============ -->
@@ -427,7 +445,7 @@
     </main>
 
     <aside class="cart" id="cartPanel">
-      <div class="cart-head"><div class="row"><div><h2>Pesanan</h2><div class="trx">#TRX-0207 · Dine-in</div></div><button class="clear" id="clear">Kosongkan</button></div></div>
+      <div class="cart-head"><div class="row"><div><h2>Pesanan</h2><div class="trx">#TRX-0207 · Dine-in</div></div><button class="clear" id="clear">Kosongkan</button><button class="cart-close" onclick="closeCart()">✕</button></div></div>
       <div class="cart-items" id="cartItems"></div>
       <div class="cart-foot">
         <div class="sumrow"><span>Subtotal</span><span id="subtotal">Rp 0</span></div>
@@ -437,6 +455,13 @@
         <div style="text-align:center;margin-top:14px;"><span class="pill-brand"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="12" rx="5" ry="8"/></svg>Kopi A'Robi POS · Demo</span></div>
       </div>
     </aside>
+
+    <div class="mcart-backdrop" id="mcartBackdrop" onclick="closeCart()"></div>
+    <button class="mbar" id="mbar" onclick="openCart()">
+      <span class="mb-count" id="mbCount">0</span>
+      <span class="mb-total" id="mbTotal">Keranjang kosong</span>
+      <span class="mb-go">Lihat pesanan ›</span>
+    </button>
   </div>
 </section>
 
@@ -527,12 +552,15 @@
     const tax = Math.round(sub*0.1); return { ids, sub, tax, total: sub+tax }; };
 
   function go(name){
+    closeCart();
     document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
     document.getElementById(name).classList.add("active");
     if(name==="payment") renderPayment();
     if(name==="app") setView(currentView);
     window.scrollTo(0,0);
   }
+  function openCart(){ document.getElementById("cartPanel").classList.add("open"); document.getElementById("mcartBackdrop").classList.add("show"); }
+  function closeCart(){ const c=document.getElementById("cartPanel"); if(c)c.classList.remove("open"); const b=document.getElementById("mcartBackdrop"); if(b)b.classList.remove("show"); }
   function startDemo(){ go('app'); setView('sales'); }
   function logout(){ Object.keys(cart).forEach(k=>delete cart[k]); go('login'); }
 
@@ -548,6 +576,8 @@
     const nProd = MENU.filter(m=>m.photo).length;
     document.getElementById("eyebrow").textContent = v==="sales"?"PENJUALAN · #TRX-0207" : v==="produk"?("KATALOG · "+nProd+" PRODUK") : "LAPORAN · HARI INI";
     if(v==="laporan") renderReport(reportPeriod);
+    const mbar=document.getElementById("mbar"); if(mbar) mbar.style.display = v==="sales" ? "" : "none";
+    closeCart();
   }
   document.getElementById("railNav").addEventListener("click", e=>{ const b=e.target.closest(".nav-btn"); if(b) setView(b.dataset.v); });
 
@@ -578,6 +608,9 @@
     document.getElementById("total").textContent = fmt(total);
     const pay = document.getElementById("pay"); pay.disabled = !ids.length;
     document.getElementById("payLabel").textContent = ids.length ? `Bayar · ${fmt(total)}` : "Bayar";
+    const n = ids.reduce((s,id)=>s+cart[id],0);
+    document.getElementById("mbCount").textContent = n;
+    document.getElementById("mbTotal").textContent = n ? fmt(total) : "Keranjang kosong";
   }
   cartItems.addEventListener("click", e=>{ const b=e.target.closest("button[data-d]"); if(!b) return; const id=b.parentElement.dataset.id; cart[id]=Math.max(0,(cart[id]||0)+Number(b.dataset.d)); renderGrid(); renderCart(); });
   document.getElementById("clear").addEventListener("click", ()=>{ Object.keys(cart).forEach(k=>delete cart[k]); renderGrid(); renderCart(); });
