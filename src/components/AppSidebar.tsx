@@ -1,8 +1,10 @@
-import { ShoppingCart, Package, BarChart2, ChevronLeft, LogOut, MessageCircle } from "lucide-react";
+import { ShoppingCart, Package, BarChart2, ChevronLeft, LogOut, MessageCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import { useStore } from "../store";
 import type { Screen } from "../types";
 import FeedbackDrawer from "./FeedbackDrawer";
+import UpgradeModal from "./UpgradeModal";
 
 const NAV = [
   { id: "sales"   as Screen, label: "Jual",    Icon: ShoppingCart },
@@ -20,6 +22,8 @@ interface Props {
 
 export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDemoBack = false }: Props) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const storeTier = useStore(s => (s.storeId ? s.storeTier : "free"));
 
   return (
     <>
@@ -59,6 +63,16 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#5C9E7E", boxShadow: "0 0 0 3px rgba(92,158,126,0.18)", display: "inline-block", flexShrink: 0 }} />
           </div>
+
+          {/* Tier badge → upgrade */}
+          <button onClick={() => setUpgradeOpen(true)} title="Lihat paket / upgrade" style={{
+            display: "flex", alignItems: "center", gap: 5, height: 28, padding: "0 10px",
+            borderRadius: 999, border: "1px solid rgba(201,165,95,0.4)", background: "rgba(201,165,95,0.10)",
+            cursor: "pointer",
+          }}>
+            <Sparkles size={12} color="#A6843F" strokeWidth={2} />
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "#A6843F" }}>{storeTier}</span>
+          </button>
 
           {/* Bantuan */}
           <button onClick={() => setFeedbackOpen(true)} title="Bantuan" style={{
@@ -108,6 +122,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
       `}</style>
 
       <FeedbackDrawer open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
     </>
   );
 }
