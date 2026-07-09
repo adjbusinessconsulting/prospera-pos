@@ -8,8 +8,12 @@ export interface Product {
   category: string;
   unit: string;
   price: number;
-  stock: number;
+  stock: number;          // live SISA (awal + tambahan − terjual)
   photo?: string;
+  stockAwal?: number;     // starting stock for today
+  stockTambahan?: number; // added today
+  stockTerjual?: number;  // sold today (auto from sales)
+  stockDate?: string | null;
 }
 
 export interface CartItem {

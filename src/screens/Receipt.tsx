@@ -1,4 +1,4 @@
-import { useStore, getTotal, getTrxId, isAtLeast } from "../store";
+import { useStore, getTotal, getTrxId, isAtLeast, localDateISO } from "../store";
 import { formatRp } from "../data";
 import { Printer, Check, ChevronLeft } from "lucide-react";
 import { AppSidebar } from "../components/AppSidebar";
@@ -22,8 +22,9 @@ function SterithWatermark({ tier }: { tier: string }) {
 }
 
 export default function Receipt() {
-  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, selectedShiftName, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, restart, setScreen, signOut } = useStore();
+  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, selectedShiftName, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, inventoryEnabled, products, updateProduct, restart, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
+  const inventoryOn = isAtLeast(effectiveTier, 'premium') && inventoryEnabled;
   const canWhatsApp = isAtLeast(effectiveTier, 'standard');
   const total = getTotal(cart);
   const change = cashReceived - total;
@@ -59,6 +60,20 @@ export default function Receipt() {
           }))
         );
       }
+    }
+    // Basic Inventori: count sold (terjual) and reduce sisa for each item.
+    if (inventoryOn) {
+      const today = localDateISO();
+      cart.forEach(i => {
+        const p = products.find(x => x.id === i.product.id);
+        if (!p) return;
+        const newStock = (p.stock ?? 0) - i.qty;
+        const newTerjual = (p.stockTerjual ?? 0) + i.qty;
+        updateProduct(i.product.id, { stock: newStock, stockTerjual: newTerjual, stockDate: today });
+        if (storeId && !isDemoMode) {
+          supabase.from("products").update({ stock: newStock, stock_terjual: newTerjual, stock_date: today }).eq("id", i.product.id);
+        }
+      });
     }
     restart();
   }

@@ -258,6 +258,12 @@ export const useStore = create<POSState>((set) => ({
   }),
 }));
 
+// Local (device-timezone) date as YYYY-MM-DD — used for the daily inventory ledger.
+export const localDateISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 export const getTotal = (cart: CartItem[]) => cart.reduce((sum, i) => sum + i.product.price * i.qty, 0);
 export const getItemCount = (cart: CartItem[]) => cart.reduce((sum, i) => sum + i.qty, 0);
 export const getTrxId = (counter: number) => `#TRX-${counter.toString().padStart(4, '0')}`;

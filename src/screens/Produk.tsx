@@ -1,6 +1,6 @@
 import { Search, X, Camera, Image as ImageIcon } from "lucide-react";
 import { useState, useRef } from "react";
-import { useStore, isAtLeast } from "../store";
+import { useStore, isAtLeast, localDateISO } from "../store";
 import { supabase } from "../lib/supabase";
 import { getCatLabel, formatRp, formatIDRInput, parseIDRInput, CATEGORY_OPTIONS } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
@@ -24,6 +24,8 @@ export default function Produk() {
   const [addPhoto, setAddPhoto] = useState<string | null>(null);
   const [addCategory, setAddCategory] = useState("SBK");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [tambahTarget, setTambahTarget] = useState<Product | null>(null);
+  const [tambahQty, setTambahQty] = useState("");
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
@@ -40,6 +42,20 @@ export default function Produk() {
     if (storeId && !isDemoMode) {
       await supabase.from("stores").update({ inventory_enabled: next }).eq("id", storeId);
     }
+  }
+
+  async function handleAddStock() {
+    const n = parseInt(tambahQty, 10);
+    if (!tambahTarget || !n || n <= 0) return;
+    const p = tambahTarget;
+    const today = localDateISO();
+    const newStock = (p.stock ?? 0) + n;
+    const newTambahan = (p.stockTambahan ?? 0) + n;
+    updateProduct(p.id, { stock: newStock, stockTambahan: newTambahan, stockDate: today });
+    if (storeId && !isDemoMode) {
+      await supabase.from("products").update({ stock: newStock, stock_tambahan: newTambahan, stock_date: today }).eq("id", p.id);
+    }
+    setTambahTarget(null); setTambahQty("");
   }
 
   const filtered = products.filter(p =>
@@ -236,7 +252,16 @@ export default function Produk() {
                     </td>
                     <td className="px-4 py-3.5 text-right">
                       {canStock ? (
-                        <span className="text-[13px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: showStockValue && p.stock <= threshold ? "#A6843F" : "#1B2A4A" }}>{showStockValue ? p.stock : "—"}</span>
+                        <div className="inline-flex items-center gap-2 justify-end">
+                          <span className="text-[13px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: showStockValue && p.stock <= threshold ? "#A6843F" : "#1B2A4A" }}>{showStockValue ? p.stock : "—"}</span>
+                          {inventoryOn && (
+                            <button onClick={() => { setTambahTarget(p); setTambahQty(""); }} title="Tambah stok"
+                              className="w-6 h-6 rounded-[6px] flex items-center justify-center border cursor-pointer"
+                              style={{ borderColor: "rgba(92,158,126,0.4)", color: "#4E8C6E", background: "rgba(92,158,126,0.06)" }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
+                            </button>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-[13px] text-text-mute/40 tracking-widest select-none">—</span>
                       )}
@@ -277,7 +302,15 @@ export default function Produk() {
                   <div className="font-serif text-[14px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.price)}</div>
                   <div className="flex items-center justify-end gap-1.5 mt-0.5">
                     {canStock ? (
-                      <span className="text-[11px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: showStockValue && p.stock <= threshold ? "#A6843F" : "#7A7360" }}>Stok {showStockValue ? p.stock : "—"}</span>
+                      <>
+                        <span className="text-[11px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: showStockValue && p.stock <= threshold ? "#A6843F" : "#7A7360" }}>Stok {showStockValue ? p.stock : "—"}</span>
+                        {inventoryOn && (
+                          <button onClick={() => { setTambahTarget(p); setTambahQty(""); }} title="Tambah stok"
+                            className="w-5 h-5 rounded-[5px] flex items-center justify-center border-0" style={{ color: "#4E8C6E", background: "rgba(92,158,126,0.12)" }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
+                          </button>
+                        )}
+                      </>
                     ) : (
                       <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 700, padding: "2px 5px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>PRE</span>
                     )}
@@ -293,6 +326,51 @@ export default function Produk() {
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
       <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
       <input ref={editPhotoRef} type="file" accept="image/*" className="hidden" onChange={handleEditPhoto} />
+
+      {/* Tambah Stok Modal */}
+      {tambahTarget && (() => {
+        const p = tambahTarget;
+        const awal = p.stockAwal ?? p.stock ?? 0;
+        const tambahan = p.stockTambahan ?? 0;
+        const terjual = p.stockTerjual ?? 0;
+        const n = parseInt(tambahQty, 10) || 0;
+        return (
+          <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setTambahTarget(null)} />
+            <div className="relative bg-white w-full lg:max-w-[380px] lg:mx-4 rounded-t-[20px] lg:rounded-card flex flex-col shadow-xl">
+              <div className="px-5 pt-5 pb-3 flex items-start justify-between">
+                <div>
+                  <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute">Inventori · Tambah Stok</p>
+                  <h3 className="font-serif text-[19px] font-medium text-navy leading-tight mt-1">{p.name}</h3>
+                </div>
+                <button onClick={() => setTambahTarget(null)} className="w-8 h-8 rounded-card flex items-center justify-center text-text-mute hover:bg-cream-bg border-0 bg-transparent cursor-pointer"><X size={16} /></button>
+              </div>
+              <div className="px-5 pb-2">
+                {/* Ledger */}
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  {[{ l: "Awal", v: awal }, { l: "Tambahan", v: tambahan }, { l: "Terjual", v: terjual }, { l: "Sisa", v: p.stock ?? 0, accent: true }].map(c => (
+                    <div key={c.l} className="rounded-card border border-warm-border px-2 py-2 text-center" style={{ background: c.accent ? "rgba(92,158,126,0.06)" : "#FAFAF7" }}>
+                      <div style={{ fontSize: 8.5, letterSpacing: "0.12em" }} className="font-sans uppercase text-text-mute">{c.l}</div>
+                      <div className="font-serif text-[17px] font-semibold mt-0.5" style={{ fontVariantNumeric: "tabular-nums", color: c.accent ? "#4E8C6E" : "#1B2A4A" }}>{c.v}</div>
+                    </div>
+                  ))}
+                </div>
+                <label style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute block mb-2">Tambah berapa?</label>
+                <input autoFocus type="number" inputMode="numeric" min={1} value={tambahQty}
+                  onChange={e => setTambahQty(e.target.value)} onKeyDown={e => e.key === "Enter" && handleAddStock()}
+                  placeholder="mis. 24"
+                  className="w-full bg-white border rounded-button h-[46px] px-4 text-[15px] text-navy outline-none"
+                  style={{ borderColor: n > 0 ? "#5C9E7E" : "#ECE7DD", fontVariantNumeric: "tabular-nums" }} />
+                {n > 0 && <p className="text-[11.5px] text-text-mute mt-2">Sisa menjadi <b className="text-navy">{(p.stock ?? 0) + n}</b></p>}
+              </div>
+              <div className="px-5 py-4 flex gap-2">
+                <button onClick={() => setTambahTarget(null)} className="flex-1 h-[46px] rounded-button border border-warm-border bg-white text-navy text-[13px] font-medium cursor-pointer">Batal</button>
+                <button onClick={handleAddStock} disabled={n <= 0} className="flex-[2] h-[46px] rounded-button border-0 bg-navy text-cream-text text-[13px] font-semibold cursor-pointer disabled:opacity-50">Tambah Stok</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Add Product Modal */}
       {showAddModal && (

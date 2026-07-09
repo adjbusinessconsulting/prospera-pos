@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useStore } from "../store";
+import { useStore, localDateISO } from "../store";
 import { supabase } from "../lib/supabase";
 import type { CashierDB } from "../types";
 import { BUILD } from "../version";
@@ -141,7 +141,29 @@ export default function OwnerLogin() {
       supabase.from("sales").select("*", { count: "exact", head: true }).eq("store_id", store.id),
       supabase.from("shifts").select("id, name, start_time, end_time").eq("store_id", store.id).order("start_time"),
     ]);
-    if (productRows && productRows.length > 0) setProductsFromDB(productRows as import("../types").Product[]);
+    if (productRows && productRows.length > 0) {
+      // Daily rollover: on the first login of a new day, yesterday's sisa becomes
+      // today's stok_awal and the tambahan/terjual counters reset.
+      const today = localDateISO();
+      const mapped = productRows.map((r: Record<string, unknown>) => {
+        const stock = (r.stock as number) ?? 0;
+        const rolls = r.stock_date !== today;
+        return {
+          ...r,
+          stock,
+          stockAwal:     rolls ? stock : ((r.stock_awal as number) ?? stock),
+          stockTambahan: rolls ? 0     : ((r.stock_tambahan as number) ?? 0),
+          stockTerjual:  rolls ? 0     : ((r.stock_terjual as number) ?? 0),
+          stockDate:     today,
+        };
+      });
+      productRows.forEach((r: Record<string, unknown>) => {
+        if (r.stock_date !== today) {
+          supabase.from("products").update({ stock_awal: (r.stock as number) ?? 0, stock_tambahan: 0, stock_terjual: 0, stock_date: today }).eq("id", r.id as string);
+        }
+      });
+      setProductsFromDB(mapped as unknown as import("../types").Product[]);
+    }
     setDbShifts((shiftRows ?? []) as import("../types").ShiftDef[]);
     setTrxCounter((saleCount ?? 0) + 1);
     setScreen("login");
