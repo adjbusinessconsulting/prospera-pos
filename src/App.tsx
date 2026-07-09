@@ -5,6 +5,7 @@ import OwnerLogin from "./screens/OwnerLogin";
 import ResetPassword from "./screens/ResetPassword";
 import UpdateBanner from "./components/UpdateBanner";
 import { DemoControls } from "./components/DemoControls";
+import { RenewBanner } from "./components/RenewBanner";
 import BackofficeDemo from "./screens/BackofficeDemo";
 import SplashScreen from "./components/SplashScreen";
 import PinLogin from "./screens/PinLogin";
@@ -38,6 +39,7 @@ export default function App() {
   const startDemo = useStore(s => s.startDemo);
   const isDemoMode = useStore(s => s.isDemoMode);
   const demoView = useStore(s => s.demoView);
+  const subscriptionExpired = useStore(s => s.subscriptionExpired);
   const storeId = useStore(s => s.storeId);
   const signOut = useStore(s => s.signOut);
   const [scale, setScale] = useState(1);
@@ -112,6 +114,7 @@ export default function App() {
       <div className="fixed inset-0 bg-cream-bg overflow-hidden flex flex-col">
         <UpdateBanner />
         {isDemoMode && <div className="shrink-0 flex justify-center py-1.5 bg-cream-deep"><DemoControls /></div>}
+        {!isDemoMode && subscriptionExpired && <div className="shrink-0 flex justify-center py-1.5 bg-cream-deep"><RenewBanner /></div>}
         <div className="flex-1 min-h-0 relative">
           {screen === "login"        && <PinLogin />}
           {screen === "sales"        && <Sales />}
@@ -132,6 +135,7 @@ export default function App() {
     <div className="fixed inset-0 bg-cream-deep flex flex-col items-center justify-center gap-2 overflow-hidden">
       <UpdateBanner />
       {isDemoMode && <DemoControls />}
+      {!isDemoMode && subscriptionExpired && <RenewBanner />}
       <div
         className="rounded-card shadow-tablet overflow-hidden bg-cream-bg"
         style={{ width: Math.round(1366 * scale), height: Math.round(900 * scale) }}

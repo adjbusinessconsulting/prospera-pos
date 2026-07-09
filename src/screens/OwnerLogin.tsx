@@ -21,10 +21,11 @@ interface StoreRow {
   midtrans_client_key: string | null;
   inventory_enabled: boolean | null;
   low_stock_threshold: number | null;
+  tier_expires_at: string | null;
 }
 
 export default function OwnerLogin() {
-  const { setScreen, setStoreData, setProductsFromDB, setTrxCounter, setDbShifts, startDemo, setInventorySettings } = useStore();
+  const { setScreen, setStoreData, setProductsFromDB, setTrxCounter, setDbShifts, startDemo, setInventorySettings, setSubscription } = useStore();
   const [storeChoices, setStoreChoices] = useState<StoreRow[]>([]);
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [loginAs, setLoginAs] = useState<"toko" | "backoffice">("toko");
@@ -109,7 +110,7 @@ export default function OwnerLogin() {
     if (userId) {
       const { data: storeRows } = await supabase
         .from("stores")
-        .select("id, name, address, phone, tier, qris_image_url, midtrans_client_key, inventory_enabled, low_stock_threshold")
+        .select("id, name, address, phone, tier, qris_image_url, midtrans_client_key, inventory_enabled, low_stock_threshold, tier_expires_at")
         .eq("owner_id", userId)
         .order("created_at");
       // Multi-store: let the owner pick which store to enter
@@ -129,6 +130,12 @@ export default function OwnerLogin() {
   async function enterStore(store: StoreRow) {
     const { data: cashierRows } = await supabase
       .from("cashiers").select("*").eq("store_id", store.id).eq("active", true);
+    // Subscription expiry: if the paid period has passed, revert to Free features
+    // (data stays; a renew banner is shown). Expiry day itself is still valid.
+    const paidTier = store.tier || "free";
+    const expired = !!store.tier_expires_at && localDateISO() > store.tier_expires_at;
+    const effectiveTier = expired ? "free" : paidTier;
+    setSubscription(expired, expired ? paidTier : "");
     setStoreData(
       store.id,
       store.name,
@@ -137,7 +144,7 @@ export default function OwnerLogin() {
       store.phone || "",
       store.qris_image_url || "",
       store.midtrans_client_key || "",
-      store.tier || "free",
+      effectiveTier,
     );
     setInventorySettings(store.inventory_enabled ?? true, store.low_stock_threshold ?? 5);
     const [{ data: productRows }, { count: saleCount }, { data: shiftRows }] = await Promise.all([

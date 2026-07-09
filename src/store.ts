@@ -32,10 +32,13 @@ interface POSState {
   products: Product[];
   isDemoMode: boolean;
   demoView: 'front' | 'back';
+  subscriptionExpired: boolean;
+  paidTier: string;
 
   setScreen: (s: Screen) => void;
   setDemoMode: (v: boolean) => void;
   setDemoView: (v: 'front' | 'back') => void;
+  setSubscription: (expired: boolean, paidTier: string) => void;
   setStoreTier: (tier: string) => void;
   setInventoryEnabled: (v: boolean) => void;
   setInventorySettings: (enabled: boolean, threshold: number) => void;
@@ -149,10 +152,13 @@ export const useStore = create<POSState>((set) => ({
   products: [...PRODUCTS],
   isDemoMode: false,
   demoView: 'front',
+  subscriptionExpired: false,
+  paidTier: '',
 
   setScreen: (screen) => set({ screen }),
   setDemoMode: (isDemoMode) => set({ isDemoMode }),
   setDemoView: (demoView) => set({ demoView }),
+  setSubscription: (subscriptionExpired, paidTier) => set({ subscriptionExpired, paidTier }),
   setStoreTier: (storeTier) => set({ storeTier }),
   setInventoryEnabled: (inventoryEnabled) => set({ inventoryEnabled }),
   setInventorySettings: (inventoryEnabled, lowStockThreshold) => set({ inventoryEnabled, lowStockThreshold }),
@@ -162,6 +168,8 @@ export const useStore = create<POSState>((set) => ({
   startDemo: () => set({
     isDemoMode: true,
     demoView: 'front',
+    subscriptionExpired: false,
+    paidTier: '',
     storeId: DEMO_STORE_ID,
     storeName: 'Demo Toko',
     storeAddress: 'Jl. Diponegoro No. 24, Palu Timur',
@@ -238,6 +246,8 @@ export const useStore = create<POSState>((set) => ({
     dbShifts: [],
     trxCounter: 42,
     isDemoMode: false,
+    subscriptionExpired: false,
+    paidTier: '',
   }),
 
   setCheckinPhoto: (photo) => set({ checkinPhoto: photo }),
