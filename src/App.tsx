@@ -5,6 +5,8 @@ import OwnerLogin from "./screens/OwnerLogin";
 import ResetPassword from "./screens/ResetPassword";
 import UpdateBanner from "./components/UpdateBanner";
 import { DemoTierSwitcher } from "./components/DemoTierSwitcher";
+import { DemoOfficeSwitcher } from "./components/DemoOfficeSwitcher";
+import BackofficeDemo from "./screens/BackofficeDemo";
 import SplashScreen from "./components/SplashScreen";
 import PinLogin from "./screens/PinLogin";
 import Sales from "./screens/Sales";
@@ -36,6 +38,7 @@ export default function App() {
   const setScreen = useStore(s => s.setScreen);
   const startDemo = useStore(s => s.startDemo);
   const isDemoMode = useStore(s => s.isDemoMode);
+  const demoView = useStore(s => s.demoView);
   const storeId = useStore(s => s.storeId);
   const signOut = useStore(s => s.signOut);
   const [scale, setScale] = useState(1);
@@ -103,11 +106,13 @@ export default function App() {
   if (screen === "reset-password") return <ResetPassword />;
   if (screen === "owner-login") return <><OwnerLogin /><UpdateBanner /></>;
   if (screen === "checkin")     return <CheckIn />;
+  if (isDemoMode && demoView === "back") return <BackofficeDemo />;
 
   if (isMobile) {
     return (
       <div className="fixed inset-0 bg-cream-bg overflow-hidden">
         <UpdateBanner />
+        {isDemoMode && <DemoOfficeSwitcher />}
         {isDemoMode && <DemoTierSwitcher />}
         {screen === "login"        && <PinLogin />}
         {screen === "sales"        && <Sales />}
@@ -126,6 +131,7 @@ export default function App() {
   return (
     <div className="fixed inset-0 bg-cream-deep flex items-center justify-center overflow-hidden">
       <UpdateBanner />
+      {isDemoMode && <DemoOfficeSwitcher />}
       {isDemoMode && <DemoTierSwitcher />}
       <div
         className="rounded-card shadow-tablet overflow-hidden bg-cream-bg"

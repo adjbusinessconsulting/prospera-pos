@@ -31,9 +31,11 @@ interface POSState {
   checkinPhoto: string | null;
   products: Product[];
   isDemoMode: boolean;
+  demoView: 'front' | 'back';
 
   setScreen: (s: Screen) => void;
   setDemoMode: (v: boolean) => void;
+  setDemoView: (v: 'front' | 'back') => void;
   setStoreTier: (tier: string) => void;
   setInventoryEnabled: (v: boolean) => void;
   setInventorySettings: (enabled: boolean, threshold: number) => void;
@@ -146,9 +148,11 @@ export const useStore = create<POSState>((set) => ({
   checkinPhoto: null,
   products: [...PRODUCTS],
   isDemoMode: false,
+  demoView: 'front',
 
   setScreen: (screen) => set({ screen }),
   setDemoMode: (isDemoMode) => set({ isDemoMode }),
+  setDemoView: (demoView) => set({ demoView }),
   setStoreTier: (storeTier) => set({ storeTier }),
   setInventoryEnabled: (inventoryEnabled) => set({ inventoryEnabled }),
   setInventorySettings: (inventoryEnabled, lowStockThreshold) => set({ inventoryEnabled, lowStockThreshold }),
@@ -157,6 +161,7 @@ export const useStore = create<POSState>((set) => ({
   // Ephemeral — nothing is written to Supabase while isDemoMode is true.
   startDemo: () => set({
     isDemoMode: true,
+    demoView: 'front',
     storeId: DEMO_STORE_ID,
     storeName: 'Demo Toko',
     storeAddress: 'Jl. Diponegoro No. 24, Palu Timur',
