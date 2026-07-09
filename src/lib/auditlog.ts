@@ -34,14 +34,36 @@ function write(list: AuditEntry[]) {
   localStorage.setItem(KEY, JSON.stringify(list));
 }
 
-export function getLog(): AuditEntry[] { return read(); }
+// ── Demo: ephemeral, seeded, in-memory (never touches the real log) ──
+function isDemo(): boolean { return useStore.getState().isDemoMode; }
+function seedDemo(): AuditEntry[] {
+  const now = Date.now();
+  const mk = (minsAgo: number, actor: string, type: string, detail: string, seq: number): AuditEntry =>
+    ({ seq, time: new Date(now - minsAgo * 60000).toISOString(), actor, type, detail, prevHash: "DEMO", hash: `demo-${seq}` });
+  return [
+    mk(320, "Rani",  "product.add",   "Produk baru: Es Kopi Susu — Rp 22.000", 1),
+    mk(260, "Rani",  "stock.add",     "Tambah stok Beras Pandan 5kg: +20 → sisa 62", 2),
+    mk(140, "Dimas", "product.price", "Ubah harga Indomie Goreng: Rp 3.500 → Rp 3.800", 3),
+    mk(75,  "Rani",  "product.price", "Ubah harga Gula Pasir 1kg: Rp 16.000 → Rp 15.500", 4),
+    mk(18,  "Dimas", "stock.add",     "Tambah stok Telur Ayam: +30 → sisa 44", 5),
+  ];
+}
+let demoLog: AuditEntry[] = seedDemo();
+
+export function getLog(): AuditEntry[] { return isDemo() ? demoLog : read(); }
 
 // Append an entry. Logging must never throw into the calling action.
 export async function logEvent(type: string, detail: string) {
   try {
+    const s = useStore.getState();
+    // Demo: append to the in-memory log only (ephemeral, never persisted).
+    if (s.isDemoMode) {
+      const seq = (demoLog[demoLog.length - 1]?.seq ?? 0) + 1;
+      demoLog.push({ seq, time: new Date().toISOString(), actor: s.cashierName || s.cashierInitials || "—", type, detail, prevHash: "DEMO", hash: `demo-${seq}` });
+      return;
+    }
     const list = read();
     const prev = list[list.length - 1];
-    const s = useStore.getState();
     const base = {
       seq: (prev?.seq ?? 0) + 1,
       time: new Date().toISOString(),
@@ -90,6 +112,7 @@ export async function flushAuditServer() {
 
 // Verify the chain. Returns the index of the first broken entry, or -1 if intact.
 export async function verifyLog(): Promise<number> {
+  if (isDemo()) return -1; // demo log is a showcase — always shown intact
   const list = read();
   let prevHash = "GENESIS";
   for (let i = 0; i < list.length; i++) {
