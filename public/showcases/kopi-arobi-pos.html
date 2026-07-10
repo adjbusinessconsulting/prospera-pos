@@ -276,7 +276,31 @@
   .period button.on { background:var(--brown-700); border-color:var(--brown-700); color:#fff; }
   .pbadge { font-size:7.5px; font-weight:800; letter-spacing:0.1em; margin-left:5px; color:var(--gold); background:rgba(198,133,47,0.14); border:1px solid rgba(198,133,47,0.4); border-radius:4px; padding:1px 4px; }
   .period button.on .pbadge { color:#fff; background:rgba(255,255,255,0.22); border-color:transparent; }
+  .period button.locked { opacity:0.5; }
+  .period button.locked:hover { border-color:var(--line); }
+  .pdiv { width:1px; align-self:center; height:20px; background:var(--line); margin:0 2px; }
+  .rangebar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+  .rangebar input[type=date] { height:36px; border:1px solid var(--line); border-radius:9px; padding:0 10px; font-size:12.5px; color:var(--ink); background:var(--card); font-family:inherit; }
+  .rmode { display:flex; background:var(--parch-deep); border-radius:999px; padding:3px; gap:2px; }
+  .rmode button { border:0; background:transparent; color:var(--mute); font-size:11.5px; font-weight:600; padding:5px 12px; border-radius:999px; }
+  .rmode button.on { background:var(--card); color:var(--brown-700); }
+  .rapply { height:36px; border:0; border-radius:9px; background:var(--brown-700); color:#fff; font-size:12.5px; font-weight:700; padding:0 16px; }
+  .rnote { font-size:11px; color:var(--mute); }
+  .locknote { font-size:12px; color:var(--danger); background:rgba(194,102,47,0.08); border:1px solid rgba(194,102,47,0.3); border-radius:9px; padding:9px 13px; margin-bottom:14px; display:none; }
+  .freecard { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px 24px; max-width:460px; }
+  .fc-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; gap:12px; }
+  .fc-ey { font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--mute); font-weight:700; }
+  .fc-sub { font-family:var(--serif); font-size:19px; font-weight:700; color:var(--ink); margin-top:3px; }
+  .fc-badge { flex-shrink:0; font-size:8.5px; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); background:rgba(198,133,47,0.14); border:1px solid rgba(198,133,47,0.4); border-radius:6px; padding:3px 8px; }
+  .fc-rows { display:flex; flex-direction:column; }
+  .fc-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid #F1E8D6; font-size:13.5px; color:var(--mute); }
+  .fc-row b { color:var(--ink); font-size:15px; font-variant-numeric:tabular-nums; }
+  .fc-row.total { border-bottom:0; padding-top:14px; }
+  .fc-row.total span { color:var(--ink); font-weight:600; }
+  .fc-row.total b { color:var(--brown-700); font-size:20px; font-weight:800; }
+  .fc-note { font-size:11.5px; color:var(--mute); margin-top:14px; line-height:1.6; background:var(--parch); border-radius:10px; padding:10px 12px; }
   .lap-2col { display:grid; grid-template-columns:1.6fr 1fr; gap:14px; }
+  .lap-2col.solo { grid-template-columns:1fr; }
   .topcard { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 22px; }
   .toprow { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid #F1E8D6; }
   .toprow:last-child { border-bottom:0; }
@@ -462,29 +486,61 @@
 
       <div id="view-laporan" style="display:none;">
         <div class="plain-wrap" style="padding-top:20px;">
-          <div class="period" id="period">
-            <button data-p="today" class="on">Hari ini</button>
-            <button data-p="7">7 Hari</button>
-            <button data-p="30">30 Hari <span class="pbadge">STD</span></button>
-            <button data-p="182">6 Bulan <span class="pbadge">STD</span></button>
+          <div id="reportFree" style="display:none;">
+            <div class="freecard">
+              <div class="fc-head">
+                <div>
+                  <div class="fc-ey">Ringkasan Hari Ini</div>
+                  <div class="fc-sub" id="freeWindow">Buka 10.00 · sampai sekarang</div>
+                </div>
+                <span class="fc-badge">Paket Free</span>
+              </div>
+              <div class="fc-rows">
+                <div class="fc-row"><span>Modal Awal</span><b id="freeModal">Rp 0</b></div>
+                <div class="fc-row"><span>Omset (buka → sekarang)</span><b id="freeOmset">Rp 0</b></div>
+                <div class="fc-row total"><span>Perkiraan di Laci</span><b id="freeTotal">Rp 0</b></div>
+              </div>
+              <div class="fc-note">Paket Free menampilkan omset berjalan hari ini. Grafik &amp; pilih periode mulai paket <b>Standard</b>; rincian lengkap tetap ada di <b>Tutup Shift</b>.</div>
+            </div>
           </div>
+          <div id="reportBody">
+          <div class="period" id="period">
+            <button data-g="hari" data-o="0" class="on">Hari ini</button>
+            <button data-g="hari" data-o="1">Kemarin</button>
+            <span class="pdiv"></span>
+            <button data-g="minggu" data-o="0" data-min="standard">Minggu ini</button>
+            <button data-g="minggu" data-o="1" data-min="standard">Minggu lalu</button>
+            <span class="pdiv"></span>
+            <button data-g="bulan" data-o="0" data-min="standard">Bulan ini</button>
+            <button data-g="bulan" data-o="1" data-min="premium">Bulan lalu</button>
+            <span class="pdiv"></span>
+            <button data-g="rentang" data-min="standard">Rentang</button>
+          </div>
+          <div class="rangebar" id="rangebar" style="display:none;">
+            <input type="date" id="rStart"><span style="color:var(--mute);">–</span><input type="date" id="rEnd">
+            <div class="rmode" id="rmode"><button data-m="harian" class="on">Harian</button><button data-m="mingguan">Mingguan</button></div>
+            <button class="rapply" id="rApply">Terapkan</button>
+            <span class="rnote" id="rNote"></span>
+          </div>
+          <div class="locknote" id="lockNote"></div>
           <div class="cards4">
             <div class="stat accent"><div class="sl" id="svLabel">Penjualan Hari Ini</div><div class="sv" id="svRev">Rp 0</div></div>
             <div class="stat plain"><div class="sl">Transaksi</div><div class="sv" id="svTrx">0</div></div>
-            <div class="stat plain"><div class="sl">Rata-rata / trx</div><div class="sv" id="svAvg">Rp 0</div></div>
-            <div class="stat plain"><div class="sl">Menu Terjual</div><div class="sv" id="svItems">0</div></div>
+            <div class="stat plain prem-only"><div class="sl">Rata-rata / trx</div><div class="sv" id="svAvg">Rp 0</div></div>
+            <div class="stat plain prem-only"><div class="sl">Menu Terjual</div><div class="sv" id="svItems">0</div></div>
           </div>
-          <div class="lap-2col">
+          <div class="lap-2col" id="lap2col">
             <div class="chartcard">
               <div class="ct" id="chartTitle">Penjualan per Jam</div>
               <div class="bars" id="bars"></div>
               <div class="barx" id="barx"></div>
             </div>
-            <div class="topcard">
+            <div class="topcard prem-only">
               <div class="ct">Menu Terlaris</div>
               <div id="topMenu"></div>
             </div>
           </div>
+          </div><!-- /reportBody -->
         </div>
       </div>
     </main>
@@ -620,7 +676,7 @@
     document.querySelectorAll("#railNav .nav-btn").forEach(b=>b.classList.toggle("active", b.dataset.v===v));
     const nProd = MENU.filter(m=>m.photo).length;
     document.getElementById("eyebrow").textContent = v==="sales"?"PENJUALAN · #TRX-0207" : v==="produk"?("KATALOG · "+nProd+" PRODUK") : "LAPORAN · HARI INI";
-    if(v==="laporan") renderReport(reportPeriod);
+    if(v==="laporan") renderReport();
     const mbar=document.getElementById("mbar"); if(mbar) mbar.style.display = v==="sales" ? "" : "none";
     closeCart();
   }
@@ -678,41 +734,172 @@
       const trx = Math.round(rev/27500);
       arr.push({ d, rev, trx, items: Math.round(trx*1.32) });
     } return arr; })();
-  const HOURLY = [28,40,72,96,88,64,48,44,58,80,90,66];   // 10:00–21:00 shape (today)
-  let reportPeriod = "today";
+  const HOURLY = [28,40,72,96,88,64,48,44,58,80,90,66,60,52,44,36]; // per-hour shape
+  const RTODAY = (()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; })();
+  let openHour = 10, closeHour = 18;   // A'Robi Shift Siang (updated on shift change)
+  const DOW_ID = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"]; // getDay()=0 -> Min
 
-  function periodData(p){
-    const n = p==="today"?1 : p==="7"?7 : p==="30"?30 : 182;
-    const slice = SALES6M.slice(-n);
-    const rev = slice.reduce((s,x)=>s+x.rev,0);
-    const trx = slice.reduce((s,x)=>s+x.trx,0);
-    const items = slice.reduce((s,x)=>s+x.items,0);
-    return { rev, trx, items, avg: Math.round(rev/Math.max(1,trx)), slice };
+  // ── report state ──
+  let gran = "hari", off = 0, rMode = "harian", rStart = null, rEnd = null;
+  const tierRank = { free:0, standard:1, premium:2 };
+  const tierDaysCap = { free:1, standard:30, premium:90 };
+  function curTier(){ const el=document.querySelector("#tierSeg .on"); return el?el.dataset.t:"premium"; }
+  function startOfWeekMon(d){ const x=new Date(d); x.setHours(0,0,0,0); const g=(x.getDay()+6)%7; x.setDate(x.getDate()-g); return x; }
+  function dayRec(d){ const t=new Date(d); t.setHours(0,0,0,0); const f=SALES6M.find(r=>r.d.getTime()===t.getTime()); return f||{rev:0,trx:0,items:0}; }
+  function hourLabel(h){ return `${((h%24)+24)%24}–${((h+1)%24+24)%24}`; }
+  function aggr(vals, labs, recs, title, slabel){
+    const rev=recs.reduce((a,r)=>a+r.rev,0), trx=recs.reduce((a,r)=>a+r.trx,0), items=recs.reduce((a,r)=>a+r.items,0);
+    return { vals, labs, rev, trx, items, title, slabel };
   }
-  function renderReport(p){
-    reportPeriod = p;
-    const pd = periodData(p);
-    document.getElementById("svLabel").textContent = p==="today"?"Penjualan Hari Ini":p==="7"?"Penjualan 7 Hari":p==="30"?"Penjualan 30 Hari":"Penjualan 6 Bulan";
-    document.getElementById("svRev").textContent   = fmt(pd.rev);
-    document.getElementById("svTrx").textContent   = pd.trx.toLocaleString("id-ID");
-    document.getElementById("svAvg").textContent   = fmt(pd.avg);
-    document.getElementById("svItems").textContent = pd.items.toLocaleString("id-ID");
-    let vals=[], labs=[], title="";
-    if(p==="today"){ const t=pd.slice[0].rev; vals=HOURLY.map(v=>Math.round(v/96*t*0.16)); labs=["10","11","12","13","14","15","16","17","18","19","20","21"]; title="Penjualan per Jam"; }
-    else if(p==="182"){ const mo={}; pd.slice.forEach(x=>{ const k=x.d.getFullYear()+"-"+x.d.getMonth(); (mo[k]=mo[k]||{r:0,m:x.d.getMonth()}).r+=x.rev; });
-      const keys=Object.keys(mo); vals=keys.map(k=>mo[k].r); labs=keys.map(k=>MONTHS_ID[mo[k].m]); title="Penjualan per Bulan"; }
-    else { vals=pd.slice.map(x=>x.rev); labs=pd.slice.map((x,i)=> p==="7"?["Min","Sen","Sel","Rab","Kam","Jum","Sab"][x.d.getDay()] : (i%5===0?String(x.d.getDate()):"")); title = p==="7"?"Penjualan 7 Hari":"Penjualan 30 Hari"; }
-    const max=Math.max(...vals,1);
-    document.getElementById("bars").innerHTML = vals.map(v=>`<div class="b" style="height:${Math.max(4,Math.round(v/max*100))}%"></div>`).join("");
-    document.getElementById("barx").innerHTML = labs.map(l=>`<span>${l}</span>`).join("");
-    document.getElementById("chartTitle").textContent = title;
+  function buildSeries(){
+    if(gran==="hari"){
+      const day=new Date(RTODAY); day.setDate(day.getDate()-off);
+      const rec=dayRec(day);
+      const fullHrs=[]; for(let h=openHour; h<closeHour; h++) fullHrs.push(h);
+      const shape=fullHrs.map((h,i)=>HOURLY[i%HOURLY.length]);
+      const ssum=shape.reduce((a,b)=>a+b,0)||1;
+      const perHr=fullHrs.map((h,i)=>Math.round(shape[i]/ssum*rec.rev));
+      let show=fullHrs.length; // kemarin = full shift
+      if(off===0){ const nowH=new Date().getHours(); show = nowH<openHour ? 1 : Math.max(1, Math.min(fullHrs.length, nowH-openHour+1)); }
+      const vals=perHr.slice(0,show), labs=fullHrs.slice(0,show).map(hourLabel);
+      const rev=vals.reduce((a,b)=>a+b,0), frac=rec.rev?rev/rec.rev:1;
+      return { vals, labs, rev, trx:Math.round(rec.trx*frac), items:Math.round(rec.items*frac),
+        title:"Penjualan per Jam", slabel: off? "Penjualan Kemarin":"Penjualan Hari Ini" };
+    }
+    if(gran==="minggu"){
+      const mon=startOfWeekMon(RTODAY); mon.setDate(mon.getDate()-off*7);
+      const days=[]; for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(d.getDate()+i); if(off===0 && d.getTime()>RTODAY.getTime()) break; days.push(d); }
+      const recs=days.map(dayRec);
+      return aggr(recs.map(r=>r.rev), days.map(d=>DOW_ID[d.getDay()]), recs,
+        "Penjualan per Hari", off? "Penjualan Minggu Lalu":"Penjualan Minggu Ini");
+    }
+    if(gran==="bulan"){
+      const base=new Date(RTODAY.getFullYear(), RTODAY.getMonth()-off, 1);
+      const y=base.getFullYear(), m=base.getMonth(), dim=new Date(y,m+1,0).getDate();
+      const bounds=[[1,7],[8,14],[15,21],[22,28],[29,dim]].filter(b=>b[0]<=dim);
+      const vals=[], labs=[], recs=[];
+      bounds.forEach((b,idx)=>{ let rev=0,trx=0,items=0,any=false;
+        for(let dd=b[0]; dd<=b[1]; dd++){ const d=new Date(y,m,dd); if(off===0 && d.getTime()>RTODAY.getTime()) continue; any=true; const r=dayRec(d); rev+=r.rev; trx+=r.trx; items+=r.items; }
+        if(off!==0 || any){ vals.push(rev); labs.push("Mgg "+(idx+1)); recs.push({rev,trx,items}); }
+      });
+      return aggr(vals, labs, recs, "Penjualan per Minggu", off? "Penjualan Bulan Lalu":"Penjualan Bulan Ini");
+    }
+    // rentang
+    const s=rStart||RTODAY, e=rEnd||RTODAY;
+    if(rMode==="mingguan"){
+      const buckets={}, order=[];
+      for(let d=new Date(s); d.getTime()<=e.getTime(); d.setDate(d.getDate()+1)){ const wk=startOfWeekMon(d).getTime(); if(!buckets[wk]){ buckets[wk]={rev:0,trx:0,items:0,start:new Date(wk)}; order.push(wk);} const r=dayRec(d); buckets[wk].rev+=r.rev; buckets[wk].trx+=r.trx; buckets[wk].items+=r.items; }
+      const recs=order.map(k=>buckets[k]);
+      return aggr(recs.map(r=>r.rev), recs.map(r=>`${r.start.getDate()}/${r.start.getMonth()+1}`), recs, "Penjualan per Minggu", "Penjualan Rentang");
+    }
+    const days=[]; for(let d=new Date(s); d.getTime()<=e.getTime(); d.setDate(d.getDate()+1)) days.push(new Date(d));
+    const recs=days.map(dayRec), step=Math.max(1, Math.ceil(days.length/12));
+    return aggr(recs.map(r=>r.rev), days.map((d,i)=> i%step===0? String(d.getDate()):""), recs, "Penjualan Harian", "Penjualan Rentang");
+  }
+  // ── Free: today-only omset (open → now) + modal awal ──
+  const MODAL_AWAL = 500000;
+  function renderFree(){
+    const sg=gran, so=off; gran="hari"; off=0; const d=buildSeries(); gran=sg; off=so;
+    const nowH=new Date().getHours();
+    const upto = nowH<openHour ? openHour+1 : Math.min(closeHour, nowH+1);
+    document.getElementById("freeWindow").textContent = `Buka ${openHour}.00 · sampai jam ${upto}.00`;
+    document.getElementById("freeModal").textContent = fmt(MODAL_AWAL);
+    document.getElementById("freeOmset").textContent = fmt(d.rev);
+    document.getElementById("freeTotal").textContent = fmt(MODAL_AWAL + d.rev);
+  }
+  // ── tier → dashboard richness ──
+  function applyTierToReport(){
+    const tier=curTier();
+    const free=document.getElementById("reportFree"), body=document.getElementById("reportBody");
+    if(tier==="free"){ body.style.display="none"; free.style.display="block"; renderFree(); return true; }
+    free.style.display="none"; body.style.display="";
+    const prem = tier==="premium";
+    document.querySelectorAll("#view-laporan .prem-only").forEach(el=>{ el.style.display = prem?"":"none"; });
+    document.getElementById("lap2col").classList.toggle("solo", !prem);
+    return false;
+  }
+  function renderReport(){
+    if(applyTierToReport()) return; // Free handled with its own minimal view
+    const d=buildSeries();
+    document.getElementById("svLabel").textContent = d.slabel;
+    document.getElementById("svRev").textContent   = fmt(d.rev);
+    document.getElementById("svTrx").textContent   = d.trx.toLocaleString("id-ID");
+    document.getElementById("svAvg").textContent   = fmt(Math.round(d.rev/Math.max(1,d.trx)));
+    document.getElementById("svItems").textContent = d.items.toLocaleString("id-ID");
+    const max=Math.max(...d.vals,1);
+    document.getElementById("bars").innerHTML = d.vals.length ? d.vals.map(v=>`<div class="b" style="height:${Math.max(4,Math.round(v/max*100))}%"></div>`).join("") : `<div style="color:var(--faint);font-size:12px;padding:34px 10px;">Tidak ada data pada periode ini.</div>`;
+    document.getElementById("barx").innerHTML = d.labs.map(l=>`<span>${l}</span>`).join("");
+    document.getElementById("chartTitle").textContent = d.title;
     const w = MENU.map(m=>1+(/best/i.test(m.hint)?2.2:0)+(/signature/i.test(m.hint)?1.4:0)+(/nusantara/i.test(m.hint)?1.1:0));
     const tw = w.reduce((a,b)=>a+b,0);
-    const top = MENU.map((m,i)=>({m, sold:Math.round(pd.items*w[i]/tw)})).sort((a,b)=>b.sold-a.sold).slice(0,5);
+    const top = MENU.map((m,i)=>({m, sold:Math.round(d.items*w[i]/tw)})).sort((a,b)=>b.sold-a.sold).slice(0,5);
     const tmax = top[0].sold||1;
     document.getElementById("topMenu").innerHTML = top.map((t,i)=>`<div class="toprow"><span class="rank">${i+1}</span><div style="flex:1;min-width:0;"><div class="tn">${t.m.name}</div><div class="tbar" style="width:${Math.round(t.sold/tmax*100)}%"></div></div><span class="tq">${t.sold.toLocaleString("id-ID")} pcs</span></div>`).join("");
   }
-  document.getElementById("period").addEventListener("click", e=>{ const b=e.target.closest("button"); if(!b) return; [...b.parentElement.children].forEach(x=>x.classList.toggle("on",x===b)); renderReport(b.dataset.p); });
+
+  // ── retention gating ──
+  function updateLocks(){
+    const rank=tierRank[curTier()];
+    document.querySelectorAll("#period button").forEach(b=>{
+      const min=b.dataset.min||"free", locked=tierRank[min]>rank;
+      b.classList.toggle("locked", locked);
+      let bd=b.querySelector(".pbadge");
+      if(locked){ if(!bd){ bd=document.createElement("span"); bd.className="pbadge"; b.appendChild(bd);} bd.textContent = min==="premium"?"PREM":"STD"; }
+      else if(bd){ bd.remove(); }
+    });
+  }
+  function showLockNote(b){
+    const prem=b.dataset.min==="premium";
+    const el=document.getElementById("lockNote");
+    el.textContent = `🔒 “${b.textContent.replace(/STD|PREM/,"").trim()}” perlu paket ${prem?"Premium":"Standard"} (riwayat ${prem?"90":"30"} hari). Upgrade untuk membukanya.`;
+    el.style.display="block"; clearTimeout(showLockNote._t); showLockNote._t=setTimeout(()=>{el.style.display="none";}, 4000);
+  }
+  function fmtISO(d){ const x=new Date(d); return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0"); }
+  function setupRange(){
+    const cap=tierDaysCap[curTier()], minD=new Date(RTODAY); minD.setDate(minD.getDate()-cap);
+    const si=document.getElementById("rStart"), ei=document.getElementById("rEnd");
+    si.max=ei.max=fmtISO(RTODAY); si.min=ei.min=fmtISO(minD);
+    if(!si.value){ const def=new Date(RTODAY); def.setDate(def.getDate()-6); si.value=fmtISO(def); }
+    if(!ei.value) ei.value=fmtISO(RTODAY);
+    document.getElementById("rNote").textContent = `Maks. ${cap} hari (paket ${curTier()})`;
+  }
+  function applyRange(){
+    const cap=tierDaysCap[curTier()], minD=new Date(RTODAY); minD.setDate(minD.getDate()-cap);
+    let s=new Date(document.getElementById("rStart").value||fmtISO(RTODAY));
+    let e=new Date(document.getElementById("rEnd").value||fmtISO(RTODAY));
+    s.setHours(0,0,0,0); e.setHours(0,0,0,0);
+    if(s.getTime()>e.getTime()){ const t=s; s=e; e=t; }
+    let clamped=false;
+    if(s.getTime()<minD.getTime()){ s=new Date(minD); clamped=true; }
+    if(e.getTime()>RTODAY.getTime()) e=new Date(RTODAY);
+    rStart=s; rEnd=e;
+    document.getElementById("rStart").value=fmtISO(s); document.getElementById("rEnd").value=fmtISO(e);
+    document.getElementById("rNote").textContent = clamped ? `Dibatasi ${cap} hari (paket ${curTier()})` : `Maks. ${cap} hari (paket ${curTier()})`;
+    renderReport();
+  }
+
+  document.getElementById("period").addEventListener("click", e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    if(b.classList.contains("locked")){ showLockNote(b); return; }
+    [...document.querySelectorAll("#period button")].forEach(x=>x.classList.toggle("on", x===b));
+    gran=b.dataset.g; off=Number(b.dataset.o||0);
+    document.getElementById("rangebar").style.display = gran==="rentang"?"flex":"none";
+    document.getElementById("lockNote").style.display="none";
+    if(gran==="rentang"){ setupRange(); applyRange(); } else renderReport();
+  });
+  document.getElementById("rmode").addEventListener("click", e=>{ const b=e.target.closest("button"); if(!b) return; [...b.parentElement.children].forEach(x=>x.classList.toggle("on",x===b)); rMode=b.dataset.m; applyRange(); });
+  document.getElementById("rApply").addEventListener("click", applyRange);
+  document.getElementById("tierSeg").addEventListener("click", ()=>{
+    updateLocks();
+    const cur=document.querySelector("#period button.on");
+    if(cur && cur.classList.contains("locked")){
+      const first=document.querySelector('#period button[data-g="hari"]');
+      [...document.querySelectorAll("#period button")].forEach(x=>x.classList.toggle("on",x===first));
+      gran="hari"; off=0; document.getElementById("rangebar").style.display="none";
+    } else if(gran==="rentang"){ setupRange(); }
+    renderReport();
+  });
+  updateLocks();
 
   function renderPayment(){
     const { ids, sub, tax, total } = totals();
