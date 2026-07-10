@@ -1,15 +1,20 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { X, Camera, Image as ImageIcon } from "lucide-react";
 import { useStore, isAtLeast } from "../store";
 import { formatRp, formatIDRInput } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
+import { supabase } from "../lib/supabase";
+import { logEvent } from "../lib/auditlog";
 
-const INITIAL_PERGERAKAN = [
-  { time: "16:42", label: "18 trx tunai",            desc: "14:00–16:42 · otomatis dari penjualan", amount: +2680000, icon: "auto",   photo: false },
-  { time: "15:30", label: "Bayar parkir & retribusi", desc: "Aerith D. · operasional",              amount: -15000,   icon: "keluar", photo: true  },
-  { time: "14:48", label: "Beli es batu",             desc: "Aerith D. · supplier",                 amount: -100000,  icon: "keluar", photo: true  },
-  { time: "14:00", label: "Modal awal shift",         desc: "Dibuka oleh Anthony D. (owner)",       amount: +500000,  icon: "masuk",  photo: false },
+type KasIcon = "masuk" | "keluar" | "auto";
+interface KasMove { time: string; label: string; desc: string; amount: number; icon: KasIcon; photo: boolean }
+
+// Demo-only seed (real stores load from kas_entries / sales).
+const DEMO_MANUAL: KasMove[] = [
+  { time: "15:30", label: "Bayar parkir & retribusi", desc: "Aerith D. · keluar", amount: -15000,  icon: "keluar", photo: true },
+  { time: "14:48", label: "Beli es batu",             desc: "Aerith D. · keluar", amount: -100000, icon: "keluar", photo: true },
 ];
+const DEMO_MODAL = 500000, DEMO_AUTO = 2680000;
 
 function PhotoThumb({ size = "sm" }: { size?: "sm" | "md" }) {
   const dim = size === "md" ? "w-10 h-10" : "w-8 h-8";
@@ -27,12 +32,15 @@ function PhotoThumb({ size = "sm" }: { size?: "sm" | "md" }) {
 }
 
 export default function Kas() {
-  const { cashierInitials, cashierName, selectedShiftName, storeId, storeTier, setScreen, signOut } = useStore();
+  const { cashierInitials, cashierName, selectedShift, selectedShiftName, storeId, storeTier, isDemoMode, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
   const canKas = isAtLeast(effectiveTier, 'standard');
   const requiresPhoto = isAtLeast(effectiveTier, 'premium');
 
-  const [pergerakan, setPergerakan] = useState(INITIAL_PERGERAKAN);
+  const [manual, setManual] = useState<KasMove[]>(isDemoMode ? DEMO_MANUAL : []);
+  const [modalAwal, setModalAwal] = useState(isDemoMode ? DEMO_MODAL : 0);
+  const [autoTunai, setAutoTunai] = useState(isDemoMode ? DEMO_AUTO : 0);
+  const [bukaTime, setBukaTime] = useState(isDemoMode ? "14:00" : "");
   const [showMasuk, setShowMasuk] = useState(false);
   const [showKeluar, setShowKeluar] = useState(false);
   const [kasNominal, setKasNominal] = useState("");
@@ -41,13 +49,56 @@ export default function Kas() {
   const kasCamera = useRef<HTMLInputElement>(null);
   const kasGallery = useRef<HTMLInputElement>(null);
 
-  const kasKeluar = pergerakan.filter(p => p.amount < 0).reduce((s, p) => s + Math.abs(p.amount), 0);
-  const kasMasuk  = pergerakan.filter(p => p.amount > 0 && p.icon !== "auto").reduce((s, p) => s + p.amount, 0);
-  const saldo     = pergerakan.reduce((s, p) => s + p.amount, 0);
+  // Load today's real kas + modal awal + cash-in from sales (skips demo).
+  useEffect(() => {
+    if (!storeId || isDemoMode) return;
+    let cancelled = false;
+    (async () => {
+      const start = new Date(); start.setHours(0, 0, 0, 0);
+      const startISO = start.toISOString();
+      const { data: shiftRow } = await supabase.from("shifts")
+        .select("modal_awal, opened_at").eq("store_id", storeId).is("closed_at", null)
+        .order("opened_at", { ascending: false }).limit(1).maybeSingle();
+      const { data: salesRows } = await supabase.from("sales")
+        .select("total, payment_method, created_at").eq("store_id", storeId).gte("created_at", startISO);
+      const { data: kasRows } = await supabase.from("kas_entries")
+        .select("*").eq("store_id", storeId).gte("created_at", startISO)
+        .order("created_at", { ascending: false });
+      if (cancelled) return;
+      const sr = shiftRow as { modal_awal?: number; opened_at?: string } | null;
+      setModalAwal(sr?.modal_awal ?? 0);
+      setBukaTime(sr?.opened_at ? new Date(sr.opened_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "");
+      setAutoTunai((salesRows ?? [])
+        .filter(s => (s as { payment_method: string }).payment_method === "tunai")
+        .reduce((a, s) => a + ((s as { total: number }).total ?? 0), 0));
+      setManual((kasRows ?? []).map(k => {
+        const kk = k as { type: KasIcon; amount: number; label: string; cashier_name?: string; photo_url?: string; created_at: string };
+        return {
+          time: new Date(kk.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+          label: kk.label,
+          desc: [kk.cashier_name, kk.type].filter(Boolean).join(" · "),
+          amount: kk.type === "keluar" ? -kk.amount : kk.amount,
+          icon: kk.type, photo: !!kk.photo_url,
+        };
+      }));
+    })();
+    return () => { cancelled = true; };
+  }, [storeId, isDemoMode]);
 
-  const bukaTime = "14:00";
+  const kasKeluar  = manual.filter(p => p.amount < 0).reduce((s, p) => s + Math.abs(p.amount), 0);
+  const kasMasuk   = manual.filter(p => p.amount > 0).reduce((s, p) => s + p.amount, 0);
+  const totalMasuk = modalAwal + autoTunai + kasMasuk;
+  const saldo      = totalMasuk - kasKeluar;
+
+  // Display: manual entries first, then synthetic auto cash-in + modal awal rows.
+  const pergerakan: KasMove[] = [
+    ...manual,
+    ...(autoTunai > 0 ? [{ time: "", label: "Penjualan tunai", desc: "otomatis dari penjualan", amount: autoTunai, icon: "auto" as KasIcon, photo: false }] : []),
+    ...(modalAwal > 0 ? [{ time: "", label: "Modal awal shift", desc: "saat buka toko", amount: modalAwal, icon: "masuk" as KasIcon, photo: false }] : []),
+  ];
+
   const isModalOpen = showMasuk || showKeluar;
-  const modalType = showMasuk ? "masuk" : "keluar";
+  const modalType: "masuk" | "keluar" = showMasuk ? "masuk" : "keluar";
 
   function handleKasFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -69,16 +120,36 @@ export default function Kas() {
   function handleKasConfirm() {
     const amount = parseInt(kasNominal.replace(/\D/g, "") || "0");
     if (!amount) return;
+    const type = modalType;                 // capture before closeKasModal resets state
+    const photo = kasPhoto;
+    const ket = kasKet.trim();
+    const label = ket || (type === "masuk" ? "Kas Masuk" : "Kas Keluar");
     const timeStr = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-    setPergerakan(prev => [{
-      time: timeStr,
-      label: kasKet.trim() || (modalType === "masuk" ? "Kas Masuk" : "Kas Keluar"),
-      desc: `${cashierName} · ${modalType}`,
-      amount: modalType === "masuk" ? +amount : -amount,
-      icon: modalType,
-      photo: kasPhoto !== null,
+    // Optimistic UI
+    setManual(prev => [{
+      time: timeStr, label, desc: `${cashierName} · ${type}`,
+      amount: type === "masuk" ? +amount : -amount, icon: type, photo: photo !== null,
     }, ...prev]);
+    if (storeId && !isDemoMode) void persistKas({ amount, type, label, ket, photo });
     closeKasModal();
+  }
+
+  async function persistKas({ amount, type, label, ket, photo }:
+    { amount: number; type: "masuk" | "keluar"; label: string; ket: string; photo: string | null }) {
+    try {
+      let photo_url: string | null = null;
+      if (photo) {
+        const blob = await (await fetch(photo)).blob();
+        const path = `${storeId}/${Date.now()}.jpg`;
+        const { error } = await supabase.storage.from("kas-photos").upload(path, blob, { contentType: blob.type || "image/jpeg" });
+        if (!error) photo_url = supabase.storage.from("kas-photos").getPublicUrl(path).data.publicUrl;
+      }
+      await supabase.from("kas_entries").insert({
+        store_id: storeId, cashier_name: cashierName, shift: selectedShift,
+        type, amount, label, description: ket || null, photo_url,
+      });
+      void logEvent(`kas.${type}`, `${type === "masuk" ? "Kas masuk" : "Kas keluar"} ${formatRp(amount)} — ${label}`);
+    } catch { /* stays in optimistic UI; owner can re-add if it failed */ }
   }
 
   return (
@@ -94,7 +165,7 @@ export default function Kas() {
             <div className="min-w-0">
               <h1 className="font-serif text-[24px] lg:text-display-l font-medium text-navy leading-tight truncate">Uang Kas · {cashierName}</h1>
               <p style={{ fontSize: 10, letterSpacing: "0.12em", color: "#C9A55F" }} className="font-sans uppercase font-semibold mt-0.5">
-                {selectedShiftName} · DIBUKA {bukaTime}
+                {selectedShiftName}{bukaTime ? ` · DIBUKA ${bukaTime}` : ""}
               </p>
             </div>
             <div className="flex gap-0.5 bg-cream-bg border border-warm-border rounded-[10px] p-0.5 shrink-0 mt-0.5">
@@ -121,11 +192,11 @@ export default function Kas() {
               <p className="font-serif text-[38px] font-semibold text-cream-text leading-none" style={{ fontVariantNumeric: "tabular-nums" }}>
                 {formatRp(saldo)}
               </p>
-              <p className="text-[11px] text-white/40 mt-1.5">Modal awal {formatRp(500000)} + omzet tunai</p>
+              <p className="text-[11px] text-white/40 mt-1.5">Modal awal {formatRp(modalAwal)} + omzet tunai</p>
               <div className="flex gap-5 mt-4 pt-4 border-t border-white/10">
                 <div>
                   <p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-0.5">MASUK</p>
-                  <p className="text-[13px] font-medium text-white/70" style={{ fontVariantNumeric: "tabular-nums" }}>+ {formatRp(kasMasuk + 2680000)}</p>
+                  <p className="text-[13px] font-medium text-white/70" style={{ fontVariantNumeric: "tabular-nums" }}>+ {formatRp(totalMasuk)}</p>
                 </div>
                 <div>
                   <p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-0.5">KELUAR</p>

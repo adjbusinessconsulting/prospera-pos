@@ -305,7 +305,7 @@ export const tierLevel = (tier: string) => TIER_LEVELS[tier?.toLowerCase()] ?? 0
 export const isAtLeast = (tier: string, required: string) => tierLevel(tier) >= tierLevel(required);
 
 // Per-tier limits (Jul 6 2026 update). Kasir/karyawan accounts include the owner.
-const KASIR_LIMITS: Record<string, number> = { free: 3, standard: 10, premium: Infinity, business: Infinity, enterprise: Infinity };
+const KASIR_LIMITS: Record<string, number> = { free: 1, standard: 10, premium: Infinity, business: Infinity, enterprise: Infinity };
 export const kasirLimit = (tier: string) => KASIR_LIMITS[tier?.toLowerCase()] ?? 3;
 
 const SHIFT_SLOT_LIMITS: Record<string, number> = { free: 1, standard: 5, premium: Infinity, business: Infinity, enterprise: Infinity };

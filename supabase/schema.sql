@@ -178,12 +178,15 @@ $$;
 
 -- Returns how many days of history this user is allowed to read.
 -- Enforced at the database level — no client-side code can bypass it.
+-- History read window per tier. MUST match retention_cleanup.sql's
+-- retention_days() (the hard-delete job) or users will "see" rows the cron
+-- is about to delete. free 1 / standard 30 / premium 90.
 CREATE OR REPLACE FUNCTION history_days()
 RETURNS INTEGER LANGUAGE SQL STABLE SECURITY DEFINER AS $$
   SELECT CASE my_tier()
     WHEN 'free'     THEN 1
     WHEN 'standard' THEN 30
-    WHEN 'premium'  THEN 365
+    WHEN 'premium'  THEN 90
     ELSE 1
   END
 $$;

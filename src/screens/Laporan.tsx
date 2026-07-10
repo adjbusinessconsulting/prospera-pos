@@ -266,14 +266,14 @@ export default function Laporan() {
 
               {lockNote && <div className="text-[12px] rounded-[9px] px-3 py-2 mb-3" style={{ color: "#C25E3D", background: "rgba(194,94,61,0.08)", border: "1px solid rgba(194,94,61,0.3)" }}>{lockNote}</div>}
 
-              {/* Summary cards — Standard: 2, Premium: 4 */}
-              <div className={`grid gap-3 mb-5 ${isPremium ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2"}`}>
+              {/* Summary cards — Standard+ gets all four */}
+              <div className="grid gap-3 mb-5 grid-cols-2 lg:grid-cols-4">
                 {[
-                  { label: series.slabel, value: formatRp(series.rev), accent: true, show: true },
-                  { label: "TRANSAKSI", value: `${series.trx} trx`, accent: false, show: true },
-                  { label: "RATA-RATA", value: formatRp(Math.round(series.rev / Math.max(1, series.trx))), accent: false, show: isPremium },
-                  { label: "ITEM TERJUAL", value: `${series.items} pcs`, accent: false, show: isPremium },
-                ].filter(c => c.show).map(card => (
+                  { label: series.slabel, value: formatRp(series.rev), accent: true },
+                  { label: "TRANSAKSI", value: `${series.trx} trx`, accent: false },
+                  { label: "RATA-RATA", value: formatRp(Math.round(series.rev / Math.max(1, series.trx))), accent: false },
+                  { label: "ITEM TERJUAL", value: `${series.items} pcs`, accent: false },
+                ].map(card => (
                   <div key={card.label} className={`rounded-card px-5 py-4 ${card.accent ? "bg-navy" : "bg-white border border-warm-border"}`}>
                     <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className={`font-sans uppercase mb-1 ${card.accent ? "text-gold/70" : "text-text-mute"}`}>{card.label}</p>
                     <p className={`font-serif text-[20px] font-semibold leading-tight ${card.accent ? "text-cream-text" : "text-navy"}`} style={{ fontVariantNumeric: "tabular-nums" }}>{card.value}</p>
@@ -298,9 +298,9 @@ export default function Laporan() {
                 ) : <p className="text-[12px] text-text-mute py-8 text-center">Tidak ada data pada periode ini.</p>}
               </div>
 
-              {/* Premium: method breakdown + top products */}
-              {isPremium && (
-                <div className="flex flex-col lg:flex-row gap-4">
+              {/* Produk Terlaris (Standard+); Breakdown Metode (Premium only) */}
+              <div className="flex flex-col lg:flex-row gap-4">
+                {isPremium && (
                   <div className="flex-1 bg-white border border-warm-border rounded-card px-5 lg:px-6 py-5">
                     <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-4">BREAKDOWN METODE</p>
                     <div className="flex flex-col gap-3">
@@ -320,30 +320,30 @@ export default function Laporan() {
                       })}
                     </div>
                   </div>
-                  <div className="flex-1 bg-white border border-warm-border rounded-card px-5 lg:px-6 py-5">
-                    <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-4">PRODUK TERLARIS</p>
-                    <div className="flex flex-col gap-3">
-                      {topProducts.map((p, i) => (
-                        <div key={p.name} className="flex items-center gap-3">
-                          <span className="text-[12px] font-semibold text-text-mute w-4 shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{i + 1}</span>
-                          <span className="text-[18px] leading-none shrink-0">{p.emoji}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[12.5px] font-medium text-navy truncate">{p.name}</div>
-                            <div className="text-[11px] text-text-mute">{p.sold} terjual</div>
-                          </div>
-                          <span className="font-serif text-[13px] font-semibold text-navy shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.sold * p.price)}</span>
+                )}
+                <div className="flex-1 bg-white border border-warm-border rounded-card px-5 lg:px-6 py-5">
+                  <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-4">PRODUK TERLARIS</p>
+                  <div className="flex flex-col gap-3">
+                    {topProducts.map((p, i) => (
+                      <div key={p.name} className="flex items-center gap-3">
+                        <span className="text-[12px] font-semibold text-text-mute w-4 shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{i + 1}</span>
+                        <span className="text-[18px] leading-none shrink-0">{p.emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[12.5px] font-medium text-navy truncate">{p.name}</div>
+                          <div className="text-[11px] text-text-mute">{p.sold} terjual</div>
                         </div>
-                      ))}
-                    </div>
+                        <span className="font-serif text-[13px] font-semibold text-navy shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.sold * p.price)}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Standard upgrade hint */}
+              {/* Premium upsell (shown on Standard) */}
               {!isPremium && (
-                <div className="bg-white border border-dashed border-warm-border rounded-card px-5 py-4 flex items-center gap-3">
+                <div className="mt-4 bg-white border border-dashed border-warm-border rounded-card px-5 py-4 flex items-center gap-3">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4C9B8" strokeWidth="1.5" className="shrink-0"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
-                  <p className="text-[12px] text-text-mute">Rata-rata/trx, item terjual, <b className="text-navy">produk terlaris</b>, breakdown metode &amp; <b className="text-navy">bulan lalu</b> tersedia di <b className="text-navy">Premium</b>.</p>
+                  <p className="text-[12px] text-text-mute"><b className="text-navy">Breakdown metode pembayaran</b>, per-kasir/kategori &amp; <b className="text-navy">Bulan lalu</b> (90 hari) tersedia di <b className="text-navy">Premium</b>.</p>
                 </div>
               )}
             </>
