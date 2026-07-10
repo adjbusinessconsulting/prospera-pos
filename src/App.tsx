@@ -17,6 +17,7 @@ import Receipt from "./screens/Receipt";
 import Riwayat from "./screens/Riwayat";
 import Produk from "./screens/Produk";
 import Kas from "./screens/Kas";
+import Hutang from "./screens/Hutang";
 import Laporan from "./screens/Laporan";
 import PindahShift from "./screens/PindahShift";
 import TutupToko from "./screens/TutupToko";
@@ -132,6 +133,7 @@ export default function App() {
           {screen === "riwayat"      && <Riwayat />}
           {screen === "produk"       && <Produk />}
           {screen === "kas"          && <Kas />}
+          {screen === "hutang"       && <Hutang />}
           {screen === "laporan"      && <Laporan />}
           {screen === "pindah-shift" && <PindahShift />}
           {screen === "tutup-toko"   && <TutupToko />}
@@ -158,6 +160,7 @@ export default function App() {
           {screen === "riwayat"      && <Riwayat />}
           {screen === "produk"       && <Produk />}
           {screen === "kas"          && <Kas />}
+          {screen === "hutang"       && <Hutang />}
           {screen === "laporan"      && <Laporan />}
           {screen === "pindah-shift" && <PindahShift />}
           {screen === "tutup-toko"   && <TutupToko />}
