@@ -6,6 +6,7 @@ import type { Screen } from "../types";
 import FeedbackDrawer from "./FeedbackDrawer";
 import UpgradeModal from "./UpgradeModal";
 import { ReceiptSettings } from "./ReceiptSettings";
+import { pendingAuditCount } from "../lib/auditlog";
 
 const NAV = [
   { id: "sales"   as Screen, label: "Jual",    Icon: ShoppingCart },
@@ -28,7 +29,8 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
   const storeTier = useStore(s => (s.storeId ? s.storeTier : "free"));
   const isOnline = useStore(s => s.isOnline);
   const pendingSyncCount = useStore(s => s.pendingSyncCount);
-  const syncColor = !isOnline ? "#C25E3D" : pendingSyncCount > 0 ? "#C9A55F" : "#5C9E7E";
+  const auditPending = pendingAuditCount();
+  const syncColor = !isOnline ? "#C25E3D" : (pendingSyncCount + auditPending) > 0 ? "#C9A55F" : "#5C9E7E";
   const syncLabel = !isOnline ? "Offline" : pendingSyncCount > 0 ? `${pendingSyncCount} belum sync` : "";
 
   return (
@@ -66,7 +68,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
         {/* Right: sync · feedback · cashier · demo back · logout */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           {/* Sync status */}
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }} title={isOnline ? (pendingSyncCount > 0 ? `${pendingSyncCount} transaksi menunggu sinkron` : "Tersinkron") : "Offline — transaksi disimpan & disinkron saat online"}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }} title={!isOnline ? "Offline — transaksi disimpan & disinkron saat online" : (pendingSyncCount + auditPending) > 0 ? `${pendingSyncCount} transaksi${auditPending ? ` · ${auditPending} log audit` : ""} menunggu sinkron` : "Tersinkron"}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: syncColor, boxShadow: `0 0 0 3px ${syncColor}2E`, display: "inline-block", flexShrink: 0 }} />
             {syncLabel && <span style={{ fontSize: 9, fontWeight: 600, color: syncColor, letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{syncLabel}</span>}
           </div>

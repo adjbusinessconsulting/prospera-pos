@@ -94,6 +94,8 @@ export async function logEvent(type: string, detail: string) {
 
 interface ServerLog { id: string; store_id: string; type: string; meta: Record<string, unknown>; created_at: string }
 function readServer(): ServerLog[] { try { return JSON.parse(localStorage.getItem(SKEY) || "[]"); } catch { return []; } }
+// Premium: how many audit entries are still waiting to mirror to Backoffice.
+export function pendingAuditCount(): number { try { return readServer().length; } catch { return 0; } }
 function writeServer(l: ServerLog[]) { localStorage.setItem(SKEY, JSON.stringify(l)); }
 
 let sflushing = false;
