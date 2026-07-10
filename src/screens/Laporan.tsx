@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useStore, isAtLeast, tierLevel } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
+import { supabase } from "../lib/supabase";
 
-// ── seeded ~6-month sales history (mock/demo; real-data wiring is a follow-up) ──
+// ── seeded ~6-month sales history (used for the DEMO only) ──
 interface DayRec { d: Date; rev: number; trx: number; items: number }
 function seedHistory(): { SALES6M: DayRec[]; RTODAY: Date } {
   const arr: DayRec[] = [];
@@ -57,29 +58,79 @@ const hourLabel = (h: number) => `${((h % 24) + 24) % 24}–${(((h + 1) % 24) + 
 
 interface Series { vals: number[]; labs: string[]; rev: number; trx: number; items: number; title: string; slabel: string }
 
+interface RealItem { ts: number; name: string; qty: number; subtotal: number }
+interface RealData { byDay: Map<number, DayRec>; items: RealItem[]; modalAwal: number }
+
+// The [start,end] day-timestamp range covered by the current period (for filtering real items).
+function periodRange(gran: string, off: number, rStart: string, rEnd: string, TODAY: Date): [number, number] {
+  const dts = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x.getTime(); };
+  if (gran === "hari") { const d = new Date(TODAY); d.setDate(d.getDate() - off); return [dts(d), dts(d)]; }
+  if (gran === "minggu") {
+    const mon = startOfWeekMon(TODAY); mon.setDate(mon.getDate() - off * 7);
+    const end = new Date(mon); end.setDate(end.getDate() + 6);
+    return [dts(mon), off === 0 ? Math.min(dts(TODAY), dts(end)) : dts(end)];
+  }
+  if (gran === "bulan") {
+    const base = new Date(TODAY.getFullYear(), TODAY.getMonth() - off, 1);
+    const last = new Date(base.getFullYear(), base.getMonth() + 1, 0);
+    return [dts(base), off === 0 ? Math.min(dts(TODAY), dts(last)) : dts(last)];
+  }
+  return [dts(new Date(rStart)), dts(new Date(rEnd))];
+}
+
 export default function Laporan() {
-  const { cashierInitials, products, storeId, storeTier, setScreen, signOut, isOnline, pendingSyncCount, lastSyncedAt, dbShifts, selectedShift } = useStore();
+  const { cashierInitials, products, storeId, storeTier, isDemoMode, setScreen, signOut, isOnline, pendingSyncCount, lastSyncedAt, dbShifts, selectedShift } = useStore();
   const effectiveTier = storeId ? storeTier : "free";
   const isStd = isAtLeast(effectiveTier, "standard");
   const isPremium = isAtLeast(effectiveTier, "premium");
 
   const { SALES6M, RTODAY } = useMemo(seedHistory, []);
   const [openHour, closeHour] = useMemo(() => shiftHours(dbShifts, selectedShift), [dbShifts, selectedShift]);
+  const cap = tierDaysCap[effectiveTier] ?? 1;
+
+  // Real store: pull actual sales (+ items) over the retention window + open-shift modal.
+  const [real, setReal] = useState<RealData | null>(null);
+  useEffect(() => {
+    if (!storeId || isDemoMode) { setReal(null); return; }
+    let cancelled = false;
+    (async () => {
+      const from = new Date(RTODAY); from.setDate(from.getDate() - cap);
+      const { data: sales } = await supabase.from("sales")
+        .select("created_at,total,payment_method,sale_items(product_name,qty,subtotal)")
+        .eq("store_id", storeId).gte("created_at", from.toISOString());
+      const { data: shiftRow } = await supabase.from("shifts")
+        .select("modal_awal").eq("store_id", storeId).is("closed_at", null)
+        .order("opened_at", { ascending: false }).limit(1).maybeSingle();
+      if (cancelled) return;
+      const byDay = new Map<number, DayRec>();
+      const items: RealItem[] = [];
+      (sales ?? []).forEach(row => {
+        const s = row as { created_at: string; total: number; sale_items?: { product_name: string; qty: number; subtotal: number }[] };
+        const d = new Date(s.created_at); d.setHours(0, 0, 0, 0); const ts = d.getTime();
+        const cur = byDay.get(ts) ?? { d, rev: 0, trx: 0, items: 0 };
+        cur.rev += s.total ?? 0; cur.trx += 1;
+        (s.sale_items ?? []).forEach(it => { cur.items += it.qty ?? 0; items.push({ ts, name: it.product_name, qty: it.qty ?? 0, subtotal: it.subtotal ?? 0 }); });
+        byDay.set(ts, cur);
+      });
+      setReal({ byDay, items, modalAwal: (shiftRow as { modal_awal?: number } | null)?.modal_awal ?? 0 });
+    })();
+    return () => { cancelled = true; };
+  }, [storeId, isDemoMode, cap, RTODAY]);
+
+  const modalAwal = real ? real.modalAwal : MODAL_AWAL;
 
   const [gran, setGran] = useState<string>("hari");
   const [off, setOff] = useState(0);
   const [rMode, setRMode] = useState<"harian" | "mingguan">("harian");
-  const cap = tierDaysCap[effectiveTier] ?? 1;
   const defStart = new Date(RTODAY); defStart.setDate(defStart.getDate() - 6);
   const [rStart, setRStart] = useState(isoOf(defStart));
   const [rEnd, setREnd] = useState(isoOf(RTODAY));
   const [lockNote, setLockNote] = useState("");
 
   const dayRec = useMemo(() => {
-    const map = new Map<number, DayRec>();
-    SALES6M.forEach(r => map.set(r.d.getTime(), r));
+    const map = real ? real.byDay : new Map<number, DayRec>(SALES6M.map(r => [r.d.getTime(), r]));
     return (d: Date) => { const t = new Date(d); t.setHours(0, 0, 0, 0); return map.get(t.getTime()) ?? { d: t, rev: 0, trx: 0, items: 0 }; };
-  }, [SALES6M]);
+  }, [real, SALES6M]);
 
   const series: Series = useMemo(() => {
     const agg = (vals: number[], labs: string[], recs: { rev: number; trx: number; items: number }[], title: string, slabel: string): Series => ({
@@ -146,12 +197,27 @@ export default function Laporan() {
   }, [dayRec, RTODAY, openHour, closeHour]);
 
   const topProducts = useMemo(() => {
+    if (real) {
+      // Aggregate actual sale_items within the selected period's date range.
+      const [a, b] = periodRange(gran, off, rStart, rEnd, RTODAY);
+      const agg = new Map<string, { qty: number; subtotal: number }>();
+      real.items.forEach(it => {
+        if (it.ts < a || it.ts > b) return;
+        const c = agg.get(it.name) ?? { qty: 0, subtotal: 0 };
+        c.qty += it.qty; c.subtotal += it.subtotal; agg.set(it.name, c);
+      });
+      const emojiFor = (name: string) => products.find(p => p.name === name)?.emoji ?? "📦";
+      return [...agg.entries()]
+        .map(([name, v]) => ({ name, emoji: emojiFor(name), sold: v.qty, price: v.qty ? Math.round(v.subtotal / v.qty) : 0 }))
+        .sort((x, y) => y.sold - x.sold).slice(0, 5);
+    }
+    // Demo: weight-based from store products.
     const w = products.map(p => (p.stockTerjual ?? 0) + 0.4);
     const tw = w.reduce((a, b) => a + b, 0) || 1;
     return products.map((p, i) => ({ name: p.name, emoji: p.emoji, price: p.price, weight: w[i] / tw }))
       .sort((a, b) => b.weight - a.weight).slice(0, 5)
-      .map(p => ({ ...p, sold: Math.max(1, Math.round(series.items * p.weight)) }));
-  }, [products, series.items]);
+      .map(p => ({ name: p.name, emoji: p.emoji, price: p.price, sold: Math.max(1, Math.round(series.items * p.weight)) }));
+  }, [real, products, series.items, gran, off, rStart, rEnd, RTODAY]);
 
   function pick(chip: typeof CHIPS[number]) {
     const locked = tierLevel(chip.min) > tierLevel(effectiveTier);
@@ -208,14 +274,14 @@ export default function Laporan() {
               </div>
               <div className="flex flex-col">
                 <div className="flex justify-between items-center py-[11px] border-b border-cream-deep text-[13.5px] text-text-mute">
-                  <span>Modal Awal</span><b className="text-navy text-[15px]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(MODAL_AWAL)}</b>
+                  <span>Modal Awal</span><b className="text-navy text-[15px]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(modalAwal)}</b>
                 </div>
                 <div className="flex justify-between items-center py-[11px] border-b border-cream-deep text-[13.5px] text-text-mute">
                   <span>Omset (buka → sekarang)</span><b className="text-navy text-[15px]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(freeToday.omset)}</b>
                 </div>
                 <div className="flex justify-between items-center pt-[14px] text-[13.5px]">
                   <span className="text-navy font-semibold">Perkiraan di Laci</span>
-                  <b className="text-gold text-[20px] font-extrabold" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(MODAL_AWAL + freeToday.omset)}</b>
+                  <b className="text-gold text-[20px] font-extrabold" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(modalAwal + freeToday.omset)}</b>
                 </div>
               </div>
               <p className="text-[11.5px] text-text-mute mt-3.5 leading-relaxed bg-cream-bg rounded-[10px] px-3 py-2.5">
