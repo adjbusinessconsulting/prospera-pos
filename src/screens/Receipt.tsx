@@ -3,6 +3,8 @@ import { formatRp } from "../data";
 import { Printer, Check, ChevronLeft } from "lucide-react";
 import { AppSidebar } from "../components/AppSidebar";
 import { recordSale } from "../lib/sync";
+import { supabase } from "../lib/supabase";
+import { logEvent } from "../lib/auditlog";
 
 function SterithWatermark({ tier }: { tier: string }) {
   // Standard+ gets custom receipt branding (own logo + "Powered by …"); Free keeps plain Sterith branding.
@@ -22,7 +24,7 @@ function SterithWatermark({ tier }: { tier: string }) {
 }
 
 export default function Receipt() {
-  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, selectedShiftName, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, inventoryEnabled, receiptLogo, products, updateProduct, restart, setScreen, signOut } = useStore();
+  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, selectedShiftName, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, inventoryEnabled, receiptLogo, products, hutangCustomer, updateProduct, setHutangCustomer, restart, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
   const inventoryOn = isAtLeast(effectiveTier, 'premium') && inventoryEnabled;
   const canWhatsApp = isAtLeast(effectiveTier, 'standard');
@@ -72,7 +74,28 @@ export default function Receipt() {
         updateProduct(i.product.id, { stock: (p.stock ?? 0) - i.qty, stockTerjual: (p.stockTerjual ?? 0) + i.qty, stockDate: today });
       });
     }
+    // Hutang: record the debt in the ledger (independent of the sale row so it
+    // survives retention). Guarded — must never break finishing the sale.
+    if (storeId && !isDemoMode && paymentMethod === "hutang" && hutangCustomer) {
+      void recordHutang(hutangCustomer, total, trxId);
+    }
+    setHutangCustomer(null);
     restart();
+  }
+
+  async function recordHutang(cust: { name: string; phone: string }, amount: number, saleTrx: string) {
+    try {
+      const { data: cRow } = await supabase.from("customers")
+        .insert({ store_id: storeId, name: cust.name, phone: cust.phone || null })
+        .select("id").single();
+      const customer_id = (cRow as { id?: string } | null)?.id ?? null;
+      await supabase.from("hutang").insert({
+        store_id: storeId, sale_id: null, customer_id,
+        customer_name: cust.name, phone: cust.phone || null,
+        amount, paid_amount: 0, status: "open", cashier_name: cashierName,
+      });
+      void logEvent("hutang.add", `Hutang baru ${cust.name} ${formatRp(amount)} (${saleTrx})`);
+    } catch { /* non-fatal — sale already recorded */ }
   }
 
   const displayName = storeName || "Toko Sembako Maju";

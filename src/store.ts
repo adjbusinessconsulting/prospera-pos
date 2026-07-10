@@ -16,6 +16,7 @@ interface POSState {
   search: string;
   paymentMethod: string;
   cashReceived: number;
+  hutangCustomer: { name: string; phone: string } | null;
   trxCounter: number;
 
   storeId: string;
@@ -62,6 +63,7 @@ interface POSState {
   setSearch: (s: string) => void;
   setPaymentMethod: (m: string) => void;
   setCashReceived: (n: number) => void;
+  setHutangCustomer: (c: { name: string; phone: string } | null) => void;
   addCash: (n: number) => void;
   restart: () => void;
   signOut: () => void;
@@ -142,6 +144,7 @@ export const useStore = create<POSState>((set) => ({
   search: '',
   paymentMethod: 'tunai',
   cashReceived: 200000,
+  hutangCustomer: null,
   trxCounter: 42,
 
   storeId: '',
@@ -230,6 +233,7 @@ export const useStore = create<POSState>((set) => ({
   setSearch: (search) => set({ search }),
   setPaymentMethod: (paymentMethod) => set({ paymentMethod }),
   setCashReceived: (cashReceived) => set({ cashReceived }),
+  setHutangCustomer: (hutangCustomer) => set({ hutangCustomer }),
   addCash: (n) => set(s => ({ cashReceived: s.cashReceived + n })),
 
   restart: () => set(s => ({
