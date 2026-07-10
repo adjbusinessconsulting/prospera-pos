@@ -1,6 +1,17 @@
 -- ============================================================
--- STERITH POS · SUPABASE SCHEMA
--- Paste this into: Supabase Dashboard → SQL Editor → Run
+-- ⚠️  STALE / REFERENCE ONLY — DO NOT RUN AGAINST THE LIVE DB
+-- ------------------------------------------------------------
+-- This file describes an EARLIER design (tenants + my_tier() +
+-- transactions/transaction_items/kas_entries) that was NEVER
+-- deployed. The live database instead uses:
+--   • stores.owner_id = auth.uid()  for RLS (see activity_logs_rls.sql)
+--   • sales / sale_items            (not transactions/*)
+--   • kas_entries                   (see kas_entries.sql — the real one)
+--   • retention                     (see retention_cleanup.sql — prem 90)
+-- Treat the individual migration files as the source of truth.
+-- Running anything here (e.g. history_days/my_tier) will error.
+-- ============================================================
+-- STERITH POS · SUPABASE SCHEMA (historical design doc)
 -- ============================================================
 
 
