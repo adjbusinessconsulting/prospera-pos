@@ -1,228 +1,355 @@
-import { useState } from "react";
-import { useStore, isAtLeast } from "../store";
+import { useMemo, useState } from "react";
+import { useStore, isAtLeast, tierLevel } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 
-const PERIOD_DATA = [
-  {
-    label: "TOTAL HARI INI",
-    total: 629000, trx: 8, avg: 78625, items: 25,
-    methods: [
-      { method: "Tunai",     total: 436500, pct: 69, color: "#5C9E7E" },
-      { method: "Transfer",  total: 75000,  pct: 12, color: "#C9A55F" },
-      { method: "QRIS",      total: 49000,  pct: 8,  color: "#0B1129" },
-      { method: "Debit",     total: 43000,  pct: 7,  color: "#7A776F" },
-      { method: "E-Wallet",  total: 25500,  pct: 4,  color: "#C25E3D" },
-    ],
-    produk: [
-      { emoji: "🌾", name: "Beras Pandan 5kg",  qty: 3,  total: 225000 },
-      { emoji: "🍜", name: "Indomie Goreng",     qty: 12, total: 42000  },
-      { emoji: "🥚", name: "Telur Ayam",         qty: 2,  total: 56000  },
-      { emoji: "💧", name: "Aqua 600ml",         qty: 5,  total: 20000  },
-      { emoji: "🫙", name: "Bimoli 2L",          qty: 1,  total: 38000  },
-    ],
-  },
-  {
-    label: "TOTAL KEMARIN",
-    total: 404500, trx: 5, avg: 80900, items: 16,
-    methods: [
-      { method: "Tunai",  total: 283500, pct: 70, color: "#5C9E7E" },
-      { method: "QRIS",   total: 92000,  pct: 23, color: "#0B1129" },
-      { method: "Debit",  total: 29000,  pct: 7,  color: "#7A776F" },
-    ],
-    produk: [
-      { emoji: "🍜", name: "Indomie Goreng",    qty: 18, total: 63000  },
-      { emoji: "🌾", name: "Beras Pandan 5kg",  qty: 2,  total: 150000 },
-      { emoji: "💧", name: "Aqua 600ml",        qty: 8,  total: 32000  },
-      { emoji: "🥚", name: "Telur Ayam",        qty: 3,  total: 84000  },
-      { emoji: "🧴", name: "Sunlight 750ml",    qty: 2,  total: 24000  },
-    ],
-  },
-  {
-    label: "TOTAL 7 HARI",
-    total: 1753000, trx: 18, avg: 97389, items: 60,
-    methods: [
-      { method: "Tunai",    total: 1275500, pct: 73, color: "#5C9E7E" },
-      { method: "QRIS",     total: 208500,  pct: 12, color: "#0B1129" },
-      { method: "Debit",    total: 147000,  pct: 8,  color: "#7A776F" },
-      { method: "Transfer", total: 122000,  pct: 7,  color: "#C9A55F" },
-    ],
-    produk: [
-      { emoji: "🍜", name: "Indomie Goreng",    qty: 54, total: 189000 },
-      { emoji: "🌾", name: "Beras Pandan 5kg",  qty: 8,  total: 600000 },
-      { emoji: "💧", name: "Aqua 600ml",        qty: 30, total: 120000 },
-      { emoji: "🥚", name: "Telur Ayam",        qty: 9,  total: 252000 },
-      { emoji: "🫙", name: "Bimoli 2L",         qty: 5,  total: 190000 },
-    ],
-  },
-  {
-    label: "TOTAL 30 HARI",
-    total: 2422500, trx: 23, avg: 105326, items: 80,
-    methods: [
-      { method: "Tunai",    total: 1795000, pct: 74, color: "#5C9E7E" },
-      { method: "QRIS",     total: 267500,  pct: 11, color: "#0B1129" },
-      { method: "Debit",    total: 238000,  pct: 10, color: "#7A776F" },
-      { method: "Transfer", total: 122000,  pct: 5,  color: "#C9A55F" },
-    ],
-    produk: [
-      { emoji: "🍜", name: "Indomie Goreng",    qty: 86, total: 301000 },
-      { emoji: "🌾", name: "Beras Pandan 5kg",  qty: 14, total: 1050000 },
-      { emoji: "💧", name: "Aqua 600ml",        qty: 55, total: 220000 },
-      { emoji: "🥚", name: "Telur Ayam",        qty: 18, total: 504000 },
-      { emoji: "🧴", name: "Sunlight 750ml",    qty: 11, total: 132000 },
-    ],
-  },
+// ── seeded ~6-month sales history (mock/demo; real-data wiring is a follow-up) ──
+interface DayRec { d: Date; rev: number; trx: number; items: number }
+function seedHistory(): { SALES6M: DayRec[]; RTODAY: Date } {
+  const arr: DayRec[] = [];
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  for (let i = 181; i >= 0; i--) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const dow = d.getDay();
+    const weekend = dow === 6 || dow === 0 ? 1.22 : dow === 5 ? 1.12 : 1;
+    const trend = 1 + (181 - i) / 181 * 0.35;
+    const noise = 0.85 + Math.random() * 0.3;
+    const rev = Math.round(1_850_000 * weekend * trend * noise / 1000) * 1000;
+    const trx = Math.max(1, Math.round(rev / 55_000));
+    arr.push({ d, rev, trx, items: Math.round(trx * 3.1) });
+  }
+  return { SALES6M: arr, RTODAY: today };
+}
+
+const HOURLY = [22, 34, 48, 70, 92, 100, 84, 66, 58, 72, 90, 78, 60, 46, 36, 28];
+const DOW_ID = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+const MODAL_AWAL = 500_000;
+const METHOD_SPLIT = [
+  { method: "Tunai", pct: 0.68, color: "#5C9E7E" },
+  { method: "QRIS", pct: 0.14, color: "#0B1129" },
+  { method: "Transfer", pct: 0.09, color: "#C9A55F" },
+  { method: "Debit", pct: 0.06, color: "#7A776F" },
+  { method: "E-Wallet", pct: 0.03, color: "#C25E3D" },
 ];
 
-const FILTER_LABELS = [
-  { label: "Hari ini", tier: null as string | null },
-  { label: "Kemarin",  tier: null },
-  { label: "7 hari",   tier: "STD" },
-  { label: "30 hari",  tier: "STD" },
-];
+const CHIPS = [
+  { g: "hari", o: 0, label: "Hari ini", min: "free" },
+  { g: "hari", o: 1, label: "Kemarin", min: "free" },
+  { g: "minggu", o: 0, label: "Minggu ini", min: "standard" },
+  { g: "minggu", o: 1, label: "Minggu lalu", min: "standard" },
+  { g: "bulan", o: 0, label: "Bulan ini", min: "standard" },
+  { g: "bulan", o: 1, label: "Bulan lalu", min: "premium" },
+  { g: "rentang", o: 0, label: "Rentang", min: "standard" },
+] as const;
+
+const tierDaysCap: Record<string, number> = { free: 1, standard: 30, premium: 90, business: 1095, enterprise: 1825 };
+
+function shiftHours(dbShifts: { start_time?: string; end_time?: string }[], n: number): [number, number] {
+  const s = dbShifts[n - 1];
+  let open = 8, close = 21;
+  if (s?.start_time) open = parseInt(s.start_time.slice(0, 2), 10);
+  if (s?.end_time) { let c = parseInt(s.end_time.slice(0, 2), 10); if (c <= open) c += 24; close = c; }
+  return [open, close];
+}
+const isoOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const startOfWeekMon = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); const g = (x.getDay() + 6) % 7; x.setDate(x.getDate() - g); return x; };
+const hourLabel = (h: number) => `${((h % 24) + 24) % 24}–${(((h + 1) % 24) + 24) % 24}`;
+
+interface Series { vals: number[]; labs: string[]; rev: number; trx: number; items: number; title: string; slabel: string }
 
 export default function Laporan() {
-  const { cashierInitials, storeId, storeTier, setScreen, signOut, isOnline, pendingSyncCount, lastSyncedAt } = useStore();
-  const effectiveTier = storeId ? storeTier : 'free';
-  const canFullBreakdown = isAtLeast(effectiveTier, 'standard');
-  const [activeFilter, setActiveFilter] = useState(0);
+  const { cashierInitials, products, storeId, storeTier, setScreen, signOut, isOnline, pendingSyncCount, lastSyncedAt, dbShifts, selectedShift } = useStore();
+  const effectiveTier = storeId ? storeTier : "free";
+  const isStd = isAtLeast(effectiveTier, "standard");
+  const isPremium = isAtLeast(effectiveTier, "premium");
 
-  const d = PERIOD_DATA[activeFilter];
+  const { SALES6M, RTODAY } = useMemo(seedHistory, []);
+  const [openHour, closeHour] = useMemo(() => shiftHours(dbShifts, selectedShift), [dbShifts, selectedShift]);
+
+  const [gran, setGran] = useState<string>("hari");
+  const [off, setOff] = useState(0);
+  const [rMode, setRMode] = useState<"harian" | "mingguan">("harian");
+  const cap = tierDaysCap[effectiveTier] ?? 1;
+  const defStart = new Date(RTODAY); defStart.setDate(defStart.getDate() - 6);
+  const [rStart, setRStart] = useState(isoOf(defStart));
+  const [rEnd, setREnd] = useState(isoOf(RTODAY));
+  const [lockNote, setLockNote] = useState("");
+
+  const dayRec = useMemo(() => {
+    const map = new Map<number, DayRec>();
+    SALES6M.forEach(r => map.set(r.d.getTime(), r));
+    return (d: Date) => { const t = new Date(d); t.setHours(0, 0, 0, 0); return map.get(t.getTime()) ?? { d: t, rev: 0, trx: 0, items: 0 }; };
+  }, [SALES6M]);
+
+  const series: Series = useMemo(() => {
+    const agg = (vals: number[], labs: string[], recs: { rev: number; trx: number; items: number }[], title: string, slabel: string): Series => ({
+      vals, labs, title, slabel,
+      rev: recs.reduce((a, r) => a + r.rev, 0), trx: recs.reduce((a, r) => a + r.trx, 0), items: recs.reduce((a, r) => a + r.items, 0),
+    });
+    if (gran === "hari") {
+      const day = new Date(RTODAY); day.setDate(day.getDate() - off);
+      const rec = dayRec(day);
+      const hrs: number[] = []; for (let h = openHour; h < closeHour; h++) hrs.push(h);
+      const shape = hrs.map((_, i) => HOURLY[i % HOURLY.length]);
+      const ssum = shape.reduce((a, b) => a + b, 0) || 1;
+      const perHr = hrs.map((_, i) => Math.round(shape[i] / ssum * rec.rev));
+      let show = hrs.length;
+      if (off === 0) { const nowH = new Date().getHours(); show = nowH < openHour ? 1 : Math.max(1, Math.min(hrs.length, nowH - openHour + 1)); }
+      const vals = perHr.slice(0, show), labs = hrs.slice(0, show).map(hourLabel);
+      const rev = vals.reduce((a, b) => a + b, 0), frac = rec.rev ? rev / rec.rev : 1;
+      return { vals, labs, rev, trx: Math.round(rec.trx * frac), items: Math.round(rec.items * frac), title: "Penjualan per jam", slabel: off ? "Total kemarin" : "Total hari ini" };
+    }
+    if (gran === "minggu") {
+      const mon = startOfWeekMon(RTODAY); mon.setDate(mon.getDate() - off * 7);
+      const days: Date[] = []; for (let i = 0; i < 7; i++) { const d = new Date(mon); d.setDate(d.getDate() + i); if (off === 0 && d.getTime() > RTODAY.getTime()) break; days.push(d); }
+      const recs = days.map(dayRec);
+      return agg(recs.map(r => r.rev), days.map(d => DOW_ID[d.getDay()]), recs, "Penjualan per hari", off ? "Total minggu lalu" : "Total minggu ini");
+    }
+    if (gran === "bulan") {
+      const base = new Date(RTODAY.getFullYear(), RTODAY.getMonth() - off, 1);
+      const y = base.getFullYear(), m = base.getMonth(), dim = new Date(y, m + 1, 0).getDate();
+      const bounds: [number, number][] = ([[1, 7], [8, 14], [15, 21], [22, 28], [29, dim]] as [number, number][]).filter(b => b[0] <= dim);
+      const vals: number[] = [], labs: string[] = [], recs: { rev: number; trx: number; items: number }[] = [];
+      bounds.forEach((b, idx) => {
+        let rev = 0, trx = 0, items = 0, any = false;
+        for (let dd = b[0]; dd <= b[1]; dd++) { const d = new Date(y, m, dd); if (off === 0 && d.getTime() > RTODAY.getTime()) continue; any = true; const r = dayRec(d); rev += r.rev; trx += r.trx; items += r.items; }
+        if (off !== 0 || any) { vals.push(rev); labs.push("Mgg " + (idx + 1)); recs.push({ rev, trx, items }); }
+      });
+      return agg(vals, labs, recs, "Penjualan per minggu", off ? "Total bulan lalu" : "Total bulan ini");
+    }
+    // rentang
+    const s = new Date(rStart); s.setHours(0, 0, 0, 0);
+    const e = new Date(rEnd); e.setHours(0, 0, 0, 0);
+    if (rMode === "mingguan") {
+      const buckets = new Map<number, { rev: number; trx: number; items: number; start: Date }>(); const order: number[] = [];
+      for (const d = new Date(s); d.getTime() <= e.getTime(); d.setDate(d.getDate() + 1)) {
+        const wk = startOfWeekMon(d).getTime();
+        if (!buckets.has(wk)) { buckets.set(wk, { rev: 0, trx: 0, items: 0, start: new Date(wk) }); order.push(wk); }
+        const b = buckets.get(wk)!, r = dayRec(d); b.rev += r.rev; b.trx += r.trx; b.items += r.items;
+      }
+      const recs = order.map(k => buckets.get(k)!);
+      return agg(recs.map(r => r.rev), recs.map(r => `${r.start.getDate()}/${r.start.getMonth() + 1}`), recs, "Penjualan per minggu", "Total rentang");
+    }
+    const days: Date[] = []; for (const d = new Date(s); d.getTime() <= e.getTime(); d.setDate(d.getDate() + 1)) days.push(new Date(d));
+    const recs = days.map(dayRec), step = Math.max(1, Math.ceil(days.length / 12));
+    return agg(recs.map(r => r.rev), days.map((d, i) => i % step === 0 ? String(d.getDate()) : ""), recs, "Penjualan harian", "Total rentang");
+  }, [gran, off, rMode, rStart, rEnd, openHour, closeHour, dayRec, RTODAY]);
+
+  // Free: today omset (open → now)
+  const freeToday = useMemo(() => {
+    const rec = dayRec(RTODAY);
+    const hrs = closeHour - openHour;
+    const nowH = new Date().getHours();
+    const upto = nowH < openHour ? openHour + 1 : Math.min(closeHour, nowH + 1);
+    const frac = hrs > 0 ? Math.max(0, Math.min(1, (upto - openHour) / hrs)) : 1;
+    return { omset: Math.round(rec.rev * frac), upto };
+  }, [dayRec, RTODAY, openHour, closeHour]);
+
+  const topProducts = useMemo(() => {
+    const w = products.map(p => (p.stockTerjual ?? 0) + 0.4);
+    const tw = w.reduce((a, b) => a + b, 0) || 1;
+    return products.map((p, i) => ({ name: p.name, emoji: p.emoji, price: p.price, weight: w[i] / tw }))
+      .sort((a, b) => b.weight - a.weight).slice(0, 5)
+      .map(p => ({ ...p, sold: Math.max(1, Math.round(series.items * p.weight)) }));
+  }, [products, series.items]);
+
+  function pick(chip: typeof CHIPS[number]) {
+    const locked = tierLevel(chip.min) > tierLevel(effectiveTier);
+    if (locked) {
+      const prem = chip.min === "premium";
+      setLockNote(`🔒 "${chip.label}" perlu paket ${prem ? "Premium" : "Standard"} (riwayat ${prem ? "90" : "30"} hari).`);
+      window.clearTimeout((pick as unknown as { _t?: number })._t);
+      (pick as unknown as { _t?: number })._t = window.setTimeout(() => setLockNote(""), 4000);
+      return;
+    }
+    setLockNote(""); setGran(chip.g); setOff(chip.o);
+  }
+  const activeChip = (c: typeof CHIPS[number]) => c.g === gran && (c.g === "rentang" || c.o === off);
+
+  const barMax = Math.max(...series.vals, 1);
+  const capMinISO = isoOf(new Date(RTODAY.getTime() - cap * 86400000));
 
   return (
     <div className="w-full h-full flex flex-col animate-screen-in bg-cream-bg">
       <AppSidebar active="laporan" cashierInitials={cashierInitials} setScreen={setScreen} signOut={signOut} showDemoBack />
 
       <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
-
         {/* Header */}
-        <div className="flex justify-between items-end px-5 lg:px-10 pt-5 lg:pt-8 pb-0 shrink-0">
+        <div className="flex justify-between items-end px-5 lg:px-10 pt-5 lg:pt-8 pb-0 shrink-0 gap-3">
           <div>
             <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute mb-1">ANALITIK · REPORTS</p>
             <h1 className="font-serif text-display-l font-medium text-navy">Laporan Penjualan</h1>
           </div>
-          {canFullBreakdown && (() => {
+          {isStd && (() => {
             const color = !isOnline ? "#C25E3D" : pendingSyncCount > 0 ? "#A6843F" : "#5C9E7E";
             const label = !isOnline ? `Offline · ${pendingSyncCount} tersimpan` : pendingSyncCount > 0 ? `${pendingSyncCount} belum tersinkron` : "Tersinkron";
             const t = lastSyncedAt ? new Date(lastSyncedAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : null;
             return (
-              <div style={{ display: "flex", alignItems: "center", gap: 7, background: "white", border: `1px solid ${color}55`, borderRadius: 10, padding: "6px 11px" }} title="Status sinkronisasi transaksi">
+              <div style={{ display: "flex", alignItems: "center", gap: 7, background: "white", border: `1px solid ${color}55`, borderRadius: 10, padding: "6px 11px" }} className="shrink-0">
                 <span style={{ width: 7, height: 7, borderRadius: "50%", background: color, flexShrink: 0 }} />
-                <span style={{ fontSize: 11.5, fontWeight: 600, color: "#1B2A4A" }}>{label}</span>
-                {isOnline && pendingSyncCount === 0 && t && <span style={{ fontSize: 10.5, color: "#7A7360" }}>· {t}</span>}
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: "#1B2A4A" }} className="hidden sm:inline">{label}</span>
+                {isOnline && pendingSyncCount === 0 && t && <span style={{ fontSize: 10.5, color: "#7A7360" }} className="hidden sm:inline">· {t}</span>}
               </div>
             );
           })()}
         </div>
 
-        {/* Filter chips */}
-        <div className="flex gap-2 px-5 lg:px-10 pt-4 pb-0 shrink-0 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-          {FILTER_LABELS.map((f, i) => {
-            const locked = !!f.tier && !canFullBreakdown;
-            return (
-              <div key={f.label} className="relative shrink-0">
-                <button
-                  onClick={() => { if (!locked) setActiveFilter(i); }}
-                  className={`px-3.5 py-[7px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors ${activeFilter === i ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border hover:border-navy/40"} ${locked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
-                  {f.label}
-                </button>
-                {f.tier && (
-                  <span style={{ position: "absolute", top: -6, right: -2, background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 600, padding: "1px 4px", borderRadius: 3, textTransform: "uppercase" as const }}>
-                    {f.tier}
-                  </span>
-                )}
+        <div className="flex-1 overflow-auto px-5 lg:px-10 pt-4 pb-6">
+
+          {/* ── FREE: today-only omset + modal awal ── */}
+          {effectiveTier === "free" ? (
+            <div className="bg-white border border-warm-border rounded-card px-6 py-5 max-w-[460px]">
+              <div className="flex justify-between items-start gap-3 mb-4">
+                <div>
+                  <p style={{ fontSize: 10, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute font-bold">Ringkasan hari ini</p>
+                  <p className="font-serif text-[19px] font-bold text-navy mt-0.5">Buka {openHour}.00 · sampai jam {freeToday.upto}.00</p>
+                </div>
+                <span style={{ fontSize: 8.5, letterSpacing: "0.1em" }} className="shrink-0 font-bold uppercase text-gold bg-gold/10 border border-gold/30 rounded-md px-2 py-1">Paket Free</span>
               </div>
-            );
-          })}
-        </div>
-
-        <div className="flex-1 overflow-auto px-5 lg:px-10 pt-4 pb-4 lg:pb-6">
-
-          {/* Summary cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-            {[
-              { label: d.label,       value: formatRp(d.total), accent: true },
-              { label: "TRANSAKSI",   value: `${d.trx} trx`,    accent: false },
-              { label: "RATA-RATA",   value: formatRp(d.avg),   accent: false },
-              { label: "ITEM TERJUAL", value: `${d.items} pcs`, accent: false },
-            ].map(card => (
-              <div key={card.label} className={`rounded-card px-5 py-4 ${card.accent ? "bg-navy" : "bg-white border border-warm-border"}`}>
-                <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className={`font-sans uppercase mb-1 ${card.accent ? "text-gold/70" : "text-text-mute"}`}>{card.label}</p>
-                <p className={`font-serif text-[20px] font-semibold leading-tight ${card.accent ? "text-cream-text" : "text-navy"}`} style={{ fontVariantNumeric: "tabular-nums" }}>{card.value}</p>
+              <div className="flex flex-col">
+                <div className="flex justify-between items-center py-[11px] border-b border-cream-deep text-[13.5px] text-text-mute">
+                  <span>Modal Awal</span><b className="text-navy text-[15px]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(MODAL_AWAL)}</b>
+                </div>
+                <div className="flex justify-between items-center py-[11px] border-b border-cream-deep text-[13.5px] text-text-mute">
+                  <span>Omset (buka → sekarang)</span><b className="text-navy text-[15px]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(freeToday.omset)}</b>
+                </div>
+                <div className="flex justify-between items-center pt-[14px] text-[13.5px]">
+                  <span className="text-navy font-semibold">Perkiraan di Laci</span>
+                  <b className="text-gold text-[20px] font-extrabold" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(MODAL_AWAL + freeToday.omset)}</b>
+                </div>
               </div>
-            ))}
-          </div>
-
-          {/* Two columns on desktop */}
-          <div className="flex flex-col lg:flex-row gap-4">
-
-            {/* Breakdown by method */}
-            <div className="flex-1 bg-white border border-warm-border rounded-card px-6 py-5">
-              <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-4">BREAKDOWN METODE</p>
-              <div className="flex flex-col gap-3">
-                {d.methods.map(m => (
-                  <div key={m.method}>
-                    <div className="flex justify-between items-baseline mb-1.5">
-                      <span className="text-[12.5px] font-medium text-navy">{m.method}</span>
-                      <span className="text-[12px] text-text-mute" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(m.total)} · {m.pct}%</span>
+              <p className="text-[11.5px] text-text-mute mt-3.5 leading-relaxed bg-cream-bg rounded-[10px] px-3 py-2.5">
+                Paket Free menampilkan omset berjalan hari ini. Grafik &amp; pilih periode mulai paket <b>Standard</b>; rincian lengkap tetap ada di <b>Tutup Shift</b>.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Period chips */}
+              <div className="flex flex-wrap gap-2 items-center mb-3">
+                {CHIPS.map((c, i) => {
+                  const locked = tierLevel(c.min) > tierLevel(effectiveTier);
+                  const on = activeChip(c);
+                  return (
+                    <div key={c.label} className="relative shrink-0 flex items-center">
+                      {(i === 2 || i === 4 || i === 6) && <span className="w-px h-5 bg-warm-border mx-1 hidden sm:block" />}
+                      <button
+                        onClick={() => pick(c)}
+                        className={`px-3.5 py-[7px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors ${on ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border hover:border-navy/40"} ${locked ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
+                        {c.label}
+                      </button>
+                      {locked && (
+                        <span style={{ position: "absolute", top: -6, right: -2, background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 600, padding: "1px 4px", borderRadius: 3 }} className="uppercase">
+                          {c.min === "premium" ? "PREM" : "STD"}
+                        </span>
+                      )}
                     </div>
-                    <div className="h-[6px] bg-cream-bg rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${m.pct}%`, background: m.color }} />
-                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Rentang controls */}
+              {gran === "rentang" && (
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <input type="date" value={rStart} min={capMinISO} max={isoOf(RTODAY)} onChange={e => setRStart(e.target.value)}
+                    className="h-9 border border-warm-border rounded-[9px] px-2.5 text-[12.5px] text-navy bg-white" />
+                  <span className="text-text-mute">–</span>
+                  <input type="date" value={rEnd} min={capMinISO} max={isoOf(RTODAY)} onChange={e => setREnd(e.target.value)}
+                    className="h-9 border border-warm-border rounded-[9px] px-2.5 text-[12.5px] text-navy bg-white" />
+                  <div className="flex bg-cream-deep rounded-full p-[3px] gap-[2px]">
+                    {(["harian", "mingguan"] as const).map(m => (
+                      <button key={m} onClick={() => setRMode(m)} className={`text-[11.5px] font-semibold px-3 py-[5px] rounded-full capitalize ${rMode === m ? "bg-white text-navy" : "text-text-mute"}`}>{m}</button>
+                    ))}
+                  </div>
+                  <span className="text-[11px] text-text-mute">Maks. {cap} hari (paket {effectiveTier})</span>
+                </div>
+              )}
+
+              {lockNote && <div className="text-[12px] rounded-[9px] px-3 py-2 mb-3" style={{ color: "#C25E3D", background: "rgba(194,94,61,0.08)", border: "1px solid rgba(194,94,61,0.3)" }}>{lockNote}</div>}
+
+              {/* Summary cards — Standard: 2, Premium: 4 */}
+              <div className={`grid gap-3 mb-5 ${isPremium ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2"}`}>
+                {[
+                  { label: series.slabel, value: formatRp(series.rev), accent: true, show: true },
+                  { label: "TRANSAKSI", value: `${series.trx} trx`, accent: false, show: true },
+                  { label: "RATA-RATA", value: formatRp(Math.round(series.rev / Math.max(1, series.trx))), accent: false, show: isPremium },
+                  { label: "ITEM TERJUAL", value: `${series.items} pcs`, accent: false, show: isPremium },
+                ].filter(c => c.show).map(card => (
+                  <div key={card.label} className={`rounded-card px-5 py-4 ${card.accent ? "bg-navy" : "bg-white border border-warm-border"}`}>
+                    <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className={`font-sans uppercase mb-1 ${card.accent ? "text-gold/70" : "text-text-mute"}`}>{card.label}</p>
+                    <p className={`font-serif text-[20px] font-semibold leading-tight ${card.accent ? "text-cream-text" : "text-navy"}`} style={{ fontVariantNumeric: "tabular-nums" }}>{card.value}</p>
                   </div>
                 ))}
               </div>
-            </div>
 
-            {/* Top products */}
-            <div className="flex-1 bg-white border border-warm-border rounded-card px-6 py-5 relative">
-              {!canFullBreakdown && (
-                <span style={{ position: "absolute", top: 12, right: 14, background: "rgba(201,165,95,0.10)", border: "1px solid rgba(201,165,95,0.30)", color: "#A6843F", fontSize: 8, letterSpacing: "0.12em", fontWeight: 600, padding: "3px 8px", borderRadius: 4, textTransform: "uppercase" as const }}>STANDARD</span>
-              )}
-              <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-4">PRODUK TERLARIS</p>
-              {canFullBreakdown ? (
-                <div className="flex flex-col gap-3">
-                  {d.produk.map((p, i) => (
-                    <div key={p.name} className="flex items-center gap-3">
-                      <span className="text-[12px] font-semibold text-text-mute w-4 shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{i + 1}</span>
-                      <span className="text-[18px] leading-none shrink-0">{p.emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[12.5px] font-medium text-navy">{p.name}</div>
-                        <div className="text-[11px] text-text-mute">{p.qty} terjual</div>
-                      </div>
-                      <span className="font-serif text-[13px] font-semibold text-navy shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.total)}</span>
+              {/* Chart */}
+              <div className="bg-white border border-warm-border rounded-card px-5 lg:px-6 py-5 mb-4">
+                <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-3">{series.title}</p>
+                {series.vals.length ? (
+                  <>
+                    <div className="h-[100px] flex items-end gap-1.5">
+                      {series.vals.map((v, i) => (
+                        <div key={i} className="flex-1 rounded-t-sm transition-all" style={{ height: `${Math.max(4, Math.round(v / barMax * 100))}%`, background: "linear-gradient(to top,#0B1129,#3A4A78)" }} />
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-6 gap-2">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D4C9B8" strokeWidth="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                  <p className="text-[12px] text-text-mute text-center">Produk terlaris tersedia di<br /><span className="font-semibold text-navy">Standard</span> ke atas.</p>
+                    <div className="flex mt-2 gap-1.5">
+                      {series.labs.map((l, i) => (<span key={i} style={{ fontSize: 8.5, color: "#B0A99A" }} className="flex-1 text-center">{l}</span>))}
+                    </div>
+                  </>
+                ) : <p className="text-[12px] text-text-mute py-8 text-center">Tidak ada data pada periode ini.</p>}
+              </div>
+
+              {/* Premium: method breakdown + top products */}
+              {isPremium && (
+                <div className="flex flex-col lg:flex-row gap-4">
+                  <div className="flex-1 bg-white border border-warm-border rounded-card px-5 lg:px-6 py-5">
+                    <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-4">BREAKDOWN METODE</p>
+                    <div className="flex flex-col gap-3">
+                      {METHOD_SPLIT.map(m => {
+                        const total = Math.round(series.rev * m.pct), pct = Math.round(m.pct * 100);
+                        return (
+                          <div key={m.method}>
+                            <div className="flex justify-between items-baseline mb-1.5">
+                              <span className="text-[12.5px] font-medium text-navy">{m.method}</span>
+                              <span className="text-[12px] text-text-mute" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)} · {pct}%</span>
+                            </div>
+                            <div className="h-[6px] bg-cream-bg rounded-full overflow-hidden">
+                              <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: m.color }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex-1 bg-white border border-warm-border rounded-card px-5 lg:px-6 py-5">
+                    <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-4">PRODUK TERLARIS</p>
+                    <div className="flex flex-col gap-3">
+                      {topProducts.map((p, i) => (
+                        <div key={p.name} className="flex items-center gap-3">
+                          <span className="text-[12px] font-semibold text-text-mute w-4 shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{i + 1}</span>
+                          <span className="text-[18px] leading-none shrink-0">{p.emoji}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[12.5px] font-medium text-navy truncate">{p.name}</div>
+                            <div className="text-[11px] text-text-mute">{p.sold} terjual</div>
+                          </div>
+                          <span className="font-serif text-[13px] font-semibold text-navy shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.sold * p.price)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Chart — STANDARD tier */}
-          <div className={`mt-4 bg-white border border-warm-border rounded-card px-6 py-5 relative ${!canFullBreakdown ? "opacity-50 pointer-events-none select-none" : ""}`}>
-            <span style={{ position: "absolute", top: 12, right: 14, background: "rgba(201,165,95,0.10)", border: "1px solid rgba(201,165,95,0.30)", color: "#A6843F", fontSize: 8, letterSpacing: "0.12em", fontWeight: 600, padding: "3px 8px", borderRadius: 4, textTransform: "uppercase" as const }}>
-              STD
-            </span>
-            <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-3">GRAFIK PENJUALAN PER JAM</p>
-            <div className="h-[80px] flex items-end gap-1.5">
-              {[20, 35, 55, 80, 95, 70, 60, 85, 100, 75, 50, 30].map((h, i) => (
-                <div key={i} className="flex-1 bg-navy/20 rounded-t-sm transition-all hover:bg-navy/40" style={{ height: `${h}%` }} />
-              ))}
-            </div>
-            <div className="flex justify-between mt-2">
-              {["06", "08", "10", "12", "13", "14", "15", "16", "17", "18", "19", "20"].map(h => (
-                <span key={h} style={{ fontSize: 8, color: "#B0A99A" }} className="flex-1 text-center">{h}</span>
-              ))}
-            </div>
-          </div>
+              {/* Standard upgrade hint */}
+              {!isPremium && (
+                <div className="bg-white border border-dashed border-warm-border rounded-card px-5 py-4 flex items-center gap-3">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4C9B8" strokeWidth="1.5" className="shrink-0"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
+                  <p className="text-[12px] text-text-mute">Rata-rata/trx, item terjual, <b className="text-navy">produk terlaris</b>, breakdown metode &amp; <b className="text-navy">bulan lalu</b> tersedia di <b className="text-navy">Premium</b>.</p>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
-
     </div>
   );
 }

@@ -73,6 +73,11 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("demo") === "true") {
       startDemo();
+      // Optional demo deep-link: jump straight to a screen / tier (QA + demos).
+      const scr = params.get("screen");
+      if (scr) setScreen(scr as Parameters<typeof setScreen>[0]);
+      const tier = params.get("tier");
+      if (tier) useStore.getState().setStoreTier(tier);
     }
   }, []);
 
