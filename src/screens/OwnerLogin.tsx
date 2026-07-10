@@ -11,6 +11,15 @@ const DAY_ID = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 // prospect in Master Office), not an in-app signup.
 const DAFTAR_POS_URL = "https://sterith.com/form.html?daftar=pos";
 
+// Max stores per tier. NOTE: also enforce server-side (RLS / provisioning) —
+// this client cap is UX only and can be bypassed.
+function storeCap(tier: string | null): number {
+  const t = (tier || "free").toLowerCase();
+  if (t === "premium" || t === "business" || t === "enterprise") return Infinity;
+  if (t === "standard") return 2;
+  return 1;
+}
+
 interface StoreRow {
   id: string;
   name: string;
@@ -28,6 +37,10 @@ interface StoreRow {
 export default function OwnerLogin() {
   const { setScreen, setStoreData, setProductsFromDB, setTrxCounter, setDbShifts, startDemo, setInventorySettings, setSubscription, setReceiptLogo } = useStore();
   const [storeChoices, setStoreChoices] = useState<StoreRow[]>([]);
+  const [ownerId, setOwnerId] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+  const [newStoreName, setNewStoreName] = useState("");
+  const [creating, setCreating] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [loginAs, setLoginAs] = useState<"toko" | "backoffice">("toko");
   const [email, setEmail] = useState("");
@@ -114,13 +127,17 @@ export default function OwnerLogin() {
         .select("id, name, address, phone, tier, qris_image_url, midtrans_client_key, inventory_enabled, low_stock_threshold, tier_expires_at, receipt_logo")
         .eq("owner_id", userId)
         .order("created_at");
-      // Multi-store: let the owner pick which store to enter
-      if (storeRows && storeRows.length > 1) {
-        setStoreChoices(storeRows as StoreRow[]);
-        setLoading(false);
-        return;
-      }
-      if (storeRows && storeRows.length === 1) {
+      // Multi-store: show the picker when there's >1 store, OR when the tier can
+      // still add more (so single-store paid owners can create a 2nd). Free (cap 1
+      // with 1 store) auto-enters — no friction.
+      if (storeRows && storeRows.length >= 1) {
+        const cap = storeCap(storeRows[0].tier);
+        if (storeRows.length > 1 || cap > storeRows.length) {
+          setOwnerId(userId);
+          setStoreChoices(storeRows as StoreRow[]);
+          setLoading(false);
+          return;
+        }
         await enterStore(storeRows[0] as StoreRow);
         return;
       }
@@ -180,6 +197,21 @@ export default function OwnerLogin() {
     setDbShifts((shiftRows ?? []) as import("../types").ShiftDef[]);
     setTrxCounter((saleCount ?? 0) + 1);
     setScreen("login");
+  }
+
+  async function createStore() {
+    const name = newStoreName.trim();
+    if (!name || !ownerId) return;
+    setCreating(true); setError("");
+    const tier = storeChoices[0]?.tier || "free";  // inherit the owner's tier
+    const { data, error: createErr } = await supabase.from("stores")
+      .insert({ owner_id: ownerId, name, tier })
+      .select("id, name, address, phone, tier, qris_image_url, midtrans_client_key, inventory_enabled, low_stock_threshold, tier_expires_at, receipt_logo")
+      .single();
+    setCreating(false);
+    if (createErr || !data) { setError("Gagal membuat toko. Coba lagi atau hubungi Sterith."); return; }
+    setNewStoreName(""); setShowCreate(false);
+    setStoreChoices(prev => [...prev, data as StoreRow]);
   }
 
   const card = (
@@ -352,7 +384,38 @@ export default function OwnerLogin() {
               </button>
             ))}
           </div>
-          <button onClick={() => { setStoreChoices([]); supabase.auth.signOut(); }}
+
+          {/* Create store (tier-capped) */}
+          {error && <p style={{ fontSize: 11.5, color: "#C25E3D", textAlign: "center", marginTop: 12 }}>{error}</p>}
+          {(() => {
+            const cap = storeCap(storeChoices[0]?.tier);
+            if (storeChoices.length >= cap) return (
+              <p style={{ fontSize: 11.5, color: "#7A776F", textAlign: "center", marginTop: 14, background: "rgba(201,165,95,0.06)", border: "1px dashed rgba(201,165,95,0.4)", borderRadius: 10, padding: "10px 12px" }}>
+                Batas toko untuk paket <b style={{ color: "#0B1129" }}>{storeChoices[0]?.tier || "free"}</b> tercapai ({cap === Infinity ? "∞" : cap} toko). Upgrade untuk menambah cabang.
+              </p>
+            );
+            if (showCreate) return (
+              <div style={{ marginTop: 12, background: "white", border: "1px solid #ECE7DD", borderRadius: 14, padding: 14 }}>
+                <p style={{ fontSize: 9.5, letterSpacing: "0.2em", textTransform: "uppercase", color: "#7A776F", fontWeight: 600, marginBottom: 8 }}>Toko Baru</p>
+                <input autoFocus value={newStoreName} onChange={e => setNewStoreName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") createStore(); }} placeholder="mis. Toko Sembako Maju · Cabang 2"
+                  style={{ width: "100%", height: 46, borderRadius: 10, border: `1px solid ${newStoreName.trim() ? "#5C9E7E" : "#ECE7DD"}`, padding: "0 14px", fontSize: 14, color: "#0B1129", outline: "none", boxSizing: "border-box" }} />
+                <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                  <button onClick={() => { setShowCreate(false); setNewStoreName(""); setError(""); }} style={{ flex: 1, height: 44, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0B1129", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Batal</button>
+                  <button onClick={createStore} disabled={!newStoreName.trim() || creating} style={{ flex: 2, height: 44, borderRadius: 11, border: "none", background: "#0B1129", color: "#FAFAF7", fontSize: 13, fontWeight: 700, cursor: creating ? "default" : "pointer", opacity: !newStoreName.trim() || creating ? 0.5 : 1 }}>{creating ? "Membuat…" : "Buat Toko"}</button>
+                </div>
+                <p style={{ fontSize: 10.5, color: "#A8A39B", marginTop: 8 }}>Paket {storeChoices[0]?.tier || "free"}: maksimal {cap === Infinity ? "tanpa batas" : cap} toko.</p>
+              </div>
+            );
+            return (
+              <button onClick={() => setShowCreate(true)}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", marginTop: 12, height: 50, borderRadius: 14, border: "1.5px dashed rgba(201,165,95,0.5)", background: "rgba(201,165,95,0.06)", color: "#A6843F", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
+                Buat Toko Baru
+              </button>
+            );
+          })()}
+
+          <button onClick={() => { setStoreChoices([]); setShowCreate(false); setError(""); supabase.auth.signOut(); }}
             style={{ display: "block", margin: "20px auto 0", background: "none", border: "none", fontSize: 12.5, color: "#7A776F", cursor: "pointer", textDecoration: "underline" }}>
             ← Keluar
           </button>
