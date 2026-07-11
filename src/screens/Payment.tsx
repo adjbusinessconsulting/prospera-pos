@@ -130,8 +130,9 @@ export default function Payment() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Detect QRIS mode
-  const hasMidtrans = Boolean(midtransClientKey);
+  // Detect QRIS mode. Dynamic Midtrans (auto-confirm, needs a Midtrans account)
+  // is PREMIUM-only; Free/Standard use the static QRIS image uploaded in settings.
+  const hasMidtrans = Boolean(midtransClientKey) && isAtLeast(effectiveTier, "premium");
   const hasStatic = Boolean(qrisImageUrl);
   const [useStaticFallback, setUseStaticFallback] = useState(false);
   const qrisMode: "midtrans" | "static" | "none" = (hasMidtrans && !useStaticFallback)

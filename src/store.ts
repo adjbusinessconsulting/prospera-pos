@@ -50,6 +50,7 @@ interface POSState {
   setInventoryEnabled: (v: boolean) => void;
   setInventorySettings: (enabled: boolean, threshold: number) => void;
   setReceiptLogo: (v: string) => void;
+  setQrisImageUrl: (v: string) => void;
   startDemo: () => void;
   selectCashier: (id: string) => void;
   setShift: (n: number) => void;
@@ -184,6 +185,7 @@ export const useStore = create<POSState>((set) => ({
   setInventoryEnabled: (inventoryEnabled) => set({ inventoryEnabled }),
   setInventorySettings: (inventoryEnabled, lowStockThreshold) => set({ inventoryEnabled, lowStockThreshold }),
   setReceiptLogo: (receiptLogo) => set({ receiptLogo }),
+  setQrisImageUrl: (qrisImageUrl) => set({ qrisImageUrl }),
 
   // Enter the full demo: premium tier + demo store, straight to Sales.
   // Ephemeral — nothing is written to Supabase while isDemoMode is true.
