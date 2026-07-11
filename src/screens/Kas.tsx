@@ -6,11 +6,12 @@ import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
 
-type KasIcon = "masuk" | "keluar" | "auto";
+type KasIcon = "masuk" | "keluar" | "auto" | "hutang_settle";
 interface KasMove { time: string; label: string; desc: string; amount: number; icon: KasIcon; photo: boolean }
 
 // Demo-only seed (real stores load from kas_entries / sales).
 const DEMO_MANUAL: KasMove[] = [
+  { time: "16:10", label: "Pelunasan bon TRX-0042 — Budi", desc: "Aerith D. · pelunasan hutang", amount: 185000, icon: "hutang_settle", photo: false },
   { time: "15:30", label: "Bayar parkir & retribusi", desc: "Aerith D. · keluar", amount: -15000,  icon: "keluar", photo: true },
   { time: "14:48", label: "Beli es batu",             desc: "Aerith D. · keluar", amount: -100000, icon: "keluar", photo: true },
 ];
@@ -75,10 +76,11 @@ export default function Kas() {
         .reduce((a, s) => a + ((s as { total: number }).total ?? 0), 0));
       setManual((kasRows ?? []).map(k => {
         const kk = k as { type: KasIcon; amount: number; label: string; cashier_name?: string; photo_url?: string; created_at: string };
+        const typeLabel = kk.type === "hutang_settle" ? "pelunasan hutang" : kk.type;
         return {
           time: new Date(kk.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
           label: kk.label,
-          desc: [kk.cashier_name, kk.type].filter(Boolean).join(" · "),
+          desc: [kk.cashier_name, typeLabel].filter(Boolean).join(" · "),
           amount: kk.type === "keluar" ? -kk.amount : kk.amount,
           icon: kk.type, photo: !!kk.photo_url,
         };
@@ -248,23 +250,30 @@ export default function Kas() {
 
               <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-2.5">PERGERAKAN HARI INI</p>
               <div className="bg-white border border-warm-border rounded-card overflow-hidden">
-                {pergerakan.map((p, i) => (
+                {pergerakan.map((p, i) => {
+                  const settle = p.icon === "hutang_settle";
+                  const accent = settle ? "#A6843F" : p.amount > 0 ? "#5C9E7E" : "#C25E3D";
+                  return (
                   <div key={i} className={`flex items-center gap-3 px-4 py-3 ${i < pergerakan.length - 1 ? "border-b border-[#F2EDE3]" : ""}`}>
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${p.amount > 0 ? "bg-[#5C9E7E20]" : "bg-[#C25E3D14]"}`}>
-                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={p.amount > 0 ? "#5C9E7E" : "#C25E3D"} strokeWidth="2.5">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: `${accent}1F` }}>
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5">
                         {p.amount > 0 ? <path d="M12 5v14M5 12h14" /> : <path d="M5 12h14" />}
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[12.5px] font-medium text-navy">{p.label}</div>
+                      <div className="text-[12.5px] font-medium text-navy flex items-center gap-1.5">
+                        <span className="truncate">{p.label}</span>
+                        {settle && <span className="shrink-0 uppercase font-bold rounded px-1 py-0.5" style={{ fontSize: 7.5, letterSpacing: "0.08em", color: "#A6843F", background: "rgba(201,165,95,0.14)" }}>Bukan omzet</span>}
+                      </div>
                       <div className="text-[10.5px] text-text-mute mt-0.5">{p.time} · {p.desc}</div>
                     </div>
                     {p.photo && <PhotoThumb size="sm" />}
-                    <span className={`font-serif text-[13px] font-semibold shrink-0 ${p.amount > 0 ? "text-[#5C9E7E]" : "text-[#C25E3D]"}`} style={{ fontVariantNumeric: "tabular-nums" }}>
+                    <span className="font-serif text-[13px] font-semibold shrink-0" style={{ color: accent, fontVariantNumeric: "tabular-nums" }}>
                       {p.amount > 0 ? "+" : "−"}{formatRp(Math.abs(p.amount))}
                     </span>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -300,23 +309,30 @@ export default function Kas() {
 
             <div className="flex-1 overflow-auto">
               <div className="bg-white border border-warm-border rounded-card overflow-hidden">
-                {pergerakan.map((p, i) => (
+                {pergerakan.map((p, i) => {
+                  const settle = p.icon === "hutang_settle";
+                  const accent = settle ? "#A6843F" : p.amount > 0 ? "#5C9E7E" : "#C25E3D";
+                  return (
                   <div key={i} className={`flex items-center gap-3 px-5 py-4 ${i < pergerakan.length - 1 ? "border-b border-[#F2EDE3]" : ""}`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${p.amount > 0 ? "bg-[#5C9E7E14]" : "bg-[#C25E3D14]"}`}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={p.amount > 0 ? "#5C9E7E" : "#C25E3D"} strokeWidth="2.5">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: `${accent}14` }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5">
                         {p.amount > 0 ? <path d="M12 5v14M5 12h14" /> : <path d="M5 12h14" />}
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-medium text-navy">{p.label}</div>
+                      <div className="text-[13px] font-medium text-navy flex items-center gap-2">
+                        <span className="truncate">{p.label}</span>
+                        {settle && <span className="shrink-0 uppercase font-bold rounded px-1.5 py-0.5" style={{ fontSize: 8, letterSpacing: "0.08em", color: "#A6843F", background: "rgba(201,165,95,0.14)" }}>Bukan omzet</span>}
+                      </div>
                       <div className="text-[11px] text-text-mute mt-0.5">{p.time} · {p.desc}</div>
                     </div>
                     {p.photo && <PhotoThumb size="md" />}
-                    <span className={`font-serif text-[15px] font-semibold shrink-0 ${p.amount > 0 ? "text-[#5C9E7E]" : "text-[#C25E3D]"}`} style={{ fontVariantNumeric: "tabular-nums" }}>
+                    <span className="font-serif text-[15px] font-semibold shrink-0" style={{ color: accent, fontVariantNumeric: "tabular-nums" }}>
                       {p.amount > 0 ? "+" : "−"}{formatRp(Math.abs(p.amount))}
                     </span>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

@@ -24,6 +24,7 @@ export default function TutupToko() {
   const [modalAwal, setModalAwal] = useState(isDemoMode ? 500_000 : 0);
   const [kasMasuk, setKasMasuk] = useState(0);
   const [kasKeluar, setKasKeluar] = useState(isDemoMode ? 115_000 : 0);
+  const [hutangSettle, setHutangSettle] = useState(isDemoMode ? 185_000 : 0); // pelunasan tunai hari ini → masuk laci
   const [shiftId, setShiftId] = useState<string | null>(null);
   const [showRecon, setShowRecon] = useState(false);
   const [counted, setCounted] = useState("");
@@ -43,7 +44,7 @@ export default function TutupToko() {
       if (cancelled) return;
       const S = (sales ?? []) as { total: number; payment_method: string; shift: number }[];
       const H = (hut ?? []) as { amount: number; status: string; settled_method?: string | null }[];
-      // Non-credit sales received today, grouped by method…
+      // OMZET (income, cash-basis): non-credit sales today by method…
       const bd: Record<string, number> = {};
       S.filter(s => s.payment_method !== "hutang").forEach(s => { bd[s.payment_method] = (bd[s.payment_method] ?? 0) + (s.total ?? 0); });
       // …plus any hutang whose bon is TODAY and already lunas (folded by settle method).
@@ -53,17 +54,21 @@ export default function TutupToko() {
       setPiutangBaru(H.filter(h => h.status !== "lunas").reduce((a, h) => a + h.amount, 0));
       setTrx(S.length);
       setShiftCount(Math.max(1, new Set(S.map(s => s.shift)).size));
-      setCash((bd.tunai ?? 0) + (bd.transfer ?? 0));
+      // DRAWER (physical cash today): direct tunai+transfer SALES only. Hutang
+      // settlements come in via the separate hutang_settle kas type below — folding
+      // them into bd is for omzet display, not the drawer, so we don't double-count.
+      setCash(S.filter(s => s.payment_method === "tunai" || s.payment_method === "transfer").reduce((a, s) => a + (s.total ?? 0), 0));
       const sr = shiftRow as { id?: string; modal_awal?: number } | null;
       setModalAwal(sr?.modal_awal ?? 0); setShiftId(sr?.id ?? null);
       const K = (kas ?? []) as { type: string; amount: number }[];
       setKasMasuk(K.filter(k => k.type === "masuk").reduce((a, k) => a + k.amount, 0));
       setKasKeluar(K.filter(k => k.type === "keluar").reduce((a, k) => a + k.amount, 0));
+      setHutangSettle(K.filter(k => k.type === "hutang_settle").reduce((a, k) => a + k.amount, 0));
     })();
     return () => { cancelled = true; };
   }, [storeId, isDemoMode]);
 
-  const expected = modalAwal + cash + kasMasuk - kasKeluar;   // drawer seharusnya
+  const expected = modalAwal + cash + kasMasuk + hutangSettle - kasKeluar;   // drawer seharusnya
   const countedNum = parseInt(counted.replace(/\D/g, "") || "0");
   const selisih = counted ? countedNum - expected : 0;
   const selType: "cocok" | "lebih" | "kurang" = selisih === 0 ? "cocok" : selisih > 0 ? "lebih" : "kurang";
@@ -180,6 +185,7 @@ export default function TutupToko() {
                   <div className="flex flex-col">
                     {reconRow("Modal awal", formatRp(modalAwal))}
                     {reconRow("Penjualan tunai + transfer", formatRp(cash), "+")}
+                    {hutangSettle > 0 && reconRow("Pelunasan hutang (tunai)", formatRp(hutangSettle), "+")}
                     {kasMasuk > 0 && reconRow("Kas masuk", formatRp(kasMasuk), "+")}
                     {kasKeluar > 0 && reconRow("Kas keluar", formatRp(kasKeluar), "-")}
                     {reconRow("Kas seharusnya", formatRp(expected), undefined, true)}

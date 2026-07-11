@@ -33,7 +33,7 @@ function fmtDate(iso?: string | null) {
 }
 
 export default function Hutang() {
-  const { cashierInitials, storeId, storeName, storeTier, isDemoMode, demoHutang, setDemoHutang, setScreen, signOut } = useStore();
+  const { cashierInitials, cashierName, selectedShift, storeId, storeName, storeTier, isDemoMode, demoHutang, setDemoHutang, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : "free";
   const canHutang = isAtLeast(effectiveTier, "standard");
 
@@ -72,9 +72,12 @@ export default function Hutang() {
     const settledAt = new Date().toISOString();
     const settled: HutangRow = { ...target, paid_amount: target.amount, status: "lunas", settled_at: settledAt, settled_method: method };
 
-    // NOTE: settling a debt does NOT create income on today's report. The full
-    // amount is credited back to the ORIGINAL sale's day (via hutang.created_at);
-    // today's kas/omset stays unchanged — so no kas_entries insert here.
+    // Settling a debt does NOT create income today — the amount is credited to the
+    // bon's ORIGINAL day (via hutang.created_at) in every omzet report. BUT a TUNAI
+    // settlement is real cash in the drawer TODAY, so we record it as a distinct
+    // kas type 'hutang_settle' (counts toward laci reconciliation, excluded from
+    // omzet). QRIS / Transfer never touch the drawer → no kas entry.
+    const drawerCash = method === "tunai";
     setRows(prev => prev.map(r => r.id === target.id ? settled : r));
 
     if (isDemoMode) {
@@ -84,6 +87,14 @@ export default function Hutang() {
         await supabase.from("hutang").update({
           paid_amount: target.amount, status: "lunas", settled_at: settledAt, settled_method: method,
         }).eq("id", target.id);
+        if (drawerCash) {
+          await supabase.from("kas_entries").insert({
+            store_id: storeId, cashier_name: cashierName, shift: selectedShift,
+            type: "hutang_settle", amount: target.amount,
+            label: `Pelunasan bon${target.trx_id ? ` ${target.trx_id}` : ""} — ${target.customer_name}`,
+            description: null, photo_url: null,
+          });
+        }
         void logEvent("hutang.lunas", `Hutang LUNAS ${target.customer_name} ${formatRp(target.amount)} · ${METHOD_LABEL[method]}${target.trx_id ? ` (${target.trx_id})` : ""}`);
       } catch { /* keep optimistic */ }
     }
