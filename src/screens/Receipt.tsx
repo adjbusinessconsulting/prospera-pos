@@ -3,8 +3,6 @@ import { formatRp } from "../data";
 import { Printer, Check, ChevronLeft } from "lucide-react";
 import { AppSidebar } from "../components/AppSidebar";
 import { recordSale } from "../lib/sync";
-import { supabase } from "../lib/supabase";
-import { logEvent } from "../lib/auditlog";
 
 function SterithWatermark({ tier }: { tier: string }) {
   // Branding ladder (July 11):
@@ -75,38 +73,9 @@ export default function Receipt() {
         updateProduct(i.product.id, { stock: (p.stock ?? 0) - i.qty, stockTerjual: (p.stockTerjual ?? 0) + i.qty, stockDate: today });
       });
     }
-    // Hutang: record the debt in the ledger (independent of the sale row so it
-    // survives retention). Guarded — must never break finishing the sale.
-    if (storeId && !isDemoMode && paymentMethod === "hutang" && hutangCustomer) {
-      void recordHutang(hutangCustomer, total, trxId);
-    }
+    // (Hutang is recorded at checkout confirm in Payment.tsx, not here.)
     setHutangCustomer(null);
     restart();
-  }
-
-  async function recordHutang(cust: { name: string; phone: string }, amount: number, saleTrx: string) {
-    try {
-      // Dedup (hutang scope): reuse an existing customer matched by phone so we
-      // don't fragment Buku Hutang totals with "5 Budis". Only creates when new.
-      let customer_id: string | null = null;
-      if (cust.phone) {
-        const { data: existing } = await supabase.from("customers")
-          .select("id").eq("store_id", storeId).eq("phone", cust.phone).limit(1).maybeSingle();
-        customer_id = (existing as { id?: string } | null)?.id ?? null;
-      }
-      if (!customer_id) {
-        const { data: cRow } = await supabase.from("customers")
-          .insert({ store_id: storeId, name: cust.name, phone: cust.phone || null })
-          .select("id").single();
-        customer_id = (cRow as { id?: string } | null)?.id ?? null;
-      }
-      await supabase.from("hutang").insert({
-        store_id: storeId, sale_id: null, customer_id,
-        customer_name: cust.name, phone: cust.phone || null,
-        amount, paid_amount: 0, status: "open", cashier_name: cashierName,
-      });
-      void logEvent("hutang.add", `Hutang baru ${cust.name} ${formatRp(amount)} (${saleTrx})`);
-    } catch { /* non-fatal — sale already recorded */ }
   }
 
   const displayName = storeName || "Toko Sembako Maju";
@@ -198,12 +167,30 @@ export default function Receipt() {
             </div>
 
             <div className="py-3">
-              <div className="flex justify-between font-sans text-[11px] text-text-mute mb-1.5" style={{ fontVariantNumeric: "tabular-nums" }}>
-                <span>TUNAI</span><span>{cashReceived.toLocaleString("id-ID")}</span>
-              </div>
-              <div className="flex justify-between font-sans text-[11px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>
-                <span>KEMBALIAN</span><span>{change.toLocaleString("id-ID")}</span>
-              </div>
+              {paymentMethod === "hutang" ? (
+                <>
+                  <div className="flex justify-between font-sans text-[11px] text-text-mute mb-1.5" style={{ fontVariantNumeric: "tabular-nums" }}>
+                    <span>DIBAYAR</span><span>{(hutangCustomer?.paidNow ?? 0).toLocaleString("id-ID")}</span>
+                  </div>
+                  <div className="flex justify-between font-sans text-[11px] font-semibold" style={{ color: "#C25E3D", fontVariantNumeric: "tabular-nums" }}>
+                    <span>SISA HUTANG</span><span>{(total - (hutangCustomer?.paidNow ?? 0)).toLocaleString("id-ID")}</span>
+                  </div>
+                  {hutangCustomer && <div className="font-sans text-[10px] text-text-mute mt-1.5">a.n. {hutangCustomer.name}{hutangCustomer.phone ? ` · ${hutangCustomer.phone}` : ""}</div>}
+                </>
+              ) : paymentMethod === "tunai" ? (
+                <>
+                  <div className="flex justify-between font-sans text-[11px] text-text-mute mb-1.5" style={{ fontVariantNumeric: "tabular-nums" }}>
+                    <span>TUNAI</span><span>{cashReceived.toLocaleString("id-ID")}</span>
+                  </div>
+                  <div className="flex justify-between font-sans text-[11px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>
+                    <span>KEMBALIAN</span><span>{change.toLocaleString("id-ID")}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between font-sans text-[11px] font-semibold text-navy">
+                  <span>METODE</span><span>{paymentMethod.toUpperCase()} · LUNAS</span>
+                </div>
+              )}
             </div>
 
             <div className="pt-3.5 border-t border-dashed border-warm-dashed mt-auto">

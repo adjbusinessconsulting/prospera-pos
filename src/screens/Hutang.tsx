@@ -19,11 +19,14 @@ const DEMO_HUTANG: HutangRow[] = [
 ];
 
 export default function Hutang() {
-  const { cashierInitials, cashierName, selectedShift, storeId, storeTier, isDemoMode, setScreen, signOut } = useStore();
+  const { cashierInitials, cashierName, selectedShift, storeId, storeTier, isDemoMode, demoHutang, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : "free";
   const canHutang = isAtLeast(effectiveTier, "standard");
 
-  const [rows, setRows] = useState<HutangRow[]>(isDemoMode ? DEMO_HUTANG : []);
+  // Demo: newly-added debts (from checkout) first, then the seed — open/partial only.
+  const [rows, setRows] = useState<HutangRow[]>(isDemoMode
+    ? [...demoHutang, ...DEMO_HUTANG].filter(h => h.status !== "lunas") as HutangRow[]
+    : []);
   const [loading, setLoading] = useState(!isDemoMode && canHutang);
   const [target, setTarget] = useState<HutangRow | null>(null);
   const [bayar, setBayar] = useState("");

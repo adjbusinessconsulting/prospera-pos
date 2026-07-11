@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, QrCode, CheckCircle2, XCircle, Loader2, Clock, Lock } from "lucide-react";
 import { useStore, getTotal, getItemCount, getTrxId, isAtLeast } from "../store";
-import { formatRp } from "../data";
+import { formatRp, formatIDRInput } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
+import { logEvent } from "../lib/auditlog";
 
 const METHODS = [
   {
@@ -39,14 +40,15 @@ type QrisState = "idle" | "loading" | "show" | "confirmed" | "error";
 export default function Payment() {
   const {
     cart, paymentMethod, cashReceived, cashierName, cashierInitials,
-    trxCounter, storeId, storeTier, qrisImageUrl, midtransClientKey,
-    setPaymentMethod, setCashReceived, setScreen, signOut, setHutangCustomer,
+    trxCounter, storeId, storeTier, isDemoMode, qrisImageUrl, midtransClientKey,
+    setPaymentMethod, setCashReceived, setScreen, signOut, setHutangCustomer, addDemoHutang,
   } = useStore();
 
   // Hutang customer capture
   const [showHutangModal, setShowHutangModal] = useState(false);
   const [hutangName, setHutangName] = useState("");
   const [hutangPhone, setHutangPhone] = useState("");
+  const [hutangBayar, setHutangBayar] = useState("");
   const [recentCustomers, setRecentCustomers] = useState<{ name: string; phone: string | null }[]>([]);
   useEffect(() => {
     if (!storeId) return;
@@ -56,10 +58,40 @@ export default function Payment() {
     return () => { cancelled = true; };
   }, [storeId]);
   function confirmHutang() {
-    if (!hutangName.trim()) return;
-    setHutangCustomer({ name: hutangName.trim(), phone: hutangPhone.trim() });
+    const name = hutangName.trim();
+    if (!name) return;
+    const phone = hutangPhone.trim();
+    const paid = hutangPaidNow;
+    const status: "open" | "partial" | "lunas" = paid >= total ? "lunas" : paid > 0 ? "partial" : "open";
+    setHutangCustomer({ name, phone, paidNow: paid });
+    // Record the debt NOW (so Buku Hutang reflects it) — not tied to tapping
+    // "Transaksi Baru" later. Demo keeps it in memory; real store writes to DB.
+    if (isDemoMode) {
+      addDemoHutang({ id: `dh-${Date.now()}`, customer_name: name, phone: phone || null, amount: total, paid_amount: paid, status, cashier_name: cashierName, created_at: new Date().toISOString() });
+    } else if (storeId) {
+      void recordHutangDB(name, phone, total, paid, status);
+    }
     setShowHutangModal(false);
     setScreen("receipt");
+  }
+
+  async function recordHutangDB(name: string, phone: string, amount: number, paid: number, status: string) {
+    try {
+      let customer_id: string | null = null;
+      if (phone) {
+        const { data } = await supabase.from("customers").select("id").eq("store_id", storeId).eq("phone", phone).limit(1).maybeSingle();
+        customer_id = (data as { id?: string } | null)?.id ?? null;
+      }
+      if (!customer_id) {
+        const { data } = await supabase.from("customers").insert({ store_id: storeId, name, phone: phone || null }).select("id").single();
+        customer_id = (data as { id?: string } | null)?.id ?? null;
+      }
+      await supabase.from("hutang").insert({
+        store_id: storeId, sale_id: null, customer_id, customer_name: name, phone: phone || null,
+        amount, paid_amount: paid, status, settled_at: status === "lunas" ? new Date().toISOString() : null, cashier_name: cashierName,
+      });
+      void logEvent("hutang.add", `Hutang baru ${name} ${formatRp(amount)}${paid > 0 ? ` (dibayar ${formatRp(paid)}, sisa ${formatRp(amount - paid)})` : ""}`);
+    } catch { /* non-fatal */ }
   }
 
   // Demo mode shows all features (no storeId = demo)
@@ -80,6 +112,8 @@ export default function Payment() {
   }
 
   const total = getTotal(cart);
+  const hutangPaidNow = Math.min(parseInt(hutangBayar.replace(/\D/g, "") || "0"), total);
+  const hutangSisa = total - hutangPaidNow;
   const itemCount = getItemCount(cart);
   const change = cashReceived - total;
   const trxId = getTrxId(trxCounter);
@@ -569,6 +603,24 @@ export default function Payment() {
                 <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">WHATSAPP <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></span></label>
                 <input value={hutangPhone} onChange={e => setHutangPhone(e.target.value)} inputMode="tel" placeholder="0812-xxxx-xxxx"
                   className="w-full bg-cream-bg border border-warm-border rounded-button px-4 h-[44px] text-[13.5px] text-navy outline-none placeholder:text-text-mute" />
+              </div>
+
+              {/* Amount: total bon + optional down-payment now → sisa */}
+              <div className="border-t border-dashed border-warm-dashed pt-4">
+                <div className="flex justify-between items-baseline mb-3">
+                  <span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">TOTAL BON</span>
+                  <span className="font-serif text-[18px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</span>
+                </div>
+                <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">BAYAR SEKARANG <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional · 0 = ngutang penuh)</span></span></label>
+                <div className="flex items-center bg-cream-bg border rounded-button px-4 h-[46px] gap-2" style={{ borderColor: hutangBayar ? "#3D7A5E" : "#ECE7DD" }}>
+                  <span className="font-serif text-[15px] text-text-mute font-medium">Rp</span>
+                  <input value={hutangBayar} onChange={e => setHutangBayar(formatIDRInput(e.target.value))} inputMode="numeric" placeholder="0"
+                    className="flex-1 bg-transparent border-0 outline-none font-serif text-[18px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }} />
+                </div>
+                <div className="flex justify-between items-center mt-2.5">
+                  <span className="text-[12px] font-semibold text-navy">Sisa hutang</span>
+                  <span className="font-serif text-[17px] font-bold" style={{ color: hutangSisa > 0 ? "#C25E3D" : "#3D7A5E", fontVariantNumeric: "tabular-nums" }}>{formatRp(hutangSisa)}</span>
+                </div>
               </div>
             </div>
             <div className="px-6 pb-7 pt-3 border-t border-warm-border flex gap-2.5">
