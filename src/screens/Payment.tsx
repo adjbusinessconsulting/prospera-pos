@@ -288,7 +288,7 @@ export default function Payment() {
         </div>
 
         {/* Method tiles — 3-col desktop, 2-col mobile */}
-        <div className="flex-1 overflow-auto px-5 lg:px-10 pt-5 pb-[120px] lg:pb-5">
+        <div className="flex-1 overflow-auto px-5 lg:px-10 pt-5 pb-5">
           <p style={{ fontSize: 10, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-3">METODE PEMBAYARAN</p>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {METHODS.map(m => {
@@ -319,8 +319,8 @@ export default function Payment() {
           </div>
         </div>
 
-        {/* Math card — pinned at bottom */}
-        <div className="fixed lg:relative bottom-0 inset-x-0 lg:inset-x-auto bg-white border-t border-warm-border px-5 lg:px-10 pt-4 pb-5 shrink-0"
+        {/* Math card — in-flow at the bottom of the payment column (scrolls above it) */}
+        <div className="relative bg-white border-t border-warm-border px-5 lg:px-10 pt-4 shrink-0"
           style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom))" }}>
 
           {paymentMethod === "tunai" && (
