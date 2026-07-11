@@ -222,13 +222,6 @@ export default function Receipt() {
         {/* Right panel: desktop only */}
         <div className="hidden lg:flex w-[300px] bg-white border-l border-warm-border flex-col px-7 py-7 shrink-0">
 
-          {/* Kembalian */}
-          <div className="bg-navy rounded-card px-5 py-6 mb-6">
-            <p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-gold/70 mb-2">KEMBALIAN</p>
-            <p className="font-serif text-[38px] font-semibold text-cream-text leading-none" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(change)}</p>
-            <p className="text-[11px] text-white/40 mt-2" style={{ fontVariantNumeric: "tabular-nums" }}>dari {formatRp(cashReceived)} diterima</p>
-          </div>
-
           <p style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-3">TINDAKAN</p>
           <div className="flex flex-col gap-2 mb-auto">
             <button className="flex items-center gap-3 bg-cream-bg border border-warm-border rounded-card px-4 py-3.5 text-[13px] font-medium text-navy hover:border-navy/30 transition-colors cursor-pointer w-full">
