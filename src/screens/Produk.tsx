@@ -173,7 +173,7 @@ export default function Produk() {
               KATALOG · {products.length} ITEM
             </p>
             <h1 className="font-serif text-[24px] lg:text-display-l font-medium text-navy leading-tight">Produk toko</h1>
-            <p className="text-[12px] text-text-mute mt-0.5 hidden lg:block">Kelola produk, harga, dan stok</p>
+            <p className="text-[12px] text-text-mute mt-0.5 hidden lg:block">{canStock ? "Kelola produk, harga, dan stok" : "Kelola produk dan harga"}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
             {canStock && (
@@ -196,27 +196,18 @@ export default function Produk() {
           </div>
         </div>
 
-        {/* Low-stock banner: real notification on Premium, upgrade prompt below */}
-        {lowStockItems.length > 0 && (inventoryOn || !canStock) && (
-          <div className="mx-5 lg:mx-10 mt-4 shrink-0 relative border border-dashed rounded-card px-4 py-3 flex items-center justify-between gap-3"
+        {/* Low-stock banner — Premium + inventory ON only (inventory is Premium-only) */}
+        {lowStockItems.length > 0 && inventoryOn && (
+          <div className="mx-5 lg:mx-10 mt-4 shrink-0 relative border border-dashed rounded-card px-4 py-3 flex items-center gap-3"
             style={{ borderColor: "rgba(201,165,95,0.45)", background: "rgba(201,165,95,0.06)" }}>
-            <div className="flex items-center gap-3">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
-              <div>
-                <p className="text-[12.5px] font-semibold text-navy">
-                  {lowStockItems.length} produk hampir habis
-                  <span className="font-normal text-text-mute"> — {lowStockItems.map(p => p.name.split(" ")[0]).join(", ")}</span>
-                </p>
-                <p className="text-[11px] text-text-mute mt-0.5">
-                  {canStock ? "Segera lakukan pemesanan ulang untuk menjaga stok." : "Aktifkan notifikasi stok rendah dengan upgrade ke Premium."}
-                </p>
-              </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+            <div>
+              <p className="text-[12.5px] font-semibold text-navy">
+                {lowStockItems.length} produk hampir habis
+                <span className="font-normal text-text-mute"> — {lowStockItems.map(p => p.name.split(" ")[0]).join(", ")}</span>
+              </p>
+              <p className="text-[11px] text-text-mute mt-0.5">Segera lakukan pemesanan ulang untuk menjaga stok.</p>
             </div>
-            {!canStock && (
-              <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>
-                PRE
-              </span>
-            )}
           </div>
         )}
 
@@ -243,12 +234,7 @@ export default function Produk() {
                   <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Kategori</th>
                   <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Satuan</th>
                   <th className="text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Harga</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">
-                    <span className="inline-flex items-center gap-1.5 justify-end">
-                      Stok
-                      {!canStock && <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 700, padding: "2px 5px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>PRE</span>}
-                    </span>
-                  </th>
+                  {canStock && <th className="text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Stok</th>}
                   <th className="px-4 py-3 w-8"></th>
                 </tr>
               </thead>
@@ -289,22 +275,20 @@ export default function Produk() {
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-mute"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>
                       </button>
                     </td>
+                    {canStock && (
                     <td className="px-4 py-3.5 text-right">
-                      {canStock ? (
-                        <div className="inline-flex items-center gap-2 justify-end">
-                          <span className="text-[13px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: showStockValue && p.stock <= threshold ? "#A6843F" : "#1B2A4A" }}>{showStockValue ? p.stock : "—"}</span>
-                          {inventoryOn && (
-                            <button onClick={() => { setTambahTarget(p); setTambahQty(""); }} title="Tambah stok"
-                              className="w-6 h-6 rounded-[6px] flex items-center justify-center border cursor-pointer"
-                              style={{ borderColor: "rgba(92,158,126,0.4)", color: "#4E8C6E", background: "rgba(92,158,126,0.06)" }}>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
-                            </button>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-[13px] text-text-mute/40 tracking-widest select-none">—</span>
-                      )}
+                      <div className="inline-flex items-center gap-2 justify-end">
+                        <span className="text-[13px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: showStockValue && p.stock <= threshold ? "#A6843F" : "#1B2A4A" }}>{showStockValue ? p.stock : "—"}</span>
+                        {inventoryOn && (
+                          <button onClick={() => { setTambahTarget(p); setTambahQty(""); }} title="Tambah stok"
+                            className="w-6 h-6 rounded-[6px] flex items-center justify-center border cursor-pointer"
+                            style={{ borderColor: "rgba(92,158,126,0.4)", color: "#4E8C6E", background: "rgba(92,158,126,0.06)" }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
+                          </button>
+                        )}
+                      </div>
                     </td>
+                    )}
                     <td className="px-4 py-3.5">
                       <button className="w-7 h-7 rounded-[6px] flex items-center justify-center text-text-mute hover:text-navy hover:bg-cream-bg transition-colors bg-transparent border-0 cursor-pointer">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="5" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="19" r="1" /></svg>
@@ -342,21 +326,17 @@ export default function Produk() {
                     {formatRp(p.price)}
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-mute"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>
                   </button>
+                  {canStock && (
                   <div className="flex items-center justify-end gap-1.5 mt-0.5">
-                    {canStock ? (
-                      <>
-                        <span className="text-[11px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: showStockValue && p.stock <= threshold ? "#A6843F" : "#7A7360" }}>Stok {showStockValue ? p.stock : "—"}</span>
-                        {inventoryOn && (
-                          <button onClick={() => { setTambahTarget(p); setTambahQty(""); }} title="Tambah stok"
-                            className="w-5 h-5 rounded-[5px] flex items-center justify-center border-0" style={{ color: "#4E8C6E", background: "rgba(92,158,126,0.12)" }}>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7, letterSpacing: "0.12em", fontWeight: 700, padding: "2px 5px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>PRE</span>
+                    <span className="text-[11px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: showStockValue && p.stock <= threshold ? "#A6843F" : "#7A7360" }}>Stok {showStockValue ? p.stock : "—"}</span>
+                    {inventoryOn && (
+                      <button onClick={() => { setTambahTarget(p); setTambahQty(""); }} title="Tambah stok"
+                        className="w-5 h-5 rounded-[5px] flex items-center justify-center border-0" style={{ color: "#4E8C6E", background: "rgba(92,158,126,0.12)" }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
+                      </button>
                     )}
                   </div>
+                  )}
                 </div>
               </div>
             ))}

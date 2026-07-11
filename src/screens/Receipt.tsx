@@ -86,10 +86,20 @@ export default function Receipt() {
 
   async function recordHutang(cust: { name: string; phone: string }, amount: number, saleTrx: string) {
     try {
-      const { data: cRow } = await supabase.from("customers")
-        .insert({ store_id: storeId, name: cust.name, phone: cust.phone || null })
-        .select("id").single();
-      const customer_id = (cRow as { id?: string } | null)?.id ?? null;
+      // Dedup (hutang scope): reuse an existing customer matched by phone so we
+      // don't fragment Buku Hutang totals with "5 Budis". Only creates when new.
+      let customer_id: string | null = null;
+      if (cust.phone) {
+        const { data: existing } = await supabase.from("customers")
+          .select("id").eq("store_id", storeId).eq("phone", cust.phone).limit(1).maybeSingle();
+        customer_id = (existing as { id?: string } | null)?.id ?? null;
+      }
+      if (!customer_id) {
+        const { data: cRow } = await supabase.from("customers")
+          .insert({ store_id: storeId, name: cust.name, phone: cust.phone || null })
+          .select("id").single();
+        customer_id = (cRow as { id?: string } | null)?.id ?? null;
+      }
       await supabase.from("hutang").insert({
         store_id: storeId, sale_id: null, customer_id,
         customer_name: cust.name, phone: cust.phone || null,

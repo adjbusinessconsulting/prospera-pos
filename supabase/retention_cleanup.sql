@@ -46,11 +46,15 @@ returns int language sql stable as $$
   end;
 $$;
 
--- ── STEP 2: the cleanup (sale_items first, then sales) ─────────────────────────
--- Keeps a sale while its WITA date >= today(WITA) − effective_keep_days; deletes older.
+-- ── STEP 2: the cleanup — ALL data follows the tier window ─────────────────────
+-- Sales + sale_items, kas_entries, activity_logs (audit), shifts, and SETTLED
+-- hutang all expire on effective_keep_days. OPEN hutang is the ONE exception — a
+-- debt is money owed, not history — so it survives until it's marked lunas (then
+-- it ages from settled_at). Cutoff helper: WITA date < today(WITA) − keep_days.
 create or replace function public.expire_old_sales()
 returns void language plpgsql security definer set search_path = public as $$
 begin
+  -- sale_items (via their sale)
   delete from public.sale_items si
   using public.sales s
   join public.stores st on st.id = s.store_id
@@ -58,10 +62,35 @@ begin
     and (s.created_at at time zone 'Asia/Makassar')::date
         < ((now() at time zone 'Asia/Makassar')::date - public.effective_keep_days(st.tier, st.tier_expires_at));
 
-  delete from public.sales s
-  using public.stores st
+  -- sales
+  delete from public.sales s using public.stores st
   where st.id = s.store_id
     and (s.created_at at time zone 'Asia/Makassar')::date
+        < ((now() at time zone 'Asia/Makassar')::date - public.effective_keep_days(st.tier, st.tier_expires_at));
+
+  -- kas entries
+  delete from public.kas_entries k using public.stores st
+  where st.id = k.store_id
+    and (k.created_at at time zone 'Asia/Makassar')::date
+        < ((now() at time zone 'Asia/Makassar')::date - public.effective_keep_days(st.tier, st.tier_expires_at));
+
+  -- audit log (Premium mirror)
+  delete from public.activity_logs a using public.stores st
+  where st.id = a.store_id
+    and (a.created_at at time zone 'Asia/Makassar')::date
+        < ((now() at time zone 'Asia/Makassar')::date - public.effective_keep_days(st.tier, st.tier_expires_at));
+
+  -- shift records
+  delete from public.shifts sh using public.stores st
+  where st.id = sh.store_id
+    and (sh.opened_at at time zone 'Asia/Makassar')::date
+        < ((now() at time zone 'Asia/Makassar')::date - public.effective_keep_days(st.tier, st.tier_expires_at));
+
+  -- SETTLED hutang only (open debts survive); ages from settled_at
+  delete from public.hutang h using public.stores st
+  where st.id = h.store_id
+    and h.status = 'lunas' and h.settled_at is not null
+    and (h.settled_at at time zone 'Asia/Makassar')::date
         < ((now() at time zone 'Asia/Makassar')::date - public.effective_keep_days(st.tier, st.tier_expires_at));
 end $$;
 

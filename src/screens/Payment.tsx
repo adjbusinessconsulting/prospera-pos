@@ -47,6 +47,14 @@ export default function Payment() {
   const [showHutangModal, setShowHutangModal] = useState(false);
   const [hutangName, setHutangName] = useState("");
   const [hutangPhone, setHutangPhone] = useState("");
+  const [recentCustomers, setRecentCustomers] = useState<{ name: string; phone: string | null }[]>([]);
+  useEffect(() => {
+    if (!storeId) return;
+    let cancelled = false;
+    supabase.from("customers").select("name,phone").eq("store_id", storeId).order("created_at", { ascending: false }).limit(8)
+      .then(({ data }) => { if (!cancelled) setRecentCustomers((data ?? []) as { name: string; phone: string | null }[]); });
+    return () => { cancelled = true; };
+  }, [storeId]);
   function confirmHutang() {
     if (!hutangName.trim()) return;
     setHutangCustomer({ name: hutangName.trim(), phone: hutangPhone.trim() });
@@ -538,6 +546,19 @@ export default function Payment() {
               <p className="text-[12px] text-text-mute mt-1">Rp {new Intl.NumberFormat("id-ID").format(total)} akan dicatat di Buku Hutang.</p>
             </div>
             <div className="px-6 py-5 flex flex-col gap-4">
+              {recentCustomers.length > 0 && (
+                <div>
+                  <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">PELANGGAN TERAKHIR</span></label>
+                  <div className="flex flex-wrap gap-2">
+                    {recentCustomers.map((c, i) => (
+                      <button key={i} type="button" onClick={() => { setHutangName(c.name); setHutangPhone(c.phone ?? ""); }}
+                        className="h-8 px-3 rounded-full border border-warm-border bg-cream-bg text-[12px] text-navy hover:border-navy/40 cursor-pointer whitespace-nowrap">
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">NAMA PELANGGAN <span className="text-warning">*</span></span></label>
                 <input value={hutangName} onChange={e => setHutangName(e.target.value)} autoFocus placeholder="mis. Bu Sari"
