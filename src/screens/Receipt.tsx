@@ -117,13 +117,6 @@ export default function Receipt() {
             </div>
           </div>
 
-          {/* Mobile: Kembalian */}
-          <div className="lg:hidden bg-navy rounded-card px-5 py-5 mb-5">
-            <p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-gold/70 mb-1">KEMBALIAN</p>
-            <p className="font-serif text-[36px] font-semibold text-cream-text leading-none" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(change)}</p>
-            <p className="text-[11px] text-white/40 mt-1.5">dari {formatRp(cashReceived)} diterima</p>
-          </div>
-
           {/* Thermal receipt card */}
           <div className="bg-white border border-warm-border rounded-card px-[26px] py-6 flex flex-col w-full max-w-[460px]">
 
