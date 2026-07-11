@@ -35,8 +35,44 @@ function methodLabel(m: string) {
   return m.charAt(0).toUpperCase() + m.slice(1).toLowerCase();
 }
 
+// Demo-only seeded transaction history (real stores load from Supabase).
+function seedDemoSales(): SaleRecord[] {
+  const cashiers = ["Aerith", "Stevany"];
+  const methods = ["tunai", "tunai", "tunai", "qris", "qris", "transfer", "debit"];
+  const products: [string, number][] = [
+    ["Beras Pandan 5kg", 75000], ["Indomie Goreng", 3500], ["Telur Ayam", 28000],
+    ["Aqua 600ml", 4000], ["Bimoli 2L", 38000], ["Gula Pasir 1kg", 16000], ["Kapal Api Sachet", 1500],
+  ];
+  const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)];
+  const out: SaleRecord[] = [];
+  let n = 42;
+  for (let d = 0; d < 5; d++) {
+    const perDay = d === 0 ? 9 : 3 + (d % 3);
+    for (let i = 0; i < perDay; i++) {
+      const when = new Date(); when.setDate(when.getDate() - d);
+      when.setHours(9 + Math.floor(Math.random() * 10), Math.floor(Math.random() * 60), 0, 0);
+      const items = Array.from({ length: 1 + Math.floor(Math.random() * 3) }, () => {
+        const [pn, price] = pick(products); const qty = 1 + Math.floor(Math.random() * 3);
+        return { product_id: "", product_name: pn, price, qty, subtotal: price * qty };
+      });
+      const total = items.reduce((s, it) => s + it.subtotal, 0);
+      const method = pick(methods);
+      const rounded = Math.ceil(total / 5000) * 5000;
+      out.push({
+        id: `demo-${n}`, trx_id: `#TRX-${String(n).padStart(4, "0")}`, cashier_id: "",
+        cashier_name: pick(cashiers), shift: 1 + Math.floor(Math.random() * 3), total,
+        payment_method: method, cash_received: method === "tunai" ? rounded : total,
+        change_amount: method === "tunai" ? rounded - total : 0,
+        created_at: when.toISOString(), sale_items: items,
+      });
+      n++;
+    }
+  }
+  return out.sort((a, b) => b.created_at.localeCompare(a.created_at));
+}
+
 export default function Riwayat() {
-  const { cashierInitials, selectedShiftName, storeId, storePhone, storeTier, setScreen, signOut } = useStore();
+  const { cashierInitials, selectedShiftName, storeId, storePhone, storeTier, isDemoMode, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
   const canExport = isAtLeast(effectiveTier, 'standard');
   const canExtendedHistory = isAtLeast(effectiveTier, 'standard');
@@ -49,6 +85,7 @@ export default function Riwayat() {
   const [showExportMenu, setShowExportMenu] = useState(false);
 
   useEffect(() => {
+    if (isDemoMode) { setSales(seedDemoSales()); setLoadingData(false); return; }
     if (!storeId) { setLoadingData(false); return; }
     const from = new Date();
     from.setDate(from.getDate() - 30);
@@ -64,7 +101,7 @@ export default function Riwayat() {
         setSales((data as SaleRecord[]) ?? []);
         setLoadingData(false);
       });
-  }, [storeId]);
+  }, [storeId, isDemoMode]);
 
   function filterByDays(list: SaleRecord[], days: number) {
     if (days === 0) {
@@ -207,7 +244,11 @@ export default function Riwayat() {
               </button>
               <button onClick={() => setScreen("kas")}
                 className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-medium text-text-mute hover:text-navy transition-colors bg-transparent border-0 cursor-pointer">
-                Kasir
+                Kas
+              </button>
+              <button onClick={() => setScreen("hutang")}
+                className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-medium text-text-mute hover:text-navy transition-colors bg-transparent border-0 cursor-pointer">
+                Hutang
               </button>
             </div>
           </div>
@@ -254,8 +295,8 @@ export default function Riwayat() {
           </div>
         </div>
 
-        {/* Free expiry banner */}
-        {activeFilter === 0 && (
+        {/* Free expiry banner — Free tier only */}
+        {activeFilter === 0 && !canExtendedHistory && (
           <div className="mx-5 lg:mx-10 mt-3 shrink-0 flex items-center justify-between gap-3 px-4 py-3 rounded-card border border-dashed"
             style={{ borderColor: "rgba(201,165,95,0.45)", background: "rgba(201,165,95,0.06)" }}>
             <div className="flex items-center gap-2.5">

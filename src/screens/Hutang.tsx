@@ -88,6 +88,7 @@ export default function Hutang() {
           <div className="flex items-start justify-between gap-2">
             <h1 className="font-serif text-[24px] lg:text-display-l font-medium text-navy leading-tight">Buku Hutang</h1>
             <div className="flex gap-0.5 bg-cream-bg border border-warm-border rounded-[10px] p-0.5 shrink-0 mt-0.5">
+              <button onClick={() => setScreen("riwayat")} className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-medium text-text-mute hover:text-navy bg-transparent border-0 cursor-pointer">Riwayat</button>
               <button onClick={() => setScreen("kas")} className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-medium text-text-mute hover:text-navy bg-transparent border-0 cursor-pointer">Kas</button>
               <button className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-semibold bg-navy text-cream-text border-0">Hutang</button>
             </div>
