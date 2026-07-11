@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useStore, localDateISO } from "../store";
 import { supabase } from "../lib/supabase";
+import { pruneLog } from "../lib/auditlog";
 import type { CashierDB } from "../types";
 import { BUILD } from "../version";
 import { DemoChooser } from "../components/DemoChooser";
@@ -13,11 +14,13 @@ const DAFTAR_POS_URL = "https://sterith.com/form.html?daftar=pos";
 
 // Max stores per tier. NOTE: also enforce server-side (RLS / provisioning) —
 // this client cap is UX only and can be bypassed.
+// Base stores included per tier. Standard/Premium include 1; EXTRA stores are a
+// paid add-on provisioned by Master Office (Standard +50rb, Premium +70rb each),
+// so self-serve create is capped to the included store here.
 function storeCap(tier: string | null): number {
   const t = (tier || "free").toLowerCase();
-  if (t === "premium" || t === "business" || t === "enterprise") return Infinity;
-  if (t === "standard") return 2;
-  return 1;
+  if (t === "business" || t === "enterprise") return Infinity;
+  return 1; // free / standard / premium all include 1; extras are paid add-ons
 }
 
 interface StoreRow {
@@ -166,6 +169,7 @@ export default function OwnerLogin() {
     );
     setInventorySettings(store.inventory_enabled ?? true, store.low_stock_threshold ?? 5);
     setReceiptLogo(store.receipt_logo ?? "");
+    void pruneLog(effectiveTier);   // trim on-device audit log to the tier window
     const [{ data: productRows }, { count: saleCount }, { data: shiftRows }] = await Promise.all([
       supabase.from("products").select("*").eq("store_id", store.id).eq("active", true).order("name"),
       supabase.from("sales").select("*", { count: "exact", head: true }).eq("store_id", store.id),
@@ -391,7 +395,7 @@ export default function OwnerLogin() {
             const cap = storeCap(storeChoices[0]?.tier);
             if (storeChoices.length >= cap) return (
               <p style={{ fontSize: 11.5, color: "#7A776F", textAlign: "center", marginTop: 14, background: "rgba(201,165,95,0.06)", border: "1px dashed rgba(201,165,95,0.4)", borderRadius: 10, padding: "10px 12px" }}>
-                Batas toko untuk paket <b style={{ color: "#0B1129" }}>{storeChoices[0]?.tier || "free"}</b> tercapai ({cap === Infinity ? "∞" : cap} toko). Upgrade untuk menambah cabang.
+                Tambah toko / cabang adalah <b style={{ color: "#0B1129" }}>add-on berbayar</b> (Standard +Rp 50rb, Premium +Rp 70rb per toko). Hubungi Sterith untuk menambah.
               </p>
             );
             if (showCreate) return (

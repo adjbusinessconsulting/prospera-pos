@@ -59,7 +59,7 @@ const hourLabel = (h: number) => `${((h % 24) + 24) % 24}–${(((h + 1) % 24) + 
 interface Series { vals: number[]; labs: string[]; rev: number; trx: number; items: number; title: string; slabel: string }
 
 interface RealItem { ts: number; name: string; qty: number; subtotal: number }
-interface RealData { byDay: Map<number, DayRec>; items: RealItem[]; modalAwal: number }
+interface RealData { byDay: Map<number, DayRec>; items: RealItem[]; modalAwal: number; todayCash: number }
 
 // The [start,end] day-timestamp range covered by the current period (for filtering real items).
 function periodRange(gran: string, off: number, rStart: string, rEnd: string, TODAY: Date): [number, number] {
@@ -104,15 +104,19 @@ export default function Laporan() {
       if (cancelled) return;
       const byDay = new Map<number, DayRec>();
       const items: RealItem[] = [];
+      const todayTs = RTODAY.getTime();
+      let todayCash = 0;  // drawer = tunai + transfer only (QRIS excluded)
       (sales ?? []).forEach(row => {
-        const s = row as { created_at: string; total: number; sale_items?: { product_name: string; qty: number; subtotal: number }[] };
+        const s = row as { created_at: string; total: number; payment_method?: string; sale_items?: { product_name: string; qty: number; subtotal: number }[] };
         const d = new Date(s.created_at); d.setHours(0, 0, 0, 0); const ts = d.getTime();
         const cur = byDay.get(ts) ?? { d, rev: 0, trx: 0, items: 0 };
         cur.rev += s.total ?? 0; cur.trx += 1;
         (s.sale_items ?? []).forEach(it => { cur.items += it.qty ?? 0; items.push({ ts, name: it.product_name, qty: it.qty ?? 0, subtotal: it.subtotal ?? 0 }); });
         byDay.set(ts, cur);
+        const m = s.payment_method ?? "";
+        if (ts === todayTs && (m === "tunai" || m === "transfer")) todayCash += s.total ?? 0;
       });
-      setReal({ byDay, items, modalAwal: (shiftRow as { modal_awal?: number } | null)?.modal_awal ?? 0 });
+      setReal({ byDay, items, todayCash, modalAwal: (shiftRow as { modal_awal?: number } | null)?.modal_awal ?? 0 });
     })();
     return () => { cancelled = true; };
   }, [storeId, isDemoMode, cap, RTODAY]);
@@ -186,15 +190,18 @@ export default function Laporan() {
     return agg(recs.map(r => r.rev), days.map((d, i) => i % step === 0 ? String(d.getDate()) : ""), recs, "Penjualan harian", "Total rentang");
   }, [gran, off, rMode, rStart, rEnd, openHour, closeHour, dayRec, RTODAY]);
 
-  // Free: today omset (open → now)
+  // Free today card. Omset = all methods; "Perkiraan di Laci" = modal + CASH
+  // (tunai + transfer) only — QRIS is in omset but not in the drawer.
   const freeToday = useMemo(() => {
     const rec = dayRec(RTODAY);
-    const hrs = closeHour - openHour;
     const nowH = new Date().getHours();
     const upto = nowH < openHour ? openHour + 1 : Math.min(closeHour, nowH + 1);
+    if (real) return { omset: rec.rev, laci: real.todayCash, upto };  // real: actual so far
+    const hrs = closeHour - openHour;
     const frac = hrs > 0 ? Math.max(0, Math.min(1, (upto - openHour) / hrs)) : 1;
-    return { omset: Math.round(rec.rev * frac), upto };
-  }, [dayRec, RTODAY, openHour, closeHour]);
+    const omset = Math.round(rec.rev * frac);
+    return { omset, laci: Math.round(omset * 0.82), upto };  // demo approx (cash ≈ 82%)
+  }, [real, dayRec, RTODAY, openHour, closeHour]);
 
   const topProducts = useMemo(() => {
     if (real) {
@@ -281,7 +288,7 @@ export default function Laporan() {
                 </div>
                 <div className="flex justify-between items-center pt-[14px] text-[13.5px]">
                   <span className="text-navy font-semibold">Perkiraan di Laci</span>
-                  <b className="text-gold text-[20px] font-extrabold" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(modalAwal + freeToday.omset)}</b>
+                  <b className="text-gold text-[20px] font-extrabold" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(modalAwal + freeToday.laci)}</b>
                 </div>
               </div>
               <p className="text-[11.5px] text-text-mute mt-3.5 leading-relaxed bg-cream-bg rounded-[10px] px-3 py-2.5">

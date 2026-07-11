@@ -15,11 +15,12 @@ export default function TutupToko() {
   const [omzet, setOmzet] = useState(isDemoMode ? 8_450_000 : 0);
   const [trx, setTrx] = useState(isDemoMode ? 54 : 0);
   const [shiftCount, setShiftCount] = useState(isDemoMode ? 3 : 1);
-  const [tunai, setTunai] = useState(isDemoMode ? 6_120_000 : 0);
+  const [cash, setCash] = useState(isDemoMode ? 6_120_000 : 0);   // tunai + transfer (drawer)
   const [modalAwal, setModalAwal] = useState(isDemoMode ? 500_000 : 0);
   const [kasMasuk, setKasMasuk] = useState(0);
   const [kasKeluar, setKasKeluar] = useState(isDemoMode ? 115_000 : 0);
   const [shiftId, setShiftId] = useState<string | null>(null);
+  const [showRecon, setShowRecon] = useState(false);
   const [counted, setCounted] = useState("");
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function TutupToko() {
       setOmzet(S.reduce((a, s) => a + (s.total ?? 0), 0));
       setTrx(S.length);
       setShiftCount(Math.max(1, new Set(S.map(s => s.shift)).size));
-      setTunai(S.filter(s => s.payment_method === "tunai").reduce((a, s) => a + (s.total ?? 0), 0));
+      setCash(S.filter(s => s.payment_method === "tunai" || s.payment_method === "transfer").reduce((a, s) => a + (s.total ?? 0), 0));
       const sr = shiftRow as { id?: string; modal_awal?: number } | null;
       setModalAwal(sr?.modal_awal ?? 0); setShiftId(sr?.id ?? null);
       const K = (kas ?? []) as { type: string; amount: number }[];
@@ -45,27 +46,32 @@ export default function TutupToko() {
     return () => { cancelled = true; };
   }, [storeId, isDemoMode]);
 
-  const expected = modalAwal + tunai + kasMasuk - kasKeluar;
+  const expected = modalAwal + cash + kasMasuk - kasKeluar;   // drawer seharusnya
   const countedNum = parseInt(counted.replace(/\D/g, "") || "0");
   const selisih = counted ? countedNum - expected : 0;
+  const selType: "cocok" | "lebih" | "kurang" = selisih === 0 ? "cocok" : selisih > 0 ? "lebih" : "kurang";
   const rataRata = trx ? Math.round(omzet / trx) : 0;
 
   const now = new Date();
   const dateStr = now.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   async function closeAndLogout() {
+    const reconciled = isStd && counted !== "";
     if (storeId && !isDemoMode && shiftId) {
       try {
-        await supabase.from("shifts").update({ closed_at: new Date().toISOString(), modal_akhir: counted ? countedNum : null }).eq("id", shiftId);
-        void logEvent("shift.close", `Tutup shift · kas dihitung ${formatRp(countedNum)} (selisih ${selisih >= 0 ? "+" : ""}${formatRp(selisih)})`);
+        const patch: Record<string, unknown> = { closed_at: new Date().toISOString(), modal_akhir: reconciled ? countedNum : null };
+        if (reconciled) { patch.selisih_type = selType; patch.selisih_amount = Math.abs(selisih); }
+        await supabase.from("shifts").update(patch).eq("id", shiftId);
+        if (reconciled) void logEvent("shift.rekonsiliasi", `Rekonsiliasi ${selType.toUpperCase()} · dihitung ${formatRp(countedNum)} vs seharusnya ${formatRp(expected)} (selisih ${selisih >= 0 ? "+" : ""}${formatRp(selisih)})`);
+        else void logEvent("shift.close", "Tutup shift · tanpa hitung kas");
       } catch { /* still let them log out */ }
     }
     signOut();
   }
 
-  const sel = selisih === 0
-    ? { label: "Pas", color: "#3D7A5E", bg: "rgba(92,158,126,0.10)" }
-    : selisih > 0
+  const sel = selType === "cocok"
+    ? { label: "Cocok ✓", color: "#3D7A5E", bg: "rgba(92,158,126,0.10)" }
+    : selType === "lebih"
     ? { label: "Lebih", color: "#A6843F", bg: "rgba(201,165,95,0.12)" }
     : { label: "Kurang", color: "#C25E3D", bg: "rgba(194,94,61,0.10)" };
 
@@ -93,13 +99,11 @@ export default function TutupToko() {
         <span style={{ background: "rgba(122,119,111,0.10)", border: "1px solid rgba(122,119,111,0.28)", color: "#7A776F", fontSize: 9, letterSpacing: "0.16em", fontWeight: 600, padding: "3px 8px", borderRadius: 9999, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>{effectiveTier}</span>
       </div>
 
-      {/* Main */}
       <div className="flex-1 flex flex-col lg:flex-row gap-5 lg:gap-6 px-6 lg:px-8 py-6 lg:py-8 overflow-auto min-h-0">
-        {/* Left */}
         <div className="flex-1 flex flex-col gap-5 min-w-0">
           <div>
             <h1 className="font-serif text-[28px] lg:text-[32px] font-medium text-navy mb-1">Tutup Toko</h1>
-            <p className="text-[13px] text-text-mute">Ringkasan &amp; hitung kas sebelum logout. Data tersimpan di Riwayat ({retentionDays} hari).</p>
+            <p className="text-[13px] text-text-mute">Ringkasan hari ini sebelum logout. Data tersimpan di Riwayat ({retentionDays} hari).</p>
           </div>
 
           {/* Navy omzet card */}
@@ -113,31 +117,48 @@ export default function TutupToko() {
             </div>
           </div>
 
-          {/* Reconciliation */}
-          <div className="bg-white border border-warm-border rounded-card px-6 py-5">
-            <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-3">HITUNG KAS · REKONSILIASI TUNAI</p>
-            <div className="flex flex-col">
-              {reconRow("Modal awal", formatRp(modalAwal))}
-              {reconRow("Penjualan tunai", formatRp(tunai), "+")}
-              {isStd && kasMasuk > 0 && reconRow("Kas masuk", formatRp(kasMasuk), "+")}
-              {isStd && kasKeluar > 0 && reconRow("Kas keluar", formatRp(kasKeluar), "-")}
-              {reconRow("Kas seharusnya", formatRp(expected), undefined, true)}
-            </div>
-            <div className="mt-4">
-              <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">KAS DIHITUNG (UANG DI LACI)</span></label>
-              <div className="flex items-center bg-cream-bg border rounded-button px-4 h-[50px] gap-2" style={{ borderColor: counted ? "#0B1129" : "#ECE7DD" }}>
-                <span className="font-serif text-[16px] text-text-mute font-medium">Rp</span>
-                <input type="text" inputMode="numeric" value={counted} onChange={e => setCounted(formatIDRInput(e.target.value))} placeholder="0"
-                  className="flex-1 bg-transparent border-0 outline-none font-serif text-[20px] text-navy" style={{ fontVariantNumeric: "tabular-nums" }} />
+          {/* Reconciliation — Standard+ only, optional */}
+          {isStd && (
+            <div className="bg-white border border-warm-border rounded-card px-6 py-5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute">REKONSILIASI KAS · OPSIONAL</p>
+                  <p className="text-[11.5px] text-text-mute mt-0.5">Hitung uang di laci untuk cek selisih. Boleh tutup tanpa hitung.</p>
+                </div>
+                <button onClick={() => setShowRecon(v => !v)}
+                  className="shrink-0 h-[38px] px-4 rounded-card text-[12.5px] font-semibold border border-navy/20 text-navy hover:border-navy/40 bg-cream-bg cursor-pointer">
+                  {showRecon ? "Sembunyikan" : "Hitung Kas"}
+                </button>
               </div>
+
+              {showRecon && (
+                <div className="mt-4">
+                  <div className="flex flex-col">
+                    {reconRow("Modal awal", formatRp(modalAwal))}
+                    {reconRow("Penjualan tunai + transfer", formatRp(cash), "+")}
+                    {kasMasuk > 0 && reconRow("Kas masuk", formatRp(kasMasuk), "+")}
+                    {kasKeluar > 0 && reconRow("Kas keluar", formatRp(kasKeluar), "-")}
+                    {reconRow("Kas seharusnya", formatRp(expected), undefined, true)}
+                  </div>
+                  <div className="mt-4">
+                    <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">KAS DIHITUNG (UANG DI LACI)</span></label>
+                    <div className="flex items-center bg-cream-bg border rounded-button px-4 h-[50px] gap-2" style={{ borderColor: counted ? "#0B1129" : "#ECE7DD" }}>
+                      <span className="font-serif text-[16px] text-text-mute font-medium">Rp</span>
+                      <input type="text" inputMode="numeric" value={counted} onChange={e => setCounted(formatIDRInput(e.target.value))} placeholder="0"
+                        className="flex-1 bg-transparent border-0 outline-none font-serif text-[20px] text-navy" style={{ fontVariantNumeric: "tabular-nums" }} />
+                    </div>
+                  </div>
+                  {counted && (
+                    <div className="mt-3 flex items-center justify-between rounded-card px-4 py-3" style={{ background: sel.bg, border: `1px solid ${sel.color}44` }}>
+                      <span className="text-[12px] font-semibold uppercase" style={{ letterSpacing: "0.06em", color: sel.color }}>Kas · {sel.label}</span>
+                      {selType !== "cocok" && <span className="font-serif text-[18px] font-bold" style={{ color: sel.color, fontVariantNumeric: "tabular-nums" }}>{selisih > 0 ? "+" : "−"}{formatRp(Math.abs(selisih))}</span>}
+                    </div>
+                  )}
+                  <p className="text-[10.5px] text-text-mute mt-2">Selisih dicatat pada nota tutup &amp; tersimpan di data shift.</p>
+                </div>
+              )}
             </div>
-            {counted && (
-              <div className="mt-3 flex items-center justify-between rounded-card px-4 py-3" style={{ background: sel.bg, border: `1px solid ${sel.color}44` }}>
-                <span className="text-[12px] font-semibold uppercase" style={{ letterSpacing: "0.06em", color: sel.color }}>Selisih · {sel.label}</span>
-                <span className="font-serif text-[18px] font-bold" style={{ color: sel.color, fontVariantNumeric: "tabular-nums" }}>{selisih > 0 ? "+" : selisih < 0 ? "−" : ""}{formatRp(Math.abs(selisih))}</span>
-              </div>
-            )}
-          </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3">
@@ -153,7 +174,7 @@ export default function TutupToko() {
               TUTUP &amp; LOGOUT
             </button>
           </div>
-          <p className="text-[11px] text-text-mute">Setelah ditutup, shift ditutup dengan jumlah kas dihitung &amp; layar kembali ke login.</p>
+          <p className="text-[11px] text-text-mute">Setelah ditutup, shift ditutup{isStd ? " (beserta hasil rekonsiliasi jika diisi)" : ""} &amp; layar kembali ke login.</p>
         </div>
 
         {/* Right: Standard upsell (Free only) */}
@@ -162,9 +183,9 @@ export default function TutupToko() {
             <div className="bg-white border border-warm-border rounded-card px-6 py-6 relative">
               <span style={{ position: "absolute", top: 12, right: 14, background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const }}>STANDARD</span>
               <p style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-2">LAPORAN LENGKAP</p>
-              <p className="text-[12.5px] text-text-mute mb-5 leading-relaxed">Tier Free menampilkan total omzet &amp; hitung kas. <span className="text-navy font-medium">Standard</span> membuka:</p>
+              <p className="text-[12.5px] text-text-mute mb-5 leading-relaxed">Tier Free menampilkan total omzet. <span className="text-navy font-medium">Standard</span> membuka:</p>
               <div className="flex flex-col gap-2.5 mb-6">
-                {["Rincian omzet per shift & kasir", "Rincian per metode bayar", "Export laporan (PDF / CSV)", "Riwayat 30 hari (bukan 1 hari)", "Uang kas, hutang & WhatsApp struk"].map(item => (
+                {["Rincian omzet per shift & kasir", "Rekonsiliasi kas (hitung laci → selisih)", "Export laporan (PDF / CSV)", "Riwayat 30 hari (bukan 1 hari)", "Uang kas, hutang & WhatsApp struk"].map(item => (
                   <div key={item} className="flex items-start gap-2.5">
                     <svg className="shrink-0 mt-0.5" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5C9E7E" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" /></svg>
                     <span className="text-[12px] text-navy leading-relaxed">{item}</span>

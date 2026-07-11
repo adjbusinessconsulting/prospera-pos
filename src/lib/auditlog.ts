@@ -112,6 +112,30 @@ export async function flushAuditServer() {
   finally { sflushing = false; }
 }
 
+const RETENTION_DAYS: Record<string, number> = { free: 1, standard: 30, premium: 90, business: 1095, enterprise: 1825 };
+
+// Prune on-device audit entries older than the tier window, then re-anchor the
+// surviving chain so verifyLog() still passes. Immutable WITHIN the window; beyond
+// it, entries expire by policy (same window as transaction history) — not by a
+// cashier deleting them. Call once on login with the store's tier.
+export async function pruneLog(tier: string) {
+  try {
+    if (isDemo()) return;
+    const days = RETENTION_DAYS[(tier || "free").toLowerCase()] ?? 1;
+    const cutoff = Date.now() - days * 86400000;
+    const list = read();
+    const kept = list.filter((e) => new Date(e.time).getTime() >= cutoff);
+    if (kept.length === list.length) return;      // nothing expired
+    let prevHash = "GENESIS";                      // re-anchor from oldest survivor
+    for (const e of kept) {
+      e.prevHash = prevHash;
+      e.hash = await sha256(chainInput({ seq: e.seq, time: e.time, actor: e.actor, type: e.type, detail: e.detail, prevHash }));
+      prevHash = e.hash;
+    }
+    write(kept);
+  } catch { /* non-fatal */ }
+}
+
 // Verify the chain. Returns the index of the first broken entry, or -1 if intact.
 export async function verifyLog(): Promise<number> {
   if (isDemo()) return -1; // demo log is a showcase — always shown intact

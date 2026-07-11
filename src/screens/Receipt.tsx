@@ -7,17 +7,18 @@ import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
 
 function SterithWatermark({ tier }: { tier: string }) {
-  // Standard+ gets custom receipt branding (own logo + "Powered by …"); Free keeps plain Sterith branding.
-  const isStandardPlus = isAtLeast(tier, 'standard');
+  // Branding ladder (July 11):
+  //  Free     → store name (shown above) + "powered by Sterith Business Consulting", no logo
+  //  Standard → own logo + "Powered by Sterith Business Consulting POS"
+  //  Premium  → own logo, NO Sterith branding (full white-label)
+  if (isAtLeast(tier, 'premium')) return null;
+  const isStandard = isAtLeast(tier, 'standard');
   return (
-    <div style={{ background: "#FAFAF7", border: "1px solid #ECE7DD", borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+    <div style={{ background: "#FAFAF7", border: "1px solid #ECE7DD", borderRadius: 10, padding: "9px 14px", display: "flex", alignItems: "center", gap: 9, justifyContent: "center" }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/mark-gold-512.png" alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />
-      <div>
-        <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600, fontSize: 12, letterSpacing: "0.08em", color: "#0B1129", lineHeight: 1 }}>STERITH POS</div>
-        <div style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: 7, letterSpacing: "0.14em", color: "#A6843F", marginTop: 3, textTransform: "uppercase", lineHeight: 1 }}>
-          {isStandardPlus ? "Powered by Sterith Business Consulting POS" : "Sterith POS · sterith.com"}
-        </div>
+      <img src="/mark-gold-512.png" alt="" style={{ width: 18, height: 18, objectFit: "contain", flexShrink: 0, opacity: 0.85 }} />
+      <div style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: 8.5, letterSpacing: "0.09em", color: "#A6843F", textTransform: "uppercase", lineHeight: 1.3 }}>
+        {isStandard ? "Powered by Sterith Business Consulting POS" : "Powered by Sterith Business Consulting"}
       </div>
     </div>
   );

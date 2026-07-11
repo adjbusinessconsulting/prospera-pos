@@ -26,8 +26,28 @@ returns int language sql immutable as $$
     else 1 end;
 $$;
 
+-- ── STEP 1b: LAPSE GRACE — effective keep-days per store ───────────────────────
+-- When a paid subscription lapses (tier_expires_at in the past) data is FROZEN,
+-- not deleted, for 30 days. Renew within the month → everything restored. After
+-- 30 days lapsed → Free retention (1 day) applies.
+create or replace function public.effective_keep_days(p_tier text, p_expires timestamptz)
+returns int language sql stable as $$
+  select case
+    -- active (no expiry, or not yet expired): normal tier window
+    when p_expires is null
+      or (p_expires at time zone 'Asia/Makassar')::date >= (now() at time zone 'Asia/Makassar')::date
+      then public.retention_days(p_tier)
+    -- lapsed but within the 30-day freeze: keep everything
+    when (now() at time zone 'Asia/Makassar')::date
+      <= ((p_expires at time zone 'Asia/Makassar')::date + 30)
+      then 100000
+    -- lapsed > 30 days: Free retention
+    else 1
+  end;
+$$;
+
 -- ── STEP 2: the cleanup (sale_items first, then sales) ─────────────────────────
--- Keeps a sale while its WITA date >= today(WITA) − keep_days; deletes older.
+-- Keeps a sale while its WITA date >= today(WITA) − effective_keep_days; deletes older.
 create or replace function public.expire_old_sales()
 returns void language plpgsql security definer set search_path = public as $$
 begin
@@ -36,13 +56,13 @@ begin
   join public.stores st on st.id = s.store_id
   where si.sale_id = s.id
     and (s.created_at at time zone 'Asia/Makassar')::date
-        < ((now() at time zone 'Asia/Makassar')::date - public.retention_days(st.tier));
+        < ((now() at time zone 'Asia/Makassar')::date - public.effective_keep_days(st.tier, st.tier_expires_at));
 
   delete from public.sales s
   using public.stores st
   where st.id = s.store_id
     and (s.created_at at time zone 'Asia/Makassar')::date
-        < ((now() at time zone 'Asia/Makassar')::date - public.retention_days(st.tier));
+        < ((now() at time zone 'Asia/Makassar')::date - public.effective_keep_days(st.tier, st.tier_expires_at));
 end $$;
 
 -- ── STEP 3: DRY RUN — how many sales WOULD be deleted (run this to review) ──────

@@ -35,7 +35,9 @@ export default function Kas() {
   const { cashierInitials, cashierName, selectedShift, selectedShiftName, storeId, storeTier, isDemoMode, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
   const canKas = isAtLeast(effectiveTier, 'standard');
-  const requiresPhoto = isAtLeast(effectiveTier, 'premium');
+  // July 11: foto bukti is a capability for BOTH Standard & Premium and OPTIONAL by
+  // default — whether it's *required* becomes a store toggle once POS Settings ships.
+  const requiresPhoto = false;
 
   const [manual, setManual] = useState<KasMove[]>(isDemoMode ? DEMO_MANUAL : []);
   const [modalAwal, setModalAwal] = useState(isDemoMode ? DEMO_MODAL : 0);
