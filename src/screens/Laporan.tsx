@@ -101,6 +101,8 @@ export default function Laporan() {
       const { data: shiftRow } = await supabase.from("shifts")
         .select("modal_awal").eq("store_id", storeId).is("closed_at", null)
         .order("opened_at", { ascending: false }).limit(1).maybeSingle();
+      const { data: hut } = await supabase.from("hutang")
+        .select("amount,status,settled_method,created_at").eq("store_id", storeId).gte("created_at", from.toISOString());
       if (cancelled) return;
       const byDay = new Map<number, DayRec>();
       const items: RealItem[] = [];
@@ -110,11 +112,25 @@ export default function Laporan() {
         const s = row as { created_at: string; total: number; payment_method?: string; sale_items?: { product_name: string; qty: number; subtotal: number }[] };
         const d = new Date(s.created_at); d.setHours(0, 0, 0, 0); const ts = d.getTime();
         const cur = byDay.get(ts) ?? { d, rev: 0, trx: 0, items: 0 };
-        cur.rev += s.total ?? 0; cur.trx += 1;
+        const m = s.payment_method ?? "";
+        // Cash-basis: credit (hutang) sales don't count as revenue until settled.
+        if (m !== "hutang") cur.rev += s.total ?? 0;
+        cur.trx += 1;
         (s.sale_items ?? []).forEach(it => { cur.items += it.qty ?? 0; items.push({ ts, name: it.product_name, qty: it.qty ?? 0, subtotal: it.subtotal ?? 0 }); });
         byDay.set(ts, cur);
-        const m = s.payment_method ?? "";
         if (ts === todayTs && (m === "tunai" || m === "transfer")) todayCash += s.total ?? 0;
+      });
+      // A settled hutang lifts the omzet of the day its bon was made (created_at),
+      // never the day it was paid — so paying an old debt never moves "today".
+      (hut ?? []).forEach(row => {
+        const h = row as { amount: number; status: string; settled_method?: string | null; created_at: string };
+        if (h.status !== "lunas") return;
+        const d = new Date(h.created_at); d.setHours(0, 0, 0, 0); const ts = d.getTime();
+        const cur = byDay.get(ts) ?? { d, rev: 0, trx: 0, items: 0 };
+        cur.rev += h.amount ?? 0;
+        byDay.set(ts, cur);
+        const sm = h.settled_method ?? "tunai";
+        if (ts === todayTs && (sm === "tunai" || sm === "transfer")) todayCash += h.amount ?? 0;
       });
       setReal({ byDay, items, todayCash, modalAwal: (shiftRow as { modal_awal?: number } | null)?.modal_awal ?? 0 });
     })();

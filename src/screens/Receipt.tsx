@@ -162,11 +162,8 @@ export default function Receipt() {
             <div className="py-3">
               {paymentMethod === "hutang" ? (
                 <>
-                  <div className="flex justify-between font-sans text-[11px] text-text-mute mb-1.5" style={{ fontVariantNumeric: "tabular-nums" }}>
-                    <span>DIBAYAR</span><span>{(hutangCustomer?.paidNow ?? 0).toLocaleString("id-ID")}</span>
-                  </div>
                   <div className="flex justify-between font-sans text-[11px] font-semibold" style={{ color: "#C25E3D", fontVariantNumeric: "tabular-nums" }}>
-                    <span>SISA HUTANG</span><span>{(total - (hutangCustomer?.paidNow ?? 0)).toLocaleString("id-ID")}</span>
+                    <span>HUTANG · BELUM DIBAYAR</span><span>{total.toLocaleString("id-ID")}</span>
                   </div>
                   {hutangCustomer && <div className="font-sans text-[10px] text-text-mute mt-1.5">a.n. {hutangCustomer.name}{hutangCustomer.phone ? ` · ${hutangCustomer.phone}` : ""}</div>}
                 </>

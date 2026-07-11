@@ -17,7 +17,7 @@ interface POSState {
   paymentMethod: string;
   cashReceived: number;
   hutangCustomer: { name: string; phone: string; paidNow: number } | null;
-  demoHutang: { id: string; customer_name: string; phone: string | null; amount: number; paid_amount: number; status: "open" | "partial" | "lunas"; cashier_name: string; created_at: string }[];
+  demoHutang: { id: string; customer_name: string; phone: string | null; amount: number; paid_amount: number; status: "open" | "partial" | "lunas"; cashier_name: string; created_at: string; trx_id?: string; settled_at?: string | null; settled_method?: string | null }[];
   trxCounter: number;
 
   storeId: string;
@@ -67,6 +67,7 @@ interface POSState {
   setCashReceived: (n: number) => void;
   setHutangCustomer: (c: { name: string; phone: string; paidNow: number } | null) => void;
   addDemoHutang: (h: POSState["demoHutang"][number]) => void;
+  setDemoHutang: (h: POSState["demoHutang"]) => void;
   addCash: (n: number) => void;
   restart: () => void;
   signOut: () => void;
@@ -240,6 +241,7 @@ export const useStore = create<POSState>((set) => ({
   setCashReceived: (cashReceived) => set({ cashReceived }),
   setHutangCustomer: (hutangCustomer) => set({ hutangCustomer }),
   addDemoHutang: (h) => set((s) => ({ demoHutang: [h, ...s.demoHutang] })),
+  setDemoHutang: (demoHutang) => set({ demoHutang }),
   addCash: (n) => set(s => ({ cashReceived: s.cashReceived + n })),
 
   restart: () => set(s => ({

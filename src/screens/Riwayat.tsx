@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useStore, isAtLeast } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
@@ -16,7 +16,8 @@ const METHOD_COLOR: Record<string, string> = {
   tunai: "#5C9E7E", Tunai: "#5C9E7E",
   qris: "#0B1129",  QRIS: "#0B1129",
   debit: "#7A776F", Debit: "#7A776F",
-  transfer: "#7A776F", Transfer: "#7A776F",
+  transfer: "#C9A55F", Transfer: "#C9A55F",
+  hutang: "#C25E3D", Hutang: "#C25E3D",
 };
 
 function fmtTime(iso: string) {
@@ -38,7 +39,7 @@ function methodLabel(m: string) {
 // Demo-only seeded transaction history (real stores load from Supabase).
 function seedDemoSales(): SaleRecord[] {
   const cashiers = ["Aerith", "Stevany"];
-  const methods = ["tunai", "tunai", "tunai", "qris", "qris", "transfer", "debit"];
+  const methods = ["tunai", "tunai", "tunai", "qris", "qris", "transfer", "debit", "hutang"];
   const products: [string, number][] = [
     ["Beras Pandan 5kg", 75000], ["Indomie Goreng", 3500], ["Telur Ayam", 28000],
     ["Aqua 600ml", 4000], ["Bimoli 2L", 38000], ["Gula Pasir 1kg", 16000], ["Kapal Api Sachet", 1500],
@@ -77,6 +78,7 @@ export default function Riwayat() {
   const canExport = isAtLeast(effectiveTier, 'standard');
   const canExtendedHistory = isAtLeast(effectiveTier, 'standard');
   const [sales, setSales]           = useState<SaleRecord[]>([]);
+  const [hutangByTrx, setHutangByTrx] = useState<Record<string, { status: string; settled_method: string | null }>>({});
   const [loadingData, setLoadingData] = useState(true);
   const [activeFilter, setActiveFilter] = useState(0);
   const [methodFilter, setMethodFilter] = useState("Semua");
@@ -101,7 +103,37 @@ export default function Riwayat() {
         setSales((data as SaleRecord[]) ?? []);
         setLoadingData(false);
       });
+    supabase
+      .from("hutang")
+      .select("trx_id,status,settled_method")
+      .eq("store_id", storeId)
+      .gte("created_at", from.toISOString())
+      .then(({ data }) => {
+        const m: Record<string, { status: string; settled_method: string | null }> = {};
+        (data as { trx_id?: string | null; status: string; settled_method?: string | null }[] ?? []).forEach(h => {
+          if (h.trx_id) m[h.trx_id] = { status: h.status, settled_method: h.settled_method ?? null };
+        });
+        setHutangByTrx(m);
+      });
   }, [storeId, isDemoMode]);
+
+  // Cash-basis: a credit (hutang) sale only counts once its bon is settled (lunas);
+  // the money lands on the bon's own date (this row's date), never on payment day.
+  // Demo has no hutang table — mark even-numbered bon as already lunas for realism.
+  const hutangStatusOf = useMemo(() => (s: SaleRecord): { paid: boolean; method: string | null } | null => {
+    if (s.payment_method !== "hutang") return null;
+    if (isDemoMode) {
+      const num = parseInt((s.trx_id ?? "").replace(/\D/g, "") || "0");
+      return num % 2 === 0 ? { paid: true, method: "tunai" } : { paid: false, method: null };
+    }
+    const h = s.trx_id ? hutangByTrx[s.trx_id] : undefined;
+    return { paid: h?.status === "lunas", method: h?.settled_method ?? null };
+  }, [hutangByTrx, isDemoMode]);
+  const receivedTotal = (s: SaleRecord) => {
+    const h = hutangStatusOf(s);
+    if (!h) return s.total;         // non-credit sale
+    return h.paid ? s.total : 0;    // credit: only if settled
+  };
 
   function filterByDays(list: SaleRecord[], days: number) {
     if (days === 0) {
@@ -127,8 +159,22 @@ export default function Riwayat() {
     return matchMethod && matchShift && matchKasir;
   });
 
-  const total = filtered.reduce((s, t) => s + t.total, 0);
-  const avg = filtered.length > 0 ? Math.round(total / filtered.length) : 0;
+  // Omzet = money actually received (cash-basis). Credit sales count only once lunas.
+  const total = filtered.reduce((s, t) => s + receivedTotal(t), 0);
+  const paidCount = filtered.filter(t => receivedTotal(t) > 0).length;
+  const avg = paidCount > 0 ? Math.round(total / paidCount) : 0;
+  // Outstanding credit in this period (piutang) — shown separately, not in omzet.
+  const piutang = filtered.reduce((s, t) => { const h = hutangStatusOf(t); return s + (h && !h.paid ? t.total : 0); }, 0);
+
+  // Per-method received money: non-credit by method; settled credit by settle method.
+  const methodTotals = filtered.reduce<Record<string, number>>((acc, t) => {
+    const h = hutangStatusOf(t);
+    if (!h) { const m = t.payment_method.toLowerCase(); acc[m] = (acc[m] ?? 0) + t.total; }
+    else if (h.paid) { const m = (h.method ?? "tunai").toLowerCase(); acc[m] = (acc[m] ?? 0) + t.total; }
+    return acc;
+  }, {});
+  const BREAKDOWN_ORDER = ["tunai", "qris", "transfer", "debit"];
+  const BREAKDOWN_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit" };
 
   const uniqueCashiers = [...new Set(sales.map(s => s.cashier_name).filter(Boolean))];
 
@@ -364,6 +410,28 @@ export default function Riwayat() {
           </div>
         </div>
 
+        {/* Rincian per metode (uang diterima) */}
+        {total > 0 && (
+          <div className="mx-5 lg:mx-10 mt-3 shrink-0 bg-white border border-warm-border rounded-card px-5 lg:px-7 py-3.5">
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              {BREAKDOWN_ORDER.filter(m => (methodTotals[m] ?? 0) > 0).map(m => (
+                <div key={m} className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full" style={{ background: METHOD_COLOR[m] ?? "#7A776F" }} />
+                  <span className="text-[11.5px] text-text-mute">{BREAKDOWN_LABEL[m]}</span>
+                  <span className="text-[12.5px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(methodTotals[m] ?? 0)}</span>
+                </div>
+              ))}
+              {piutang > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full" style={{ background: "#C25E3D" }} />
+                  <span className="text-[11.5px] text-[#C25E3D]">Hutang belum lunas</span>
+                  <span className="text-[12.5px] font-semibold text-[#C25E3D]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(piutang)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Method pills */}
         <div className="flex gap-2 px-5 lg:px-10 pt-3 pb-0 shrink-0 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           {[
@@ -372,6 +440,7 @@ export default function Riwayat() {
             { key: "QRIS",     count: periodSales.filter(t => t.payment_method.toLowerCase() === "qris").length },
             { key: "Debit",    count: periodSales.filter(t => t.payment_method.toLowerCase() === "debit").length },
             { key: "Transfer", count: periodSales.filter(t => t.payment_method.toLowerCase() === "transfer").length },
+            { key: "Hutang",   count: periodSales.filter(t => t.payment_method.toLowerCase() === "hutang").length },
           ].filter(m => m.key === "Semua" || m.count > 0).map(m => (
             <button key={m.key} onClick={() => setMethodFilter(m.key)}
               className={`px-3.5 py-[6px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors cursor-pointer ${methodFilter === m.key ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border hover:border-navy/40"}`}>
@@ -429,10 +498,17 @@ export default function Riwayat() {
                         </td>
                         <td className="px-4 py-3.5 text-[12px] text-text-mute">{t.sale_items?.length ?? 0} item</td>
                         <td className="px-4 py-3.5">
-                          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: `${METHOD_COLOR[m] || "#7A776F"}14`, color: METHOD_COLOR[m] || "#7A776F" }}>{m}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: `${METHOD_COLOR[m] || "#7A776F"}14`, color: METHOD_COLOR[m] || "#7A776F" }}>{m}</span>
+                            {(() => { const h = hutangStatusOf(t); return h ? (
+                              <span className="text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: h.paid ? "rgba(61,122,94,0.10)" : "rgba(194,94,61,0.10)", color: h.paid ? "#3D7A5E" : "#C25E3D" }}>{h.paid ? "Lunas" : "Belum"}</span>
+                            ) : null; })()}
+                          </div>
                         </td>
                         <td className="px-5 py-3.5 text-right">
-                          <span className="font-serif text-[14px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</span>
+                          {(() => { const h = hutangStatusOf(t); return (
+                            <span className="font-serif text-[14px] font-semibold" style={{ color: h && !h.paid ? "#C25E3D" : "#0B1129", fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</span>
+                          ); })()}
                         </td>
                       </tr>
                     );
@@ -447,8 +523,9 @@ export default function Riwayat() {
             <div className="lg:hidden flex flex-col gap-2.5">
               {filtered.map(t => {
                 const m = methodLabel(t.payment_method);
+                const h = hutangStatusOf(t);
                 return (
-                  <div key={t.id} className="bg-white border border-warm-border rounded-card px-4 py-3.5">
+                  <div key={t.id} className="bg-white border rounded-card px-4 py-3.5" style={{ borderColor: h && !h.paid ? "rgba(194,94,61,0.30)" : "#ECE7DD" }}>
                     <div className="flex justify-between items-start">
                       <div>
                         <span className="font-sans text-[13px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{t.trx_id}</span>
@@ -457,8 +534,11 @@ export default function Riwayat() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-serif text-[16px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</p>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: `${METHOD_COLOR[m] || "#7A776F"}14`, color: METHOD_COLOR[m] || "#7A776F" }}>{m}</span>
+                        <p className="font-serif text-[16px] font-semibold" style={{ color: h && !h.paid ? "#C25E3D" : "#0B1129", fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</p>
+                        <div className="flex items-center gap-1 justify-end mt-0.5">
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: `${METHOD_COLOR[m] || "#7A776F"}14`, color: METHOD_COLOR[m] || "#7A776F" }}>{m}</span>
+                          {h && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: h.paid ? "rgba(61,122,94,0.10)" : "rgba(194,94,61,0.10)", color: h.paid ? "#3D7A5E" : "#C25E3D" }}>{h.paid ? "Lunas" : "Belum"}</span>}
+                        </div>
                       </div>
                     </div>
                   </div>

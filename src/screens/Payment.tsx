@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, QrCode, CheckCircle2, XCircle, Loader2, Clock, Lock } from "lucide-react";
 import { useStore, getTotal, getItemCount, getTrxId, isAtLeast } from "../store";
-import { formatRp, formatIDRInput } from "../data";
+import { formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
@@ -48,7 +48,6 @@ export default function Payment() {
   const [showHutangModal, setShowHutangModal] = useState(false);
   const [hutangName, setHutangName] = useState("");
   const [hutangPhone, setHutangPhone] = useState("");
-  const [hutangBayar, setHutangBayar] = useState("");
   const [recentCustomers, setRecentCustomers] = useState<{ name: string; phone: string | null }[]>([]);
   useEffect(() => {
     if (!storeId) return;
@@ -61,21 +60,21 @@ export default function Payment() {
     const name = hutangName.trim();
     if (!name) return;
     const phone = hutangPhone.trim();
-    const paid = hutangPaidNow;
-    const status: "open" | "partial" | "lunas" = paid >= total ? "lunas" : paid > 0 ? "partial" : "open";
-    setHutangCustomer({ name, phone, paidNow: paid });
+    // Hutang is all-or-nothing: the full cart amount is owed and later settled
+    // in ONE full pelunasan (no down-payment, no installments).
+    setHutangCustomer({ name, phone, paidNow: 0 });
     // Record the debt NOW (so Buku Hutang reflects it) — not tied to tapping
     // "Transaksi Baru" later. Demo keeps it in memory; real store writes to DB.
     if (isDemoMode) {
-      addDemoHutang({ id: `dh-${Date.now()}`, customer_name: name, phone: phone || null, amount: total, paid_amount: paid, status, cashier_name: cashierName, created_at: new Date().toISOString() });
+      addDemoHutang({ id: `dh-${Date.now()}`, customer_name: name, phone: phone || null, amount: total, paid_amount: 0, status: "open", cashier_name: cashierName, created_at: new Date().toISOString(), trx_id: trxId });
     } else if (storeId) {
-      void recordHutangDB(name, phone, total, paid, status);
+      void recordHutangDB(name, phone, total, trxId);
     }
     setShowHutangModal(false);
     setScreen("receipt");
   }
 
-  async function recordHutangDB(name: string, phone: string, amount: number, paid: number, status: string) {
+  async function recordHutangDB(name: string, phone: string, amount: number, trx_id: string) {
     try {
       let customer_id: string | null = null;
       if (phone) {
@@ -87,10 +86,10 @@ export default function Payment() {
         customer_id = (data as { id?: string } | null)?.id ?? null;
       }
       await supabase.from("hutang").insert({
-        store_id: storeId, sale_id: null, customer_id, customer_name: name, phone: phone || null,
-        amount, paid_amount: paid, status, settled_at: status === "lunas" ? new Date().toISOString() : null, cashier_name: cashierName,
+        store_id: storeId, sale_id: null, trx_id, customer_id, customer_name: name, phone: phone || null,
+        amount, paid_amount: 0, status: "open", settled_at: null, cashier_name: cashierName,
       });
-      void logEvent("hutang.add", `Hutang baru ${name} ${formatRp(amount)}${paid > 0 ? ` (dibayar ${formatRp(paid)}, sisa ${formatRp(amount - paid)})` : ""}`);
+      void logEvent("hutang.add", `Hutang baru ${name} ${formatRp(amount)} (${trx_id})`);
     } catch { /* non-fatal */ }
   }
 
@@ -112,8 +111,6 @@ export default function Payment() {
   }
 
   const total = getTotal(cart);
-  const hutangPaidNow = Math.min(parseInt(hutangBayar.replace(/\D/g, "") || "0"), total);
-  const hutangSisa = total - hutangPaidNow;
   const itemCount = getItemCount(cart);
   const change = cashReceived - total;
   const trxId = getTrxId(trxCounter);
@@ -606,22 +603,13 @@ export default function Payment() {
                   className="w-full bg-cream-bg border border-warm-border rounded-button px-4 h-[44px] text-[13.5px] text-navy outline-none placeholder:text-text-mute" />
               </div>
 
-              {/* Amount: total bon + optional down-payment now → sisa */}
+              {/* Total bon — owed in full, settled later in one pelunasan */}
               <div className="border-t border-dashed border-warm-dashed pt-4">
-                <div className="flex justify-between items-baseline mb-3">
+                <div className="flex justify-between items-baseline">
                   <span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">TOTAL BON</span>
-                  <span className="font-serif text-[18px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</span>
+                  <span className="font-serif text-[22px] font-bold text-[#C25E3D]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</span>
                 </div>
-                <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">BAYAR SEKARANG <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional · 0 = ngutang penuh)</span></span></label>
-                <div className="flex items-center bg-cream-bg border rounded-button px-4 h-[46px] gap-2" style={{ borderColor: hutangBayar ? "#3D7A5E" : "#ECE7DD" }}>
-                  <span className="font-serif text-[15px] text-text-mute font-medium">Rp</span>
-                  <input value={hutangBayar} onChange={e => setHutangBayar(formatIDRInput(e.target.value))} inputMode="numeric" placeholder="0"
-                    className="flex-1 bg-transparent border-0 outline-none font-serif text-[18px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }} />
-                </div>
-                <div className="flex justify-between items-center mt-2.5">
-                  <span className="text-[12px] font-semibold text-navy">Sisa hutang</span>
-                  <span className="font-serif text-[17px] font-bold" style={{ color: hutangSisa > 0 ? "#C25E3D" : "#3D7A5E", fontVariantNumeric: "tabular-nums" }}>{formatRp(hutangSisa)}</span>
-                </div>
+                <p className="text-[11px] text-text-mute mt-2 leading-relaxed">Seluruh jumlah dicatat sebagai hutang. Dilunasi sekaligus nanti di <b className="text-navy">Buku Hutang</b>.</p>
               </div>
             </div>
             <div className="px-6 pb-7 pt-3 border-t border-warm-border flex gap-2.5">

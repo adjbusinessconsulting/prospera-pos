@@ -5,6 +5,8 @@ import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
 
 const RETENTION: Record<string, number> = { free: 1, standard: 30, premium: 90, business: 1095, enterprise: 1825 };
+const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet" };
+const METHOD_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet"];
 
 export default function TutupToko() {
   const { signOut, setScreen, storeId, storeTier, isDemoMode } = useStore();
@@ -12,7 +14,10 @@ export default function TutupToko() {
   const isStd = isAtLeast(effectiveTier, "standard");
   const retentionDays = RETENTION[effectiveTier] ?? 1;
 
-  const [omzet, setOmzet] = useState(isDemoMode ? 8_450_000 : 0);
+  // Omzet = money actually received for TODAY's activity. Credit sales (hutang)
+  // are NOT counted until settled, and a debt settled today belongs to the day
+  // its bon was made — so it never lands in today's omzet here.
+  const [omzet, setOmzet] = useState(isDemoMode ? 7_950_000 : 0);
   const [trx, setTrx] = useState(isDemoMode ? 54 : 0);
   const [shiftCount, setShiftCount] = useState(isDemoMode ? 3 : 1);
   const [cash, setCash] = useState(isDemoMode ? 6_120_000 : 0);   // tunai + transfer (drawer)
@@ -22,6 +27,9 @@ export default function TutupToko() {
   const [shiftId, setShiftId] = useState<string | null>(null);
   const [showRecon, setShowRecon] = useState(false);
   const [counted, setCounted] = useState("");
+  const [piutangBaru, setPiutangBaru] = useState(isDemoMode ? 217_000 : 0); // hutang baru hari ini, belum lunas
+  const [breakdown, setBreakdown] = useState<Record<string, number>>(isDemoMode
+    ? { tunai: 5_120_000, qris: 1_830_000, transfer: 1_000_000 } : {});
 
   useEffect(() => {
     if (!storeId || isDemoMode) return;
@@ -31,12 +39,21 @@ export default function TutupToko() {
       const { data: sales } = await supabase.from("sales").select("total,payment_method,shift,created_at").eq("store_id", storeId).gte("created_at", startISO);
       const { data: shiftRow } = await supabase.from("shifts").select("id,modal_awal").eq("store_id", storeId).is("closed_at", null).order("opened_at", { ascending: false }).limit(1).maybeSingle();
       const { data: kas } = await supabase.from("kas_entries").select("type,amount,created_at").eq("store_id", storeId).gte("created_at", startISO);
+      const { data: hut } = await supabase.from("hutang").select("amount,status,settled_method,created_at").eq("store_id", storeId).gte("created_at", startISO);
       if (cancelled) return;
       const S = (sales ?? []) as { total: number; payment_method: string; shift: number }[];
-      setOmzet(S.reduce((a, s) => a + (s.total ?? 0), 0));
+      const H = (hut ?? []) as { amount: number; status: string; settled_method?: string | null }[];
+      // Non-credit sales received today, grouped by method…
+      const bd: Record<string, number> = {};
+      S.filter(s => s.payment_method !== "hutang").forEach(s => { bd[s.payment_method] = (bd[s.payment_method] ?? 0) + (s.total ?? 0); });
+      // …plus any hutang whose bon is TODAY and already lunas (folded by settle method).
+      H.filter(h => h.status === "lunas").forEach(h => { const m = h.settled_method ?? "tunai"; bd[m] = (bd[m] ?? 0) + h.amount; });
+      setBreakdown(bd);
+      setOmzet(Object.values(bd).reduce((a, v) => a + v, 0));
+      setPiutangBaru(H.filter(h => h.status !== "lunas").reduce((a, h) => a + h.amount, 0));
       setTrx(S.length);
       setShiftCount(Math.max(1, new Set(S.map(s => s.shift)).size));
-      setCash(S.filter(s => s.payment_method === "tunai" || s.payment_method === "transfer").reduce((a, s) => a + (s.total ?? 0), 0));
+      setCash((bd.tunai ?? 0) + (bd.transfer ?? 0));
       const sr = shiftRow as { id?: string; modal_awal?: number } | null;
       setModalAwal(sr?.modal_awal ?? 0); setShiftId(sr?.id ?? null);
       const K = (kas ?? []) as { type: string; amount: number }[];
@@ -115,6 +132,33 @@ export default function TutupToko() {
               <div><p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">SHIFT</p><p className="font-serif text-[24px] font-semibold text-cream-text">{shiftCount}</p></div>
               <div><p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">RATA-RATA</p><p className="font-serif text-[24px] font-semibold text-cream-text" style={{ fontVariantNumeric: "tabular-nums" }}>Rp {Math.round(rataRata / 1000)}k</p></div>
             </div>
+          </div>
+
+          {/* Breakdown: modal awal + penjualan per metode (all tiers) */}
+          <div className="bg-white border border-warm-border rounded-card px-6 py-5">
+            <div className="flex justify-between items-center pb-3 border-b border-[#F2EDE3]">
+              <span className="text-[12.5px] text-text-mute">Modal awal</span>
+              <span className="font-serif text-[15px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(modalAwal)}</span>
+            </div>
+            <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mt-4 mb-1.5">PENJUALAN PER METODE</p>
+            <div className="flex flex-col">
+              {METHOD_ORDER.filter(m => (breakdown[m] ?? 0) > 0).map(m => (
+                <div key={m} className="flex justify-between items-center py-[7px] border-b border-[#F2EDE3] text-[12.5px]">
+                  <span className={m === "hutang" ? "text-[#C25E3D]" : "text-navy"}>{METHOD_LABEL[m] ?? m}{m === "hutang" ? " · belum diterima" : ""}</span>
+                  <span className="font-medium text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(breakdown[m] ?? 0)}</span>
+                </div>
+              ))}
+              <div className="flex justify-between items-center pt-3 mt-1 border-t border-dashed border-warm-dashed">
+                <span className="text-[13px] font-semibold text-navy">Total omset</span>
+                <span className="font-serif text-[17px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(omzet)}</span>
+              </div>
+            </div>
+            {piutangBaru > 0 && (
+              <div className="flex justify-between items-center mt-3 pt-3 border-t border-[#F2EDE3]">
+                <span className="text-[12px] text-[#C25E3D]">Hutang baru hari ini · belum diterima</span>
+                <span className="font-medium text-[#C25E3D] text-[13px]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(piutangBaru)}</span>
+              </div>
+            )}
           </div>
 
           {/* Reconciliation — Standard+ only, optional */}
