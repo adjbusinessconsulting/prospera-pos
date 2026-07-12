@@ -72,12 +72,34 @@ const BRANCH_SEEDS: Record<string, Product[]> = {
   ],
 };
 
-type Tab = "ringkasan" | "produk" | "stok" | "log";
+type Tab = "ringkasan" | "laporan" | "produk" | "stok" | "log" | "pengaturan";
 const TABS: { id: Tab; label: string }[] = [
   { id: "ringkasan", label: "Ringkasan" },
+  { id: "laporan", label: "Laporan" },
   { id: "produk", label: "Produk & Stok" },
   { id: "stok", label: "Stok Harian" },
   { id: "log", label: "Log Aktivitas" },
+  { id: "pengaturan", label: "Pengaturan" },
+];
+
+// Demo analytics for the Laporan tab (month-to-date, all cabang).
+const PAY_BREAKDOWN = [
+  { label: "Tunai", value: 8_900_000, color: "#4E8C6E" },
+  { label: "QRIS", value: 3_100_000, color: "#0B1129" },
+  { label: "Transfer", value: 1_300_000, color: "#A6843F" },
+  { label: "Debit", value: 1_206_000, color: "#7A776F" },
+];
+const PIUTANG = 1_240_000; // hutang belum lunas — piutang, bukan omzet
+const TOP_PRODUCTS = [
+  { name: "Beras Pandan 5kg", qty: 128, rev: 9_600_000 },
+  { name: "Telur Ayam /kg", qty: 96, rev: 2_688_000 },
+  { name: "Rokok Sampoerna 16", qty: 62, rev: 1_984_000 },
+  { name: "Aqua 600ml", qty: 388, rev: 1_552_000 },
+  { name: "Indomie Goreng", qty: 420, rev: 1_470_000 },
+];
+const BY_CASHIER = [
+  { name: "Aerith D.", rev: 7_820_000, trx: 92 },
+  { name: "Stevany C.", rev: 6_686_000, trx: 76 },
 ];
 
 const typeLabel: Record<string, string> = {
@@ -105,6 +127,7 @@ export default function BackofficeDemo() {
   const [showAddBranch, setShowAddBranch] = useState(false);
   const [newBranch, setNewBranch] = useState("");
   const [logEntries, setLogEntries] = useState<AuditEntry[]>([]);
+  const [demoLocked, setDemoLocked] = useState(false);   // master lock (demo, non-persistent)
   // Editable per-branch catalogs for b2–b5 (b1/Pusat uses the live store products).
   const [branchProducts, setBranchProducts] = useState<Record<string, Product[]>>(() => ({ ...BRANCH_SEEDS }));
   useEffect(() => {
@@ -272,6 +295,87 @@ export default function BackofficeDemo() {
           </div>
         </>)}
 
+        {/* ── LAPORAN (sales analytics, month-to-date · all cabang) ── */}
+        {tab === "laporan" && (<>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+            <div>
+              <h2 style={{ fontSize: 15, fontWeight: 700, color: NAVY }}>Laporan Penjualan</h2>
+              <p style={{ fontSize: 11.5, color: MUTE, marginTop: 1 }}>Bulan ini · semua cabang · omzet = uang diterima (hutang dihitung saat lunas)</p>
+            </div>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: GOLD, background: "rgba(201,165,95,0.12)", border: `1px solid ${GOLD}44`, borderRadius: 8, padding: "6px 12px" }}>Bulan ini</span>
+          </div>
+
+          {/* Stat cards */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
+            {[
+              { l: "Total Omzet", v: formatRp(totSales), accent: true },
+              { l: "Transaksi", v: String(totTrx), accent: false },
+              { l: "Rata-rata / Trx", v: formatRp(Math.round(totSales / totTrx)), accent: false },
+              { l: "Piutang (belum lunas)", v: formatRp(PIUTANG), accent: false, warn: true },
+            ].map(s => (
+              <div key={s.l} style={{ background: s.accent ? NAVY : CARD, border: s.accent ? "none" : `1px solid ${BORDER}`, borderRadius: 16, padding: "16px 18px" }}>
+                <div style={{ fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, color: s.accent ? "rgba(201,165,95,0.85)" : MUTE }}>{s.l}</div>
+                <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 23, fontWeight: 600, marginTop: 6, color: s.accent ? "#F2EDE3" : (s.warn ? DANGER : NAVY), fontVariantNumeric: "tabular-nums" }}>{s.v}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
+            {/* Payment breakdown */}
+            <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "18px 20px" }}>
+              <h3 style={{ fontSize: 13, fontWeight: 800, color: NAVY, marginBottom: 14 }}>Metode Pembayaran</h3>
+              {PAY_BREAKDOWN.map(m => {
+                const pct = Math.round((m.value / totSales) * 100);
+                return (
+                  <div key={m.label} style={{ marginBottom: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, marginBottom: 5 }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: 7, color: NAVY }}><span style={{ width: 8, height: 8, borderRadius: 999, background: m.color }} />{m.label}</span>
+                      <span style={{ fontWeight: 700, color: NAVY, fontVariantNumeric: "tabular-nums" }}>{formatRp(m.value)}</span>
+                    </div>
+                    <div style={{ height: 6, borderRadius: 999, background: "#F0ECE3", overflow: "hidden" }}>
+                      <div style={{ width: `${pct}%`, height: "100%", background: m.color }} />
+                    </div>
+                  </div>
+                );
+              })}
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginTop: 14, paddingTop: 12, borderTop: `1px dashed ${BORDER}` }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 7, color: DANGER }}><span style={{ width: 8, height: 8, borderRadius: 999, background: DANGER }} />Hutang belum lunas</span>
+                <span style={{ fontWeight: 700, color: DANGER, fontVariantNumeric: "tabular-nums" }}>{formatRp(PIUTANG)}</span>
+              </div>
+            </div>
+
+            {/* Per cashier */}
+            <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "18px 20px" }}>
+              <h3 style={{ fontSize: 13, fontWeight: 800, color: NAVY, marginBottom: 14 }}>Per Kasir</h3>
+              {BY_CASHIER.map(c => (
+                <div key={c.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid #F2EDE3` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ width: 30, height: 30, borderRadius: 999, background: "#F0EBE1", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: MUTE }}>{c.name.split(" ").map(w => w[0]).join("")}</span>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{c.name}</div>
+                      <div style={{ fontSize: 11, color: MUTE }}>{c.trx} transaksi</div>
+                    </div>
+                  </div>
+                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, fontWeight: 600, color: NAVY, fontVariantNumeric: "tabular-nums" }}>{formatRp(c.rev)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Top products */}
+          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "18px 20px", marginTop: 16 }}>
+            <h3 style={{ fontSize: 13, fontWeight: 800, color: NAVY, marginBottom: 12 }}>Produk Terlaris</h3>
+            {TOP_PRODUCTS.map((p, i) => (
+              <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: i < TOP_PRODUCTS.length - 1 ? `1px solid #F2EDE3` : "none" }}>
+                <span style={{ width: 22, height: 22, borderRadius: 6, background: i === 0 ? "rgba(201,165,95,0.16)" : "#F0ECE3", color: i === 0 ? GOLD : MUTE, fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
+                <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: NAVY }}>{p.name}</span>
+                <span style={{ fontSize: 12, color: MUTE, fontVariantNumeric: "tabular-nums" }}>{p.qty} terjual</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: NAVY, fontVariantNumeric: "tabular-nums", minWidth: 96, textAlign: "right" }}>{formatRp(p.rev)}</span>
+              </div>
+            ))}
+          </div>
+        </>)}
+
         {/* branch context strip (shared by Produk & Stok tabs) */}
         {(tab === "produk" || tab === "stok") && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
@@ -436,6 +540,60 @@ export default function BackofficeDemo() {
               );
             })}
             {!logEntries.length && <p style={{ fontSize: 12.5, color: MUTE }}>Belum ada aktivitas.</p>}
+          </div>
+        </>)}
+
+        {/* ── PENGATURAN (subscription + master lock + payment config) ── */}
+        {tab === "pengaturan" && (<>
+          <div style={{ marginBottom: 14 }}>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: NAVY }}>Pengaturan Toko</h2>
+            <p style={{ fontSize: 11.5, color: MUTE, marginTop: 1 }}>Langganan, kunci pengaturan POS, dan konfigurasi pembayaran.</p>
+          </div>
+
+          {/* Subscription */}
+          <div style={{ background: CARD, border: `1px solid ${GOLD}55`, borderRadius: 16, padding: "18px 20px", marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+              <div>
+                <div style={{ fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, color: MUTE }}>Paket Anda</div>
+                <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 600, marginTop: 2, color: NAVY }}>Premium</div>
+                <div style={{ fontSize: 11.5, color: MUTE, marginTop: 2 }}>Aktif s/d 9 Agu 2026 · perpanjang otomatis</div>
+              </div>
+              <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: GREEN, background: "rgba(78,140,110,0.12)", borderRadius: 6, padding: "4px 10px" }}>Aktif</span>
+            </div>
+          </div>
+
+          {/* Master lock — mirrors the real Back Office control */}
+          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "18px 20px", marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="1.9"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
+                  <h3 style={{ fontSize: 14, fontWeight: 800, color: NAVY }}>Kunci Pengaturan POS</h3>
+                </div>
+                <p style={{ fontSize: 12.5, color: NAVY, lineHeight: 1.7, margin: "8px 0 0" }}>
+                  Saat aktif, menu <b>Pengaturan</b> di aplikasi kasir disembunyikan sepenuhnya —
+                  kasir tidak bisa mengubah metode pembayaran, fitur, atau apa pun. Semua diatur
+                  dari Back Office ini. Perlindungan anti-utak-atik untuk perangkat jualan.
+                </p>
+              </div>
+              <button onClick={() => setDemoLocked(v => !v)} role="switch" aria-checked={demoLocked}
+                style={{ width: 52, height: 30, borderRadius: 999, border: "none", flexShrink: 0, cursor: "pointer", position: "relative", background: demoLocked ? GOLD : "#D8D2C4", transition: "background 0.15s", marginTop: 2 }}>
+                <span style={{ position: "absolute", top: 3, left: demoLocked ? 25 : 3, width: 24, height: 24, borderRadius: 999, background: "#fff", transition: "left 0.15s", boxShadow: "0 1px 3px rgba(0,0,0,0.25)" }} />
+              </button>
+            </div>
+            <div style={{ marginTop: 14, display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 13px", borderRadius: 999, background: demoLocked ? "rgba(150,118,47,0.10)" : "#f0ece3", border: `1px solid ${demoLocked ? GOLD + "66" : BORDER}` }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={demoLocked ? GOLD : MUTE} strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
+              <span style={{ fontSize: 11.5, fontWeight: 800, color: demoLocked ? GOLD : MUTE }}>{demoLocked ? "Terkunci — hanya Back Office" : "Terbuka — POS bisa ubah sendiri"}</span>
+            </div>
+          </div>
+
+          {/* Payment config (info) */}
+          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "18px 20px" }}>
+            <h3 style={{ fontSize: 14, fontWeight: 800, color: NAVY, marginBottom: 4 }}>Pembayaran & Struk</h3>
+            <p style={{ fontSize: 12, color: MUTE, lineHeight: 1.7 }}>
+              QRIS Statis (gratis, konfirmasi manual) & QRIS Dinamis Midtrans (otomatis),
+              logo struk, dan setup printer thermal diatur di sini. <i>Sesi demo — konfigurasi tidak disimpan.</i>
+            </p>
           </div>
         </>)}
       </div>
