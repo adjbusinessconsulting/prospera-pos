@@ -27,12 +27,13 @@ function shiftContainsNow(start: string, end: string, nowMin: number) {
 interface ShiftOption { pos: number; name: string; time: string; isNow: boolean; }
 
 export default function PinLogin() {
-  const { selectedCashier, selectedShift, selectCashier, setShift, pin, addPin, removePin, clearPin, setScreen, storeName, storeAddress, storeTier, storeId, dbCashiers, dbShifts } = useStore();
+  const { selectedCashier, selectedShift, selectCashier, setShift, pin, addPin, removePin, clearPin, setScreen, storeName, storeAddress, storeTier, storeId, dbCashiers, dbShifts, settings } = useStore();
   // Demo shows all features; Free locks non-current shifts (only when shifts aren't configured)
   const effectiveTier = storeId ? storeTier : 'free';
   const canChangeShift = isAtLeast(effectiveTier, 'standard');
-  // Free skips the PIN; Standard+ requires it (multi-kasir attribution)
-  const requiresPin = isAtLeast(effectiveTier, 'standard');
+  // Free skips the PIN; Standard+ requires it (multi-kasir attribution) — but the
+  // owner can turn PIN off (Pengaturan) for a small trusted team.
+  const requiresPin = isAtLeast(effectiveTier, 'standard') && settings.pinWajib;
 
   const hasConfiguredShifts = dbShifts.length > 0;
   const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();

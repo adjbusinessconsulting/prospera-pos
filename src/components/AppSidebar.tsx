@@ -6,6 +6,7 @@ import type { Screen } from "../types";
 import FeedbackDrawer from "./FeedbackDrawer";
 import UpgradeModal from "./UpgradeModal";
 import { ReceiptSettings } from "./ReceiptSettings";
+import { SettingsPanel } from "./SettingsPanel";
 import { pendingAuditCount } from "../lib/auditlog";
 
 const NAV = [
@@ -26,6 +27,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [receiptOpen, setReceiptOpen] = useState(false);
   const storeTier = useStore(s => (s.storeId ? s.storeTier : "free"));
   const isOnline = useStore(s => s.isOnline);
   const pendingSyncCount = useStore(s => s.pendingSyncCount);
@@ -83,8 +85,8 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
             <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "#A6843F" }}>{storeTier}</span>
           </button>
 
-          {/* Pengaturan struk */}
-          <button onClick={() => setSettingsOpen(true)} title="Pengaturan struk" style={{
+          {/* Pengaturan */}
+          <button onClick={() => setSettingsOpen(true)} title="Pengaturan" style={{
             background: "transparent", border: "none", cursor: "pointer",
             color: "#7A776F", display: "flex", alignItems: "center", justifyContent: "center",
             width: 32, height: 32, borderRadius: 8,
@@ -141,7 +143,8 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
 
       <FeedbackDrawer open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
-      <ReceiptSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} onOpenReceipt={() => setReceiptOpen(true)} />
+      <ReceiptSettings open={receiptOpen} onClose={() => setReceiptOpen(false)} />
     </>
   );
 }

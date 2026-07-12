@@ -23,11 +23,14 @@ function SterithWatermark({ tier }: { tier: string }) {
 }
 
 export default function Receipt() {
-  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, selectedShiftName, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, inventoryEnabled, receiptLogo, products, hutangCustomer, updateProduct, setHutangCustomer, restart, setScreen, signOut } = useStore();
+  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, selectedShiftName, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, inventoryEnabled, receiptLogo, products, hutangCustomer, settings, updateProduct, setHutangCustomer, restart, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
   const inventoryOn = isAtLeast(effectiveTier, 'premium') && inventoryEnabled;
-  const canWhatsApp = isAtLeast(effectiveTier, 'standard');
-  const canBranding = isAtLeast(effectiveTier, 'standard');
+  const waTierOk = isAtLeast(effectiveTier, 'standard');
+  const canWhatsApp = waTierOk;                              // clickable when tier allows
+  const showWhatsApp = !waTierOk || settings.whatsappShare;  // Free sees upsell; Std+ only if enabled
+  const canBranding = isAtLeast(effectiveTier, 'standard') && settings.receiptLogo;
+  const canPrint = settings.printReceipt;
   const total = getTotal(cart);
   const change = cashReceived - total;
   const trxId = getTrxId(trxCounter);
@@ -190,11 +193,15 @@ export default function Receipt() {
           </div>
 
           {/* Mobile actions */}
+          {(canPrint || showWhatsApp) && (
           <div className="lg:hidden grid grid-cols-2 gap-2.5 mt-5">
+            {canPrint && (
             <button className="bg-white border border-warm-border rounded-button py-3.5 flex flex-col items-center gap-1.5 text-navy cursor-pointer">
               <Printer size={17} strokeWidth={1.8} />
               <span className="text-[11px]">Cetak struk</span>
             </button>
+            )}
+            {showWhatsApp && (
             <div className="relative">
               <button
                 onClick={() => canWhatsApp && window.open(`https://wa.me/?text=${waText}`, "_blank")}
@@ -202,11 +209,13 @@ export default function Receipt() {
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" /></svg>
                 <span className="text-[11px]">WhatsApp</span>
               </button>
-              <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const, position: "absolute", top: -7, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap" }}>
+              {!canWhatsApp && <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const, position: "absolute", top: -7, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap" }}>
                 STANDARD
-              </span>
+              </span>}
             </div>
+            )}
           </div>
+          )}
         </div>
 
         {/* Right panel: desktop only */}
@@ -214,11 +223,14 @@ export default function Receipt() {
 
           <p style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-3">TINDAKAN</p>
           <div className="flex flex-col gap-2 mb-auto">
+            {canPrint && (
             <button className="flex items-center gap-3 bg-cream-bg border border-warm-border rounded-card px-4 py-3.5 text-[13px] font-medium text-navy hover:border-navy/30 transition-colors cursor-pointer w-full">
               <Printer size={15} strokeWidth={1.8} className="shrink-0" />
               Cetak struk
             </button>
+            )}
 
+            {showWhatsApp && (
             <div className="relative">
               <button
                 onClick={() => canWhatsApp && window.open(`https://wa.me/?text=${waText}`, "_blank")}
@@ -226,10 +238,11 @@ export default function Receipt() {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="shrink-0"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" /></svg>
                 Kirim via WhatsApp
               </button>
-              <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const, position: "absolute", top: -7, right: 10, whiteSpace: "nowrap" }}>
+              {!canWhatsApp && <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const, position: "absolute", top: -7, right: 10, whiteSpace: "nowrap" }}>
                 STANDARD
-              </span>
+              </span>}
             </div>
+            )}
           </div>
 
           <p className="text-[11px] text-text-mute text-center mt-6">{isDemoMode ? "Mode Demo · data tidak tersimpan" : "Struk tersimpan di Riwayat"}</p>

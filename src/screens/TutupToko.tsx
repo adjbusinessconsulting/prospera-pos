@@ -9,9 +9,10 @@ const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", tra
 const METHOD_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet"];
 
 export default function TutupToko() {
-  const { signOut, setScreen, storeId, storeTier, isDemoMode } = useStore();
+  const { signOut, setScreen, storeId, storeTier, isDemoMode, settings } = useStore();
   const effectiveTier = storeId ? storeTier : "free";
   const isStd = isAtLeast(effectiveTier, "standard");
+  const recOn = isStd && settings.rekonsiliasi;   // owner can hide the reconciliation tool
   const retentionDays = RETENTION[effectiveTier] ?? 1;
 
   // Omzet = money actually received for TODAY's activity. Credit sales (hutang)
@@ -78,7 +79,7 @@ export default function TutupToko() {
   const dateStr = now.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   async function closeAndLogout() {
-    const reconciled = isStd && counted !== "";
+    const reconciled = recOn && counted !== "";
     if (storeId && !isDemoMode && shiftId) {
       try {
         const patch: Record<string, unknown> = { closed_at: new Date().toISOString(), modal_akhir: reconciled ? countedNum : null };
@@ -166,8 +167,8 @@ export default function TutupToko() {
             )}
           </div>
 
-          {/* Reconciliation — Standard+ only, optional */}
-          {isStd && (
+          {/* Reconciliation — Standard+ only, optional, owner-toggleable */}
+          {recOn && (
             <div className="bg-white border border-warm-border rounded-card px-6 py-5">
               <div className="flex items-center justify-between gap-3">
                 <div>

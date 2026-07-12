@@ -40,9 +40,30 @@ type QrisState = "idle" | "loading" | "show" | "confirmed" | "error";
 export default function Payment() {
   const {
     cart, paymentMethod, cashReceived, cashierName, cashierInitials,
-    trxCounter, storeId, storeTier, isDemoMode, qrisImageUrl, midtransClientKey,
+    trxCounter, storeId, storeTier, isDemoMode, qrisImageUrl, midtransClientKey, settings,
     setPaymentMethod, setCashReceived, setScreen, signOut, setHutangCustomer, addDemoHutang,
   } = useStore();
+
+  // Owner can hide payment methods they don't accept (Pengaturan).
+  const methodEnabled = (id: string): boolean => {
+    switch (id) {
+      case "tunai": return settings.pay_tunai;
+      case "qris": return settings.pay_qris;
+      case "transfer": return settings.pay_transfer;
+      case "debit": return settings.pay_debit;
+      case "ewallet": return settings.pay_ewallet;
+      case "hutang": return settings.hutang;
+      default: return true;
+    }
+  };
+  const visibleMethods = METHODS.filter(m => methodEnabled(m.id));
+  // If the selected method got hidden, fall back to the first visible one.
+  useEffect(() => {
+    if (visibleMethods.length > 0 && !visibleMethods.some(m => m.id === paymentMethod)) {
+      setPaymentMethod(visibleMethods[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings]);
 
   // Hutang customer capture
   const [showHutangModal, setShowHutangModal] = useState(false);
@@ -323,7 +344,7 @@ export default function Payment() {
         <div className="flex-1 overflow-auto px-5 lg:px-10 pt-5 pb-5">
           <p style={{ fontSize: 10, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-3">METODE PEMBAYARAN</p>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-            {METHODS.map(m => {
+            {visibleMethods.map(m => {
               const { locked, badge, tierLabel } = methodLock(m.id);
               const active = !locked && paymentMethod === m.id;
               return (

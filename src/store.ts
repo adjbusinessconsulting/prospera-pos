@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { CartItem, CashierDB, Product, Screen, ShiftDef } from './types';
 import { PRODUCTS } from './data';
+import { DEFAULT_SETTINGS, mergeSettings, type StoreSettings } from './settings';
 
 interface POSState {
   screen: Screen;
@@ -25,6 +26,8 @@ interface POSState {
   storeAddress: string;
   storePhone: string;
   storeTier: string;
+  settings: StoreSettings;
+  settingsLocked: boolean;   // Premium: settings managed only from Back Office
   inventoryEnabled: boolean;
   lowStockThreshold: number;
   receiptLogo: string;
@@ -47,6 +50,8 @@ interface POSState {
   setSubscription: (expired: boolean, paidTier: string) => void;
   setSyncStatus: (s: { isOnline?: boolean; pendingSyncCount?: number; lastSyncedAt?: string | null }) => void;
   setStoreTier: (tier: string) => void;
+  setSettings: (patch: Partial<StoreSettings>) => void;
+  loadSettings: (raw: unknown, locked?: boolean) => void;
   setInventoryEnabled: (v: boolean) => void;
   setInventorySettings: (enabled: boolean, threshold: number) => void;
   setReceiptLogo: (v: string) => void;
@@ -157,6 +162,8 @@ export const useStore = create<POSState>((set) => ({
   storeAddress: '',
   storePhone: '',
   storeTier: 'free',
+  settings: { ...DEFAULT_SETTINGS },
+  settingsLocked: false,
   inventoryEnabled: true,
   lowStockThreshold: 5,
   receiptLogo: '',
@@ -183,6 +190,8 @@ export const useStore = create<POSState>((set) => ({
     lastSyncedAt: s.lastSyncedAt !== undefined ? s.lastSyncedAt : st.lastSyncedAt,
   })),
   setStoreTier: (storeTier) => set({ storeTier }),
+  setSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
+  loadSettings: (raw, locked) => set({ settings: mergeSettings(raw), settingsLocked: !!locked }),
   setInventoryEnabled: (inventoryEnabled) => set({ inventoryEnabled }),
   setInventorySettings: (inventoryEnabled, lowStockThreshold) => set({ inventoryEnabled, lowStockThreshold }),
   setReceiptLogo: (receiptLogo) => set({ receiptLogo }),
@@ -200,6 +209,8 @@ export const useStore = create<POSState>((set) => ({
     storeAddress: 'Jl. Diponegoro No. 24, Palu Timur',
     storePhone: '0812-3456-7890',
     storeTier: 'premium',
+    settings: { ...DEFAULT_SETTINGS },
+    settingsLocked: false,
     inventoryEnabled: true,
     lowStockThreshold: 5,
     dbCashiers: [DEMO_CASHIER],
@@ -266,6 +277,8 @@ export const useStore = create<POSState>((set) => ({
     storeName: '',
     storeAddress: '',
     storeTier: 'free',
+    settings: { ...DEFAULT_SETTINGS },
+    settingsLocked: false,
     inventoryEnabled: true,
     lowStockThreshold: 5,
     receiptLogo: '',

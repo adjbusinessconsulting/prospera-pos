@@ -33,12 +33,12 @@ function PhotoThumb({ size = "sm" }: { size?: "sm" | "md" }) {
 }
 
 export default function Kas() {
-  const { cashierInitials, cashierName, selectedShift, selectedShiftName, storeId, storeTier, isDemoMode, setScreen, signOut } = useStore();
+  const { cashierInitials, cashierName, selectedShift, selectedShiftName, storeId, storeTier, isDemoMode, settings, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
-  const canKas = isAtLeast(effectiveTier, 'standard');
-  // July 11: foto bukti is a capability for BOTH Standard & Premium and OPTIONAL by
-  // default — whether it's *required* becomes a store toggle once POS Settings ships.
-  const requiresPhoto = false;
+  const canKas = isAtLeast(effectiveTier, 'standard');       // tier gate (banner/upsell)
+  const newKasOn = canKas && settings.kas;                    // owner can hide new-entry buttons
+  // Foto bukti is optional by default; the owner can make it required (Pengaturan).
+  const requiresPhoto = settings.fotoBuktiWajib;
 
   const [manual, setManual] = useState<KasMove[]>(isDemoMode ? DEMO_MANUAL : []);
   const [modalAwal, setModalAwal] = useState(isDemoMode ? DEMO_MODAL : 0);
@@ -180,6 +180,7 @@ export default function Kas() {
               <button className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-semibold bg-navy text-cream-text border-0">
                 Kas
               </button>
+              {/* Hutang tab stays reachable even when new bons are off — existing debts must stay visible. */}
               <button onClick={() => setScreen("hutang")}
                 className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-medium text-text-mute hover:text-navy transition-colors bg-transparent border-0 cursor-pointer">
                 Hutang
@@ -213,25 +214,27 @@ export default function Kas() {
               </div>
             </div>
 
-            {/* Kas Masuk / Kas Keluar */}
+            {/* Kas Masuk / Kas Keluar — hidden entirely when the owner turns Kas off (Std+) */}
+            {(!canKas || settings.kas) && (
             <div className="flex gap-2.5">
               <div className="relative flex-1">
-                <button onClick={() => canKas && setShowMasuk(true)}
-                  className={`w-full bg-[#5C9E7E14] border border-[#5C9E7E40] rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-[#3D7A5E] transition-colors ${canKas ? "hover:bg-[#5C9E7E20] cursor-pointer" : "opacity-50 cursor-not-allowed"}`}>
+                <button onClick={() => newKasOn && setShowMasuk(true)}
+                  className={`w-full bg-[#5C9E7E14] border border-[#5C9E7E40] rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-[#3D7A5E] transition-colors ${newKasOn ? "hover:bg-[#5C9E7E20] cursor-pointer" : "opacity-50 cursor-not-allowed"}`}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
                   Kas Masuk
                 </button>
                 {!canKas && <span style={{ position: "absolute", top: -7, right: 6, background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const }}>STD</span>}
               </div>
               <div className="relative flex-1">
-                <button onClick={() => canKas && setShowKeluar(true)}
-                  className={`w-full bg-[#C25E3D14] border border-[#C25E3D40] rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-[#C25E3D] transition-colors ${canKas ? "hover:bg-[#C25E3D20] cursor-pointer" : "opacity-50 cursor-not-allowed"}`}>
+                <button onClick={() => newKasOn && setShowKeluar(true)}
+                  className={`w-full bg-[#C25E3D14] border border-[#C25E3D40] rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-[#C25E3D] transition-colors ${newKasOn ? "hover:bg-[#C25E3D20] cursor-pointer" : "opacity-50 cursor-not-allowed"}`}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14" /></svg>
                   Kas Keluar
                 </button>
                 {!canKas && <span style={{ position: "absolute", top: -7, right: 6, background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const }}>STD</span>}
               </div>
             </div>
+            )}
 
             {/* Mobile: tier banner + pergerakan */}
             <div className="lg:hidden">
@@ -340,11 +343,13 @@ export default function Kas() {
 
         {/* Bottom: Pindah Shift + Tutup Toko */}
         <div className="flex gap-2.5 px-5 lg:px-10 py-4 shrink-0 border-t border-warm-border bg-cream-bg">
+          {settings.gantiShift && (
           <button onClick={() => setScreen("pindah-shift")}
             className="flex-1 bg-cream-bg border border-warm-border rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-navy hover:border-navy/40 transition-colors cursor-pointer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6" /></svg>
             Pindah Shift
           </button>
+          )}
           <button onClick={() => setScreen("tutup-toko")}
             className="flex-1 bg-navy border-0 rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-cream-text hover:opacity-90 transition-opacity cursor-pointer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2"><path d="M18.36 6.64A9 9 0 115.64 19.36M2 12h2M20 12h2M12 2v2M12 20v2" /></svg>

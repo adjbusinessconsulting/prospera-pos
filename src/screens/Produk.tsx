@@ -34,7 +34,7 @@ export default function Produk() {
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
-  const { cashierInitials, setScreen, signOut, storeId, storeTier, isDemoMode, inventoryEnabled, lowStockThreshold, setInventoryEnabled, products, addProduct, updateProduct } = useStore();
+  const { cashierInitials, setScreen, signOut, storeId, storeTier, isDemoMode, inventoryEnabled, lowStockThreshold, setInventoryEnabled, products, settings, addProduct, updateProduct } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
   const canStock = isAtLeast(effectiveTier, 'premium');
   const threshold = lowStockThreshold || LOW_STOCK_THRESHOLD;
@@ -105,8 +105,8 @@ export default function Produk() {
     setAddCategory("SBK");
   }
 
-  // Free/Standard: adding a product needs the owner's login password to confirm.
-  const needsOwnerConfirm = !isDemoMode && !!storeId && !isAtLeast(effectiveTier, "premium");
+  // Owner-toggleable: require the owner's login password before product/price edits.
+  const needsOwnerConfirm = !isDemoMode && !!storeId && settings.passwordConfirmPrice;
 
   function handleSave() {
     if (!canSave) return;
