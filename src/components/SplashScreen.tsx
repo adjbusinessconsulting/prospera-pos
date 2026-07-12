@@ -12,16 +12,16 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 99999,
-      background: "#F2EDE3",
+      background: "#0B1129",
       display: "flex", alignItems: "center", justifyContent: "center",
       opacity: fading ? 0 : 1,
       transition: "opacity 0.5s ease",
       pointerEvents: fading ? "none" : "all",
     }}>
       <img
-        src="/app-splash-POS-reference.png"
+        src="/splash-logo.png"
         alt="Sterith POS"
-        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+        style={{ width: "72%", maxWidth: 420, height: "auto", objectFit: "contain" }}
       />
     </div>
   );
