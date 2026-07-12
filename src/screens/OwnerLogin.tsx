@@ -8,9 +8,10 @@ import { DemoChooser } from "../components/DemoChooser";
 
 const DAY_ID = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
-// New sign-ups go through the Daftar POS form on the marketing site (lands as a
-// prospect in Master Office), not an in-app signup.
-const DAFTAR_POS_URL = "https://sterith.com/form.html?daftar=pos";
+// New sign-ups go through the unified Daftar page in Master Office (name / email /
+// WhatsApp / apps → lands as a New Request). After payment is confirmed there, the
+// client gets a WhatsApp link to set their password. Not an in-app signup.
+const DAFTAR_POS_URL = "https://masteroffice.sterith.com/daftar?app=pos";
 
 // Max stores per tier. NOTE: also enforce server-side (RLS / provisioning) —
 // this client cap is UX only and can be bypassed.
