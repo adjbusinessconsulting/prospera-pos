@@ -18,7 +18,7 @@ function Switch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   );
 }
 
-export function SettingsPanel({ open, onClose, onOpenReceipt }: { open: boolean; onClose: () => void; onOpenReceipt?: () => void }) {
+export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: { open: boolean; onClose: () => void; onOpenReceipt?: () => void; onOpenPrinter?: () => void }) {
   const storeId = useStore((s) => s.storeId);
   const isDemoMode = useStore((s) => s.isDemoMode);
   const storeTier = useStore((s) => (s.storeId ? s.storeTier : "free"));
@@ -124,7 +124,17 @@ export function SettingsPanel({ open, onClose, onOpenReceipt }: { open: boolean;
               {isPre && <Row k="pay_ewallet" label="E-Wallet" desc="OVO, GoPay, Dana, dll." />}
 
               <SectionHead title="Kasir & Struk" />
-              <Row k="printReceipt" label="Cetak struk" desc="Tampilkan tombol cetak struk. (Atur printer menyusul.)" />
+              <Row k="printReceipt" label="Cetak struk" desc="Tampilkan tombol cetak struk & aktifkan pengaturan printer." />
+              {draft.printReceipt && onOpenPrinter && (
+                <button onClick={() => { onClose(); onOpenPrinter(); }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, margin: "10px 0 2px", padding: "12px 14px", borderRadius: 11, border: "1px solid #ECE7DD", background: "#FAFAF7", cursor: "pointer" }}>
+                  <span style={{ textAlign: "left" }}>
+                    <span style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#0B1129" }}>Atur Printer</span>
+                    <span style={{ display: "block", fontSize: 11, color: "#7A776F", marginTop: 1 }}>Sambungkan printer thermal · ukuran kertas · test print</span>
+                  </span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
+                </button>
+              )}
               <Row k="passwordConfirmPrice" label="Konfirmasi kata sandi saat ubah harga" desc="Minta kata sandi pemilik sebelum harga/produk diubah." />
 
               {isStd && <>

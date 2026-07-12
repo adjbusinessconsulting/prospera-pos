@@ -7,6 +7,7 @@ import FeedbackDrawer from "./FeedbackDrawer";
 import UpgradeModal from "./UpgradeModal";
 import { ReceiptSettings } from "./ReceiptSettings";
 import { SettingsPanel } from "./SettingsPanel";
+import { PrinterSettings } from "./PrinterSettings";
 import { pendingAuditCount } from "../lib/auditlog";
 
 const NAV = [
@@ -28,6 +29,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
+  const [printerOpen, setPrinterOpen] = useState(false);
   const storeTier = useStore(s => (s.storeId ? s.storeTier : "free"));
   const isOnline = useStore(s => s.isOnline);
   const pendingSyncCount = useStore(s => s.pendingSyncCount);
@@ -143,8 +145,9 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
 
       <FeedbackDrawer open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
-      <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} onOpenReceipt={() => setReceiptOpen(true)} />
+      <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} onOpenReceipt={() => setReceiptOpen(true)} onOpenPrinter={() => setPrinterOpen(true)} />
       <ReceiptSettings open={receiptOpen} onClose={() => setReceiptOpen(false)} />
+      <PrinterSettings open={printerOpen} onClose={() => setPrinterOpen(false)} />
     </>
   );
 }

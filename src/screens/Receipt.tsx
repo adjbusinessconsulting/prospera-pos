@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useStore, getTotal, getTrxId, isAtLeast, localDateISO } from "../store";
 import { formatRp } from "../data";
 import { Printer, Check, ChevronLeft } from "lucide-react";
 import { AppSidebar } from "../components/AppSidebar";
 import { recordSale } from "../lib/sync";
+import { printReceipt as sendToPrinter, loadPrinterConfig } from "../lib/printer";
 
 function SterithWatermark({ tier }: { tier: string }) {
   // Branding ladder (July 11):
@@ -31,6 +33,25 @@ export default function Receipt() {
   const showWhatsApp = !waTierOk || settings.whatsappShare;  // Free sees upsell; Std+ only if enabled
   const canBranding = isAtLeast(effectiveTier, 'standard') && settings.receiptLogo;
   const canPrint = settings.printReceipt;
+
+  const [printMsg, setPrintMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  async function handlePrint() {
+    setPrintMsg(null);
+    const paper = loadPrinterConfig()?.paper ?? 58;
+    try {
+      await sendToPrinter({
+        storeName: storeName || "Toko", storeAddress, storePhone,
+        trxId, dateStr, timeStr, cashierName,
+        items: cart.map(i => ({ name: i.product.name, qty: i.qty, price: i.product.price })),
+        total, method: paymentMethod, cashReceived, change,
+        hutangName: hutangCustomer?.name, footer: "Terima kasih, sampai jumpa lagi",
+      }, paper);
+      setPrintMsg({ ok: true, text: "Struk tercetak." });
+    } catch {
+      // Never block the sale — the on-screen struk is the fallback.
+      setPrintMsg({ ok: false, text: "Printer tidak terhubung. Struk tampil di layar. Atur printer di Pengaturan." });
+    }
+  }
   const total = getTotal(cart);
   const change = cashReceived - total;
   const trxId = getTrxId(trxCounter);
@@ -196,7 +217,7 @@ export default function Receipt() {
           {(canPrint || showWhatsApp) && (
           <div className="lg:hidden grid grid-cols-2 gap-2.5 mt-5">
             {canPrint && (
-            <button className="bg-white border border-warm-border rounded-button py-3.5 flex flex-col items-center gap-1.5 text-navy cursor-pointer">
+            <button onClick={handlePrint} className="bg-white border border-warm-border rounded-button py-3.5 flex flex-col items-center gap-1.5 text-navy cursor-pointer">
               <Printer size={17} strokeWidth={1.8} />
               <span className="text-[11px]">Cetak struk</span>
             </button>
@@ -216,6 +237,9 @@ export default function Receipt() {
             )}
           </div>
           )}
+          {printMsg && (
+            <p className="lg:hidden text-[11px] mt-2 text-center" style={{ color: printMsg.ok ? "#3D7A5E" : "#C25E3D" }}>{printMsg.text}</p>
+          )}
         </div>
 
         {/* Right panel: desktop only */}
@@ -224,7 +248,7 @@ export default function Receipt() {
           <p style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-3">TINDAKAN</p>
           <div className="flex flex-col gap-2 mb-auto">
             {canPrint && (
-            <button className="flex items-center gap-3 bg-cream-bg border border-warm-border rounded-card px-4 py-3.5 text-[13px] font-medium text-navy hover:border-navy/30 transition-colors cursor-pointer w-full">
+            <button onClick={handlePrint} className="flex items-center gap-3 bg-cream-bg border border-warm-border rounded-card px-4 py-3.5 text-[13px] font-medium text-navy hover:border-navy/30 transition-colors cursor-pointer w-full">
               <Printer size={15} strokeWidth={1.8} className="shrink-0" />
               Cetak struk
             </button>
@@ -245,6 +269,7 @@ export default function Receipt() {
             )}
           </div>
 
+          {printMsg && <p className="text-[11px] mt-4 text-center" style={{ color: printMsg.ok ? "#3D7A5E" : "#C25E3D" }}>{printMsg.text}</p>}
           <p className="text-[11px] text-text-mute text-center mt-6">{isDemoMode ? "Mode Demo · data tidak tersimpan" : "Struk tersimpan di Riwayat"}</p>
         </div>
       </div>
