@@ -21,7 +21,7 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
       <img
         src="/app-splash-POS-reference.png"
         alt="Sterith POS"
-        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
       />
     </div>
   );
