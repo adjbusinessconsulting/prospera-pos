@@ -136,7 +136,6 @@ export default function BackofficeDemo() {
   const [showAddBranch, setShowAddBranch] = useState(false);
   const [newBranch, setNewBranch] = useState("");
   const [logEntries, setLogEntries] = useState<AuditEntry[]>([]);
-  const [demoLocked, setDemoLocked] = useState(false);   // master lock (demo, non-persistent)
   // Editable per-branch catalogs for b2–b5 (b1/Pusat uses the live store products).
   const [branchProducts, setBranchProducts] = useState<Record<string, Product[]>>(() => ({ ...BRANCH_SEEDS }));
   useEffect(() => {
@@ -618,7 +617,7 @@ export default function BackofficeDemo() {
         {tab === "pengaturan" && (<>
           <div style={{ marginBottom: 14 }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: NAVY }}>Pengaturan Toko</h2>
-            <p style={{ fontSize: 11.5, color: MUTE, marginTop: 1 }}>Langganan, kunci pengaturan POS, dan konfigurasi pembayaran.</p>
+            <p style={{ fontSize: 11.5, color: MUTE, marginTop: 1 }}>Langganan, pengaturan terpusat, dan konfigurasi pembayaran.</p>
           </div>
 
           {/* Subscription */}
@@ -633,29 +632,18 @@ export default function BackofficeDemo() {
             </div>
           </div>
 
-          {/* Master lock — mirrors the real Back Office control */}
+          {/* Centralized settings — structural rule for Premium (no toggle) */}
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "18px 20px", marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="1.9"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
-                  <h3 style={{ fontSize: 14, fontWeight: 800, color: NAVY }}>Kunci Pengaturan POS</h3>
-                </div>
-                <p style={{ fontSize: 12.5, color: NAVY, lineHeight: 1.7, margin: "8px 0 0" }}>
-                  Saat aktif, menu <b>Pengaturan</b> di aplikasi kasir disembunyikan sepenuhnya —
-                  kasir tidak bisa mengubah metode pembayaran, fitur, atau apa pun. Semua diatur
-                  dari Back Office ini. Perlindungan anti-utak-atik untuk perangkat jualan.
-                </p>
-              </div>
-              <button onClick={() => setDemoLocked(v => !v)} role="switch" aria-checked={demoLocked}
-                style={{ width: 52, height: 30, borderRadius: 999, border: "none", flexShrink: 0, cursor: "pointer", position: "relative", background: demoLocked ? GOLD : "#D8D2C4", transition: "background 0.15s", marginTop: 2 }}>
-                <span style={{ position: "absolute", top: 3, left: demoLocked ? 25 : 3, width: 24, height: 24, borderRadius: 999, background: "#fff", transition: "left 0.15s", boxShadow: "0 1px 3px rgba(0,0,0,0.25)" }} />
-              </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="1.9"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
+              <h3 style={{ fontSize: 14, fontWeight: 800, color: NAVY }}>Pengaturan Terpusat</h3>
             </div>
-            <div style={{ marginTop: 14, display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 13px", borderRadius: 999, background: demoLocked ? "rgba(150,118,47,0.10)" : "#f0ece3", border: `1px solid ${demoLocked ? GOLD + "66" : BORDER}` }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={demoLocked ? GOLD : MUTE} strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
-              <span style={{ fontSize: 11.5, fontWeight: 800, color: demoLocked ? GOLD : MUTE }}>{demoLocked ? "Terkunci — hanya Back Office" : "Terbuka — POS bisa ubah sendiri"}</span>
-            </div>
+            <p style={{ fontSize: 12.5, color: NAVY, lineHeight: 1.7, margin: "8px 0 0" }}>
+              Di paket <b>Premium</b>, semua pengaturan toko &amp; fitur diatur dari Back Office ini.
+              Aplikasi kasir <b>tidak menampilkan menu Pengaturan</b> — hanya <b>setup printer</b>
+              (karena printer dipasangkan langsung ke perangkat). Perlindungan anti-utak-atik,
+              tanpa perlu mengunci apa pun.
+            </p>
           </div>
 
           {/* Payment config (info) */}

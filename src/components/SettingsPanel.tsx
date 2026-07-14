@@ -23,7 +23,6 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
   const isDemoMode = useStore((s) => s.isDemoMode);
   const storeTier = useStore((s) => (s.storeId ? s.storeTier : "free"));
   const settings = useStore((s) => s.settings);
-  const settingsLocked = useStore((s) => s.settingsLocked);
   const inventoryEnabled = useStore((s) => s.inventoryEnabled);
   const setSettings = useStore((s) => s.setSettings);
   const setInventoryEnabled = useStore((s) => s.setInventoryEnabled);
@@ -92,20 +91,32 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "22px 24px 14px", borderBottom: "1px solid #ECE7DD" }}>
           <div>
             <p style={{ margin: 0, fontSize: 9.5, letterSpacing: "0.2em", textTransform: "uppercase", color: "#7A776F", fontWeight: 600 }}>Sterith POS</p>
-            <h3 style={{ margin: "3px 0 0", fontSize: 18, fontWeight: 800, color: "#0B1129" }}>Pengaturan Fitur</h3>
+            <h3 style={{ margin: "3px 0 0", fontSize: 18, fontWeight: 800, color: "#0B1129" }}>{isPre ? "Pengaturan Perangkat" : "Pengaturan Fitur"}</h3>
           </div>
           <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid #ECE7DD", background: "white", cursor: "pointer", color: "#7A776F" }}>✕</button>
         </div>
 
-        {settingsLocked ? (
-          <div style={{ padding: "40px 28px", textAlign: "center" }}>
-            <div style={{ width: 46, height: 46, borderRadius: 12, background: "rgba(122,119,111,0.10)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="1.9"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
-            </div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#0B1129" }}>Pengaturan dikunci</p>
-            <p style={{ margin: "6px 0 0", fontSize: 12.5, color: "#7A776F", lineHeight: 1.6 }}>
-              Pengaturan toko ini hanya bisa diubah dari <b>Back Office</b> oleh pemilik.
+        {isPre ? (
+          /* Premium: business/feature settings live in Back Office only. This
+             device shows printer setup only (physical per-device pairing). */
+          <div style={{ padding: "6px 24px 22px", display: "flex", flexDirection: "column" }}>
+            <p style={{ margin: "12px 0 2px", fontSize: 12.5, color: "#7A776F", lineHeight: 1.6 }}>
+              Pengaturan toko & fitur dikelola dari <b>Back Office</b>. Di perangkat ini hanya <b>setup printer</b>, karena printer dipasangkan langsung ke perangkat.
             </p>
+            <button onClick={() => { onClose(); onOpenPrinter?.(); }}
+              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 14, padding: "14px 14px", borderRadius: 11, border: "1px solid #ECE7DD", background: "#FAFAF7", cursor: "pointer" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(11,17,41,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0B1129" strokeWidth="1.8"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" /></svg>
+                </span>
+                <span style={{ textAlign: "left" }}>
+                  <span style={{ display: "block", fontSize: 13.5, fontWeight: 700, color: "#0B1129" }}>Atur Printer</span>
+                  <span style={{ display: "block", fontSize: 11, color: "#7A776F", marginTop: 1 }}>Sambungkan printer thermal · ukuran kertas · test print</span>
+                </span>
+              </span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
+            </button>
+            <button onClick={onClose} style={{ marginTop: 16, height: 46, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0B1129", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Tutup</button>
           </div>
         ) : (
           <>

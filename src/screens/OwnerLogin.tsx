@@ -38,7 +38,6 @@ interface StoreRow {
   tier_expires_at: string | null;
   receipt_logo: string | null;
   settings: unknown;
-  settings_locked: boolean | null;
 }
 
 export default function OwnerLogin() {
@@ -131,7 +130,7 @@ export default function OwnerLogin() {
     if (userId) {
       const { data: storeRows } = await supabase
         .from("stores")
-        .select("id, name, address, phone, tier, qris_image_url, midtrans_client_key, inventory_enabled, low_stock_threshold, tier_expires_at, receipt_logo, settings, settings_locked")
+        .select("id, name, address, phone, tier, qris_image_url, midtrans_client_key, inventory_enabled, low_stock_threshold, tier_expires_at, receipt_logo, settings")
         .eq("owner_id", userId)
         .order("created_at");
       // Multi-store: show the picker when there's >1 store, OR when the tier can
@@ -173,7 +172,7 @@ export default function OwnerLogin() {
     );
     setInventorySettings(store.inventory_enabled ?? true, store.low_stock_threshold ?? 5);
     setReceiptLogo(store.receipt_logo ?? "");
-    loadSettings(store.settings, store.settings_locked ?? false);
+    loadSettings(store.settings);
     void pruneLog(effectiveTier);   // trim on-device audit log to the tier window
     const [{ data: productRows }, { count: saleCount }, { data: shiftRows }] = await Promise.all([
       supabase.from("products").select("*").eq("store_id", store.id).eq("active", true).order("name"),

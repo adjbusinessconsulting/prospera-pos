@@ -27,7 +27,6 @@ interface POSState {
   storePhone: string;
   storeTier: string;
   settings: StoreSettings;
-  settingsLocked: boolean;   // Premium: settings managed only from Back Office
   inventoryEnabled: boolean;
   lowStockThreshold: number;
   receiptLogo: string;
@@ -51,7 +50,7 @@ interface POSState {
   setSyncStatus: (s: { isOnline?: boolean; pendingSyncCount?: number; lastSyncedAt?: string | null }) => void;
   setStoreTier: (tier: string) => void;
   setSettings: (patch: Partial<StoreSettings>) => void;
-  loadSettings: (raw: unknown, locked?: boolean) => void;
+  loadSettings: (raw: unknown) => void;
   setInventoryEnabled: (v: boolean) => void;
   setInventorySettings: (enabled: boolean, threshold: number) => void;
   setReceiptLogo: (v: string) => void;
@@ -164,7 +163,6 @@ export const useStore = create<POSState>((set) => ({
   storePhone: '',
   storeTier: 'free',
   settings: { ...DEFAULT_SETTINGS },
-  settingsLocked: false,
   inventoryEnabled: true,
   lowStockThreshold: 5,
   receiptLogo: '',
@@ -192,7 +190,7 @@ export const useStore = create<POSState>((set) => ({
   })),
   setStoreTier: (storeTier) => set({ storeTier }),
   setSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
-  loadSettings: (raw, locked) => set({ settings: mergeSettings(raw), settingsLocked: !!locked }),
+  loadSettings: (raw) => set({ settings: mergeSettings(raw) }),
   setInventoryEnabled: (inventoryEnabled) => set({ inventoryEnabled }),
   setInventorySettings: (inventoryEnabled, lowStockThreshold) => set({ inventoryEnabled, lowStockThreshold }),
   setReceiptLogo: (receiptLogo) => set({ receiptLogo }),
@@ -211,7 +209,6 @@ export const useStore = create<POSState>((set) => ({
     storePhone: '0812-3456-7890',
     storeTier: 'premium',
     settings: { ...DEFAULT_SETTINGS },
-    settingsLocked: false,
     inventoryEnabled: true,
     lowStockThreshold: 5,
     dbCashiers: [DEMO_CASHIER],
@@ -279,7 +276,6 @@ export const useStore = create<POSState>((set) => ({
     storeAddress: '',
     storeTier: 'free',
     settings: { ...DEFAULT_SETTINGS },
-    settingsLocked: false,
     inventoryEnabled: true,
     lowStockThreshold: 5,
     receiptLogo: '',
