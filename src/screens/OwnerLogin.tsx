@@ -104,8 +104,18 @@ export default function OwnerLogin() {
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
-    // Backoffice is a separate app (same Supabase login). Send them there to sign in.
-    if (loginAs === "backoffice") { window.location.href = "https://backoffice.sterith.com"; return; }
+    // Single-login portal: validate the password via Supabase here, then hand the
+    // access token to Back Office's /sso so the owner lands there already signed in
+    // (no second login). Wrong credentials → error shown here, no redirect.
+    if (loginAs === "backoffice") {
+      setLoading(true); setError(""); setSuccess("");
+      const { data: boData, error: boErr } = await supabase.auth.signInWithPassword({ email, password });
+      if (boErr) { setError(boErr.message); setLoading(false); return; }
+      const token = boData.session?.access_token;
+      if (!token) { setError("Gagal masuk. Coba lagi."); setLoading(false); return; }
+      window.location.href = "https://backoffice.sterith.com/sso#at=" + encodeURIComponent(token);
+      return;
+    }
     setLoading(true);
     setError("");
     setSuccess("");
