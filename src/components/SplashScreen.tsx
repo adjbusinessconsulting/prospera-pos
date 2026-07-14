@@ -12,7 +12,7 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 99999,
-      background: "#0B1129",
+      background: "#0D1117",
       display: "flex", alignItems: "center", justifyContent: "center",
       opacity: fading ? 0 : 1,
       transition: "opacity 0.5s ease",

@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useStore, startedAsInvite } from "../store";
-
-const GK = "'Hanken Grotesk', system-ui, sans-serif";
-const EBG = "'EB Garamond', Georgia, serif";
+import { BUILD } from "../version";
 
 export default function ResetPassword() {
   const setScreen = useStore(s => s.setScreen);
@@ -17,6 +15,7 @@ export default function ResetPassword() {
   const [exchanging, setExchanging] = useState(true);
   const [error, setError]         = useState("");
   const [done, setDone]           = useState(false);
+  const [lang, setLang]           = useState<"id" | "en">("id");
 
   useEffect(() => {
     let resolved = false;
@@ -91,179 +90,149 @@ export default function ResetPassword() {
     setDone(true);
   }
 
-  const inputWrap: React.CSSProperties = {
-    position: "relative",
-  };
-  const inputBase: React.CSSProperties = {
-    width: "100%",
-    border: "1px solid #e0dac9",
-    background: "#fbfaf5",
-    borderRadius: 10,
-    padding: "12px 12px 12px 36px",
-    font: `500 14px/1 ${GK}`,
-    color: "#14203a",
-    outline: "none",
-    boxSizing: "border-box",
-  };
-  const iconLeft: React.CSSProperties = {
-    position: "absolute",
-    left: 12,
-    top: "50%",
-    transform: "translateY(-50%)",
-    color: "#a49d8c",
-    display: "flex",
-    pointerEvents: "none",
-  };
-  const eyeBtn: React.CSSProperties = {
-    position: "absolute",
-    right: 8,
-    top: "50%",
-    transform: "translateY(-50%)",
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    display: "grid",
-    placeItems: "center" as const,
-    color: "#a49d8c",
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-  };
-  const labelStyle: React.CSSProperties = {
-    font: `600 10px/1 ${GK}`,
-    letterSpacing: "0.12em",
-    textTransform: "uppercase",
-    color: "#a49d8c",
-    display: "block",
-    marginBottom: 8,
-  };
+  // ── Shared styles (mirrors OwnerLogin / Back Office login) ──
+  const inputStyle: React.CSSProperties = { width: "100%", height: 46, boxSizing: "border-box", border: "1.5px solid #ddd9cc", borderRadius: 10, padding: "0 14px 0 42px", fontSize: 13, color: "#0B1129", background: "#fff", fontFamily: "Inter, sans-serif", outline: "none" };
+  const labelStyle: React.CSSProperties = { display: "block", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#8f897a", fontWeight: 600, marginBottom: 6 };
+  const iconStyle: React.CSSProperties = { position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#8f897a" };
+  const eyeBtn: React.CSSProperties = { position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#8f897a", padding: 4, display: "flex" };
 
   const EnvelopeIcon = () => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>
-    </svg>
+    <svg style={iconStyle} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>
   );
   const LockIcon = () => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>
-    </svg>
+    <svg style={iconStyle} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
   );
   const EyeIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-    </svg>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+  );
+
+  const fonts = <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>;
+
+  const card = (
+    <div style={{ width: "100%", maxWidth: 420, background: "#f8f6ef", borderRadius: 18, padding: "24px 30px 20px", border: "1px solid #ddd9cc", boxShadow: "0 8px 40px rgba(11,17,41,0.09)", boxSizing: "border-box" }}>
+
+      {/* Top bar */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#5C9E7E", boxShadow: "0 0 0 3px rgba(92,158,126,0.22)" }} />
+          <span style={{ fontSize: 9, letterSpacing: "0.2em", color: "#8f897a", fontWeight: 600, textTransform: "uppercase" }}>Sesi Aman</span>
+        </div>
+        <button type="button" onClick={() => setLang(l => l === "id" ? "en" : "id")} style={{ display: "flex", alignItems: "center", gap: 5, background: "#fff", border: "1px solid #ddd9cc", borderRadius: 8, padding: "4px 9px", fontSize: 10.5, fontWeight: 600, color: "#0B1129", cursor: "pointer" }}>
+          {lang.toUpperCase()}
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+      </div>
+
+      {/* Branding */}
+      <div style={{ textAlign: "center", marginBottom: 18 }}>
+        <img src="/horizontal-light.png" alt="Sterith" style={{ width: 190, maxWidth: "72%", display: "block", margin: "0 auto 6px", mixBlendMode: "multiply" }} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 14 }}>
+          <div style={{ height: 1, width: 30, background: "#b8934a", opacity: 0.6 }} />
+          <span style={{ fontSize: 9, letterSpacing: "0.25em", color: "#b8934a", textTransform: "uppercase", fontWeight: 600 }}>Point of Sale</span>
+          <div style={{ height: 1, width: 30, background: "#b8934a", opacity: 0.6 }} />
+        </div>
+      </div>
+
+      {done ? (
+        /* ── Success ── */
+        <div style={{ textAlign: "center", padding: "4px 4px 8px", animation: "fadeUp .5s ease both" }}>
+          <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#e9f1ea", display: "grid", placeItems: "center", margin: "0 auto 18px", position: "relative" }}>
+            <div style={{ position: "absolute", inset: -8, borderRadius: "50%", border: "1px dashed #cfe0d1" }} />
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#3f7d54" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#3f7d54", fontWeight: 600, marginBottom: 8 }}>{startedAsInvite ? "Berhasil · Akun Aktif" : "Berhasil · Kata Sandi Diperbarui"}</div>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0B1129", margin: "0 0 6px", lineHeight: 1.2 }}>{startedAsInvite ? "Kata sandi Anda telah dibuat." : "Kata sandi baru tersimpan."}</h1>
+          <p style={{ fontSize: 12, color: "#8f897a", lineHeight: 1.5, margin: "0 0 20px" }}>Silakan masuk kembali ke Sterith POS menggunakan kata sandi baru Anda.</p>
+          <a href="https://pos.sterith.com" style={{ textDecoration: "none", height: 48, background: "#e7c987", color: "#0B1129", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: "Inter, sans-serif" }}>
+            Login ke POS
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0B1129" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+
+      ) : exchanging ? (
+        <div style={{ padding: "24px 0 32px", textAlign: "center" }}>
+          <p style={{ fontSize: 12.5, color: "#8f897a", fontFamily: "Inter, sans-serif", margin: 0 }}>Memverifikasi link…</p>
+        </div>
+
+      ) : error && !password ? (
+        <div style={{ padding: "8px 0 20px", textAlign: "center", animation: "fadeUp .4s ease both" }}>
+          <p style={{ fontSize: 12.5, color: "#b0492f", background: "#f4e9e4", padding: "11px 14px", borderRadius: 8, lineHeight: 1.5, margin: "0 0 18px" }}>{error}</p>
+          <button onClick={() => setScreen("owner-login")} style={{ background: "transparent", border: "none", fontSize: 12, color: "#8f897a", cursor: "pointer", fontFamily: "Inter, sans-serif", textDecoration: "underline", textUnderlineOffset: 3 }}>
+            ← Kembali ke login
+          </button>
+        </div>
+
+      ) : (
+        /* ── Form ── */
+        <>
+          <div style={{ textAlign: "center", marginBottom: 18 }}>
+            <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0B1129", margin: "0 0 4px", lineHeight: 1.2 }}>
+              {startedAsInvite ? "Buat kata sandi Anda" : "Atur ulang kata sandi"}
+            </h1>
+            <p style={{ fontSize: 12, color: "#8f897a", lineHeight: 1.5, margin: 0 }}>
+              {startedAsInvite ? "Buat kata sandi untuk mulai menggunakan Sterith POS." : "Buat kata sandi baru untuk akun Anda."}
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12, animation: "fadeUp .4s ease both" }}>
+
+            {/* Email (read-only) */}
+            <div>
+              <label style={labelStyle}>Email Akun</label>
+              <div style={{ position: "relative" }}>
+                <EnvelopeIcon />
+                <input type="email" value={email} readOnly placeholder="pemilik@toko.co.id"
+                  style={{ ...inputStyle, background: "#f2f0e8", color: email ? "#0B1129" : "#a49d8c", caretColor: "transparent" }} />
+              </div>
+            </div>
+
+            {/* New password */}
+            <div>
+              <label style={labelStyle}>Kata Sandi Baru</label>
+              <div style={{ position: "relative" }}>
+                <LockIcon />
+                <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
+                  placeholder="Minimal 8 karakter" required style={{ ...inputStyle, padding: "0 44px 0 42px" }} />
+                <button type="button" style={eyeBtn} onClick={() => setShowPw(p => !p)}><EyeIcon /></button>
+              </div>
+            </div>
+
+            {/* Confirm password */}
+            <div>
+              <label style={labelStyle}>Ketik Ulang Kata Sandi</label>
+              <div style={{ position: "relative" }}>
+                <LockIcon />
+                <input type={showCf ? "text" : "password"} value={confirm} onChange={e => setConfirm(e.target.value)}
+                  placeholder="Ulangi kata sandi baru" required style={{ ...inputStyle, padding: "0 44px 0 42px" }} />
+                <button type="button" style={eyeBtn} onClick={() => setShowCf(p => !p)}><EyeIcon /></button>
+              </div>
+            </div>
+
+            {error && <p style={{ fontSize: 12, color: "#b0492f", background: "#f4e9e4", padding: "9px 12px", borderRadius: 8, margin: 0 }}>{error}</p>}
+
+            <button type="submit" disabled={loading} style={{ height: 48, background: "#e7c987", color: "#0B1129", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, fontFamily: "Inter, sans-serif", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              {loading ? "MENYIMPAN…" : startedAsInvite ? "BUAT KATA SANDI & MASUK" : "SIMPAN KATA SANDI BARU"}
+              {!loading && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0B1129" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
+            </button>
+          </form>
+        </>
+      )}
+
+      {/* Security footer */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18, paddingTop: 14, borderTop: "1px solid #ddd9cc" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#b8a88a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span style={{ fontSize: 10, color: "#b8a88a", fontFamily: "Inter, sans-serif" }}>Terenkripsi · build {BUILD}</span>
+        </div>
+        <span style={{ fontSize: 10, color: "#b8a88a", fontFamily: "Inter, sans-serif" }}>© 2026 STERITH</span>
+      </div>
+    </div>
   );
 
   return (
-    <div style={{ minHeight: "100dvh", background: "#d8d3c2", display: "flex", justifyContent: "center", alignItems: "flex-start", padding: "20px 16px", fontFamily: GK }}>
-      <div style={{ width: "100%", maxWidth: 420, background: "#eceadf", borderRadius: 20, boxShadow: "0 20px 60px rgba(15,20,30,.18)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-
-        {/* Logo */}
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "16px 24px 2px", flexShrink: 0 }}>
-          <img src="/logo-pos.png" alt="Sterith Business Consulting — POS" style={{ height: 104, width: "auto", objectFit: "contain" }} />
-        </div>
-
-        {done ? (
-          /* ── Success screen ── */
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "8px 28px 24px", textAlign: "center", animation: "fadeUp .5s ease both" }}>
-            <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
-
-            <div style={{ width: 84, height: 84, borderRadius: "50%", background: "#e9f1ea", display: "grid", placeItems: "center", marginBottom: 18, position: "relative", flexShrink: 0 }}>
-              <div style={{ position: "absolute", inset: -10, borderRadius: "50%", border: "1px dashed #cfe0d1" }} />
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3f7d54" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 6L9 17l-5-5"/>
-              </svg>
-            </div>
-
-            <div style={{ font: `600 10.5px/1.4 ${GK}`, letterSpacing: "0.16em", textTransform: "uppercase", color: "#3f7d54", marginBottom: 10 }}>{startedAsInvite ? "Berhasil · Akun Aktif" : "Berhasil · Kata Sandi Diperbarui"}</div>
-            <h1 style={{ font: `500 26px/1.15 ${EBG}`, color: "#14203a", margin: "0 0 8px" }}>{startedAsInvite ? "Kata sandi Anda telah dibuat." : "Kata sandi baru Anda telah tersimpan."}</h1>
-            <p style={{ font: `400 13px/1.55 ${GK}`, color: "#8f897a", margin: "0 0 20px", maxWidth: 320 }}>Silakan masuk kembali ke Sterith POS menggunakan kata sandi baru Anda.</p>
-
-            <a href="https://pos.sterith.com" style={{ textDecoration: "none", width: "100%", background: "#14203a", color: "#fff", borderRadius: 11, padding: "13px 18px", font: `600 13.5px/1 ${GK}`, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-              Login ke POS
-              <span style={{ color: "#e7c987", fontWeight: 700 }}>→</span>
-            </a>
-
-            <div style={{ marginTop: 14, font: `500 12.5px/1 ${GK}`, color: "#8f897a" }}>
-              Butuh bantuan? <a href="#" style={{ color: "#14203a", textDecoration: "none", fontWeight: 600 }}>Layanan</a>
-            </div>
-          </div>
-
-        ) : exchanging ? (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 40 }}>
-            <p style={{ font: `400 13.5px/1 ${GK}`, color: "#8f897a" }}>Memverifikasi link…</p>
-          </div>
-
-        ) : error && !password ? (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px 36px 40px", textAlign: "center" }}>
-            <p style={{ font: `400 13.5px/1.6 ${GK}`, color: "#c25e3d", marginBottom: 20 }}>{error}</p>
-            <button onClick={() => setScreen("owner-login")} style={{ font: `500 13px/1 ${GK}`, color: "#8f897a", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
-              Kembali ke login
-            </button>
-          </div>
-
-        ) : (
-          /* ── Form screen ── */
-          <div style={{ flex: 1, padding: "2px 24px 20px", animation: "fadeUp .4s ease both" }}>
-            <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
-
-            <div style={{ font: `600 10.5px/1.4 ${GK}`, letterSpacing: "0.16em", textTransform: "uppercase", color: "#b8934a", marginBottom: 7 }}>{startedAsInvite ? "Selamat Datang · Sterith POS" : "Akun · Pengaturan Ulang"}</div>
-            <h1 style={{ font: `500 24px/1.1 ${EBG}`, color: "#14203a", margin: "0 0 6px" }}>{startedAsInvite ? "Buat kata sandi Anda" : "Atur ulang kata sandi"}</h1>
-            <p style={{ font: `400 13px/1.5 ${GK}`, color: "#8f897a", margin: "0 0 14px" }}>{startedAsInvite ? "Buat kata sandi untuk mulai menggunakan Sterith POS." : "Masukkan email Anda dan buat kata sandi baru untuk melanjutkan."}</p>
-
-            <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e8e3d5", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-
-              {/* Email (pre-filled, readonly) */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={labelStyle}>Email</label>
-                <div style={inputWrap}>
-                  <span style={iconLeft}><EnvelopeIcon /></span>
-                  <input type="email" value={email} readOnly placeholder="pemilik@toko.co.id"
-                    style={{ ...inputBase, color: email ? "#14203a" : "#a49d8c", caretColor: "transparent" }} />
-                </div>
-              </div>
-
-              {/* New password */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={labelStyle}>Kata sandi baru</label>
-                <div style={inputWrap}>
-                  <span style={iconLeft}><LockIcon /></span>
-                  <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
-                    placeholder="Minimal 8 karakter" required
-                    style={{ ...inputBase, paddingRight: 42 }} />
-                  <button type="button" style={eyeBtn} onClick={() => setShowPw(p => !p)}><EyeIcon /></button>
-                </div>
-              </div>
-
-              {/* Confirm password */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={labelStyle}>Ketik ulang kata sandi</label>
-                <div style={inputWrap}>
-                  <span style={iconLeft}><LockIcon /></span>
-                  <input type={showCf ? "text" : "password"} value={confirm} onChange={e => setConfirm(e.target.value)}
-                    placeholder="Ulangi kata sandi baru" required
-                    style={{ ...inputBase, paddingRight: 42 }} />
-                  <button type="button" style={eyeBtn} onClick={() => setShowCf(p => !p)}><EyeIcon /></button>
-                </div>
-              </div>
-
-              {error && (
-                <div style={{ font: `400 12px/1.5 ${GK}`, color: "#c25e3d", background: "rgba(194,94,61,0.06)", border: "1px solid rgba(194,94,61,0.2)", borderRadius: 8, padding: "9px 12px" }}>{error}</div>
-              )}
-
-              <button type="submit" disabled={loading}
-                style={{ marginTop: 2, background: "#14203a", color: "#fff", borderRadius: 11, padding: "13px 18px", font: `600 13.5px/1 ${GK}`, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.75 : 1 }}>
-                {loading ? "Menyimpan…" : startedAsInvite ? "Buat kata sandi & masuk" : "Simpan kata sandi baru"}
-                {!loading && <span style={{ color: "#e7c987", fontWeight: 700 }}>→</span>}
-              </button>
-            </form>
-
-            <div style={{ textAlign: "center", marginTop: 12, font: `500 12.5px/1 ${GK}`, color: "#8f897a" }}>
-              Butuh bantuan? <a href="#" style={{ color: "#14203a", textDecoration: "none", fontWeight: 600 }}>Layanan</a>
-            </div>
-          </div>
-        )}
-      </div>
+    <div style={{ minHeight: "100dvh", background: "#eceadf", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "Inter, system-ui, sans-serif" }}>
+      {fonts}
+      {card}
     </div>
   );
 }
