@@ -48,7 +48,6 @@ export default function OwnerLogin() {
   const [newStoreName, setNewStoreName] = useState("");
   const [creating, setCreating] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
-  const [loginAs, setLoginAs] = useState<"toko" | "backoffice">("toko");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [storeName, setStoreName] = useState("");
@@ -104,18 +103,6 @@ export default function OwnerLogin() {
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
-    // Single-login portal: validate the password via Supabase here, then hand the
-    // access token to Back Office's /sso so the owner lands there already signed in
-    // (no second login). Wrong credentials → error shown here, no redirect.
-    if (loginAs === "backoffice") {
-      setLoading(true); setError(""); setSuccess("");
-      const { data: boData, error: boErr } = await supabase.auth.signInWithPassword({ email, password });
-      if (boErr) { setError(boErr.message); setLoading(false); return; }
-      const token = boData.session?.access_token;
-      if (!token) { setError("Gagal masuk. Coba lagi."); setLoading(false); return; }
-      window.location.href = "https://backoffice.sterith.com/sso#at=" + encodeURIComponent(token);
-      return;
-    }
     setLoading(true);
     setError("");
     setSuccess("");
@@ -235,39 +222,6 @@ export default function OwnerLogin() {
   const card = (
     <div style={{ width: "100%", maxWidth: isMobile ? "100%" : 340, background: "white", borderRadius: 18, padding: "28px 28px 24px", boxShadow: "0 8px 48px rgba(11,17,41,0.10), 0 2px 8px rgba(11,17,41,0.04)" }}>
 
-      {/* MASUK SEBAGAI */}
-      <div style={{ marginBottom: 18 }}>
-        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9.5, letterSpacing: "0.22em", textTransform: "uppercase" as const, color: "#7A776F", fontWeight: 600, margin: "0 0 9px", textAlign: isMobile ? "center" : "left" as const }}>MASUK SEBAGAI</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-
-          {/* Toko tile */}
-          <button onClick={() => setLoginAs("toko")} style={{ position: "relative", background: loginAs === "toko" ? "white" : "#FAFAF7", border: loginAs === "toko" ? "2px solid #0B1129" : "1.5px solid #ECE7DD", borderRadius: 11, padding: "12px 14px 12px", cursor: "pointer", textAlign: isMobile ? "center" as const : "left" as const }}>
-            {loginAs === "toko" && (
-              <span style={{ position: "absolute", top: 10, right: 10, width: 20, height: 20, borderRadius: "50%", background: "#0B1129", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
-              </span>
-            )}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={loginAs === "toko" ? "#0B1129" : "#A8A39B"} strokeWidth="1.8" style={{ marginBottom: 6, display: "block", margin: isMobile ? "0 auto 6px" : "0 0 6px" }}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <div style={{ fontSize: 13.5, fontWeight: 600, color: loginAs === "toko" ? "#0B1129" : "#A8A39B", marginBottom: 2 }}>Toko</div>
-            <div style={{ fontSize: 10.5, color: loginAs === "toko" ? "#7A776F" : "#C4C0B8" }}>POS, kasir, jualan</div>
-          </button>
-
-          {/* Backoffice tile — PREMIUM tier */}
-          <button onClick={() => setLoginAs("backoffice")} style={{ position: "relative", background: loginAs === "backoffice" ? "white" : "#FAFAF7", border: loginAs === "backoffice" ? "2px solid #0B1129" : "1.5px solid #ECE7DD", borderRadius: 11, padding: "12px 14px 12px", cursor: "pointer", textAlign: isMobile ? "center" as const : "left" as const }}>
-            <span style={{ position: "absolute", top: -1, right: -1, background: "#C9A55F", color: "white", fontSize: 7, letterSpacing: "0.12em", fontWeight: 700, padding: "3px 8px", borderRadius: "0 10px 0 7px", textTransform: "uppercase" as const }}>PREMIUM</span>
-            {loginAs === "backoffice" && (
-              <span style={{ position: "absolute", top: 10, right: 10, width: 20, height: 20, borderRadius: "50%", background: "#0B1129", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
-              </span>
-            )}
-            <div style={{ display: "flex", justifyContent: isMobile ? "center" : "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={loginAs === "backoffice" ? "#0B1129" : "#A8A39B"} strokeWidth="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-            </div>
-            <div style={{ fontSize: 13.5, fontWeight: 600, color: loginAs === "backoffice" ? "#0B1129" : "#A8A39B", marginBottom: 2 }}>Backoffice</div>
-            <div style={{ fontSize: 10.5, color: loginAs === "backoffice" ? "#7A776F" : "#C4C0B8" }}>Inventory, staff</div>
-          </button>
-        </div>
-      </div>
 
       {/* Forgot password form */}
       {mode === "forgot" && (
@@ -512,7 +466,7 @@ export default function OwnerLogin() {
               Selamat datang<br />kembali
             </h1>
             <p style={{ fontSize: 14, color: "#7A776F", lineHeight: 1.65, margin: 0, maxWidth: 340 }}>
-              Pilih ke mana Anda ingin masuk, lalu isi email dan kata sandi. Kasir akan login dengan PIN setelah Anda buka shift.
+              Masuk dengan email dan kata sandi Anda. Kasir akan login dengan PIN setelah Anda buka shift.
             </p>
           </div>
           <div style={{ flexShrink: 0 }}>
