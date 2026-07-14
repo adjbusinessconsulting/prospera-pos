@@ -114,13 +114,22 @@ const typeColor: Record<string, string> = {
 };
 
 export default function BackofficeDemo() {
-  const { products, updateProduct, lowStockThreshold } = useStore();
+  const { products, updateProduct, addProduct, deleteProduct, lowStockThreshold } = useStore();
   const threshold = lowStockThreshold || 5;
 
   const [tab, setTab] = useState<Tab>("ringkasan");
   const [q, setQ] = useState("");
+  const [catFilter, setCatFilter] = useState("Semua");
   const [tambahTarget, setTambahTarget] = useState<Product | null>(null);
   const [tambahQty, setTambahQty] = useState("");
+  const [stockMode, setStockMode] = useState<"in" | "out">("in");   // + Stok / − Stok
+  const [delTarget, setDelTarget] = useState<Product | null>(null);  // delete confirm
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [npName, setNpName] = useState("");
+  const [npCat, setNpCat] = useState("");
+  const [npPrice, setNpPrice] = useState("");
+  const [npStock, setNpStock] = useState("");
+  const [npUnit, setNpUnit] = useState("pcs");
   const [isMobile, setIsMobile] = useState(false);
   const [branches, setBranches] = useState<Branch[]>(DEMO_BRANCHES);
   const [selectedBranch, setSelectedBranch] = useState<string>(DEMO_BRANCHES[0].id);
@@ -157,33 +166,57 @@ export default function BackofficeDemo() {
   // Pusat (b1) reflects the live Kasir catalog; other branches have their own.
   const isPusat = selectedBranch === "b1";
   const branchList: Product[] = isPusat ? products : (branchProducts[selectedBranch] ?? []);
-  const list = branchList.filter(p => !q || p.name.toLowerCase().includes(q.toLowerCase()));
+  const categories = ["Semua", ...Array.from(new Set(branchList.map(p => p.category).filter(Boolean)))];
+  const list = branchList.filter(p =>
+    (catFilter === "Semua" || p.category === catFilter) &&
+    (!q || p.name.toLowerCase().includes(q.toLowerCase())));
   const totalProduk = branchList.length;
   const stokRendah = branchList.filter(p => (p.stock ?? 0) <= threshold).length;
   const terjualHariIni = branchList.reduce((s, p) => s + (p.stockTerjual ?? 0), 0);
 
-  function setPrice(id: string, val: string) {
-    const n = parseInt(val.replace(/\D/g, ""), 10) || 0;
-    if (isPusat) { updateProduct(id, { price: n }); return; }
+  // Update a product on the selected branch (Pusat → live store; others → local catalog).
+  function patchProduct(id: string, updates: Partial<Product>) {
+    if (isPusat) { updateProduct(id, updates); return; }
     setBranchProducts(prev => ({
       ...prev,
-      [selectedBranch]: (prev[selectedBranch] ?? []).map(p => p.id === id ? { ...p, price: n } : p),
+      [selectedBranch]: (prev[selectedBranch] ?? []).map(p => p.id === id ? { ...p, ...updates } : p),
     }));
   }
-  function addStock() {
+  function setPrice(id: string, val: string) {
+    patchProduct(id, { price: parseInt(val.replace(/\D/g, ""), 10) || 0 });
+  }
+  // Stock in (+) or out (−); out never goes below 0.
+  function adjustStock() {
     const n = parseInt(tambahQty, 10);
     if (!tambahTarget || !n || n <= 0) return;
     const p = tambahTarget;
-    if (isPusat) {
-      updateProduct(p.id, { stock: (p.stock ?? 0) + n, stockTambahan: (p.stockTambahan ?? 0) + n });
+    if (stockMode === "in") {
+      patchProduct(p.id, { stock: (p.stock ?? 0) + n, stockTambahan: (p.stockTambahan ?? 0) + n });
     } else {
-      setBranchProducts(prev => ({
-        ...prev,
-        [selectedBranch]: (prev[selectedBranch] ?? []).map(x =>
-          x.id === p.id ? { ...x, stock: (x.stock ?? 0) + n, stockTambahan: (x.stockTambahan ?? 0) + n } : x),
-      }));
+      const dec = Math.min(n, p.stock ?? 0);
+      patchProduct(p.id, { stock: (p.stock ?? 0) - dec, stockTambahan: Math.max(0, (p.stockTambahan ?? 0) - dec) });
     }
     setTambahTarget(null); setTambahQty("");
+  }
+  function createProduct() {
+    const name = npName.trim();
+    const price = parseInt(npPrice.replace(/\D/g, ""), 10) || 0;
+    const stock = parseInt(npStock.replace(/\D/g, ""), 10) || 0;
+    if (!name) return;
+    const initials = name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join("");
+    const np: Product = {
+      id: `np${Date.now()}`, name, category: npCat.trim() || "Umum", unit: npUnit.trim() || "pcs",
+      price, stock, stockAwal: stock, stockTambahan: 0, stockTerjual: 0,
+      monogram: initials.charAt(0).toUpperCase() + (initials.charAt(1) || "").toLowerCase(), emoji: "📦",
+    };
+    if (isPusat) { addProduct(np); }
+    else { setBranchProducts(prev => ({ ...prev, [selectedBranch]: [...(prev[selectedBranch] ?? []), np] })); }
+    setShowAddProduct(false); setNpName(""); setNpCat(""); setNpPrice(""); setNpStock(""); setNpUnit("pcs");
+  }
+  function removeProduct(id: string) {
+    if (isPusat) { deleteProduct(id); }
+    else { setBranchProducts(prev => ({ ...prev, [selectedBranch]: (prev[selectedBranch] ?? []).filter(p => p.id !== id) })); }
+    setDelTarget(null);
   }
 
   const cell = (extra: CSSProperties = {}): CSSProperties => ({ padding: "11px 18px", fontSize: 13, ...extra });
@@ -399,13 +432,39 @@ export default function BackofficeDemo() {
               <h2 style={{ fontSize: 15, fontWeight: 700, color: NAVY }}>Kelola Produk &amp; Stok</h2>
               <p style={{ fontSize: 11.5, color: MUTE, marginTop: 1 }}>{branchShort} · {totalProduk} produk · {stokRendah} stok rendah · terjual {terjualHariIni} pcs</p>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "0 12px", height: 38, minWidth: 200 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={MUTE} strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
-              <input value={q} onChange={e => setQ(e.target.value)} placeholder="Cari produk…" style={{ flex: 1, border: 0, outline: "none", background: "transparent", fontSize: 13, color: NAVY }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 10, padding: "0 12px", height: 38, minWidth: 180 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={MUTE} strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+                <input value={q} onChange={e => setQ(e.target.value)} placeholder="Cari produk…" style={{ flex: 1, border: 0, outline: "none", background: "transparent", fontSize: 13, color: NAVY }} />
+              </div>
+              <button onClick={() => { setNpCat(catFilter !== "Semua" ? catFilter : ""); setShowAddProduct(true); }} style={{ height: 38, padding: "0 16px", borderRadius: 10, border: "none", background: NAVY, color: "#F2EDE3", fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>+ Tambah Produk</button>
             </div>
           </div>
 
-          {isMobile ? (
+          {/* Category filter */}
+          {categories.length > 1 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+              {categories.map(c => {
+                const on = catFilter === c;
+                return (
+                  <button key={c} onClick={() => setCatFilter(c)} style={{
+                    height: 28, padding: "0 12px", borderRadius: 8, cursor: "pointer", fontSize: 11, fontWeight: 700,
+                    border: `1px solid ${on ? NAVY : BORDER}`, background: on ? NAVY : CARD, color: on ? "#F2EDE3" : MUTE, whiteSpace: "nowrap",
+                  }}>{c}</button>
+                );
+              })}
+            </div>
+          )}
+
+          {list.length === 0 ? (
+            <div style={{ background: CARD, border: `1px dashed ${BORDER}`, borderRadius: 14, padding: "40px 24px", textAlign: "center" }}>
+              <p style={{ fontSize: 14, fontWeight: 700, color: NAVY, marginBottom: 4 }}>{branchList.length === 0 ? "Belum ada produk" : "Tidak ada hasil"}</p>
+              <p style={{ fontSize: 12, color: MUTE, marginBottom: 14 }}>{branchList.length === 0 ? `Tambah produk pertama untuk ${branchShort}.` : "Coba ubah pencarian atau kategori."}</p>
+              {branchList.length === 0 && (
+                <button onClick={() => { setNpCat(""); setShowAddProduct(true); }} style={{ height: 40, padding: "0 20px", borderRadius: 9, border: "none", background: NAVY, color: "#F2EDE3", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Tambah Produk</button>
+              )}
+            </div>
+          ) : isMobile ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {list.map(p => (
                 <div key={p.id} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 14 }}>
@@ -421,7 +480,13 @@ export default function BackofficeDemo() {
                           style={{ width: 90, border: 0, outline: "none", background: "transparent", fontSize: 13.5, fontWeight: 600, color: NAVY, fontVariantNumeric: "tabular-nums" }} />
                       </div>
                     </label>
-                    <button onClick={() => { setTambahTarget(p); setTambahQty(""); }} style={{ marginLeft: "auto", marginTop: 16, height: 38, padding: "0 14px", borderRadius: 9, border: `1px solid rgba(78,140,110,0.4)`, background: "rgba(78,140,110,0.07)", color: GREEN, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>+ Tambah Stok</button>
+                    <div style={{ marginLeft: "auto", marginTop: 16, display: "flex", gap: 6 }}>
+                      <button onClick={() => { setStockMode("in"); setTambahTarget(p); setTambahQty(""); }} style={{ height: 38, padding: "0 12px", borderRadius: 9, border: `1px solid rgba(78,140,110,0.4)`, background: "rgba(78,140,110,0.07)", color: GREEN, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>+ Stok</button>
+                      <button onClick={() => { setStockMode("out"); setTambahTarget(p); setTambahQty(""); }} style={{ height: 38, padding: "0 12px", borderRadius: 9, border: `1px solid rgba(178,107,46,0.4)`, background: "rgba(178,107,46,0.07)", color: "#B26B2E", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>− Stok</button>
+                      <button onClick={() => setDelTarget(p)} title="Hapus produk" style={{ height: 38, width: 38, borderRadius: 9, border: `1px solid rgba(192,57,43,0.35)`, background: "rgba(192,57,43,0.05)", color: DANGER, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -451,7 +516,13 @@ export default function BackofficeDemo() {
                       <td style={cell({ textAlign: "right", fontSize: 13.5, fontWeight: 700, color: (p.stock ?? 0) <= threshold ? GOLD : NAVY, fontVariantNumeric: "tabular-nums" })}>{p.stock ?? 0}</td>
                       <td style={cell({ textAlign: "right", fontSize: 13, color: MUTE, fontVariantNumeric: "tabular-nums" })}>{p.stockTerjual ?? 0}</td>
                       <td style={{ padding: "11px 18px", textAlign: "right" }}>
-                        <button onClick={() => { setTambahTarget(p); setTambahQty(""); }} style={{ height: 32, padding: "0 12px", borderRadius: 8, border: `1px solid rgba(78,140,110,0.4)`, background: "rgba(78,140,110,0.07)", color: GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>+ Stok</button>
+                        <div style={{ display: "inline-flex", gap: 6 }}>
+                          <button onClick={() => { setStockMode("in"); setTambahTarget(p); setTambahQty(""); }} style={{ height: 32, padding: "0 12px", borderRadius: 8, border: `1px solid rgba(78,140,110,0.4)`, background: "rgba(78,140,110,0.07)", color: GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>+ Stok</button>
+                          <button onClick={() => { setStockMode("out"); setTambahTarget(p); setTambahQty(""); }} style={{ height: 32, padding: "0 12px", borderRadius: 8, border: `1px solid rgba(178,107,46,0.4)`, background: "rgba(178,107,46,0.07)", color: "#B26B2E", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>− Stok</button>
+                          <button onClick={() => setDelTarget(p)} title="Hapus produk" style={{ height: 32, width: 32, borderRadius: 8, border: `1px solid rgba(192,57,43,0.35)`, background: "rgba(192,57,43,0.05)", color: DANGER, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -621,15 +692,70 @@ export default function BackofficeDemo() {
       {tambahTarget && (
         <div onClick={() => setTambahTarget(null)} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(11,17,41,0.5)", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 20 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: CARD, borderRadius: isMobile ? "18px 18px 0 0" : 16, width: "100%", maxWidth: isMobile ? "100%" : 360, padding: "20px 20px 18px", boxShadow: "0 30px 80px rgba(11,17,41,0.4)" }}>
-            <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: MUTE, fontWeight: 700 }}>Tambah Stok</div>
+            <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: MUTE, fontWeight: 700 }}>{stockMode === "in" ? "Tambah Stok" : "Kurangi Stok"}</div>
             <div style={{ fontSize: 18, fontWeight: 800, color: NAVY, margin: "3px 0 14px" }}>{tambahTarget.name}</div>
             <div style={{ fontSize: 12, color: MUTE, marginBottom: 8 }}>Sisa sekarang: <b style={{ color: NAVY }}>{tambahTarget.stock ?? 0}</b></div>
-            <input autoFocus type="number" min={1} value={tambahQty} onChange={e => setTambahQty(e.target.value)} onKeyDown={e => e.key === "Enter" && addStock()}
+            <input autoFocus type="number" min={1} value={tambahQty} onChange={e => setTambahQty(e.target.value)} onKeyDown={e => e.key === "Enter" && adjustStock()}
               placeholder="mis. 24"
-              style={{ width: "100%", height: 46, borderRadius: 10, border: `1px solid ${(parseInt(tambahQty, 10) || 0) > 0 ? GREEN : BORDER}`, padding: "0 14px", fontSize: 15, color: NAVY, outline: "none", fontVariantNumeric: "tabular-nums" }} />
+              style={{ width: "100%", height: 46, borderRadius: 10, border: `1px solid ${(parseInt(tambahQty, 10) || 0) > 0 ? (stockMode === "in" ? GREEN : "#B26B2E") : BORDER}`, padding: "0 14px", fontSize: 15, color: NAVY, outline: "none", fontVariantNumeric: "tabular-nums" }} />
             <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
               <button onClick={() => setTambahTarget(null)} style={{ flex: 1, height: 46, borderRadius: 11, border: `1px solid ${BORDER}`, background: CARD, color: NAVY, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Batal</button>
-              <button onClick={addStock} disabled={(parseInt(tambahQty, 10) || 0) <= 0} style={{ flex: 2, height: 46, borderRadius: 11, border: 0, background: NAVY, color: "#F2EDE3", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: (parseInt(tambahQty, 10) || 0) <= 0 ? 0.5 : 1 }}>Tambah Stok</button>
+              <button onClick={adjustStock} disabled={(parseInt(tambahQty, 10) || 0) <= 0} style={{ flex: 2, height: 46, borderRadius: 11, border: 0, background: stockMode === "in" ? NAVY : "#B26B2E", color: "#F2EDE3", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: (parseInt(tambahQty, 10) || 0) <= 0 ? 0.5 : 1 }}>{stockMode === "in" ? "Tambah Stok" : "Kurangi Stok"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add product modal */}
+      {showAddProduct && (
+        <div onClick={() => setShowAddProduct(false)} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(11,17,41,0.5)", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: CARD, borderRadius: isMobile ? "18px 18px 0 0" : 16, width: "100%", maxWidth: isMobile ? "100%" : 400, padding: "20px 20px 18px", boxShadow: "0 30px 80px rgba(11,17,41,0.4)" }}>
+            <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: MUTE, fontWeight: 700 }}>Produk Baru</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: NAVY, margin: "3px 0 14px" }}>Tambah ke {branchShort}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <label style={{ fontSize: 11, color: MUTE, fontWeight: 600 }}>Nama produk *
+                <input autoFocus value={npName} onChange={e => setNpName(e.target.value)} placeholder="mis. Gula Pasir 1kg"
+                  style={{ width: "100%", height: 42, marginTop: 4, borderRadius: 9, border: `1px solid ${BORDER}`, padding: "0 12px", fontSize: 14, color: NAVY, outline: "none", background: CREAM }} />
+              </label>
+              <div style={{ display: "flex", gap: 8 }}>
+                <label style={{ flex: 1, fontSize: 11, color: MUTE, fontWeight: 600 }}>Kategori
+                  <input value={npCat} onChange={e => setNpCat(e.target.value)} placeholder="mis. Sembako"
+                    style={{ width: "100%", height: 42, marginTop: 4, borderRadius: 9, border: `1px solid ${BORDER}`, padding: "0 12px", fontSize: 14, color: NAVY, outline: "none", background: CREAM }} />
+                </label>
+                <label style={{ width: 110, fontSize: 11, color: MUTE, fontWeight: 600 }}>Satuan
+                  <input value={npUnit} onChange={e => setNpUnit(e.target.value)} placeholder="pcs"
+                    style={{ width: "100%", height: 42, marginTop: 4, borderRadius: 9, border: `1px solid ${BORDER}`, padding: "0 12px", fontSize: 14, color: NAVY, outline: "none", background: CREAM }} />
+                </label>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <label style={{ flex: 1, fontSize: 11, color: MUTE, fontWeight: 600 }}>Harga (Rp)
+                  <input value={npPrice} onChange={e => setNpPrice(e.target.value)} inputMode="numeric" placeholder="0"
+                    style={{ width: "100%", height: 42, marginTop: 4, borderRadius: 9, border: `1px solid ${BORDER}`, padding: "0 12px", fontSize: 14, color: NAVY, outline: "none", background: CREAM, fontVariantNumeric: "tabular-nums" }} />
+                </label>
+                <label style={{ flex: 1, fontSize: 11, color: MUTE, fontWeight: 600 }}>Stok awal
+                  <input value={npStock} onChange={e => setNpStock(e.target.value)} inputMode="numeric" placeholder="0"
+                    style={{ width: "100%", height: 42, marginTop: 4, borderRadius: 9, border: `1px solid ${BORDER}`, padding: "0 12px", fontSize: 14, color: NAVY, outline: "none", background: CREAM, fontVariantNumeric: "tabular-nums" }} />
+                </label>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+              <button onClick={() => setShowAddProduct(false)} style={{ flex: 1, height: 46, borderRadius: 11, border: `1px solid ${BORDER}`, background: CARD, color: NAVY, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Batal</button>
+              <button onClick={createProduct} disabled={!npName.trim()} style={{ flex: 2, height: 46, borderRadius: 11, border: 0, background: NAVY, color: "#F2EDE3", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: npName.trim() ? 1 : 0.5 }}>Simpan Produk</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete product confirm */}
+      {delTarget && (
+        <div onClick={() => setDelTarget(null)} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(11,17,41,0.5)", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: CARD, borderRadius: isMobile ? "18px 18px 0 0" : 16, width: "100%", maxWidth: isMobile ? "100%" : 360, padding: "22px 20px 18px", boxShadow: "0 30px 80px rgba(11,17,41,0.4)" }}>
+            <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DANGER, fontWeight: 700 }}>Hapus Produk</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: NAVY, margin: "3px 0 8px" }}>{delTarget.name}</div>
+            <div style={{ fontSize: 12.5, color: MUTE, marginBottom: 6, lineHeight: 1.5 }}>Produk ini akan dihapus dari {branchShort}{isPusat ? " dan langsung hilang dari Kasir" : ""}. Tindakan ini tidak bisa dibatalkan.</div>
+            <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+              <button onClick={() => setDelTarget(null)} style={{ flex: 1, height: 46, borderRadius: 11, border: `1px solid ${BORDER}`, background: CARD, color: NAVY, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Batal</button>
+              <button onClick={() => removeProduct(delTarget.id)} style={{ flex: 2, height: 46, borderRadius: 11, border: 0, background: DANGER, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Hapus Produk</button>
             </div>
           </div>
         </div>

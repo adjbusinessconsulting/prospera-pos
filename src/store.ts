@@ -82,6 +82,7 @@ interface POSState {
   setTrxCounter: (n: number) => void;
   addProduct: (p: Product) => void;
   updateProduct: (id: string, updates: Partial<Product>) => void;
+  deleteProduct: (id: string) => void;
   setStoreData: (id: string, name: string, address: string, cashiers: CashierDB[], phone?: string, qrisImageUrl?: string, midtransClientKey?: string, tier?: string) => void;
 }
 
@@ -300,6 +301,10 @@ export const useStore = create<POSState>((set) => ({
   updateProduct: (id, updates) => set(s => ({
     products: s.products.map(p => p.id === id ? { ...p, ...updates } : p),
     cart: s.cart.map(i => i.product.id === id ? { ...i, product: { ...i.product, ...updates } } : i),
+  })),
+  deleteProduct: (id) => set(s => ({
+    products: s.products.filter(p => p.id !== id),
+    cart: s.cart.filter(i => i.product.id !== id),
   })),
 
   setStoreData: (id, name, address, cashiers, phone = '', qrisImageUrl = '', midtransClientKey = '', tier = 'free') => set({
