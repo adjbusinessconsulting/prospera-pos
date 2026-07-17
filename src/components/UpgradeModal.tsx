@@ -57,7 +57,7 @@ export default function UpgradeModal({ open, onClose }: Props) {
     ];
     const { error: insErr } = await supabase.from("feedback").insert({
       type: "upgrade_request", email, message: lines.join("\n"), status: "pending",
-      requested_tier: target, requested_addons: chosenAddons.map(a => a.key),
+      requested_tier: target, requested_addons: chosenAddons.map(a => a.key), app: "pos",
     });
     setSending(false);
     if (insErr) { setError("Gagal mengirim permintaan. Coba lagi."); return; }

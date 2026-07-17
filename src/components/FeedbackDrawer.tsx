@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
 interface Props {
@@ -14,6 +14,20 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
+
+  // The owner is already signed in — take their email from the session and skip
+  // straight to the message. Typing + verifying it again is pure friction on the
+  // people we most want feedback from. Falls back to the manual step if there's no
+  // session (e.g. a cashier-only device).
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    supabase.auth.getUser().then(({ data }) => {
+      const e = data.user?.email;
+      if (!cancelled && e) { setEmail(e); setStep("message"); }
+    });
+    return () => { cancelled = true; };
+  }, [open]);
 
   function reset() {
     setStep("email");
@@ -50,6 +64,7 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
       email: email.trim().toLowerCase(),
       message: message.trim(),
       status: "pending",
+      app: "pos",
     });
     setLoading(false);
     if (insertError) { setError("Gagal mengirim. Coba lagi."); return; }
