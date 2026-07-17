@@ -9,10 +9,10 @@ type TierKey = "free" | "standard" | "premium";
 const TIERS: { key: TierKey; name: string; price: number; reg?: number; tagline: string; features: string[] }[] = [
   { key: "free", name: "Free", price: 0, tagline: "Mulai gratis",
     features: ["1 toko", "1 akun kasir", "1 shift", "Dashboard hari ini (omset + modal)", "Riwayat 1 hari", "Tunai · QRIS · Transfer"] },
-  { key: "standard", name: "Standard", price: 50000, tagline: "Untuk toko berkembang",
-    features: ["2 toko", "10 akun kasir", "5 shift", "Laporan periode + grafik + produk terlaris + export", "Riwayat 30 hari", "Uang kas, hutang, struk logo + WhatsApp"] },
-  { key: "premium", name: "Premium", price: 100000, tagline: "Analitik penuh + multi-cabang",
-    features: ["Toko & kasir tanpa batas", "Riwayat 90 hari", "Analitik mendalam (metode, kasir, bulan lalu)", "Semua metode bayar (Debit, E-Wallet)", "Back Office web + audit log", "Inventori dasar"] },
+  { key: "standard", name: "Standard", price: 25000, reg: 50000, tagline: "Untuk toko berkembang",
+    features: ["1 toko (tambahan +Rp 50rb/toko)", "10 akun kasir", "5 shift", "Laporan periode + grafik + produk terlaris + export", "Riwayat 30 hari", "Uang kas, hutang, struk logo + WhatsApp"] },
+  { key: "premium", name: "Premium", price: 70000, reg: 100000, tagline: "Analitik penuh + kasir tanpa batas",
+    features: ["Kasir & shift tanpa batas", "1 toko (tambahan +Rp 70rb/toko)", "Riwayat 90 hari", "Analitik mendalam (metode, kasir, bulan lalu)", "Semua metode bayar (Debit, E-Wallet)", "Back Office web + audit log", "Inventori dasar"] },
 ];
 
 const ADDONS: { key: string; name: string; price: number; desc: string }[] = [
