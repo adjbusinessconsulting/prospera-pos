@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { useStore } from "../store";
 
 interface Props {
   open: boolean;
@@ -9,6 +10,7 @@ interface Props {
 type Step = "email" | "message" | "done";
 
 export default function FeedbackDrawer({ open, onClose }: Props) {
+  const isDemoMode = useStore((s) => s.isDemoMode);
   const [step, setStep]       = useState<Step>("email");
   const [email, setEmail]     = useState("");
   const [message, setMessage] = useState("");
@@ -20,14 +22,14 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
   // people we most want feedback from. Falls back to the manual step if there's no
   // session (e.g. a cashier-only device).
   useEffect(() => {
-    if (!open) return;
+    if (!open || isDemoMode) return;   // demo: let them type any email
     let cancelled = false;
     supabase.auth.getUser().then(({ data }) => {
       const e = data.user?.email;
       if (!cancelled && e) { setEmail(e); setStep("message"); }
     });
     return () => { cancelled = true; };
-  }, [open]);
+  }, [open, isDemoMode]);
 
   function reset() {
     setStep("email");
@@ -44,6 +46,7 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
 
   async function verifyEmail() {
     if (!email.trim()) return;
+    if (isDemoMode) { setStep("message"); return; }   // demo: any email accepted
     setLoading(true);
     setError("");
     const { data, error: rpcError } = await supabase.rpc("check_email_registered", { p_email: email.trim().toLowerCase() });
@@ -57,6 +60,7 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
 
   async function handleSubmit() {
     if (!message.trim()) return;
+    if (isDemoMode) { setStep("done"); return; }   // demo: don't write a real feedback row
     setLoading(true);
     setError("");
     const { error: insertError } = await supabase.from("feedback").insert({
@@ -117,7 +121,7 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
                   <input
                     type="email" value={email} onChange={e => { setEmail(e.target.value); setError(""); }}
                     onKeyDown={e => e.key === "Enter" && verifyEmail()}
-                    placeholder="email@contoh.com"
+                    placeholder="email yang terdaftar"
                     style={{ flex: 1, border: "none", outline: "none", fontSize: 13.5, color: "#0B1129", background: "transparent", fontFamily: "Inter, sans-serif" }}
                   />
                 </div>

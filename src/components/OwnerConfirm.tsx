@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { useStore } from "../store";
 
 interface Props {
   open: boolean;
@@ -13,6 +14,7 @@ interface Props {
 // Only the owner knows the email account password, so cashiers can't do it alone.
 // Verification hits Supabase, so it needs a connection.
 export function OwnerConfirm({ open, title, message, onClose, onConfirmed }: Props) {
+  const isDemoMode = useStore((s) => s.isDemoMode);
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,13 +23,18 @@ export function OwnerConfirm({ open, title, message, onClose, onConfirmed }: Pro
   useEffect(() => {
     if (!open) return;
     setPw(""); setError("");
+    if (isDemoMode) { setEmail("pemilik@demo.sterith.com"); return; }
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
-  }, [open]);
+  }, [open, isDemoMode]);
 
   if (!open) return null;
 
   async function confirm() {
-    if (!pw || !email) return;
+    if (!pw) return;
+    // Demo: no real account to reauth — any password confirms, so prospects can
+    // experience the owner-verification step without credentials.
+    if (isDemoMode) { onConfirmed(); return; }
+    if (!email) return;
     setLoading(true); setError("");
     const { error: e } = await supabase.auth.signInWithPassword({ email, password: pw });
     setLoading(false);

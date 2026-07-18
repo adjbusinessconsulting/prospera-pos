@@ -196,7 +196,8 @@ export const useStore = create<POSState>((set) => ({
   setReceiptLogo: (receiptLogo) => set({ receiptLogo }),
   setQrisImageUrl: (qrisImageUrl) => set({ qrisImageUrl }),
 
-  // Enter the full demo: premium tier + demo store, straight to Sales.
+  // Enter the full demo: premium tier + demo store. Lands on the cashier PIN login
+  // first so the visitor sees the real entry flow.
   // Ephemeral — nothing is written to Supabase while isDemoMode is true.
   startDemo: () => set({
     isDemoMode: true,
@@ -215,7 +216,7 @@ export const useStore = create<POSState>((set) => ({
     selectedCashier: DEMO_CASHIER.id,
     cashierName: DEMO_CASHIER.name.split(' ')[0],
     cashierInitials: DEMO_CASHIER.initials,
-    screen: 'sales',
+    screen: 'login',
   }),
 
   selectCashier: (id) => set((s) => {

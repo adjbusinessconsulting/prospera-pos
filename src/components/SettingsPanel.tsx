@@ -59,7 +59,9 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
 
   function onSave() {
     if (!dirty) { onClose(); return; }
-    if (isDemoMode) { void persist(); return; }   // demo has no owner account to reauth
+    // Free is trusted — no owner password. Standard+ re-verifies the owner. In the
+    // demo the dialog still shows (to demonstrate the protection) but accepts any password.
+    if (!isStd) { void persist(); return; }
     setConfirmOpen(true);
   }
 

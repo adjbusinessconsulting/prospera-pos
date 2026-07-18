@@ -105,8 +105,10 @@ export default function Produk() {
     setAddCategory("SBK");
   }
 
-  // Owner-toggleable: require the owner's login password before product/price edits.
-  const needsOwnerConfirm = !isDemoMode && !!storeId && settings.passwordConfirmPrice;
+  // Free is trusted; Standard+ requires the owner's login password before product/price
+  // edits (when the toggle is on). Shown in the demo too — OwnerConfirm accepts any
+  // password there — so prospects see the anti-cheat protection.
+  const needsOwnerConfirm = isAtLeast(effectiveTier, "standard") && !!storeId && settings.passwordConfirmPrice;
 
   function handleSave() {
     if (!canSave) return;
