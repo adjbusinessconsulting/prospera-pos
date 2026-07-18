@@ -39,10 +39,10 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
 
   return (
     <>
-      <header style={{
+      <header className="pos-topbar" style={{
         height: 52, background: "white", borderBottom: "1px solid #ECE7DD",
-        display: "flex", alignItems: "center", padding: "0 14px", gap: 10,
-        flexShrink: 0, zIndex: 30,
+        display: "flex", alignItems: "center", padding: "0 12px", gap: 8,
+        flexShrink: 0, zIndex: 30, overflowX: "auto", overflowY: "hidden",
       }}>
         {/* Logo mark */}
         <img src="/mark-gold-512.png" alt="Sterith"
@@ -141,6 +141,8 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
 
       <style>{`
         @media (min-width: 480px) { .sm-label { display: inline !important; } }
+        .pos-topbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .pos-topbar::-webkit-scrollbar { display: none; }
       `}</style>
 
       <FeedbackDrawer open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />

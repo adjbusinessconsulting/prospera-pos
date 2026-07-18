@@ -90,7 +90,7 @@ export default function PinLogin() {
   /* ── MOBILE: single-page no-scroll layout ── */
   if (isMobile) {
     return (
-      <div style={{ height: "100dvh", display: "flex", flexDirection: "column", background: "#F5F0E8", overflow: "hidden", fontFamily: "Inter, system-ui, sans-serif" }}>
+      <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column", background: "#F5F0E8", overflowY: "auto", fontFamily: "Inter, system-ui, sans-serif" }}>
 
         {/* Top bar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid #ECE7DD", flexShrink: 0 }}>
@@ -170,8 +170,9 @@ export default function PinLogin() {
               </div>
             </div>
 
-            {/* Numpad — flex-1 so it fills all remaining height */}
-            <div style={{ flex: 1, padding: "4px 18px 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gridTemplateRows: "1fr 1fr 1fr 1fr", gap: 8 }}>
+            {/* Numpad — flex-1 fills remaining height; minHeight keeps keys tappable
+                when space is tight (e.g. under the demo control bar). */}
+            <div style={{ flex: 1, minHeight: 300, padding: "4px 18px calc(16px + env(safe-area-inset-bottom))", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gridTemplateRows: "1fr 1fr 1fr 1fr", gap: 8 }}>
               {["1","2","3","4","5","6","7","8","9"].map(d => (
                 <button key={d} onClick={() => { addPin(d); setPinError(""); }}
                   style={{ background: "white", border: "1px solid #ECE7DD", borderRadius: 12, fontSize: 22, fontWeight: 500, color: "#0B1129", cursor: "pointer", transition: "background 0.1s" }}>
