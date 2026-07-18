@@ -27,7 +27,7 @@ function shiftContainsNow(start: string, end: string, nowMin: number) {
 interface ShiftOption { pos: number; name: string; time: string; isNow: boolean; }
 
 export default function PinLogin() {
-  const { selectedCashier, selectedShift, selectCashier, setShift, pin, addPin, removePin, clearPin, setScreen, storeName, storeAddress, storeTier, storeId, dbCashiers, dbShifts, settings } = useStore();
+  const { selectedCashier, selectedShift, selectCashier, setShift, pin, addPin, removePin, clearPin, setScreen, storeName, storeAddress, storeTier, storeId, dbCashiers, dbShifts, settings, isDemoMode } = useStore();
   // Demo shows all features; Free locks non-current shifts (only when shifts aren't configured)
   const effectiveTier = storeId ? storeTier : 'free';
   const canChangeShift = isAtLeast(effectiveTier, 'standard');
@@ -75,6 +75,7 @@ export default function PinLogin() {
 
   function handleLogin() {
     setPinError("");
+    if (isDemoMode) { setScreen("checkin"); return; }     // Demo: any PIN works
     if (dbCashiers.length === 0) { setScreen("checkin"); return; }
     const cashier = dbCashiers.find(c => c.id === selectedCashier);
     if (!cashier) return;
@@ -153,7 +154,7 @@ export default function PinLogin() {
           <>
             {/* PIN dots */}
             <div style={{ padding: "8px 18px 4px", flexShrink: 0 }}>
-              <p style={{ fontSize: 8.5, letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "#7A776F", marginBottom: 8, fontWeight: 600, textAlign: "center" as const }}>MASUKKAN PIN</p>
+              <p style={{ fontSize: 8.5, letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "#7A776F", marginBottom: 8, fontWeight: 600, textAlign: "center" as const }}>{isDemoMode ? "MASUKKAN PIN · DEMO: ANGKA APA SAJA" : "MASUKKAN PIN"}</p>
               <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
                 {Array(6).fill(0).map((_, i) => {
                   const filled = i < pin.length;
