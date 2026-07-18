@@ -76,11 +76,14 @@ export default function PinLogin() {
   function handleLogin() {
     setPinError("");
     if (isDemoMode) { setScreen("sales"); return; }       // Demo: any PIN → straight to jualan
-    if (dbCashiers.length === 0) { setScreen("checkin"); return; }
+    // Shift check-in selfie is a staff-accountability feature — Standard+ only. A solo
+    // Free owner (no PIN either) goes straight to jualan.
+    const afterLogin = isAtLeast(effectiveTier, "standard") ? "checkin" : "sales";
+    if (dbCashiers.length === 0) { setScreen(afterLogin); return; }
     const cashier = dbCashiers.find(c => c.id === selectedCashier);
     if (!cashier) return;
-    if (!requiresPin) { setScreen("checkin"); return; }   // Free: no PIN
-    if (cashier.pin === pin) { setScreen("checkin"); }
+    if (!requiresPin) { setScreen(afterLogin); return; }  // PIN off (Free, or Standard+ trusted team)
+    if (cashier.pin === pin) { setScreen(afterLogin); }
     else { setPinError("PIN salah. Coba lagi."); clearPin(); }
   }
 
