@@ -75,7 +75,7 @@ export default function PinLogin() {
 
   function handleLogin() {
     setPinError("");
-    if (isDemoMode) { setScreen("checkin"); return; }     // Demo: any PIN works
+    if (isDemoMode) { setScreen("sales"); return; }       // Demo: any PIN → straight to jualan
     if (dbCashiers.length === 0) { setScreen("checkin"); return; }
     const cashier = dbCashiers.find(c => c.id === selectedCashier);
     if (!cashier) return;
