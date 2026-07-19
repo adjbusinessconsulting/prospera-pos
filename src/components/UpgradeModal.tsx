@@ -24,8 +24,14 @@ const ADDONS: { key: string; name: string; price: number; desc: string }[] = [
 
 const rp = (n: number) => n === 0 ? "Gratis" : "Rp " + n.toLocaleString("id-ID");
 
+const REGISTER_URL = "https://masteroffice.sterith.com/api/clients/register";
+
 export default function UpgradeModal({ open, onClose }: Props) {
   const storeTier = useStore(s => s.storeId ? s.storeTier : "free");
+  const storeName = useStore(s => s.storeName);
+  const storeAddress = useStore(s => s.storeAddress);
+  const storePhone = useStore(s => s.storePhone);
+  const isDemoMode = useStore(s => s.isDemoMode);
   const [target, setTarget] = useState<TierKey>(() => (tierLevel(storeTier) < 2 ? "premium" : "premium"));
   const [addons, setAddons] = useState<Set<string>>(new Set());
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
@@ -51,26 +57,44 @@ export default function UpgradeModal({ open, onClose }: Props) {
 
   async function submit() {
     setSending(true); setError("");
+    // Demo: no real account — just show the success state.
+    if (isDemoMode) { setSending(false); setDone(true); return; }
     const { data: { user } } = await supabase.auth.getUser();
     const email = user?.email;
     if (!email) { setError("Sesi tidak ditemukan. Masuk kembali lalu coba lagi."); setSending(false); return; }
-    const lines = [
-      "[PERMINTAAN UPGRADE]",
-      `Dari tier: ${storeTier.charAt(0).toUpperCase() + storeTier.slice(1)}`,
+
+    // Send the upgrade to Master Office. It matches our existing tenant by email and
+    // records requested_tier → the request lands in Permintaan, ready for Beri Akses.
+    // Cycle + add-on context ride along as a note for the follow-up conversation.
+    const note = [
+      `Upgrade via POS → ${tierObj.name}`,
       `Siklus: ${isAnnual ? "Tahunan" : "Bulanan"}`,
-      `Minta tier: ${tierObj.name}${target === "free" ? "" : ` (${rp(tierCharge)}${per})`}`,
-      chosenAddons.length ? `Add-on: ${chosenAddons.map(a => `${a.name} (~${rp(isAnnual ? annualOf(a.price) : a.price)}${per})`).join(", ")}` : "Add-on: —",
-      `Estimasi total: ${rp(total)}${per}`,
-      "",
-      "Dikirim dari POS.",
-    ];
-    const { error: insErr } = await supabase.from("feedback").insert({
-      type: "upgrade_request", email, message: lines.join("\n"), status: "pending",
-      requested_tier: target, requested_addons: chosenAddons.map(a => a.key), app: "pos",
-    });
-    setSending(false);
-    if (insErr) { setError("Gagal mengirim permintaan. Coba lagi."); return; }
-    setDone(true);
+      chosenAddons.length ? `Add-on: ${chosenAddons.map(a => a.name).join(", ")}` : null,
+      `Estimasi: ${rp(total)}${per}`,
+    ].filter(Boolean).join(" · ");
+
+    try {
+      const res = await fetch(REGISTER_URL, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          full_name: storeName || email,
+          wa_number: storePhone || null,
+          store_name: storeName || null,
+          store_address: storeAddress || null,
+          tier: target,
+          apps: ["pos"],
+          notes: note,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      setSending(false);
+      if (!res.ok) { setError(json.error || "Gagal mengirim permintaan. Coba lagi."); return; }
+      setDone(true);
+    } catch {
+      setSending(false);
+      setError("Tidak dapat terhubung ke server. Periksa koneksi internet Anda.");
+    }
   }
 
   return (
