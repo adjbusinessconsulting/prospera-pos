@@ -6,12 +6,14 @@ interface Props { open: boolean; onClose: () => void; }
 
 type TierKey = "free" | "standard" | "premium";
 
-const TIERS: { key: TierKey; name: string; price: number; reg?: number; tagline: string; features: string[] }[] = [
+// price = opening monthly · reg = regular monthly (struck through) · annual = per-year
+// SKU (~2 months free off regular: reg × 10). Add-ons annualise the same way (× 10).
+const TIERS: { key: TierKey; name: string; price: number; reg?: number; annual?: number; tagline: string; features: string[] }[] = [
   { key: "free", name: "Free", price: 0, tagline: "Mulai gratis",
     features: ["1 toko", "1 akun kasir", "1 shift", "Dashboard hari ini (omset + modal)", "Riwayat 1 hari", "Tunai · QRIS · Transfer"] },
-  { key: "standard", name: "Standard", price: 50000, reg: 75000, tagline: "Punya karyawan, kamu masih di toko",
+  { key: "standard", name: "Standard", price: 50000, reg: 75000, annual: 750000, tagline: "Punya karyawan, kamu masih di toko",
     features: ["1 toko (tambahan +Rp 50rb/toko)", "10 akun kasir", "5 shift", "Laporan periode + grafik + produk terlaris + export", "Riwayat 30 hari", "Uang kas, hutang, struk logo + WhatsApp"] },
-  { key: "premium", name: "Premium", price: 100000, reg: 150000, tagline: "Kontrol dari mana saja + kasir tanpa batas",
+  { key: "premium", name: "Premium", price: 100000, reg: 150000, annual: 1500000, tagline: "Kontrol dari mana saja + kasir tanpa batas",
     features: ["Kasir & shift tanpa batas", "1 toko (tambahan +Rp 70rb/toko)", "Riwayat 90 hari", "Analitik mendalam (metode, kasir, bulan lalu)", "Semua metode bayar (Debit, E-Wallet)", "Back Office web + audit log", "Inventori dasar"] },
 ];
 
@@ -26,16 +28,22 @@ export default function UpgradeModal({ open, onClose }: Props) {
   const storeTier = useStore(s => s.storeId ? s.storeTier : "free");
   const [target, setTarget] = useState<TierKey>(() => (tierLevel(storeTier) < 2 ? "premium" : "premium"));
   const [addons, setAddons] = useState<Set<string>>(new Set());
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
   if (!open) return null;
 
+  const isAnnual = billing === "annual";
+  const per = isAnnual ? "/thn" : "/bln";
+  // Annualise a monthly price at 2 months free (× 10).
+  const annualOf = (m: number) => m * 10;
   const targetIsPremium = tierLevel(target) >= 2;
   const chosenAddons = ADDONS.filter(a => addons.has(a.key) && targetIsPremium);
   const tierObj = TIERS.find(t => t.key === target)!;
-  const monthly = (target === "free" ? 0 : tierObj.price) + chosenAddons.reduce((s, a) => s + a.price, 0);
+  const tierCharge = target === "free" ? 0 : (isAnnual ? (tierObj.annual ?? annualOf(tierObj.price)) : tierObj.price);
+  const total = tierCharge + chosenAddons.reduce((s, a) => s + (isAnnual ? annualOf(a.price) : a.price), 0);
 
   function toggleAddon(k: string) {
     setAddons(prev => { const n = new Set(prev); n.has(k) ? n.delete(k) : n.add(k); return n; });
@@ -49,9 +57,10 @@ export default function UpgradeModal({ open, onClose }: Props) {
     const lines = [
       "[PERMINTAAN UPGRADE]",
       `Dari tier: ${storeTier.charAt(0).toUpperCase() + storeTier.slice(1)}`,
-      `Minta tier: ${tierObj.name}${target === "free" ? "" : ` (${rp(tierObj.price)}/bln)`}`,
-      chosenAddons.length ? `Add-on: ${chosenAddons.map(a => `${a.name} (~${rp(a.price)}/bln)`).join(", ")}` : "Add-on: —",
-      `Estimasi total: ${rp(monthly)}/bln`,
+      `Siklus: ${isAnnual ? "Tahunan" : "Bulanan"}`,
+      `Minta tier: ${tierObj.name}${target === "free" ? "" : ` (${rp(tierCharge)}${per})`}`,
+      chosenAddons.length ? `Add-on: ${chosenAddons.map(a => `${a.name} (~${rp(isAnnual ? annualOf(a.price) : a.price)}${per})`).join(", ")}` : "Add-on: —",
+      `Estimasi total: ${rp(total)}${per}`,
       "",
       "Dikirim dari POS.",
     ];
@@ -90,8 +99,22 @@ export default function UpgradeModal({ open, onClose }: Props) {
         ) : (
           <>
             <div style={{ flex: 1, overflowY: "auto", padding: "18px 24px" }}>
-              {/* Tiers */}
-              <p style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "#7A776F", fontWeight: 700, margin: "0 0 10px" }}>Pilih paket</p>
+              {/* Billing cycle toggle */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+                <p style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "#7A776F", fontWeight: 700, margin: 0 }}>Pilih paket</p>
+                <div style={{ display: "flex", background: "#F0EBE1", borderRadius: 999, padding: 3, gap: 2 }}>
+                  {([["monthly", "Bulanan"], ["annual", "Tahunan"]] as const).map(([k, l]) => {
+                    const on = billing === k;
+                    return (
+                      <button key={k} onClick={() => setBilling(k)}
+                        style={{ display: "flex", alignItems: "center", gap: 6, border: "none", cursor: "pointer", borderRadius: 999, padding: "6px 14px", fontSize: 11.5, fontWeight: 700, background: on ? "#0B1129" : "transparent", color: on ? "#F2EDE3" : "#7A776F", transition: "background .15s, color .15s" }}>
+                        {l}
+                        {k === "annual" && <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: "0.04em", color: on ? "#C9A55F" : "#A6843F", background: on ? "rgba(201,165,95,0.18)" : "rgba(201,165,95,0.14)", borderRadius: 5, padding: "1px 5px" }}>HEMAT ~17%</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 }}>
                 {TIERS.map(t => {
                   const isCurrent = t.key === storeTier;
@@ -103,8 +126,17 @@ export default function UpgradeModal({ open, onClose }: Props) {
                       {isCurrent && <span style={{ position: "absolute", top: 10, right: 10, fontSize: 8, letterSpacing: "0.1em", fontWeight: 800, color: "#7A776F", background: "#F0EBE1", borderRadius: 5, padding: "2px 6px", textTransform: "uppercase" }}>Paket Anda</span>}
                       <div style={{ fontSize: 15, fontWeight: 800, color: "#0B1129" }}>{t.name}</div>
                       <div style={{ fontSize: 11, color: "#7A776F", marginBottom: 8 }}>{t.tagline}</div>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: "#C9A55F" }}>{rp(t.price)}{t.price > 0 && <span style={{ fontSize: 11, color: "#B8B0A8", fontWeight: 600 }}>/bln</span>}</div>
-                      {t.reg && <div style={{ fontSize: 10, color: "#B8B0A8", textDecoration: "line-through" }}>{rp(t.reg)}/bln</div>}
+                      {(() => {
+                        const now = t.price === 0 ? 0 : (isAnnual ? (t.annual ?? annualOf(t.price)) : t.price);
+                        const was = isAnnual ? (t.reg ? t.reg * 12 : undefined) : t.reg;
+                        return (
+                          <>
+                            <div style={{ fontSize: 18, fontWeight: 800, color: "#C9A55F" }}>{rp(now)}{t.price > 0 && <span style={{ fontSize: 11, color: "#B8B0A8", fontWeight: 600 }}>{per}</span>}</div>
+                            {was && <div style={{ fontSize: 10, color: "#B8B0A8", textDecoration: "line-through" }}>{rp(was)}{per}</div>}
+                            {isAnnual && t.price > 0 && <div style={{ fontSize: 9.5, fontWeight: 700, color: "#3f7d54" }}>≈ 2 bulan gratis</div>}
+                          </>
+                        );
+                      })()}
                       <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 10 }}>
                         {t.features.map(f => (
                           <div key={f} style={{ display: "flex", gap: 6, fontSize: 11, color: "#3A3A38", lineHeight: 1.4 }}>
@@ -132,7 +164,7 @@ export default function UpgradeModal({ open, onClose }: Props) {
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#0B1129" }}>{a.name}</div>
                         <div style={{ fontSize: 11, color: "#7A776F" }}>{a.desc}</div>
                       </div>
-                      <div style={{ fontSize: 12.5, fontWeight: 700, color: "#C9A55F", flexShrink: 0 }}>~{rp(a.price)}/bln</div>
+                      <div style={{ fontSize: 12.5, fontWeight: 700, color: "#C9A55F", flexShrink: 0 }}>~{rp(isAnnual ? annualOf(a.price) : a.price)}{per}</div>
                     </button>
                   );
                 })}
@@ -145,7 +177,7 @@ export default function UpgradeModal({ open, onClose }: Props) {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
                 <div>
                   <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "#7A776F", fontWeight: 700 }}>Estimasi</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: "#0B1129" }}>{rp(monthly)}<span style={{ fontSize: 12, color: "#B8B0A8", fontWeight: 600 }}>/bln</span></div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "#0B1129" }}>{rp(total)}<span style={{ fontSize: 12, color: "#B8B0A8", fontWeight: 600 }}>{per}</span></div>
                 </div>
                 <button onClick={submit} disabled={sending}
                   style={{ height: 50, padding: "0 26px", borderRadius: 12, border: "none", background: "#0B1129", color: "#F2EDE3", fontSize: 14, fontWeight: 700, letterSpacing: "0.02em", cursor: sending ? "default" : "pointer", opacity: sending ? 0.7 : 1, display: "flex", alignItems: "center", gap: 9 }}>
