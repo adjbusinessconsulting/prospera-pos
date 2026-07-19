@@ -52,17 +52,17 @@ export function OwnerConfirm({ open, title, message, onClose, onConfirmed }: Pro
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A6843F" strokeWidth="1.9"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
         </div>
         <p style={{ margin: 0, fontSize: 9.5, letterSpacing: "0.2em", textTransform: "uppercase", color: "#A6843F", fontWeight: 700 }}>Konfirmasi Pemilik</p>
-        <h3 style={{ margin: "4px 0 6px", fontSize: 18, fontWeight: 800, color: "#0B1129" }}>{title ?? "Butuh izin pemilik"}</h3>
+        <h3 style={{ margin: "4px 0 6px", fontSize: 18, fontWeight: 800, color: "#0D1117" }}>{title ?? "Butuh izin pemilik"}</h3>
         <p style={{ margin: "0 0 16px", fontSize: 12.5, color: "#7A776F", lineHeight: 1.6 }}>
           {message ?? "Masukkan kata sandi akun pemilik untuk melanjutkan."}{email ? ` (${email})` : ""}
         </p>
         <input autoFocus type="password" value={pw} onChange={(e) => setPw(e.target.value)} onKeyDown={(e) => e.key === "Enter" && confirm()}
           placeholder="Kata sandi pemilik"
-          style={{ width: "100%", height: 46, border: `1.5px solid ${error ? "#C25E3D" : "#ECE7DD"}`, borderRadius: 10, padding: "0 14px", fontSize: 14, color: "#0B1129", outline: "none", boxSizing: "border-box" }} />
+          style={{ width: "100%", height: 46, border: `1.5px solid ${error ? "#C25E3D" : "#ECE7DD"}`, borderRadius: 10, padding: "0 14px", fontSize: 14, color: "#0D1117", outline: "none", boxSizing: "border-box" }} />
         {error && <p style={{ margin: "8px 0 0", fontSize: 11.5, color: "#C25E3D" }}>{error}</p>}
         <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-          <button onClick={onClose} style={{ flex: 1, height: 46, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0B1129", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Batal</button>
-          <button onClick={confirm} disabled={loading || !pw} style={{ flex: 2, height: 46, borderRadius: 11, border: "none", background: "#0B1129", color: "#F2EDE3", fontSize: 13, fontWeight: 700, cursor: loading || !pw ? "default" : "pointer", opacity: loading || !pw ? 0.6 : 1 }}>
+          <button onClick={onClose} style={{ flex: 1, height: 46, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0D1117", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Batal</button>
+          <button onClick={confirm} disabled={loading || !pw} style={{ flex: 2, height: 46, borderRadius: 11, border: "none", background: "#0D1117", color: "#F2EDE3", fontSize: 13, fontWeight: 700, cursor: loading || !pw ? "default" : "pointer", opacity: loading || !pw ? 0.6 : 1 }}>
             {loading ? "Memverifikasi…" : "Konfirmasi"}
           </button>
         </div>

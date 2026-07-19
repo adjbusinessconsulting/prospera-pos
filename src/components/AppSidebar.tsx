@@ -56,7 +56,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
               <button key={id} onClick={() => setScreen(id)} style={{
                 display: "flex", alignItems: "center", gap: 6,
                 padding: "7px 13px", borderRadius: 9, border: "none",
-                background: isActive ? "#0B1129" : "transparent",
+                background: isActive ? "#0D1117" : "transparent",
                 color: isActive ? "#f8f6ef" : "#7A776F",
                 cursor: "pointer", fontSize: 11, fontWeight: 600,
                 letterSpacing: "0.09em", textTransform: "uppercase" as const,
@@ -110,7 +110,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
             width: 30, height: 30, borderRadius: "50%",
             background: "#f0ebe1", border: "1px solid #ECE7DD",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 11, fontWeight: 700, color: "#0B1129", flexShrink: 0,
+            fontSize: 11, fontWeight: 700, color: "#0D1117", flexShrink: 0,
             fontFamily: "Inter, sans-serif",
           }}>
             {cashierInitials}

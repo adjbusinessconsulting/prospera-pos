@@ -193,7 +193,7 @@ export default function TutupToko() {
                   </div>
                   <div className="mt-4">
                     <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">KAS DIHITUNG (UANG DI LACI)</span></label>
-                    <div className="flex items-center bg-cream-bg border rounded-button px-4 h-[50px] gap-2" style={{ borderColor: counted ? "#0B1129" : "#ECE7DD" }}>
+                    <div className="flex items-center bg-cream-bg border rounded-button px-4 h-[50px] gap-2" style={{ borderColor: counted ? "#0D1117" : "#ECE7DD" }}>
                       <span className="font-serif text-[16px] text-text-mute font-medium">Rp</span>
                       <input type="text" inputMode="numeric" value={counted} onChange={e => setCounted(formatIDRInput(e.target.value))} placeholder="0"
                         className="flex-1 bg-transparent border-0 outline-none font-serif text-[20px] text-navy" style={{ fontVariantNumeric: "tabular-nums" }} />

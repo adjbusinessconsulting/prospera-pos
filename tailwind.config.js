@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy:          '#0B1129',
+        navy:          '#0D1117',
         'navy-soft':   '#1A2240',
         gold:          '#C9A55F',
         'gold-soft':   'rgba(201,165,95,0.12)',

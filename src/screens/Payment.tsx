@@ -447,7 +447,7 @@ export default function Payment() {
             overflow: "hidden",
           }}>
             {/* Header */}
-            <div style={{ background: "#0B1129", padding: "20px 24px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ background: "#0D1117", padding: "20px 24px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
                 <div style={{ fontSize: 9, letterSpacing: "0.22em", color: "#C9A55F", textTransform: "uppercase", fontWeight: 600, marginBottom: 4 }}>
                   {qrisMode === "midtrans" ? "QRIS · AUTO KONFIRMASI" : "QRIS · KONFIRMASI MANUAL"}
@@ -470,7 +470,7 @@ export default function Payment() {
               {qrisMode === "none" && (
                 <div style={{ textAlign: "center", padding: "20px 0" }}>
                   <QrCode size={40} color="#c8c0b0" style={{ margin: "0 auto 12px" }} />
-                  <p style={{ fontSize: 14, fontWeight: 600, color: "#14203a", marginBottom: 6 }}>QRIS belum dikonfigurasi</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "#0D1117", marginBottom: 6 }}>QRIS belum dikonfigurasi</p>
                   <p style={{ fontSize: 12.5, color: "#8f897a", lineHeight: 1.6 }}>
                     Minta pemilik toko untuk mengatur QRIS di Backoffice → Pengaturan.
                   </p>
@@ -500,7 +500,7 @@ export default function Payment() {
                   <button
                     onClick={handleManualConfirm}
                     style={{
-                      width: "100%", height: 52, background: "#14203a", color: "#f8f6ef",
+                      width: "100%", height: 52, background: "#0D1117", color: "#f8f6ef",
                       border: "none", borderRadius: 12, fontSize: 14, fontWeight: 700,
                       letterSpacing: "0.04em", cursor: "pointer", display: "flex",
                       alignItems: "center", justifyContent: "center", gap: 10,
@@ -519,7 +519,7 @@ export default function Payment() {
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 14 }}>
                       <Clock size={13} color="#8f897a" />
                       <span style={{ fontSize: 12, color: "#8f897a" }}>QR aktif selama</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: timeLeft < 60 ? "#c25e3d" : "#14203a", fontFamily: "monospace" }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: timeLeft < 60 ? "#c25e3d" : "#0D1117", fontFamily: "monospace" }}>
                         {formatCountdown(timeLeft)}
                       </span>
                     </div>
@@ -558,7 +558,7 @@ export default function Payment() {
               {qrisState === "confirmed" && (
                 <div style={{ textAlign: "center", padding: "20px 0" }}>
                   <CheckCircle2 size={52} color="#5C9E7E" style={{ margin: "0 auto 14px" }} />
-                  <p style={{ fontSize: 16, fontWeight: 700, color: "#14203a", marginBottom: 6 }}>Pembayaran Diterima!</p>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: "#0D1117", marginBottom: 6 }}>Pembayaran Diterima!</p>
                   <p style={{ fontSize: 12.5, color: "#8f897a" }}>Mencetak struk…</p>
                 </div>
               )}
@@ -567,12 +567,12 @@ export default function Payment() {
               {qrisState === "error" && (
                 <div style={{ textAlign: "center", padding: "12px 0 4px" }}>
                   <XCircle size={40} color="#c25e3d" style={{ margin: "0 auto 12px" }} />
-                  <p style={{ fontSize: 14, fontWeight: 600, color: "#14203a", marginBottom: 6 }}>Gagal</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "#0D1117", marginBottom: 6 }}>Gagal</p>
                   <p style={{ fontSize: 12.5, color: "#8f897a", lineHeight: 1.6, marginBottom: 20 }}>{qrisError}</p>
                   {hasStatic && (
                     <button
                       onClick={() => { setUseStaticFallback(true); setQrisState("show"); setQrisError(""); }}
-                      style={{ width: "100%", height: 46, background: "#f6f3ea", color: "#14203a", border: "1px solid #e8e3d5", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", marginBottom: 10 }}>
+                      style={{ width: "100%", height: 46, background: "#f6f3ea", color: "#0D1117", border: "1px solid #e8e3d5", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", marginBottom: 10 }}>
                       Gunakan QRIS Statis
                     </button>
                   )}

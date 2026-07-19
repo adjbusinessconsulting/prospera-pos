@@ -24,7 +24,7 @@ export function DemoControls() {
         const active = val === o.k;
         return (
           <button key={o.k} onClick={() => on(o.k)}
-            style={{ border: "none", cursor: "pointer", borderRadius: 999, padding: "4px 9px", fontSize: 10, fontWeight: 600, background: active ? "#C9A55F" : "transparent", color: active ? "#0B1129" : "#C4C0B8", whiteSpace: "nowrap", transition: "background .15s, color .15s" }}>
+            style={{ border: "none", cursor: "pointer", borderRadius: 999, padding: "4px 9px", fontSize: 10, fontWeight: 600, background: active ? "#C9A55F" : "transparent", color: active ? "#0D1117" : "#C4C0B8", whiteSpace: "nowrap", transition: "background .15s, color .15s" }}>
             {o.l}
           </button>
         );

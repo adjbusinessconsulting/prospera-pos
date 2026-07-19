@@ -39,7 +39,7 @@ export default function LogAktivitas() {
         </button>
         <div style={{ flex: 1 }}>
           <p style={{ margin: 0, fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#7A776F", fontWeight: 600 }}>Sterith POS · Audit</p>
-          <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#0B1129" }}>Log Aktivitas</p>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#0D1117" }}>Log Aktivitas</p>
         </div>
       </div>
 
@@ -50,7 +50,7 @@ export default function LogAktivitas() {
             {intact
               ? <ShieldCheck size={18} color="#4E8C6E" />
               : <ShieldAlert size={18} color="#C25E3D" />}
-            <div style={{ fontSize: 12.5, color: "#0B1129", lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12.5, color: "#0D1117", lineHeight: 1.5 }}>
               {intact
                 ? <>Log utuh &amp; tidak diubah. Catatan bersifat <b>permanen</b> — tidak bisa dihapus atau diedit.</>
                 : <><b style={{ color: "#C25E3D" }}>Log terdeteksi diubah!</b> Rantai tidak konsisten mulai entri ke-{(entries.length - (tamperAt ?? 0))}. Hubungi admin.</>}
@@ -67,8 +67,8 @@ export default function LogAktivitas() {
                     {TYPE_LABEL[e.type] ?? e.type}
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, color: "#0B1129", lineHeight: 1.4 }}>{e.detail}</div>
-                    <div style={{ fontSize: 11, color: "#7A776F", marginTop: 3 }}>{fmt(e.time)} · oleh <b style={{ color: "#0B1129" }}>{e.actor}</b></div>
+                    <div style={{ fontSize: 13, color: "#0D1117", lineHeight: 1.4 }}>{e.detail}</div>
+                    <div style={{ fontSize: 11, color: "#7A776F", marginTop: 3 }}>{fmt(e.time)} · oleh <b style={{ color: "#0D1117" }}>{e.actor}</b></div>
                   </div>
                   <span style={{ fontSize: 10, color: "#C4C0B8", fontFamily: "monospace", flexShrink: 0 }}>#{e.seq}</span>
                 </div>

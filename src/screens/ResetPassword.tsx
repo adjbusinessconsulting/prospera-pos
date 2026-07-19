@@ -91,7 +91,7 @@ export default function ResetPassword() {
   }
 
   // ── Shared styles (mirrors OwnerLogin / Back Office login) ──
-  const inputStyle: React.CSSProperties = { width: "100%", height: 46, boxSizing: "border-box", border: "1.5px solid #ddd9cc", borderRadius: 10, padding: "0 14px 0 42px", fontSize: 13, color: "#0B1129", background: "#fff", fontFamily: "Inter, sans-serif", outline: "none" };
+  const inputStyle: React.CSSProperties = { width: "100%", height: 46, boxSizing: "border-box", border: "1.5px solid #ddd9cc", borderRadius: 10, padding: "0 14px 0 42px", fontSize: 13, color: "#0D1117", background: "#fff", fontFamily: "Inter, sans-serif", outline: "none" };
   const labelStyle: React.CSSProperties = { display: "block", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#8f897a", fontWeight: 600, marginBottom: 6 };
   const iconStyle: React.CSSProperties = { position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#8f897a" };
   const eyeBtn: React.CSSProperties = { position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#8f897a", padding: 4, display: "flex" };
@@ -117,7 +117,7 @@ export default function ResetPassword() {
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#5C9E7E", boxShadow: "0 0 0 3px rgba(92,158,126,0.22)" }} />
           <span style={{ fontSize: 9, letterSpacing: "0.2em", color: "#8f897a", fontWeight: 600, textTransform: "uppercase" }}>Sesi Aman</span>
         </div>
-        <button type="button" onClick={() => setLang(l => l === "id" ? "en" : "id")} style={{ display: "flex", alignItems: "center", gap: 5, background: "#fff", border: "1px solid #ddd9cc", borderRadius: 8, padding: "4px 9px", fontSize: 10.5, fontWeight: 600, color: "#0B1129", cursor: "pointer" }}>
+        <button type="button" onClick={() => setLang(l => l === "id" ? "en" : "id")} style={{ display: "flex", alignItems: "center", gap: 5, background: "#fff", border: "1px solid #ddd9cc", borderRadius: 8, padding: "4px 9px", fontSize: 10.5, fontWeight: 600, color: "#0D1117", cursor: "pointer" }}>
           {lang.toUpperCase()}
           <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
         </button>
@@ -141,11 +141,11 @@ export default function ResetPassword() {
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#3f7d54" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
           <div style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#3f7d54", fontWeight: 600, marginBottom: 8 }}>{startedAsInvite ? "Berhasil · Akun Aktif" : "Berhasil · Kata Sandi Diperbarui"}</div>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0B1129", margin: "0 0 6px", lineHeight: 1.2 }}>{startedAsInvite ? "Kata sandi Anda telah dibuat." : "Kata sandi baru tersimpan."}</h1>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0D1117", margin: "0 0 6px", lineHeight: 1.2 }}>{startedAsInvite ? "Kata sandi Anda telah dibuat." : "Kata sandi baru tersimpan."}</h1>
           <p style={{ fontSize: 12, color: "#8f897a", lineHeight: 1.5, margin: "0 0 20px" }}>Silakan masuk kembali ke Sterith POS menggunakan kata sandi baru Anda.</p>
-          <a href="https://pos.sterith.com" style={{ textDecoration: "none", height: 48, background: "#e7c987", color: "#0B1129", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: "Inter, sans-serif" }}>
+          <a href="https://pos.sterith.com" style={{ textDecoration: "none", height: 48, background: "#e7c987", color: "#0D1117", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: "Inter, sans-serif" }}>
             Login ke POS
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0B1129" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0D1117" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
         </div>
 
@@ -166,7 +166,7 @@ export default function ResetPassword() {
         /* ── Form ── */
         <>
           <div style={{ textAlign: "center", marginBottom: 18 }}>
-            <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0B1129", margin: "0 0 4px", lineHeight: 1.2 }}>
+            <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0D1117", margin: "0 0 4px", lineHeight: 1.2 }}>
               {startedAsInvite ? "Buat kata sandi Anda" : "Atur ulang kata sandi"}
             </h1>
             <p style={{ fontSize: 12, color: "#8f897a", lineHeight: 1.5, margin: 0 }}>
@@ -182,7 +182,7 @@ export default function ResetPassword() {
               <div style={{ position: "relative" }}>
                 <EnvelopeIcon />
                 <input type="email" value={email} readOnly placeholder="pemilik@toko.co.id"
-                  style={{ ...inputStyle, background: "#f2f0e8", color: email ? "#0B1129" : "#a49d8c", caretColor: "transparent" }} />
+                  style={{ ...inputStyle, background: "#f2f0e8", color: email ? "#0D1117" : "#a49d8c", caretColor: "transparent" }} />
               </div>
             </div>
 
@@ -210,9 +210,9 @@ export default function ResetPassword() {
 
             {error && <p style={{ fontSize: 12, color: "#b0492f", background: "#f4e9e4", padding: "9px 12px", borderRadius: 8, margin: 0 }}>{error}</p>}
 
-            <button type="submit" disabled={loading} style={{ height: 48, background: "#e7c987", color: "#0B1129", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, fontFamily: "Inter, sans-serif", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <button type="submit" disabled={loading} style={{ height: 48, background: "#e7c987", color: "#0D1117", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, fontFamily: "Inter, sans-serif", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
               {loading ? "MENYIMPAN…" : startedAsInvite ? "BUAT KATA SANDI & MASUK" : "SIMPAN KATA SANDI BARU"}
-              {!loading && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0B1129" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
+              {!loading && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0D1117" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
             </button>
           </form>
         </>
@@ -230,7 +230,7 @@ export default function ResetPassword() {
   );
 
   return (
-    <div style={{ minHeight: "100dvh", background: "#eceadf", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "Inter, system-ui, sans-serif" }}>
       {fonts}
       {card}
     </div>

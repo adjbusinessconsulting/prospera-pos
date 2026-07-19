@@ -27,7 +27,7 @@ const DOW_ID = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 const MODAL_AWAL = 500_000;
 const METHOD_SPLIT = [
   { method: "Tunai", pct: 0.68, color: "#5C9E7E" },
-  { method: "QRIS", pct: 0.14, color: "#0B1129" },
+  { method: "QRIS", pct: 0.14, color: "#0D1117" },
   { method: "Transfer", pct: 0.09, color: "#C9A55F" },
   { method: "Debit", pct: 0.06, color: "#7A776F" },
   { method: "E-Wallet", pct: 0.03, color: "#C25E3D" },
@@ -377,7 +377,7 @@ export default function Laporan() {
                   <>
                     <div className="h-[100px] flex items-end gap-1.5">
                       {series.vals.map((v, i) => (
-                        <div key={i} className="flex-1 rounded-t-sm transition-all" style={{ height: `${Math.max(4, Math.round(v / barMax * 100))}%`, background: "linear-gradient(to top,#0B1129,#3A4A78)" }} />
+                        <div key={i} className="flex-1 rounded-t-sm transition-all" style={{ height: `${Math.max(4, Math.round(v / barMax * 100))}%`, background: "linear-gradient(to top,#0D1117,#3A4A78)" }} />
                       ))}
                     </div>
                     <div className="flex mt-2 gap-1.5">

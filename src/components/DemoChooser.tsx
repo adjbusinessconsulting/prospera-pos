@@ -19,7 +19,7 @@ const OPTIONS = [
     desc: "Tampilan bawaan Sterith — kasir, produk, laporan.",
     accent: "#C9A55F",
     logo: `${base}mark-gold-512.png`,
-    tileBg: "#0B1129",
+    tileBg: "#0D1117",
     logoFit: "contain" as const,
   },
   {
@@ -73,7 +73,7 @@ export function DemoChooser({ onClassic, onClose }: DemoChooserProps) {
             <p style={{ fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "#C9A55F", fontWeight: 700, margin: "0 0 6px" }}>
               Coba Demo
             </p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0B1129", margin: 0, lineHeight: 1.1 }}>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0D1117", margin: 0, lineHeight: 1.1 }}>
               Pilih tampilan demo
             </h2>
             <p style={{ fontSize: 13, color: "#7A776F", margin: "6px 0 0", maxWidth: 440, lineHeight: 1.5 }}>
@@ -109,15 +109,15 @@ export function DemoChooser({ onClassic, onClose }: DemoChooserProps) {
                   </div>
                   <span style={{
                     fontSize: 8, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700,
-                    color: o.kind === "classic" ? "#0B1129" : "#A6843F",
+                    color: o.kind === "classic" ? "#0D1117" : "#A6843F",
                     background: o.kind === "classic" ? "rgba(11,17,41,0.07)" : "rgba(201,165,95,0.12)",
                     border: `1px solid ${o.kind === "classic" ? "rgba(11,17,41,0.15)" : "rgba(201,165,95,0.35)"}`,
                     borderRadius: 5, padding: "3px 7px",
                   }}>{o.tag}</span>
                 </div>
-                <div style={{ fontSize: 15.5, fontWeight: 700, color: "#0B1129", marginBottom: 3 }}>{o.name}</div>
+                <div style={{ fontSize: 15.5, fontWeight: 700, color: "#0D1117", marginBottom: 3 }}>{o.name}</div>
                 <div style={{ fontSize: 12, color: "#7A776F", lineHeight: 1.5, flex: 1 }}>{o.desc}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 14, fontSize: 11.5, fontWeight: 600, color: "#0B1129" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 14, fontSize: 11.5, fontWeight: 600, color: "#0D1117" }}>
                   {o.kind === "classic" ? "Mulai demo" : "Buka showcase"}
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
                 </div>

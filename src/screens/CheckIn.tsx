@@ -143,7 +143,7 @@ export default function CheckIn() {
   const shift = selectedShiftName;
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#0B1129", display: "flex", flexDirection: "column", fontFamily: "Inter, system-ui, sans-serif", WebkitFontSmoothing: "antialiased" }}>
+    <div style={{ position: "fixed", inset: 0, background: "#0D1117", display: "flex", flexDirection: "column", fontFamily: "Inter, system-ui, sans-serif", WebkitFontSmoothing: "antialiased" }}>
 
       {/* Header */}
       <div style={{ padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(242,237,227,0.08)", flexShrink: 0 }}>
@@ -251,7 +251,7 @@ export default function CheckIn() {
       <div style={{ padding: "12px 24px 36px", flexShrink: 0 }}>
         {!captured ? (
           <button onClick={capture} disabled={!camReady || !!camError}
-            style={{ width: "100%", height: 56, borderRadius: 14, border: "none", background: camReady ? "#C9A55F" : "rgba(201,165,95,0.18)", color: camReady ? "#0B1129" : "rgba(201,165,95,0.4)", fontSize: 14, fontWeight: 700, letterSpacing: "0.08em", cursor: camReady ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, transition: "background 0.15s" }}>
+            style={{ width: "100%", height: 56, borderRadius: 14, border: "none", background: camReady ? "#C9A55F" : "rgba(201,165,95,0.18)", color: camReady ? "#0D1117" : "rgba(201,165,95,0.4)", fontSize: 14, fontWeight: 700, letterSpacing: "0.08em", cursor: camReady ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, transition: "background 0.15s" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
             AMBIL FOTO
           </button>
@@ -262,7 +262,7 @@ export default function CheckIn() {
               Ulangi
             </button>
             <button onClick={confirm}
-              style={{ flex: 2.5, height: 56, borderRadius: 14, border: "none", background: "#C9A55F", color: "#0B1129", fontSize: 14, fontWeight: 700, letterSpacing: "0.06em", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+              style={{ flex: 2.5, height: 56, borderRadius: 14, border: "none", background: "#C9A55F", color: "#0D1117", fontSize: 14, fontWeight: 700, letterSpacing: "0.06em", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
               Konfirmasi & Masuk
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
             </button>

@@ -70,7 +70,7 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
     return (
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 0", borderBottom: "1px solid #F2EDE3" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: "#0B1129" }}>{label}</p>
+          <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: "#0D1117" }}>{label}</p>
           <p style={{ margin: "2px 0 0", fontSize: 11.5, color: "#7A776F", lineHeight: 1.5 }}>{desc}</p>
         </div>
         <Switch on={val} onToggle={toggle ?? (() => k && flip(k))} />
@@ -80,7 +80,7 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
 
   const SectionHead = ({ title, badge }: { title: string; badge?: string }) => (
     <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "18px 0 2px" }}>
-      <p style={{ margin: 0, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "#0B1129", fontWeight: 700 }}>{title}</p>
+      <p style={{ margin: 0, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "#0D1117", fontWeight: 700 }}>{title}</p>
       {badge && <span style={{ fontSize: 8, letterSpacing: "0.12em", fontWeight: 700, color: "#A6843F", background: "rgba(201,165,95,0.14)", padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" }}>{badge}</span>}
     </div>
   );
@@ -93,7 +93,7 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "22px 24px 14px", borderBottom: "1px solid #ECE7DD" }}>
           <div>
             <p style={{ margin: 0, fontSize: 9.5, letterSpacing: "0.2em", textTransform: "uppercase", color: "#7A776F", fontWeight: 600 }}>Sterith POS</p>
-            <h3 style={{ margin: "3px 0 0", fontSize: 18, fontWeight: 800, color: "#0B1129" }}>{isPre ? "Pengaturan Perangkat" : "Pengaturan Fitur"}</h3>
+            <h3 style={{ margin: "3px 0 0", fontSize: 18, fontWeight: 800, color: "#0D1117" }}>{isPre ? "Pengaturan Perangkat" : "Pengaturan Fitur"}</h3>
           </div>
           <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid #ECE7DD", background: "white", cursor: "pointer", color: "#7A776F" }}>✕</button>
         </div>
@@ -109,16 +109,16 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
               style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 14, padding: "14px 14px", borderRadius: 11, border: "1px solid #ECE7DD", background: "#FAFAF7", cursor: "pointer" }}>
               <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(11,17,41,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0B1129" strokeWidth="1.8"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" /></svg>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0D1117" strokeWidth="1.8"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" /></svg>
                 </span>
                 <span style={{ textAlign: "left" }}>
-                  <span style={{ display: "block", fontSize: 13.5, fontWeight: 700, color: "#0B1129" }}>Atur Printer</span>
+                  <span style={{ display: "block", fontSize: 13.5, fontWeight: 700, color: "#0D1117" }}>Atur Printer</span>
                   <span style={{ display: "block", fontSize: 11, color: "#7A776F", marginTop: 1 }}>Sambungkan printer thermal · ukuran kertas · test print</span>
                 </span>
               </span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
             </button>
-            <button onClick={onClose} style={{ marginTop: 16, height: 46, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0B1129", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Tutup</button>
+            <button onClick={onClose} style={{ marginTop: 16, height: 46, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0D1117", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Tutup</button>
           </div>
         ) : (
           <>
@@ -142,7 +142,7 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
                 <button onClick={() => { onClose(); onOpenPrinter(); }}
                   style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, margin: "10px 0 2px", padding: "12px 14px", borderRadius: 11, border: "1px solid #ECE7DD", background: "#FAFAF7", cursor: "pointer" }}>
                   <span style={{ textAlign: "left" }}>
-                    <span style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#0B1129" }}>Atur Printer</span>
+                    <span style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#0D1117" }}>Atur Printer</span>
                     <span style={{ display: "block", fontSize: 11, color: "#7A776F", marginTop: 1 }}>Sambungkan printer thermal · ukuran kertas · test print</span>
                   </span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
@@ -171,7 +171,7 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
                 <button onClick={() => { onClose(); onOpenReceipt(); }}
                   style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 18, padding: "13px 14px", borderRadius: 11, border: "1px solid #ECE7DD", background: "#FAFAF7", cursor: "pointer" }}>
                   <span style={{ textAlign: "left" }}>
-                    <span style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#0B1129" }}>Struk & QRIS</span>
+                    <span style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#0D1117" }}>Struk & QRIS</span>
                     <span style={{ display: "block", fontSize: 11, color: "#7A776F", marginTop: 1 }}>Logo struk & gambar QRIS statis</span>
                   </span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
@@ -183,9 +183,9 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
 
             {/* Footer */}
             <div style={{ display: "flex", gap: 10, padding: "14px 24px 20px", borderTop: "1px solid #ECE7DD" }}>
-              <button onClick={onClose} style={{ flex: 1, height: 46, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0B1129", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Tutup</button>
+              <button onClick={onClose} style={{ flex: 1, height: 46, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0D1117", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Tutup</button>
               <button onClick={onSave} disabled={!dirty || saving}
-                style={{ flex: 2, height: 46, borderRadius: 11, border: "none", background: dirty ? "#0B1129" : "#D8D2C4", color: dirty ? "#F2EDE3" : "#8A857C", fontSize: 13, fontWeight: 700, cursor: dirty && !saving ? "pointer" : "default" }}>
+                style={{ flex: 2, height: 46, borderRadius: 11, border: "none", background: dirty ? "#0D1117" : "#D8D2C4", color: dirty ? "#F2EDE3" : "#8A857C", fontSize: 13, fontWeight: 700, cursor: dirty && !saving ? "pointer" : "default" }}>
                 {saving ? "Menyimpan…" : dirty ? "Simpan Perubahan" : "Tersimpan"}
               </button>
             </div>

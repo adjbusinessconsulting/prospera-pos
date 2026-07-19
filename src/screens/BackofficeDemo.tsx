@@ -5,7 +5,7 @@ import { DemoControls } from "../components/DemoControls";
 import { getLog, type AuditEntry } from "../lib/auditlog";
 import type { Product } from "../types";
 
-const NAVY = "#0B1129", GOLD = "#A6843F", GREEN = "#4E8C6E", MUTE = "#7A776F",
+const NAVY = "#0D1117", GOLD = "#A6843F", GREEN = "#4E8C6E", MUTE = "#7A776F",
   BORDER = "#ECE7DD", CREAM = "#FAFAF7", CARD = "#FFFFFF", DANGER = "#C25E3D";
 
 interface Branch { id: string; name: string; address: string; sales: number; trx: number; stockValue: number; lowStock: number; }
@@ -85,7 +85,7 @@ const TABS: { id: Tab; label: string }[] = [
 // Demo analytics for the Laporan tab (month-to-date, all cabang).
 const PAY_BREAKDOWN = [
   { label: "Tunai", value: 8_900_000, color: "#4E8C6E" },
-  { label: "QRIS", value: 3_100_000, color: "#0B1129" },
+  { label: "QRIS", value: 3_100_000, color: "#0D1117" },
   { label: "Transfer", value: 1_300_000, color: "#A6843F" },
   { label: "Debit", value: 1_206_000, color: "#7A776F" },
 ];
@@ -252,7 +252,7 @@ export default function BackofficeDemo() {
         {tab === "ringkasan" && (<>
           <div style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(78,140,110,0.07)", border: "1px solid rgba(78,140,110,0.3)", borderRadius: 12, padding: "11px 14px", marginBottom: 18 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
-            <span style={{ fontSize: 12.5, color: "#0B1129" }}>Kontrol semua cabang dari satu tempat. Perubahan <b>langsung terlihat di Kasir</b>. Sesi demo sementara — muat ulang untuk reset.</span>
+            <span style={{ fontSize: 12.5, color: "#0D1117" }}>Kontrol semua cabang dari satu tempat. Perubahan <b>langsung terlihat di Kasir</b>. Sesi demo sementara — muat ulang untuk reset.</span>
           </div>
 
           {/* Subscription + add-ons */}

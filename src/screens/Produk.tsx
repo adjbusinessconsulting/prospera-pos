@@ -488,7 +488,7 @@ export default function Produk() {
                   onChange={e => setAddName(e.target.value)}
                   placeholder="Contoh: Beras Pandan 5kg"
                   className="w-full bg-cream-bg border border-warm-border rounded-button px-4 h-[46px] text-[13.5px] text-navy outline-none placeholder:text-text-mute transition-colors"
-                  style={{ borderColor: addName.trim() ? "#0B1129" : undefined }}
+                  style={{ borderColor: addName.trim() ? "#0D1117" : undefined }}
                 />
               </div>
 
@@ -498,7 +498,7 @@ export default function Produk() {
                   <span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">HARGA JUAL <span className="text-warning">*</span></span>
                 </label>
                 <div className="flex items-center bg-cream-bg border border-warm-border rounded-button px-4 h-[46px] gap-2 transition-colors"
-                  style={{ borderColor: addPrice.trim() ? "#0B1129" : undefined }}>
+                  style={{ borderColor: addPrice.trim() ? "#0D1117" : undefined }}>
                   <span className="font-serif text-[15px] text-text-mute font-medium shrink-0">Rp</span>
                   <input
                     type="text"

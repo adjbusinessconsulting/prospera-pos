@@ -105,8 +105,8 @@ export default function UpgradeModal({ open, onClose }: Props) {
         <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid #ECE7DD", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexShrink: 0 }}>
           <div>
             <p style={{ margin: 0, fontSize: 9.5, letterSpacing: "0.22em", textTransform: "uppercase", color: "#C9A55F", fontWeight: 700 }}>Sterith POS · Paket</p>
-            <h2 style={{ margin: "4px 0 0", fontSize: 21, fontWeight: 800, color: "#0B1129", letterSpacing: "-0.02em" }}>Tingkatkan paket Anda</h2>
-            <p style={{ margin: "3px 0 0", fontSize: 12.5, color: "#7A776F" }}>Paket saat ini: <b style={{ color: "#0B1129", textTransform: "capitalize" }}>{storeTier}</b> · pilih yang Anda mau, tim kami akan menghubungi Anda.</p>
+            <h2 style={{ margin: "4px 0 0", fontSize: 21, fontWeight: 800, color: "#0D1117", letterSpacing: "-0.02em" }}>Tingkatkan paket Anda</h2>
+            <p style={{ margin: "3px 0 0", fontSize: 12.5, color: "#7A776F" }}>Paket saat ini: <b style={{ color: "#0D1117", textTransform: "capitalize" }}>{storeTier}</b> · pilih yang Anda mau, tim kami akan menghubungi Anda.</p>
           </div>
           <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 9, border: "1px solid #ECE7DD", background: "white", cursor: "pointer", color: "#7A776F", flexShrink: 0 }}>✕</button>
         </div>
@@ -116,9 +116,9 @@ export default function UpgradeModal({ open, onClose }: Props) {
             <div style={{ width: 58, height: 58, borderRadius: "50%", background: "rgba(92,158,126,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5C9E7E" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" /></svg>
             </div>
-            <p style={{ margin: 0, fontSize: 17, fontWeight: 800, color: "#0B1129" }}>Permintaan terkirim!</p>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 800, color: "#0D1117" }}>Permintaan terkirim!</p>
             <p style={{ margin: "6px auto 22px", fontSize: 13, color: "#7A776F", lineHeight: 1.6, maxWidth: 360 }}>Tim Sterith akan meninjau dan menghubungi Anda untuk menyelesaikan upgrade. Terima kasih!</p>
-            <button onClick={onClose} style={{ height: 44, padding: "0 30px", borderRadius: 11, border: "none", background: "#0B1129", color: "#F2EDE3", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Tutup</button>
+            <button onClick={onClose} style={{ height: 44, padding: "0 30px", borderRadius: 11, border: "none", background: "#0D1117", color: "#F2EDE3", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Tutup</button>
           </div>
         ) : (
           <>
@@ -131,7 +131,7 @@ export default function UpgradeModal({ open, onClose }: Props) {
                     const on = billing === k;
                     return (
                       <button key={k} onClick={() => setBilling(k)}
-                        style={{ display: "flex", alignItems: "center", gap: 6, border: "none", cursor: "pointer", borderRadius: 999, padding: "6px 14px", fontSize: 11.5, fontWeight: 700, background: on ? "#0B1129" : "transparent", color: on ? "#F2EDE3" : "#7A776F", transition: "background .15s, color .15s" }}>
+                        style={{ display: "flex", alignItems: "center", gap: 6, border: "none", cursor: "pointer", borderRadius: 999, padding: "6px 14px", fontSize: 11.5, fontWeight: 700, background: on ? "#0D1117" : "transparent", color: on ? "#F2EDE3" : "#7A776F", transition: "background .15s, color .15s" }}>
                         {l}
                         {k === "annual" && <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: "0.04em", color: on ? "#C9A55F" : "#A6843F", background: on ? "rgba(201,165,95,0.18)" : "rgba(201,165,95,0.14)", borderRadius: 5, padding: "1px 5px" }}>HEMAT ~17%</span>}
                       </button>
@@ -148,7 +148,7 @@ export default function UpgradeModal({ open, onClose }: Props) {
                     <button key={t.key} disabled={!canPick} onClick={() => canPick && setTarget(t.key)}
                       style={{ textAlign: "left", background: selected ? "white" : "#fff", border: `2px solid ${selected ? "#C9A55F" : "#ECE7DD"}`, borderRadius: 14, padding: 14, cursor: canPick ? "pointer" : "default", opacity: !canPick && !isCurrent ? 0.5 : 1, position: "relative" }}>
                       {isCurrent && <span style={{ position: "absolute", top: 10, right: 10, fontSize: 8, letterSpacing: "0.1em", fontWeight: 800, color: "#7A776F", background: "#F0EBE1", borderRadius: 5, padding: "2px 6px", textTransform: "uppercase" }}>Paket Anda</span>}
-                      <div style={{ fontSize: 15, fontWeight: 800, color: "#0B1129" }}>{t.name}</div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: "#0D1117" }}>{t.name}</div>
                       <div style={{ fontSize: 11, color: "#7A776F", marginBottom: 8 }}>{t.tagline}</div>
                       {(() => {
                         const now = t.price === 0 ? 0 : (isAnnual ? (t.annual ?? annualOf(t.price)) : t.price);
@@ -185,7 +185,7 @@ export default function UpgradeModal({ open, onClose }: Props) {
                         {on && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5"><path d="M20 6L9 17l-5-5" /></svg>}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "#0B1129" }}>{a.name}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#0D1117" }}>{a.name}</div>
                         <div style={{ fontSize: 11, color: "#7A776F" }}>{a.desc}</div>
                       </div>
                       <div style={{ fontSize: 12.5, fontWeight: 700, color: "#C9A55F", flexShrink: 0 }}>~{rp(isAnnual ? annualOf(a.price) : a.price)}{per}</div>
@@ -201,10 +201,10 @@ export default function UpgradeModal({ open, onClose }: Props) {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
                 <div>
                   <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "#7A776F", fontWeight: 700 }}>Estimasi</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: "#0B1129" }}>{rp(total)}<span style={{ fontSize: 12, color: "#B8B0A8", fontWeight: 600 }}>{per}</span></div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "#0D1117" }}>{rp(total)}<span style={{ fontSize: 12, color: "#B8B0A8", fontWeight: 600 }}>{per}</span></div>
                 </div>
                 <button onClick={submit} disabled={sending}
-                  style={{ height: 50, padding: "0 26px", borderRadius: 12, border: "none", background: "#0B1129", color: "#F2EDE3", fontSize: 14, fontWeight: 700, letterSpacing: "0.02em", cursor: sending ? "default" : "pointer", opacity: sending ? 0.7 : 1, display: "flex", alignItems: "center", gap: 9 }}>
+                  style={{ height: 50, padding: "0 26px", borderRadius: 12, border: "none", background: "#0D1117", color: "#F2EDE3", fontSize: 14, fontWeight: 700, letterSpacing: "0.02em", cursor: sending ? "default" : "pointer", opacity: sending ? 0.7 : 1, display: "flex", alignItems: "center", gap: 9 }}>
                   {sending ? "Mengirim…" : "Kirim Permintaan"}
                   {!sending && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7" /></svg>}
                 </button>

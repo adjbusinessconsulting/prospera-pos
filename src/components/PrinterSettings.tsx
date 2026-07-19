@@ -48,7 +48,7 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
     clearPrinterConfig(); setOkMsg(""); setErr(""); force(x => x + 1);
   }
 
-  const label = { fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "#0B1129", fontWeight: 700 };
+  const label = { fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "#0D1117", fontWeight: 700 };
 
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1150, background: "rgba(11,17,41,0.5)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "Inter, system-ui, sans-serif" }}>
@@ -56,14 +56,14 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
           <div>
             <p style={{ margin: 0, fontSize: 9.5, letterSpacing: "0.2em", textTransform: "uppercase", color: "#7A776F", fontWeight: 600 }}>Sterith POS · Struk</p>
-            <h3 style={{ margin: "3px 0 0", fontSize: 18, fontWeight: 800, color: "#0B1129" }}>Atur Printer</h3>
+            <h3 style={{ margin: "3px 0 0", fontSize: 18, fontWeight: 800, color: "#0D1117" }}>Atur Printer</h3>
           </div>
           <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid #ECE7DD", background: "white", cursor: "pointer", color: "#7A776F" }}>✕</button>
         </div>
 
         {ios ? (
           <div style={{ marginTop: 16, background: "rgba(194,94,61,0.07)", border: "1px dashed rgba(194,94,61,0.4)", borderRadius: 12, padding: 16 }}>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0B1129" }}>Perangkat Apple</p>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0D1117" }}>Perangkat Apple</p>
             <p style={{ margin: "6px 0 0", fontSize: 12, color: "#7A776F", lineHeight: 1.6 }}>
               Cetak Bluetooth tidak didukung di iPhone/iPad (batasan Apple). Pakai
               tablet/HP <b>Android</b> untuk printer Bluetooth, atau bagikan struk lewat
@@ -72,7 +72,7 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
           </div>
         ) : !bt && !usb ? (
           <div style={{ marginTop: 16, background: "rgba(201,165,95,0.07)", border: "1px dashed rgba(201,165,95,0.4)", borderRadius: 12, padding: 16 }}>
-            <p style={{ margin: 0, fontSize: 12.5, color: "#0B1129", lineHeight: 1.6 }}>
+            <p style={{ margin: 0, fontSize: 12.5, color: "#0D1117", lineHeight: 1.6 }}>
               Browser ini belum mendukung printer. Gunakan <b>Google Chrome</b> di Android
               atau desktop untuk menyambungkan printer thermal.
             </p>
@@ -85,8 +85,8 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
               {([58, 80] as const).map(p => (
                 <button key={p} onClick={() => changePaper(p)}
                   style={{ flex: 1, height: 42, borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer",
-                    border: paper === p ? "1.5px solid #0B1129" : "1px solid #ECE7DD",
-                    background: paper === p ? "#0B1129" : "white", color: paper === p ? "#F2EDE3" : "#0B1129" }}>
+                    border: paper === p ? "1.5px solid #0D1117" : "1px solid #ECE7DD",
+                    background: paper === p ? "#0D1117" : "white", color: paper === p ? "#F2EDE3" : "#0D1117" }}>
                   {p}mm
                 </button>
               ))}
@@ -95,7 +95,7 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
             {/* Status */}
             <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 10, background: connected ? "rgba(61,122,94,0.08)" : "#F7F4EE", border: `1px solid ${connected ? "rgba(61,122,94,0.3)" : "#ECE7DD"}` }}>
               <span style={{ width: 8, height: 8, borderRadius: 999, background: connected ? "#3D7A5E" : "#C25E3D", flexShrink: 0 }} />
-              <span style={{ fontSize: 12.5, color: "#0B1129", fontWeight: 600 }}>
+              <span style={{ fontSize: 12.5, color: "#0D1117", fontWeight: 600 }}>
                 {connected ? `Terhubung: ${connectedName()}` : "Tidak terhubung"}
               </span>
             </div>
@@ -107,13 +107,13 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
               {bt && (
                 <button onClick={() => pair("bt")} disabled={busy !== ""}
-                  style={{ height: 46, borderRadius: 11, border: "none", background: "#0B1129", color: "#F2EDE3", fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy === "bt" ? 0.6 : 1 }}>
+                  style={{ height: 46, borderRadius: 11, border: "none", background: "#0D1117", color: "#F2EDE3", fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy === "bt" ? 0.6 : 1 }}>
                   {busy === "bt" ? "Mencari…" : connected ? "Cari Printer Bluetooth Lain" : "Cari Printer Bluetooth"}
                 </button>
               )}
               {usb && (
                 <button onClick={() => pair("usb")} disabled={busy !== ""}
-                  style={{ height: 46, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0B1129", fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy === "usb" ? 0.6 : 1 }}>
+                  style={{ height: 46, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0D1117", fontSize: 13, fontWeight: 700, cursor: busy ? "default" : "pointer", opacity: busy === "usb" ? 0.6 : 1 }}>
                   {busy === "usb" ? "Mencari…" : "Printer USB / Kabel"}
                 </button>
               )}
@@ -121,7 +121,7 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
 
             {/* Test print */}
             <button onClick={runTest} disabled={!connected || busy !== ""}
-              style={{ width: "100%", height: 44, marginTop: 10, borderRadius: 11, border: "1px solid #ECE7DD", background: connected ? "#FAFAF7" : "#F2EDE3", color: connected ? "#0B1129" : "#B0A99A", fontSize: 13, fontWeight: 700, cursor: connected && !busy ? "pointer" : "default" }}>
+              style={{ width: "100%", height: 44, marginTop: 10, borderRadius: 11, border: "1px solid #ECE7DD", background: connected ? "#FAFAF7" : "#F2EDE3", color: connected ? "#0D1117" : "#B0A99A", fontSize: 13, fontWeight: 700, cursor: connected && !busy ? "pointer" : "default" }}>
               {busy === "test" ? "Mencetak…" : "Test Print"}
             </button>
 

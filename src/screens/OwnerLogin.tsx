@@ -202,7 +202,7 @@ export default function OwnerLogin() {
     setStoreChoices(prev => [...prev, data as StoreRow]);
   }
 
-  const inputStyle: React.CSSProperties = { width: "100%", height: 46, boxSizing: "border-box", border: "1.5px solid #ddd9cc", borderRadius: 10, padding: "0 14px 0 42px", fontSize: 13, color: "#0B1129", background: "#fff", fontFamily: "Inter, sans-serif", outline: "none" };
+  const inputStyle: React.CSSProperties = { width: "100%", height: 46, boxSizing: "border-box", border: "1.5px solid #ddd9cc", borderRadius: 10, padding: "0 14px 0 42px", fontSize: 13, color: "#0D1117", background: "#fff", fontFamily: "Inter, sans-serif", outline: "none" };
   const labelStyle: React.CSSProperties = { display: "block", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#8f897a", fontWeight: 600, marginBottom: 6 };
   const iconStyle: React.CSSProperties = { position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#8f897a" };
 
@@ -215,7 +215,7 @@ export default function OwnerLogin() {
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#5C9E7E", boxShadow: "0 0 0 3px rgba(92,158,126,0.22)" }} />
           <span style={{ fontSize: 9, letterSpacing: "0.2em", color: "#8f897a", fontWeight: 600, textTransform: "uppercase" }}>System Ready</span>
         </div>
-        <button type="button" onClick={() => setLang(l => l === "id" ? "en" : "id")} style={{ display: "flex", alignItems: "center", gap: 5, background: "#fff", border: "1px solid #ddd9cc", borderRadius: 8, padding: "4px 9px", fontSize: 10.5, fontWeight: 600, color: "#0B1129", cursor: "pointer" }}>
+        <button type="button" onClick={() => setLang(l => l === "id" ? "en" : "id")} style={{ display: "flex", alignItems: "center", gap: 5, background: "#fff", border: "1px solid #ddd9cc", borderRadius: 8, padding: "4px 9px", fontSize: 10.5, fontWeight: 600, color: "#0D1117", cursor: "pointer" }}>
           {lang.toUpperCase()}
           <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
         </button>
@@ -229,7 +229,7 @@ export default function OwnerLogin() {
           <span style={{ fontSize: 9, letterSpacing: "0.25em", color: "#b8934a", textTransform: "uppercase", fontWeight: 600 }}>Point of Sale</span>
           <div style={{ height: 1, width: 30, background: "#b8934a", opacity: 0.6 }} />
         </div>
-        <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0B1129", margin: "0 0 4px", lineHeight: 1.2 }}>
+        <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0D1117", margin: "0 0 4px", lineHeight: 1.2 }}>
           {mode === "signup" ? "Buat akun toko" : mode === "forgot" ? "Lupa password?" : "Selamat datang kembali"}
         </h1>
         <p style={{ fontSize: 12, color: "#8f897a", lineHeight: 1.5, margin: 0 }}>
@@ -249,7 +249,7 @@ export default function OwnerLogin() {
           </div>
           {error   && <p style={{ fontSize: 12, color: "#b0492f", background: "#f4e9e4", padding: "9px 12px", borderRadius: 8, margin: 0 }}>{error}</p>}
           {success && <p style={{ fontSize: 12, color: "#3f7d54", background: "#e9f1ea", padding: "9px 12px", borderRadius: 8, margin: 0 }}>{success}</p>}
-          <button type="submit" disabled={loading} style={{ height: 48, background: "#e7c987", color: "#0B1129", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, marginTop: 2, fontFamily: "Inter, sans-serif", letterSpacing: "0.14em", textTransform: "uppercase" }}>
+          <button type="submit" disabled={loading} style={{ height: 48, background: "#e7c987", color: "#0D1117", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, marginTop: 2, fontFamily: "Inter, sans-serif", letterSpacing: "0.14em", textTransform: "uppercase" }}>
             {loading ? "MENGIRIM…" : "KIRIM LINK RESET →"}
           </button>
           <button type="button" onClick={() => { setMode("signin"); setError(""); setSuccess(""); }} style={{ background: "transparent", border: "none", fontSize: 12, color: "#8f897a", cursor: "pointer", fontFamily: "Inter, sans-serif", textDecoration: "underline", textUnderlineOffset: 3 }}>
@@ -298,19 +298,19 @@ export default function OwnerLogin() {
 
         {mode === "signin" && (
           <label style={{ display: "flex", alignItems: "center", gap: 9, cursor: "pointer" }}>
-            <div onClick={() => setRememberMe(r => !r)} style={{ width: 17, height: 17, borderRadius: 4, border: rememberMe ? "none" : "1.5px solid #ddd9cc", background: rememberMe ? "#0B1129" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div onClick={() => setRememberMe(r => !r)} style={{ width: 17, height: 17, borderRadius: 4, border: rememberMe ? "none" : "1.5px solid #ddd9cc", background: rememberMe ? "#0D1117" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               {rememberMe && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5"><path d="M20 6L9 17l-5-5"/></svg>}
             </div>
-            <span style={{ fontSize: 12, color: "#0B1129", fontFamily: "Inter, sans-serif" }}>Ingat saya selama 30 hari</span>
+            <span style={{ fontSize: 12, color: "#0D1117", fontFamily: "Inter, sans-serif" }}>Ingat saya selama 30 hari</span>
           </label>
         )}
 
         {error && <p style={{ fontSize: 12, color: "#b0492f", background: "#f4e9e4", padding: "9px 12px", borderRadius: 8, margin: 0 }}>{error}</p>}
         {success && <p style={{ fontSize: 12, color: "#3f7d54", background: "#e9f1ea", padding: "9px 12px", borderRadius: 8, margin: 0 }}>{success}</p>}
 
-        <button type="submit" disabled={loading} style={{ height: 48, background: "#e7c987", color: "#0B1129", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, fontFamily: "Inter, sans-serif", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+        <button type="submit" disabled={loading} style={{ height: 48, background: "#e7c987", color: "#0D1117", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, fontFamily: "Inter, sans-serif", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
           {loading ? "MEMPROSES…" : mode === "signin" ? "MASUK" : "DAFTAR SEKARANG"}
-          {!loading && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0B1129" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
+          {!loading && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0D1117" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
         </button>
       </form>}
 
@@ -320,7 +320,7 @@ export default function OwnerLogin() {
           <p style={{ fontSize: 12, color: "#8f897a", margin: 0, fontFamily: "Inter, sans-serif" }}>
             Mau berlangganan?{" "}
             <button type="button" onClick={() => window.open(DAFTAR_POS_URL, "_blank", "noopener,noreferrer")}
-              style={{ background: "transparent", border: "none", padding: "0 0 0 2px", fontSize: 12, color: "#0B1129", fontWeight: 600, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#b8934a" }}>
+              style={{ background: "transparent", border: "none", padding: "0 0 0 2px", fontSize: 12, color: "#0D1117", fontWeight: 600, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#b8934a" }}>
               Daftar Gratis
             </button>
           </p>
@@ -328,7 +328,7 @@ export default function OwnerLogin() {
           <p style={{ fontSize: 12, color: "#8f897a", margin: 0, fontFamily: "Inter, sans-serif" }}>
             Sudah punya akun?{" "}
             <button type="button" onClick={() => { setMode("signin"); setError(""); }}
-              style={{ background: "transparent", border: "none", padding: "0 0 0 2px", fontSize: 12, color: "#0B1129", fontWeight: 600, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#b8934a" }}>
+              style={{ background: "transparent", border: "none", padding: "0 0 0 2px", fontSize: 12, color: "#0D1117", fontWeight: 600, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#b8934a" }}>
               Masuk
             </button>
           </p>
@@ -362,17 +362,17 @@ export default function OwnerLogin() {
         <img src="/horizontal-light.png" alt="Sterith" style={{ height: 56, width: "auto", marginBottom: 24 }} />
         <div style={{ width: "100%", maxWidth: 420 }}>
           <p style={{ fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "#C9A55F", fontWeight: 600, textAlign: "center", marginBottom: 8 }}>PILIH TOKO</p>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 30, fontWeight: 500, color: "#0B1129", textAlign: "center", margin: "0 0 6px" }}>Toko mana hari ini?</h1>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 30, fontWeight: 500, color: "#0D1117", textAlign: "center", margin: "0 0 6px" }}>Toko mana hari ini?</h1>
           <p style={{ fontSize: 13, color: "#7A776F", textAlign: "center", margin: "0 0 24px" }}>Akun Anda memiliki {storeChoices.length} toko. Pilih satu untuk masuk.</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {storeChoices.map(s => (
               <button key={s.id} onClick={() => { setLoading(true); enterStore(s); }} disabled={loading}
                 style={{ display: "flex", alignItems: "center", gap: 14, background: "white", border: "1px solid #ECE7DD", borderRadius: 14, padding: "14px 16px", cursor: loading ? "default" : "pointer", textAlign: "left", width: "100%", opacity: loading ? 0.7 : 1 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 11, background: "#F0EBE1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B1129" strokeWidth="1.7"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0D1117" strokeWidth="1.7"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: "#0B1129" }}>{s.name}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "#0D1117" }}>{s.name}</div>
                   <div style={{ fontSize: 12, color: "#7A776F", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.address || "—"}</div>
                 </div>
                 <span style={{ fontSize: 8, letterSpacing: "0.12em", fontWeight: 700, textTransform: "uppercase", color: "#A6843F", background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", padding: "2px 7px", borderRadius: 5, flexShrink: 0 }}>{s.tier || "free"}</span>
@@ -387,17 +387,17 @@ export default function OwnerLogin() {
             const cap = storeCap(storeChoices[0]?.tier);
             if (storeChoices.length >= cap) return (
               <p style={{ fontSize: 11.5, color: "#7A776F", textAlign: "center", marginTop: 14, background: "rgba(201,165,95,0.06)", border: "1px dashed rgba(201,165,95,0.4)", borderRadius: 10, padding: "10px 12px" }}>
-                Tambah toko / cabang adalah <b style={{ color: "#0B1129" }}>add-on berbayar</b> (Standard +Rp 50rb, Premium +Rp 70rb per toko). Hubungi Sterith untuk menambah.
+                Tambah toko / cabang adalah <b style={{ color: "#0D1117" }}>add-on berbayar</b> (Standard +Rp 50rb, Premium +Rp 70rb per toko). Hubungi Sterith untuk menambah.
               </p>
             );
             if (showCreate) return (
               <div style={{ marginTop: 12, background: "white", border: "1px solid #ECE7DD", borderRadius: 14, padding: 14 }}>
                 <p style={{ fontSize: 9.5, letterSpacing: "0.2em", textTransform: "uppercase", color: "#7A776F", fontWeight: 600, marginBottom: 8 }}>Toko Baru</p>
                 <input autoFocus value={newStoreName} onChange={e => setNewStoreName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") createStore(); }} placeholder="mis. Toko Sembako Maju · Cabang 2"
-                  style={{ width: "100%", height: 46, borderRadius: 10, border: `1px solid ${newStoreName.trim() ? "#5C9E7E" : "#ECE7DD"}`, padding: "0 14px", fontSize: 14, color: "#0B1129", outline: "none", boxSizing: "border-box" }} />
+                  style={{ width: "100%", height: 46, borderRadius: 10, border: `1px solid ${newStoreName.trim() ? "#5C9E7E" : "#ECE7DD"}`, padding: "0 14px", fontSize: 14, color: "#0D1117", outline: "none", boxSizing: "border-box" }} />
                 <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                  <button onClick={() => { setShowCreate(false); setNewStoreName(""); setError(""); }} style={{ flex: 1, height: 44, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0B1129", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Batal</button>
-                  <button onClick={createStore} disabled={!newStoreName.trim() || creating} style={{ flex: 2, height: 44, borderRadius: 11, border: "none", background: "#0B1129", color: "#FAFAF7", fontSize: 13, fontWeight: 700, cursor: creating ? "default" : "pointer", opacity: !newStoreName.trim() || creating ? 0.5 : 1 }}>{creating ? "Membuat…" : "Buat Toko"}</button>
+                  <button onClick={() => { setShowCreate(false); setNewStoreName(""); setError(""); }} style={{ flex: 1, height: 44, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0D1117", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Batal</button>
+                  <button onClick={createStore} disabled={!newStoreName.trim() || creating} style={{ flex: 2, height: 44, borderRadius: 11, border: "none", background: "#0D1117", color: "#FAFAF7", fontSize: 13, fontWeight: 700, cursor: creating ? "default" : "pointer", opacity: !newStoreName.trim() || creating ? 0.5 : 1 }}>{creating ? "Membuat…" : "Buat Toko"}</button>
                 </div>
                 <p style={{ fontSize: 10.5, color: "#A8A39B", marginTop: 8 }}>Paket {storeChoices[0]?.tier || "free"}: maksimal {cap === Infinity ? "tanpa batas" : cap} toko.</p>
               </div>
@@ -421,7 +421,7 @@ export default function OwnerLogin() {
   }
 
   return (
-    <div style={{ minHeight: "100dvh", background: "#eceadf", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "Inter, system-ui, sans-serif" }}>
       {fonts}
       {showChooser && <DemoChooser onClassic={() => { setShowChooser(false); startDemo(); }} onClose={() => setShowChooser(false)} />}
       {card}

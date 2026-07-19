@@ -84,7 +84,7 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
       <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid #ECE7DD", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
         <div>
           <p style={{ margin: 0, fontFamily: "Inter, sans-serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#7A776F" }}>STERITH POS · BANTUAN</p>
-          <p style={{ margin: "2px 0 0", fontFamily: "Inter, sans-serif", fontSize: 16, fontWeight: 700, color: "#0B1129" }}>Kritik & Saran</p>
+          <p style={{ margin: "2px 0 0", fontFamily: "Inter, sans-serif", fontSize: 16, fontWeight: 700, color: "#0D1117" }}>Kritik & Saran</p>
         </div>
         <button onClick={handleClose} style={{ background: "transparent", border: "none", cursor: "pointer", padding: 6, color: "#B8B0A8" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -96,11 +96,11 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
           <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(92,158,126,0.12)", border: "1px solid rgba(92,158,126,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5C9E7E" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
-          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 15, fontWeight: 700, color: "#0B1129", margin: "0 0 6px" }}>Terima kasih!</p>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 15, fontWeight: 700, color: "#0D1117", margin: "0 0 6px" }}>Terima kasih!</p>
           <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12.5, color: "#7A776F", margin: "0 0 24px", lineHeight: 1.6 }}>
             Kritik dan saran Anda sudah kami terima dan akan ditinjau oleh tim Sterith.
           </p>
-          <button onClick={handleClose} style={{ background: "#0B1129", color: "#F2EDE3", border: "none", borderRadius: 10, height: 42, padding: "0 28px", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+          <button onClick={handleClose} style={{ background: "#0D1117", color: "#F2EDE3", border: "none", borderRadius: 10, height: 42, padding: "0 28px", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
             Tutup
           </button>
         </div>
@@ -122,13 +122,13 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
                     type="email" value={email} onChange={e => { setEmail(e.target.value); setError(""); }}
                     onKeyDown={e => e.key === "Enter" && verifyEmail()}
                     placeholder="email yang terdaftar"
-                    style={{ flex: 1, border: "none", outline: "none", fontSize: 13.5, color: "#0B1129", background: "transparent", fontFamily: "Inter, sans-serif" }}
+                    style={{ flex: 1, border: "none", outline: "none", fontSize: 13.5, color: "#0D1117", background: "transparent", fontFamily: "Inter, sans-serif" }}
                   />
                 </div>
                 {error && <p style={{ margin: "6px 0 0", fontSize: 11.5, color: "#C25E3D", fontFamily: "Inter, sans-serif", lineHeight: 1.5 }}>{error}</p>}
               </div>
               <button onClick={verifyEmail} disabled={loading || !email.trim()}
-                style={{ height: 46, background: "#0B1129", color: "#F2EDE3", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: loading || !email.trim() ? "not-allowed" : "pointer", opacity: !email.trim() ? 0.5 : 1, fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                style={{ height: 46, background: "#0D1117", color: "#F2EDE3", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: loading || !email.trim() ? "not-allowed" : "pointer", opacity: !email.trim() ? 0.5 : 1, fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 {loading ? "Memeriksa…" : "Lanjutkan →"}
               </button>
             </div>
@@ -148,12 +148,12 @@ export default function FeedbackDrawer({ open, onClose }: Props) {
                   value={message} onChange={e => setMessage(e.target.value)}
                   placeholder="Tulis masukan, saran, atau kendala yang Anda alami…"
                   rows={6}
-                  style={{ width: "100%", background: "white", border: `1.5px solid ${message.trim() ? "#C9A55F" : "#ECE7DD"}`, borderRadius: 10, padding: "12px 13px", fontSize: 13.5, color: "#0B1129", fontFamily: "Inter, sans-serif", resize: "none", outline: "none", lineHeight: 1.6, boxSizing: "border-box" }}
+                  style={{ width: "100%", background: "white", border: `1.5px solid ${message.trim() ? "#C9A55F" : "#ECE7DD"}`, borderRadius: 10, padding: "12px 13px", fontSize: 13.5, color: "#0D1117", fontFamily: "Inter, sans-serif", resize: "none", outline: "none", lineHeight: 1.6, boxSizing: "border-box" }}
                 />
                 {error && <p style={{ margin: "4px 0 0", fontSize: 11.5, color: "#C25E3D", fontFamily: "Inter, sans-serif" }}>{error}</p>}
               </div>
               <button onClick={handleSubmit} disabled={loading || !message.trim()}
-                style={{ height: 46, background: "#0B1129", color: "#F2EDE3", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: loading || !message.trim() ? "not-allowed" : "pointer", opacity: !message.trim() ? 0.5 : 1, fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                style={{ height: 46, background: "#0D1117", color: "#F2EDE3", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: loading || !message.trim() ? "not-allowed" : "pointer", opacity: !message.trim() ? 0.5 : 1, fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 {loading ? "Mengirim…" : "Kirim →"}
               </button>
             </div>

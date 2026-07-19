@@ -180,7 +180,7 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
     onClose();
   }
 
-  const input: React.CSSProperties = { width: "100%", height: 44, border: "1px solid #ECE7DD", background: "#FAFAF7", borderRadius: 10, padding: "0 13px", fontSize: 14, color: "#0B1129", outline: "none", boxSizing: "border-box", fontFamily: GK };
+  const input: React.CSSProperties = { width: "100%", height: 44, border: "1px solid #ECE7DD", background: "#FAFAF7", borderRadius: 10, padding: "0 13px", fontSize: 14, color: "#0D1117", outline: "none", boxSizing: "border-box", fontFamily: GK };
   const label: React.CSSProperties = { fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "#7A776F", fontWeight: 600, display: "block", marginBottom: 6 };
   const rowBtn: React.CSSProperties = { width: 30, height: 30, borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, background: "white" };
 
@@ -190,13 +190,13 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(11,17,41,0.45)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: GK }}
       onMouseDown={(e) => { if (e.target === e.currentTarget && !showConfirm) onClose(); }}>
-      <div style={{ width: "100%", maxWidth: 460, maxHeight: "92dvh", background: "#F5F0E8", borderRadius: 18, boxShadow: "0 24px 70px rgba(11,17,41,0.3)", display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
+      <div style={{ width: "100%", maxWidth: 460, maxHeight: "92dvh", background: "#FAFAF7", borderRadius: 18, boxShadow: "0 24px 70px rgba(11,17,41,0.3)", display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px 14px", borderBottom: "1px solid #ECE7DD", flexShrink: 0 }}>
           <div>
             <p style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#A6843F", fontWeight: 600, margin: "0 0 3px" }}>Pemilik · Kelola</p>
-            <h2 style={{ fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 600, color: "#0B1129", margin: 0, lineHeight: 1 }}>Karyawan &amp; Shift</h2>
+            <h2 style={{ fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 600, color: "#0D1117", margin: 0, lineHeight: 1 }}>Karyawan &amp; Shift</h2>
           </div>
           <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 9, border: "1px solid #ECE7DD", background: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#7A776F", flexShrink: 0 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12" /></svg>
@@ -210,7 +210,7 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
             {/* Tabs */}
             <div style={{ display: "flex", gap: 6, padding: "12px 20px 0", flexShrink: 0 }}>
               {(["kasir", "shift"] as const).map(t => (
-                <button key={t} onClick={() => setTab(t)} style={{ flex: 1, height: 38, borderRadius: 10, border: "none", cursor: "pointer", fontFamily: GK, fontSize: 12.5, fontWeight: 600, background: tab === t ? "#0B1129" : "white", color: tab === t ? "#F5F0E8" : "#7A776F", boxShadow: tab === t ? "none" : "inset 0 0 0 1px #ECE7DD" }}>
+                <button key={t} onClick={() => setTab(t)} style={{ flex: 1, height: 38, borderRadius: 10, border: "none", cursor: "pointer", fontFamily: GK, fontSize: 12.5, fontWeight: 600, background: tab === t ? "#0D1117" : "white", color: tab === t ? "#FAFAF7" : "#7A776F", boxShadow: tab === t ? "none" : "inset 0 0 0 1px #ECE7DD" }}>
                   {t === "kasir" ? `Karyawan · ${visKasir.length}/${kLimitLabel}` : `Shift · ${visShifts.length}/${sLimitLabel}`}
                 </button>
               ))}
@@ -228,7 +228,7 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
                         <div key={k.key} style={{ display: "flex", alignItems: "center", gap: 11, background: kEditKey === k.key ? "#FBF6E9" : "white", border: kEditKey === k.key ? "1px solid #E4CE9A" : "1px solid #ECE7DD", borderRadius: 11, padding: "10px 12px" }}>
                           <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#F0EBE1", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#7A776F", flexShrink: 0 }}>{k.initials}</div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 13.5, fontWeight: 600, color: "#0B1129" }}>{k.name}</div>
+                            <div style={{ fontSize: 13.5, fontWeight: 600, color: "#0D1117" }}>{k.name}</div>
                             <div style={{ fontSize: 10.5, color: "#7A776F", marginTop: 1 }}>{k.role} · PIN ••••••</div>
                           </div>
                           <button onClick={() => startEditKasir(k)} title="Edit" style={{ ...rowBtn, border: "1px solid #ECE7DD", color: "#7A776F" }}>{editIcon}</button>
@@ -242,7 +242,7 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
                   {!kEditKey && visKasir.length >= kLimit ? (
                     <div style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(201,165,95,0.08)", border: "1px solid rgba(201,165,95,0.3)", borderRadius: 10, padding: "12px 14px" }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A6843F" strokeWidth="1.8"><path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
-                      <span style={{ fontSize: 12, color: "#0B1129", lineHeight: 1.5 }}>Batas {kLimit} karyawan tercapai. <strong>Upgrade ke {nextTierLabel(storeTier)}</strong>.</span>
+                      <span style={{ fontSize: 12, color: "#0D1117", lineHeight: 1.5 }}>Batas {kLimit} karyawan tercapai. <strong>Upgrade ke {nextTierLabel(storeTier)}</strong>.</span>
                     </div>
                   ) : (
                     <form onSubmit={saveKasir} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -261,7 +261,7 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
                         <input type="password" value={kPin} onChange={(e) => setKPin(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="PIN 6 digit" inputMode="numeric" autoComplete="new-password" style={{ ...input, width: 140, letterSpacing: "0.3em" }} />
                       </div>
                       {kErr && <div style={{ fontSize: 12, color: "#C25E3D", background: "rgba(194,94,61,0.06)", border: "1px solid rgba(194,94,61,0.2)", borderRadius: 8, padding: "9px 12px" }}>{kErr}</div>}
-                      <button type="submit" style={{ height: 42, borderRadius: 10, border: "none", background: "#0B1129", color: "#F5F0E8", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>{kEditKey ? "Simpan Perubahan" : "Tambah Karyawan"}</button>
+                      <button type="submit" style={{ height: 42, borderRadius: 10, border: "none", background: "#0D1117", color: "#FAFAF7", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>{kEditKey ? "Simpan Perubahan" : "Tambah Karyawan"}</button>
                     </form>
                   )}
                 </div>
@@ -282,7 +282,7 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 13.5, fontWeight: 600, color: "#0B1129" }}>{s.name}</div>
+                            <div style={{ fontSize: 13.5, fontWeight: 600, color: "#0D1117" }}>{s.name}</div>
                             <div style={{ fontSize: 10.5, color: "#7A776F", marginTop: 1, fontVariantNumeric: "tabular-nums" }}>{s.start_time} – {s.end_time}</div>
                           </div>
                           <button onClick={() => startEditShift(s)} title="Edit" style={{ ...rowBtn, border: "1px solid #ECE7DD", color: "#7A776F" }}>{editIcon}</button>
@@ -296,7 +296,7 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
                   {!sEditKey && visShifts.length >= sLimit ? (
                     <div style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(201,165,95,0.08)", border: "1px solid rgba(201,165,95,0.3)", borderRadius: 10, padding: "12px 14px" }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A6843F" strokeWidth="1.8"><path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
-                      <span style={{ fontSize: 12, color: "#0B1129", lineHeight: 1.5 }}>Batas {sLimit === 1 ? "1 shift" : `${sLimit} shift`} tercapai. <strong>Upgrade ke {nextTierLabel(storeTier)}</strong>.</span>
+                      <span style={{ fontSize: 12, color: "#0D1117", lineHeight: 1.5 }}>Batas {sLimit === 1 ? "1 shift" : `${sLimit} shift`} tercapai. <strong>Upgrade ke {nextTierLabel(storeTier)}</strong>.</span>
                     </div>
                   ) : (
                     <form onSubmit={saveShift} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -310,7 +310,7 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
                         <div style={{ flex: 1 }}><label style={label}>Selesai</label><input type="time" value={sEnd} onChange={(e) => setSEnd(e.target.value)} style={input} /></div>
                       </div>
                       {sErr && <div style={{ fontSize: 12, color: "#C25E3D", background: "rgba(194,94,61,0.06)", border: "1px solid rgba(194,94,61,0.2)", borderRadius: 8, padding: "9px 12px" }}>{sErr}</div>}
-                      <button type="submit" style={{ height: 42, borderRadius: 10, border: "none", background: "#0B1129", color: "#F5F0E8", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>{sEditKey ? "Simpan Perubahan" : "Tambah Shift"}</button>
+                      <button type="submit" style={{ height: 42, borderRadius: 10, border: "none", background: "#0D1117", color: "#FAFAF7", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>{sEditKey ? "Simpan Perubahan" : "Tambah Shift"}</button>
                     </form>
                   )}
                 </div>
@@ -320,7 +320,7 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
             {/* Footer commit */}
             <div style={{ borderTop: "1px solid #ECE7DD", padding: "12px 20px 16px", flexShrink: 0 }}>
               <button onClick={() => !hasChanges ? onClose() : isDemoMode ? applyLocalAndClose() : setShowConfirm(true)}
-                style={{ width: "100%", height: 46, borderRadius: 11, border: "none", background: hasChanges ? "#0B1129" : "white", color: hasChanges ? "#F5F0E8" : "#7A776F", boxShadow: hasChanges ? "none" : "inset 0 0 0 1px #ECE7DD", fontSize: 13, fontWeight: 600, cursor: "pointer", letterSpacing: "0.02em" }}>
+                style={{ width: "100%", height: 46, borderRadius: 11, border: "none", background: hasChanges ? "#0D1117" : "white", color: hasChanges ? "#FAFAF7" : "#7A776F", boxShadow: hasChanges ? "none" : "inset 0 0 0 1px #ECE7DD", fontSize: 13, fontWeight: 600, cursor: "pointer", letterSpacing: "0.02em" }}>
                 {hasChanges ? "Simpan & Konfirmasi →" : "Tutup"}
               </button>
             </div>
@@ -333,14 +333,14 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
             <form onSubmit={handleConfirm} style={{ width: "100%", maxWidth: 340, display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <p style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#A6843F", fontWeight: 600, margin: "0 0 5px" }}>Konfirmasi Pemilik</p>
-                <h3 style={{ fontFamily: "Georgia, serif", fontSize: 21, fontWeight: 600, color: "#0B1129", margin: "0 0 6px" }}>Masukkan password Anda</h3>
+                <h3 style={{ fontFamily: "Georgia, serif", fontSize: 21, fontWeight: 600, color: "#0D1117", margin: "0 0 6px" }}>Masukkan password Anda</h3>
                 <p style={{ fontSize: 12.5, color: "#7A776F", lineHeight: 1.55, margin: 0 }}>Masukkan password akun toko untuk menyimpan perubahan karyawan &amp; shift.</p>
               </div>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required autoFocus autoComplete="current-password" style={input} />
               {confirmErr && <div style={{ fontSize: 12, color: "#C25E3D", background: "rgba(194,94,61,0.06)", border: "1px solid rgba(194,94,61,0.2)", borderRadius: 8, padding: "9px 12px" }}>{confirmErr}</div>}
               <div style={{ display: "flex", gap: 8 }}>
-                <button type="button" onClick={() => { setShowConfirm(false); setPassword(""); setConfirmErr(""); }} disabled={saving} style={{ flex: 1, height: 46, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0B1129", fontSize: 12.5, fontWeight: 600, cursor: saving ? "default" : "pointer" }}>Batal</button>
-                <button type="submit" disabled={saving} style={{ flex: 2, height: 46, borderRadius: 11, border: "none", background: "#0B1129", color: "#F5F0E8", fontSize: 12.5, fontWeight: 600, cursor: saving ? "default" : "pointer", opacity: saving ? 0.7 : 1 }}>{saving ? "Menyimpan…" : "Konfirmasi & Simpan"}</button>
+                <button type="button" onClick={() => { setShowConfirm(false); setPassword(""); setConfirmErr(""); }} disabled={saving} style={{ flex: 1, height: 46, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0D1117", fontSize: 12.5, fontWeight: 600, cursor: saving ? "default" : "pointer" }}>Batal</button>
+                <button type="submit" disabled={saving} style={{ flex: 2, height: 46, borderRadius: 11, border: "none", background: "#0D1117", color: "#FAFAF7", fontSize: 12.5, fontWeight: 600, cursor: saving ? "default" : "pointer", opacity: saving ? 0.7 : 1 }}>{saving ? "Menyimpan…" : "Konfirmasi & Simpan"}</button>
               </div>
             </form>
           </div>

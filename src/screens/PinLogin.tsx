@@ -94,7 +94,7 @@ export default function PinLogin() {
   /* ── MOBILE: single-page no-scroll layout ── */
   if (isMobile) {
     return (
-      <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column", background: "#F5F0E8", overflowY: "auto", fontFamily: "Inter, system-ui, sans-serif" }}>
+      <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column", background: "#FAFAF7", overflowY: "auto", fontFamily: "Inter, system-ui, sans-serif" }}>
 
         {/* Top bar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid #ECE7DD", flexShrink: 0 }}>
@@ -107,7 +107,7 @@ export default function PinLogin() {
 
         {/* Store name */}
         <div style={{ padding: "10px 18px 6px", textAlign: "center", flexShrink: 0 }}>
-          <p style={{ fontSize: 16, fontWeight: 700, color: "#0B1129", margin: 0, fontFamily: "Georgia, serif" }}>{displayName}</p>
+          <p style={{ fontSize: 16, fontWeight: 700, color: "#0D1117", margin: 0, fontFamily: "Georgia, serif" }}>{displayName}</p>
           <p style={{ fontSize: 11, color: "#7A776F", margin: "2px 0 0" }}>{displayAddress}</p>
         </div>
 
@@ -119,7 +119,7 @@ export default function PinLogin() {
               const isActive = selectedShift === o.pos;
               const shiftLocked = !hasConfiguredShifts && !canChangeShift && !o.isNow;
               return (
-                <button key={o.pos} onClick={() => { if (!shiftLocked) setShift(o.pos); }} style={{ flex: "1 1 28%", minWidth: 90, padding: "8px 6px", borderRadius: 9, fontSize: 11.5, fontWeight: 500, border: isActive ? "2px solid #0B1129" : "1px solid #ECE7DD", background: isActive ? "#0B1129" : shiftLocked ? "#F7F4EE" : "white", color: isActive ? "#F5F0E8" : shiftLocked ? "#C4C0B8" : "#0B1129", position: "relative" as const, cursor: shiftLocked ? "not-allowed" : "pointer", opacity: shiftLocked ? 0.6 : 1 }}>
+                <button key={o.pos} onClick={() => { if (!shiftLocked) setShift(o.pos); }} style={{ flex: "1 1 28%", minWidth: 90, padding: "8px 6px", borderRadius: 9, fontSize: 11.5, fontWeight: 500, border: isActive ? "2px solid #0D1117" : "1px solid #ECE7DD", background: isActive ? "#0D1117" : shiftLocked ? "#F7F4EE" : "white", color: isActive ? "#FAFAF7" : shiftLocked ? "#C4C0B8" : "#0D1117", position: "relative" as const, cursor: shiftLocked ? "not-allowed" : "pointer", opacity: shiftLocked ? 0.6 : 1 }}>
                   <span style={{ display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{o.name}</span>
                   {o.time && <span style={{ display: "block", fontSize: 8.5, opacity: 0.7, marginTop: 1, fontVariantNumeric: "tabular-nums" as const }}>{o.time}</span>}
                   {o.isNow && <span style={{ position: "absolute" as const, top: -8, left: "50%", transform: "translateX(-50%)", fontSize: 7, fontWeight: 700, padding: "1px 5px", borderRadius: 99, background: "#C9A55F", color: "white", whiteSpace: "nowrap" as const, letterSpacing: "0.08em" }}>SKRNG</span>}
@@ -141,11 +141,11 @@ export default function PinLogin() {
               const active = selectedCashier === c.id;
               return (
                 <button key={c.id} onClick={() => { selectCashier(c.id); clearPin(); setPinError(""); }}
-                  style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 10, border: active ? "2px solid #0B1129" : "1px solid #ECE7DD", background: "white", cursor: "pointer", position: "relative" as const }}>
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: active ? "#0B1129" : "#F0EBE1", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: active ? "#C9A55F" : "#7A776F", flexShrink: 0 }}>
+                  style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 10, border: active ? "2px solid #0D1117" : "1px solid #ECE7DD", background: "white", cursor: "pointer", position: "relative" as const }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: active ? "#0D1117" : "#F0EBE1", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: active ? "#C9A55F" : "#7A776F", flexShrink: 0 }}>
                     {c.initials}
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#0B1129" }}>{c.name}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#0D1117" }}>{c.name}</span>
                   {active && <span style={{ position: "absolute" as const, top: 8, right: 10, width: 6, height: 6, borderRadius: "50%", background: "#C9A55F" }} />}
                 </button>
               );
@@ -164,7 +164,7 @@ export default function PinLogin() {
                   const active = i === pin.length && pin.length < 6;
                   return (
                     <div key={i} style={{ width: 42, height: 48, borderRadius: 11, background: "white", display: "flex", alignItems: "center", justifyContent: "center", border: pinError ? "1.5px solid #C25E3D" : active ? "1.5px solid #C9A55F" : "1px solid #ECE7DD", transition: "border-color 0.15s" }}>
-                      {filled && <div style={{ width: 12, height: 12, borderRadius: "50%", background: pinError ? "#C25E3D" : "#0B1129" }} />}
+                      {filled && <div style={{ width: 12, height: 12, borderRadius: "50%", background: pinError ? "#C25E3D" : "#0D1117" }} />}
                     </div>
                   );
                 })}
@@ -179,7 +179,7 @@ export default function PinLogin() {
             <div style={{ flex: 1, minHeight: 300, padding: "4px 18px calc(16px + env(safe-area-inset-bottom))", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gridTemplateRows: "1fr 1fr 1fr 1fr", gap: 8 }}>
               {["1","2","3","4","5","6","7","8","9"].map(d => (
                 <button key={d} onClick={() => { addPin(d); setPinError(""); }}
-                  style={{ background: "white", border: "1px solid #ECE7DD", borderRadius: 12, fontSize: 22, fontWeight: 500, color: "#0B1129", cursor: "pointer", transition: "background 0.1s" }}>
+                  style={{ background: "white", border: "1px solid #ECE7DD", borderRadius: 12, fontSize: 22, fontWeight: 500, color: "#0D1117", cursor: "pointer", transition: "background 0.1s" }}>
                   {d}
                 </button>
               ))}
@@ -188,11 +188,11 @@ export default function PinLogin() {
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="13" y2="14"/><line x1="13" y1="9" x2="18" y2="14"/></svg>
               </button>
               <button onClick={() => { addPin("0"); setPinError(""); }}
-                style={{ background: "white", border: "1px solid #ECE7DD", borderRadius: 12, fontSize: 22, fontWeight: 500, color: "#0B1129", cursor: "pointer" }}>
+                style={{ background: "white", border: "1px solid #ECE7DD", borderRadius: 12, fontSize: 22, fontWeight: 500, color: "#0D1117", cursor: "pointer" }}>
                 0
               </button>
               <button onClick={() => pin.length >= 1 && handleLogin()}
-                style={{ background: pin.length >= 1 ? "#0B1129" : "#ECE7DD", border: "none", borderRadius: 12, fontSize: 13, fontWeight: 700, color: pin.length >= 1 ? "#F5F0E8" : "#7A776F", cursor: pin.length >= 1 ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, letterSpacing: "0.1em", transition: "background 0.15s" }}>
+                style={{ background: pin.length >= 1 ? "#0D1117" : "#ECE7DD", border: "none", borderRadius: 12, fontSize: 13, fontWeight: 700, color: pin.length >= 1 ? "#FAFAF7" : "#7A776F", cursor: pin.length >= 1 ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, letterSpacing: "0.1em", transition: "background 0.15s" }}>
                 MASUK
                 {pin.length >= 1 && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
               </button>
@@ -203,7 +203,7 @@ export default function PinLogin() {
           <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "8px 18px 18px" }}>
             <p style={{ fontSize: 11.5, color: "#A8A39B", textAlign: "center", margin: "0 0 12px" }}>Pilih kasir &amp; shift, lalu ketuk Masuk</p>
             <button onClick={handleLogin}
-              style={{ height: 56, background: "#0B1129", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 700, color: "#F5F0E8", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, letterSpacing: "0.08em" }}>
+              style={{ height: 56, background: "#0D1117", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 700, color: "#FAFAF7", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, letterSpacing: "0.08em" }}>
               MASUK
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
             </button>

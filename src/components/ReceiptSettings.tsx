@@ -57,13 +57,13 @@ export function ReceiptSettings({ open, onClose }: { open: boolean; onClose: () 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
           <div>
             <p style={{ margin: 0, fontSize: 9.5, letterSpacing: "0.2em", textTransform: "uppercase", color: "#7A776F", fontWeight: 600 }}>Sterith POS · Pengaturan</p>
-            <h3 style={{ margin: "3px 0 0", fontSize: 18, fontWeight: 800, color: "#0B1129" }}>Struk & QRIS</h3>
+            <h3 style={{ margin: "3px 0 0", fontSize: 18, fontWeight: 800, color: "#0D1117" }}>Struk & QRIS</h3>
           </div>
           <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid #ECE7DD", background: "white", cursor: "pointer", color: "#7A776F" }}>✕</button>
         </div>
 
         {/* ── Logo struk (Standard+) ── */}
-        <p style={{ margin: "14px 0 8px", fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "#0B1129", fontWeight: 700 }}>Logo Struk</p>
+        <p style={{ margin: "14px 0 8px", fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "#0D1117", fontWeight: 700 }}>Logo Struk</p>
         {canBranding ? (
           <>
             <p style={{ margin: "0 0 12px", fontSize: 12, color: "#7A776F", lineHeight: 1.6 }}>
@@ -72,12 +72,12 @@ export function ReceiptSettings({ open, onClose }: { open: boolean; onClose: () 
             <div style={{ border: "1px dashed #D8D2C4", borderRadius: 12, padding: "18px 14px", textAlign: "center", background: "#FAFAF7", marginBottom: 12 }}>
               {receiptLogo
                 ? <img src={receiptLogo} alt="" style={{ maxHeight: 56, maxWidth: 180, objectFit: "contain", margin: "0 auto", display: "block" }} />
-                : <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, fontWeight: 600, color: "#0B1129" }}>{storeName || "Toko Anda"}</div>}
+                : <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, fontWeight: 600, color: "#0D1117" }}>{storeName || "Toko Anda"}</div>}
             </div>
             <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" style={{ display: "none" }} onChange={onFile} />
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => fileRef.current?.click()} disabled={saving}
-                style={{ flex: 1, height: 44, borderRadius: 11, border: "none", background: "#0B1129", color: "#F2EDE3", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: saving ? 0.6 : 1 }}>
+                style={{ flex: 1, height: 44, borderRadius: 11, border: "none", background: "#0D1117", color: "#F2EDE3", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: saving ? 0.6 : 1 }}>
                 {saving ? "Menyimpan…" : receiptLogo ? "Ganti Logo" : "Unggah Logo"}
               </button>
               {receiptLogo && (
@@ -91,14 +91,14 @@ export function ReceiptSettings({ open, onClose }: { open: boolean; onClose: () 
           </>
         ) : (
           <div style={{ background: "rgba(201,165,95,0.07)", border: "1px dashed rgba(201,165,95,0.4)", borderRadius: 12, padding: "14px" }}>
-            <p style={{ margin: 0, fontSize: 12, color: "#0B1129", lineHeight: 1.6 }}>
+            <p style={{ margin: 0, fontSize: 12, color: "#0D1117", lineHeight: 1.6 }}>
               <b>Logo struk kustom</b> tersedia mulai paket <b>Standard</b>. Struk Anda saat ini memakai branding Sterith.
             </p>
           </div>
         )}
 
         {/* ── QRIS statis (semua paket) ── */}
-        <p style={{ margin: "20px 0 8px", fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "#0B1129", fontWeight: 700, borderTop: "1px solid #ECE7DD", paddingTop: 16 }}>QRIS Statis</p>
+        <p style={{ margin: "20px 0 8px", fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "#0D1117", fontWeight: 700, borderTop: "1px solid #ECE7DD", paddingTop: 16 }}>QRIS Statis</p>
         <p style={{ margin: "0 0 12px", fontSize: 12, color: "#7A776F", lineHeight: 1.6 }}>
           Unggah gambar QRIS toko Anda. Saat bayar QRIS, gambar ini muncul; pelanggan scan lalu kasir tekan “Sudah Dibayar”.
         </p>
@@ -110,7 +110,7 @@ export function ReceiptSettings({ open, onClose }: { open: boolean; onClose: () 
         <input ref={qrisRef} type="file" accept="image/png,image/jpeg,image/webp" style={{ display: "none" }} onChange={onQrisFile} />
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => qrisRef.current?.click()} disabled={savingQris}
-            style={{ flex: 1, height: 44, borderRadius: 11, border: "none", background: "#0B1129", color: "#F2EDE3", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: savingQris ? 0.6 : 1 }}>
+            style={{ flex: 1, height: 44, borderRadius: 11, border: "none", background: "#0D1117", color: "#F2EDE3", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: savingQris ? 0.6 : 1 }}>
             {savingQris ? "Menyimpan…" : qrisImageUrl ? "Ganti QRIS" : "Unggah QRIS"}
           </button>
           {qrisImageUrl && (

@@ -14,7 +14,7 @@ const FILTER_LABELS = [
 
 const METHOD_COLOR: Record<string, string> = {
   tunai: "#5C9E7E", Tunai: "#5C9E7E",
-  qris: "#0B1129",  QRIS: "#0B1129",
+  qris: "#0D1117",  QRIS: "#0D1117",
   debit: "#7A776F", Debit: "#7A776F",
   transfer: "#C9A55F", Transfer: "#C9A55F",
   hutang: "#C25E3D", Hutang: "#C25E3D",
@@ -233,7 +233,7 @@ export default function Riwayat() {
 <title>Riwayat Transaksi – ${period}</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#0B1129;padding:32px}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#0D1117;padding:32px}
   .brand{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#7A776F;margin-bottom:4px}
   h1{font-size:22px;font-weight:700;margin-bottom:3px}
   .meta{font-size:11px;color:#7A776F;margin-bottom:22px}
@@ -241,7 +241,7 @@ export default function Riwayat() {
   .s-label{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#7A776F;margin-bottom:2px}
   .s-value{font-size:18px;font-weight:700}
   table{width:100%;border-collapse:collapse}
-  thead tr{background:#0B1129;color:#F8F5EF}
+  thead tr{background:#0D1117;color:#F8F5EF}
   th{text-align:left;padding:9px 11px;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
   td{padding:8px 11px;border-bottom:1px solid #ECE7DD}
   tr:nth-child(even) td{background:#FAF8F4}
@@ -269,7 +269,7 @@ export default function Riwayat() {
 
   const selectStyle: React.CSSProperties = {
     background: "white", border: "1px solid #ECE7DD", borderRadius: 8,
-    padding: "6px 32px 6px 10px", fontSize: 12, color: "#0B1129",
+    padding: "6px 32px 6px 10px", fontSize: 12, color: "#0D1117",
     appearance: "none" as const, outline: "none", cursor: "pointer",
   };
 
@@ -509,7 +509,7 @@ export default function Riwayat() {
                         </td>
                         <td className="px-5 py-3.5 text-right">
                           {(() => { const h = hutangStatusOf(t); return (
-                            <span className="font-serif text-[14px] font-semibold" style={{ color: h && !h.paid ? "#C25E3D" : "#0B1129", fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</span>
+                            <span className="font-serif text-[14px] font-semibold" style={{ color: h && !h.paid ? "#C25E3D" : "#0D1117", fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</span>
                           ); })()}
                         </td>
                       </tr>
@@ -536,7 +536,7 @@ export default function Riwayat() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-serif text-[16px] font-semibold" style={{ color: h && !h.paid ? "#C25E3D" : "#0B1129", fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</p>
+                        <p className="font-serif text-[16px] font-semibold" style={{ color: h && !h.paid ? "#C25E3D" : "#0D1117", fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</p>
                         <div className="flex items-center gap-1 justify-end mt-0.5">
                           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: `${METHOD_COLOR[m] || "#7A776F"}14`, color: METHOD_COLOR[m] || "#7A776F" }}>{m}</span>
                           {h && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: h.paid ? "rgba(61,122,94,0.10)" : "rgba(194,94,61,0.10)", color: h.paid ? "#3D7A5E" : "#C25E3D" }}>{h.paid ? "Lunas" : "Belum"}</span>}
