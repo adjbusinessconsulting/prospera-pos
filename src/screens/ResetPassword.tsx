@@ -158,8 +158,8 @@ export default function ResetPassword() {
             <div style={{ position: "absolute", inset: -8, borderRadius: "50%", border: "1px dashed #cfe0d1" }} />
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#3f7d54" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
-          <div style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#3f7d54", fontWeight: 600, marginBottom: 8 }}>{startedAsInvite ? "Berhasil · Akun Aktif" : "Berhasil · Kata Sandi Diperbarui"}</div>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0D1117", margin: "0 0 6px", lineHeight: 1.2 }}>{startedAsInvite ? "Kata sandi Anda telah dibuat." : "Kata sandi baru tersimpan."}</h1>
+          <div style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#3f7d54", fontWeight: 600, marginBottom: 8 }}>{(setupToken || startedAsInvite) ? "Berhasil · Kata Sandi Dibuat" : "Berhasil · Kata Sandi Diperbarui"}</div>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0D1117", margin: "0 0 6px", lineHeight: 1.2 }}>{(setupToken || startedAsInvite) ? "Kata sandi Anda telah dibuat." : "Kata sandi baru tersimpan."}</h1>
           <p style={{ fontSize: 12, color: "#8f897a", lineHeight: 1.5, margin: "0 0 20px" }}>Silakan masuk kembali ke Sterith POS menggunakan kata sandi baru Anda.</p>
           <a href="https://pos.sterith.com" style={{ textDecoration: "none", height: 48, background: "#e7c987", color: "#0D1117", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: "Inter, sans-serif" }}>
             Login ke POS
