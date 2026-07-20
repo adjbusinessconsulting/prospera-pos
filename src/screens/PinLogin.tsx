@@ -67,9 +67,13 @@ export default function PinLogin() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
+  // Real store with no cashiers yet → just the owner (add staff later in Kelola).
+  // The 3 sample cashiers are demo-only.
   const cashierList = dbCashiers.length > 0
     ? dbCashiers
-    : CASHIERS.map(c => ({ ...c, store_id: "", pin: "0000", active: true }));
+    : isDemoMode
+      ? CASHIERS.map(c => ({ ...c, store_id: "", pin: "0000", active: true }))
+      : [{ id: "owner", initials: "PM", name: "Pemilik", role: "Owner", store_id: "", pin: "", active: true }];
   const displayName = storeName || "Toko Sembako Maju";
   const displayAddress = storeAddress || "Jl. Diponegoro No. 24, Palu Timur";
 
