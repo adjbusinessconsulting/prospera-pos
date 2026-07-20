@@ -63,22 +63,14 @@ export default function OwnerLogin() {
     e.preventDefault();
     setLoading(true); setError(""); setSuccess("");
     try {
-      const res = await fetch("https://masteroffice.sterith.com/api/auth/forgot-password", {
+      // Issue a fresh POS setup link (resets the POS password specifically).
+      await fetch("https://masteroffice.sterith.com/api/app-auth/forgot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, app: "pos" }),
       });
-      const json = await res.json().catch(() => ({}));
       setLoading(false);
-      if (!res.ok) {
-        setError(json.error || "Terjadi kesalahan. Silakan coba lagi.");
-        return;
-      }
-      if (!json.registered) {
-        setError("Email ini belum terdaftar. Periksa kembali, atau daftar terlebih dahulu.");
-        return;
-      }
-      setSuccess("Link reset password sudah dikirim ke email Anda. Cek inbox atau folder spam.");
+      setSuccess("Jika email terdaftar, tautan buat kata sandi baru sudah dikirim. Cek inbox atau folder spam.");
     } catch {
       setLoading(false);
       setError("Tidak dapat terhubung ke server. Periksa koneksi internet Anda.");
