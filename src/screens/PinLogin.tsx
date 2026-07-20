@@ -2,6 +2,8 @@ import { useStore, isAtLeast } from "../store";
 import { CASHIERS } from "../data";
 import { useState, useEffect } from "react";
 import ManageStaff from "../components/ManageStaff";
+import { supabase } from "../lib/supabase";
+import type { CashierDB } from "../types";
 
 function currentShiftLabel(): 1 | 2 | 3 {
   const h = new Date().getHours();
@@ -27,13 +29,38 @@ function shiftContainsNow(start: string, end: string, nowMin: number) {
 interface ShiftOption { pos: number; name: string; time: string; isNow: boolean; }
 
 export default function PinLogin() {
-  const { selectedCashier, selectedShift, selectCashier, setShift, pin, addPin, removePin, clearPin, setScreen, storeName, storeAddress, storeTier, storeId, dbCashiers, dbShifts, settings, isDemoMode } = useStore();
+  const { selectedCashier, selectedShift, selectCashier, setShift, pin, addPin, removePin, clearPin, setScreen, storeName, storeAddress, storeTier, storeId, dbCashiers, setDbCashiers, dbShifts, settings, isDemoMode } = useStore();
   // Demo shows all features; Free locks non-current shifts (only when shifts aren't configured)
   const effectiveTier = storeId ? storeTier : 'free';
   const canChangeShift = isAtLeast(effectiveTier, 'standard');
   // Free skips the PIN; Standard+ requires it (multi-kasir attribution) — but the
   // owner can turn PIN off (Pengaturan) for a small trusted team.
   const requiresPin = isAtLeast(effectiveTier, 'standard') && settings.pinWajib;
+  const afterLogin = isAtLeast(effectiveTier, "standard") ? "checkin" : "sales";
+
+  // First-run on a real store with no cashiers yet. Free: quick name, no PIN.
+  // Standard+: create a proper cashier (PIN) with owner-password approval via Kelola.
+  const isFreeTier = !isAtLeast(effectiveTier, "standard");
+  const noCashiers = !isDemoMode && !!storeId && dbCashiers.length === 0;
+  const needsCashierSetup = noCashiers && isFreeTier;
+  const needsFirstCashierStd = noCashiers && !isFreeTier;
+  const [ownerName, setOwnerName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+
+  async function startAsCashier() {
+    const name = ownerName.trim();
+    if (!name) return;
+    setSavingName(true);
+    const initials = name.split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase();
+    try {
+      const { data } = await supabase.from("cashiers")
+        .insert({ store_id: storeId, name, initials, role: "Pemilik", pin: "", active: true })
+        .select("*").single();
+      if (data) { setDbCashiers([data as CashierDB]); selectCashier((data as CashierDB).id); }
+    } catch { /* offline / failed — proceed with the session name anyway */ }
+    setSavingName(false);
+    setScreen(afterLogin);
+  }
 
   const hasConfiguredShifts = dbShifts.length > 0;
   const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
@@ -82,7 +109,6 @@ export default function PinLogin() {
     if (isDemoMode) { setScreen("sales"); return; }       // Demo: any PIN → straight to jualan
     // Shift check-in selfie is a staff-accountability feature — Standard+ only. A solo
     // Free owner (no PIN either) goes straight to jualan.
-    const afterLogin = isAtLeast(effectiveTier, "standard") ? "checkin" : "sales";
     if (dbCashiers.length === 0) { setScreen(afterLogin); return; }
     const cashier = dbCashiers.find(c => c.id === selectedCashier);
     if (!cashier) return;
@@ -94,6 +120,51 @@ export default function PinLogin() {
   const now = new Date();
   const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
   const dayStr = now.toLocaleDateString("id-ID", { weekday: "long" });
+
+  /* ── First-run: capture who's on the till (no PIN, real store, no cashiers) ── */
+  if (needsCashierSetup) {
+    return (
+      <div style={{ height: "100%", minHeight: 0, background: "#FAFAF7", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 18px", overflowY: "auto", fontFamily: "Inter, system-ui, sans-serif" }}>
+        <div style={{ width: "100%", maxWidth: 380 }}>
+          <div style={{ textAlign: "center", marginBottom: 22 }}>
+            <img src="/horizontal-light.png" alt="Sterith" style={{ height: 40, width: "auto", margin: "0 auto 14px", display: "block", mixBlendMode: "multiply" }} />
+            <p style={{ fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "#b8934a", fontWeight: 600, margin: "0 0 6px" }}>Selamat Datang di {displayName}</p>
+            <h1 style={{ fontFamily: "Georgia, serif", fontSize: 24, fontWeight: 600, color: "#0D1117", margin: "0 0 4px" }}>Siapa yang bertugas?</h1>
+            <p style={{ fontSize: 12.5, color: "#7A776F", margin: 0, lineHeight: 1.5 }}>Tulis nama kasir/pemilik. Nama ini muncul di struk & laporan. Tanpa PIN.</p>
+          </div>
+          <label style={{ display: "block", fontSize: 8.5, letterSpacing: "0.18em", textTransform: "uppercase", color: "#7A776F", fontWeight: 600, marginBottom: 7 }}>Nama Kasir</label>
+          <input autoFocus value={ownerName} onChange={e => setOwnerName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") startAsCashier(); }}
+            placeholder="mis. Budi Santoso"
+            style={{ width: "100%", height: 50, boxSizing: "border-box", border: "1.5px solid #ddd9cc", borderRadius: 12, padding: "0 16px", fontSize: 15, color: "#0D1117", background: "#fff", outline: "none", fontFamily: "Inter, sans-serif" }} />
+          <button onClick={startAsCashier} disabled={!ownerName.trim() || savingName}
+            style={{ width: "100%", height: 52, marginTop: 14, borderRadius: 12, border: "none", background: ownerName.trim() ? "#0D1117" : "#D8D2C4", color: ownerName.trim() ? "#F5F0E8" : "#8A857C", fontSize: 14, fontWeight: 700, cursor: ownerName.trim() && !savingName ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", gap: 9 }}>
+            {savingName ? "Menyimpan…" : "Mulai Berjualan"}
+            {!savingName && ownerName.trim() && <span style={{ color: "#e7c987", fontWeight: 700 }}>→</span>}
+          </button>
+          <p style={{ fontSize: 11, color: "#B8B0A8", textAlign: "center", margin: "14px 0 0" }}>Bisa ditambah/diubah nanti di menu Kelola.</p>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── First-run for Standard+: create the first cashier (PIN + owner approval) ── */
+  if (needsFirstCashierStd) {
+    return (
+      <div style={{ height: "100%", minHeight: 0, background: "#FAFAF7", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 18px", overflowY: "auto", fontFamily: "Inter, system-ui, sans-serif" }}>
+        <div style={{ width: "100%", maxWidth: 380, textAlign: "center" }}>
+          <img src="/horizontal-light.png" alt="Sterith" style={{ height: 40, width: "auto", margin: "0 auto 14px", display: "block", mixBlendMode: "multiply" }} />
+          <p style={{ fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "#b8934a", fontWeight: 600, margin: "0 0 6px" }}>Selamat Datang di {displayName}</p>
+          <h1 style={{ fontFamily: "Georgia, serif", fontSize: 24, fontWeight: 600, color: "#0D1117", margin: "0 0 6px" }}>Buat kasir pertama</h1>
+          <p style={{ fontSize: 12.5, color: "#7A776F", margin: "0 0 20px", lineHeight: 1.5 }}>Tambahkan minimal satu kasir beserta PIN untuk mulai. Menyimpan kasir perlu persetujuan kata sandi pemilik.</p>
+          <button onClick={() => setShowManage(true)}
+            style={{ width: "100%", height: 52, borderRadius: 12, border: "none", background: "#0D1117", color: "#F5F0E8", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 9 }}>
+            Buat Kasir <span style={{ color: "#e7c987", fontWeight: 700 }}>→</span>
+          </button>
+        </div>
+        {showManage && <ManageStaff onClose={() => setShowManage(false)} />}
+      </div>
+    );
+  }
 
   /* ── MOBILE: single-page no-scroll layout ── */
   if (isMobile) {

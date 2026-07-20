@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useStore, kasirLimit, shiftSlotLimit, nextTierLabel } from "../store";
+import { appAuthVerify } from "../lib/appAuth";
 import { supabase } from "../lib/supabase";
 import type { CashierDB, ShiftDef } from "../types";
 
@@ -152,8 +153,8 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
     setSaving(true); setConfirmErr("");
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) { setSaving(false); setConfirmErr("Sesi tidak ditemukan. Silakan login ulang."); return; }
-    const { error: authErr } = await supabase.auth.signInWithPassword({ email: user.email, password });
-    if (authErr) { setSaving(false); setConfirmErr("Password salah. Coba lagi."); return; }
+    const ok = await appAuthVerify(user.email, password, "pos");
+    if (!ok) { setSaving(false); setConfirmErr("Password salah. Coba lagi."); return; }
     try {
       for (const k of kasir) {
         if (k.status === "new") { const { error } = await supabase.from("cashiers").insert({ store_id: storeId, name: k.name, initials: k.initials, role: k.role, pin: k.pin, active: true }); if (error) throw error; }

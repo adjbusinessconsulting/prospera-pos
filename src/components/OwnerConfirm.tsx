@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { appAuthVerify } from "../lib/appAuth";
 import { useStore } from "../store";
 
 interface Props {
@@ -36,12 +37,9 @@ export function OwnerConfirm({ open, title, message, onClose, onConfirmed }: Pro
     if (isDemoMode) { onConfirmed(); return; }
     if (!email) return;
     setLoading(true); setError("");
-    const { error: e } = await supabase.auth.signInWithPassword({ email, password: pw });
+    const ok = await appAuthVerify(email, pw, "pos");
     setLoading(false);
-    if (e) {
-      setError(/network|fetch/i.test(e.message) ? "Perlu koneksi internet untuk verifikasi." : "Kata sandi pemilik salah.");
-      return;
-    }
+    if (!ok) { setError("Kata sandi pemilik salah."); return; }
     onConfirmed();
   }
 

@@ -30,6 +30,21 @@ export async function appAuthLogin(email: string, password: string, app = "pos")
   if (error) throw error;
 }
 
+// Re-verify the app password (owner-approval prompts) — no session minted.
+export async function appAuthVerify(email: string, password: string, app = "pos"): Promise<boolean> {
+  try {
+    const res = await fetch(`${AUTH_BASE}/api/app-auth/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, app, password }),
+    });
+    const j = await res.json().catch(() => ({}));
+    return res.ok && !!j.ok;
+  } catch {
+    return false;
+  }
+}
+
 // Resolve a ?setup_token to the registered email (does not consume it).
 export async function appAuthSetupInfo(token: string): Promise<{ email: string | null; app: string | null }> {
   const res = await fetch(`${AUTH_BASE}/api/app-auth/setup?token=${encodeURIComponent(token)}`);
