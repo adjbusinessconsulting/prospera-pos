@@ -7,19 +7,25 @@ const AUTH_BASE = "https://masteroffice.sterith.com";
 
 export async function appAuthLogin(email: string, password: string, app = "pos"): Promise<void> {
   let tokenHash: string | null = null;
+  let lockoutMsg: string | null = null;
   try {
     const res = await fetch(`${AUTH_BASE}/api/app-auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, app, password }),
     });
-    if (res.ok) {
+    if (res.status === 429) {
+      const j = await res.json().catch(() => ({}));
+      lockoutMsg = j.error || "Terlalu banyak percobaan. Coba lagi nanti.";
+    } else if (res.ok) {
       const j = await res.json().catch(() => ({}));
       tokenHash = j.token_hash ?? null;
     }
   } catch {
     /* network — fall through to legacy */
   }
+  // Locked out — surface the message, don't fall back to the legacy password.
+  if (lockoutMsg) throw new Error(lockoutMsg);
   if (tokenHash) {
     const { error } = await supabase.auth.verifyOtp({ type: "magiclink", token_hash: tokenHash });
     if (error) throw error;

@@ -98,8 +98,10 @@ export default function OwnerLogin() {
 
     try {
       await appAuthLogin(email, password, "pos");
-    } catch {
-      setError("Email atau kata sandi salah."); setLoading(false); return;
+    } catch (err) {
+      // Lockout carries a helpful message; anything else is a generic wrong-password.
+      const msg = (err as Error)?.message;
+      setError(msg && /percobaan/i.test(msg) ? msg : "Email atau kata sandi salah."); setLoading(false); return;
     }
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
