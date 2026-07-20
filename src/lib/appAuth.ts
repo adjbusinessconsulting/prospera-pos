@@ -30,6 +30,14 @@ export async function appAuthLogin(email: string, password: string, app = "pos")
   if (error) throw error;
 }
 
+// Resolve a ?setup_token to the registered email (does not consume it).
+export async function appAuthSetupInfo(token: string): Promise<{ email: string | null; app: string | null }> {
+  const res = await fetch(`${AUTH_BASE}/api/app-auth/setup?token=${encodeURIComponent(token)}`);
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok || !j.ok) throw new Error(j.error || "Tautan tidak valid.");
+  return { email: j.email ?? null, app: j.app ?? null };
+}
+
 // Redeem a ?setup_token to set this app's password. Returns the account email.
 export async function appAuthSetup(token: string, password: string): Promise<{ email: string | null }> {
   const res = await fetch(`${AUTH_BASE}/api/app-auth/setup`, {

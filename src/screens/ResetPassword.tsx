@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useStore, startedAsInvite } from "../store";
-import { appAuthSetup } from "../lib/appAuth";
+import { appAuthSetup, appAuthSetupInfo } from "../lib/appAuth";
 import { BUILD } from "../version";
 
 export default function ResetPassword() {
@@ -21,7 +21,13 @@ export default function ResetPassword() {
   const [setupToken] = useState(() => new URLSearchParams(window.location.search).get("setup_token") || "");
 
   useEffect(() => {
-    if (setupToken) { setExchanging(false); return; }   // setup flow: show the form immediately
+    if (setupToken) {
+      // Setup flow: resolve the registered email for display, then show the form.
+      appAuthSetupInfo(setupToken)
+        .then(({ email }) => { if (email) setEmail(email); setExchanging(false); })
+        .catch(() => { setExchanging(false); setError("Tautan sudah kadaluarsa atau dipakai. Minta tautan baru."); });
+      return;
+    }
     let resolved = false;
 
     function resolve(userEmail: string | undefined, customError?: string) {
@@ -179,10 +185,10 @@ export default function ResetPassword() {
         <>
           <div style={{ textAlign: "center", marginBottom: 18 }}>
             <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0D1117", margin: "0 0 4px", lineHeight: 1.2 }}>
-              {startedAsInvite ? "Buat kata sandi Anda" : "Atur ulang kata sandi"}
+              {(setupToken || startedAsInvite) ? "Buat kata sandi Anda" : "Atur ulang kata sandi"}
             </h1>
             <p style={{ fontSize: 12, color: "#8f897a", lineHeight: 1.5, margin: 0 }}>
-              {startedAsInvite ? "Buat kata sandi untuk mulai menggunakan Sterith POS." : "Buat kata sandi baru untuk akun Anda."}
+              {setupToken ? "Buat kata sandi khusus untuk Sterith POS." : startedAsInvite ? "Buat kata sandi untuk mulai menggunakan Sterith POS." : "Buat kata sandi baru untuk akun Anda."}
             </p>
           </div>
 
@@ -223,7 +229,7 @@ export default function ResetPassword() {
             {error && <p style={{ fontSize: 12, color: "#b0492f", background: "#f4e9e4", padding: "9px 12px", borderRadius: 8, margin: 0 }}>{error}</p>}
 
             <button type="submit" disabled={loading} style={{ height: 48, background: "#e7c987", color: "#0D1117", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, fontFamily: "Inter, sans-serif", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-              {loading ? "MENYIMPAN…" : startedAsInvite ? "BUAT KATA SANDI & MASUK" : "SIMPAN KATA SANDI BARU"}
+              {loading ? "MENYIMPAN…" : setupToken ? "BUAT KATA SANDI" : startedAsInvite ? "BUAT KATA SANDI & MASUK" : "SIMPAN KATA SANDI BARU"}
               {!loading && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0D1117" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
             </button>
           </form>
