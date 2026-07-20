@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useStore, localDateISO } from "../store";
 import { supabase } from "../lib/supabase";
+import { appAuthLogin } from "../lib/appAuth";
 import { pruneLog } from "../lib/auditlog";
 import type { CashierDB } from "../types";
 import { BUILD } from "../version";
@@ -103,10 +104,13 @@ export default function OwnerLogin() {
       return;
     }
 
-    const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-    if (signInError) { setError(signInError.message); setLoading(false); return; }
-
-    const userId = authData.user?.id;
+    try {
+      await appAuthLogin(email, password, "pos");
+    } catch {
+      setError("Email atau kata sandi salah."); setLoading(false); return;
+    }
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
     if (userId) {
       const { data: storeRows } = await supabase
         .from("stores")

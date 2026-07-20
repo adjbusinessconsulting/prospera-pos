@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useStore, startedAsInvite } from "../store";
+import { appAuthSetup } from "../lib/appAuth";
 import { BUILD } from "../version";
 
 export default function ResetPassword() {
@@ -16,8 +17,11 @@ export default function ResetPassword() {
   const [error, setError]         = useState("");
   const [done, setDone]           = useState(false);
   const [lang, setLang]           = useState<"id" | "en">("id");
+  // New per-app setup link (?setup_token) → set THIS app's own password, no Supabase verify.
+  const [setupToken] = useState(() => new URLSearchParams(window.location.search).get("setup_token") || "");
 
   useEffect(() => {
+    if (setupToken) { setExchanging(false); return; }   // setup flow: show the form immediately
     let resolved = false;
 
     function resolve(userEmail: string | undefined, customError?: string) {
@@ -76,13 +80,21 @@ export default function ResetPassword() {
       subscription.unsubscribe();
       clearTimeout(timeout);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setupToken]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password.length < 8) { setError("Password minimal 8 karakter."); return; }
     if (password !== confirm)  { setError("Konfirmasi password tidak cocok."); return; }
     setLoading(true); setError("");
+    // New per-app setup: store the POS password via Master Office (no Supabase session).
+    if (setupToken) {
+      try { await appAuthSetup(setupToken, password); }
+      catch (err) { setLoading(false); setError((err as Error).message || "Gagal menyimpan kata sandi."); return; }
+      setLoading(false); setDone(true);
+      return;
+    }
     const { error: updateError } = await supabase.auth.updateUser({ password });
     setLoading(false);
     if (updateError) { setError(updateError.message); return; }

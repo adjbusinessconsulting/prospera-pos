@@ -116,7 +116,7 @@ function _detectResetFlow(): boolean {
   const has = (k: string) => q.has(k) || h.has(k);
   const type = q.get('type') || h.get('type');
   const isSetPassword = type === 'recovery' || type === 'invite';   // reset link OR admin invite
-  return has('code') || has('token_hash') || isSetPassword || has('error_code') || has('error');
+  return has('code') || has('token_hash') || has('setup_token') || isSetPassword || has('error_code') || has('error');
 }
 const _startsAsReset = _detectResetFlow();
 
