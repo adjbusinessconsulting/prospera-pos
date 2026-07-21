@@ -199,11 +199,15 @@ export default function OwnerLogin() {
     setCreating(true); setError("");
     const tier = storeChoices[0]?.tier || "free";  // inherit the owner's tier
     const { data, error: createErr } = await supabase.from("stores")
-      .insert({ owner_id: ownerId, name, tier })
+      .insert({ owner_id: ownerId, name, tier, status: "active" })
       .select("id, name, address, phone, tier, qris_image_url, midtrans_client_key, inventory_enabled, low_stock_threshold, tier_expires_at, receipt_logo")
       .single();
     setCreating(false);
-    if (createErr || !data) { setError("Gagal membuat toko. Coba lagi atau hubungi Sterith."); return; }
+    if (createErr || !data) {
+      // Surface the real cause (e.g. RLS: run store_create_policy.sql) instead of a blank fail.
+      setError(createErr?.message ? `Gagal membuat toko: ${createErr.message}` : "Gagal membuat toko. Coba lagi atau hubungi Sterith.");
+      return;
+    }
     setNewStoreName(""); setShowCreate(false);
     // Enter the freshly-created (empty) store straight away — clean catalog.
     await enterStore(data as StoreRow);
