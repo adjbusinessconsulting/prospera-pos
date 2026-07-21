@@ -111,7 +111,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
             background: "#f0ebe1", border: "1px solid #ECE7DD",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 11, fontWeight: 700, color: "#0D1117", flexShrink: 0,
-            fontFamily: "Inter, sans-serif",
+            fontFamily: "'Hanken Grotesk', sans-serif",
           }}>
             {cashierInitials}
           </div>

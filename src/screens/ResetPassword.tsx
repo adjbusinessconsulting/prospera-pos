@@ -109,7 +109,7 @@ export default function ResetPassword() {
   }
 
   // ── Shared styles (mirrors OwnerLogin / Back Office login) ──
-  const inputStyle: React.CSSProperties = { width: "100%", height: 46, boxSizing: "border-box", border: "1.5px solid #ddd9cc", borderRadius: 10, padding: "0 14px 0 42px", fontSize: 13, color: "#0D1117", background: "#fff", fontFamily: "Inter, sans-serif", outline: "none" };
+  const inputStyle: React.CSSProperties = { width: "100%", height: 46, boxSizing: "border-box", border: "1.5px solid #ddd9cc", borderRadius: 10, padding: "0 14px 0 42px", fontSize: 13, color: "#0D1117", background: "#fff", fontFamily: "'Hanken Grotesk', sans-serif", outline: "none" };
   const labelStyle: React.CSSProperties = { display: "block", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#8f897a", fontWeight: 600, marginBottom: 6 };
   const iconStyle: React.CSSProperties = { position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#8f897a" };
   const eyeBtn: React.CSSProperties = { position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#8f897a", padding: 4, display: "flex" };
@@ -124,7 +124,7 @@ export default function ResetPassword() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
   );
 
-  const fonts = <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>;
+  const fonts = <style>{`@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>;
 
   const card = (
     <div style={{ width: "100%", maxWidth: 420, background: "#f8f6ef", borderRadius: 18, padding: "24px 30px 20px", border: "1px solid #ddd9cc", boxShadow: "0 8px 40px rgba(11,17,41,0.09)", boxSizing: "border-box" }}>
@@ -159,9 +159,9 @@ export default function ResetPassword() {
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#3f7d54" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
           <div style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#3f7d54", fontWeight: 600, marginBottom: 8 }}>{(setupToken || startedAsInvite) ? "Berhasil · Kata Sandi Dibuat" : "Berhasil · Kata Sandi Diperbarui"}</div>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0D1117", margin: "0 0 6px", lineHeight: 1.2 }}>{(setupToken || startedAsInvite) ? "Kata sandi Anda telah dibuat." : "Kata sandi baru tersimpan."}</h1>
+          <h1 style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0D1117", margin: "0 0 6px", lineHeight: 1.2 }}>{(setupToken || startedAsInvite) ? "Kata sandi Anda telah dibuat." : "Kata sandi baru tersimpan."}</h1>
           <p style={{ fontSize: 12, color: "#8f897a", lineHeight: 1.5, margin: "0 0 20px" }}>Silakan masuk kembali ke Sterith POS menggunakan kata sandi baru Anda.</p>
-          <a href="https://pos.sterith.com" style={{ textDecoration: "none", height: 48, background: "#e7c987", color: "#0D1117", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: "Inter, sans-serif" }}>
+          <a href="https://pos.sterith.com" style={{ textDecoration: "none", height: 48, background: "#e7c987", color: "#0D1117", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: "'Hanken Grotesk', sans-serif" }}>
             Login ke POS
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0D1117" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
@@ -169,13 +169,13 @@ export default function ResetPassword() {
 
       ) : exchanging ? (
         <div style={{ padding: "24px 0 32px", textAlign: "center" }}>
-          <p style={{ fontSize: 12.5, color: "#8f897a", fontFamily: "Inter, sans-serif", margin: 0 }}>Memverifikasi link…</p>
+          <p style={{ fontSize: 12.5, color: "#8f897a", fontFamily: "'Hanken Grotesk', sans-serif", margin: 0 }}>Memverifikasi link…</p>
         </div>
 
       ) : error && !password ? (
         <div style={{ padding: "8px 0 20px", textAlign: "center", animation: "fadeUp .4s ease both" }}>
           <p style={{ fontSize: 12.5, color: "#b0492f", background: "#f4e9e4", padding: "11px 14px", borderRadius: 8, lineHeight: 1.5, margin: "0 0 18px" }}>{error}</p>
-          <button onClick={() => setScreen("owner-login")} style={{ background: "transparent", border: "none", fontSize: 12, color: "#8f897a", cursor: "pointer", fontFamily: "Inter, sans-serif", textDecoration: "underline", textUnderlineOffset: 3 }}>
+          <button onClick={() => setScreen("owner-login")} style={{ background: "transparent", border: "none", fontSize: 12, color: "#8f897a", cursor: "pointer", fontFamily: "'Hanken Grotesk', sans-serif", textDecoration: "underline", textUnderlineOffset: 3 }}>
             ← Kembali ke login
           </button>
         </div>
@@ -184,7 +184,7 @@ export default function ResetPassword() {
         /* ── Form ── */
         <>
           <div style={{ textAlign: "center", marginBottom: 18 }}>
-            <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0D1117", margin: "0 0 4px", lineHeight: 1.2 }}>
+            <h1 style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0D1117", margin: "0 0 4px", lineHeight: 1.2 }}>
               {(setupToken || startedAsInvite) ? "Buat kata sandi Anda" : "Atur ulang kata sandi"}
             </h1>
             <p style={{ fontSize: 12, color: "#8f897a", lineHeight: 1.5, margin: 0 }}>
@@ -228,7 +228,7 @@ export default function ResetPassword() {
 
             {error && <p style={{ fontSize: 12, color: "#b0492f", background: "#f4e9e4", padding: "9px 12px", borderRadius: 8, margin: 0 }}>{error}</p>}
 
-            <button type="submit" disabled={loading} style={{ height: 48, background: "#e7c987", color: "#0D1117", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, fontFamily: "Inter, sans-serif", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <button type="submit" disabled={loading} style={{ height: 48, background: "#e7c987", color: "#0D1117", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, fontFamily: "'Hanken Grotesk', sans-serif", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
               {loading ? "MENYIMPAN…" : setupToken ? "BUAT KATA SANDI" : startedAsInvite ? "BUAT KATA SANDI & MASUK" : "SIMPAN KATA SANDI BARU"}
               {!loading && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0D1117" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
             </button>
@@ -240,15 +240,15 @@ export default function ResetPassword() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18, paddingTop: 14, borderTop: "1px solid #ddd9cc" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#b8a88a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span style={{ fontSize: 10, color: "#b8a88a", fontFamily: "Inter, sans-serif" }}>Terenkripsi · build {BUILD}</span>
+          <span style={{ fontSize: 10, color: "#b8a88a", fontFamily: "'Hanken Grotesk', sans-serif" }}>Terenkripsi · build {BUILD}</span>
         </div>
-        <span style={{ fontSize: 10, color: "#b8a88a", fontFamily: "Inter, sans-serif" }}>© 2026 STERITH</span>
+        <span style={{ fontSize: 10, color: "#b8a88a", fontFamily: "'Hanken Grotesk', sans-serif" }}>© 2026 STERITH</span>
       </div>
     </div>
   );
 
   return (
-    <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
       {fonts}
       {card}
     </div>

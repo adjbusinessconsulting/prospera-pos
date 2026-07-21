@@ -17,7 +17,7 @@ function SterithWatermark({ tier }: { tier: string }) {
     <div style={{ background: "#FAFAF7", border: "1px solid #ECE7DD", borderRadius: 10, padding: "9px 14px", display: "flex", alignItems: "center", gap: 9, justifyContent: "center" }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/mark-gold-512.png" alt="" style={{ width: 18, height: 18, objectFit: "contain", flexShrink: 0, opacity: 0.85 }} />
-      <div style={{ fontFamily: "Inter, system-ui, sans-serif", fontSize: 8.5, letterSpacing: "0.09em", color: "#A6843F", textTransform: "uppercase", lineHeight: 1.3 }}>
+      <div style={{ fontFamily: "'Hanken Grotesk', system-ui, sans-serif", fontSize: 8.5, letterSpacing: "0.09em", color: "#A6843F", textTransform: "uppercase", lineHeight: 1.3 }}>
         {isStandard ? "Powered by Sterith Business Consulting POS" : "Powered by Sterith Business Consulting"}
       </div>
     </div>

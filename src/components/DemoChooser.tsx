@@ -56,7 +56,7 @@ export function DemoChooser({ onClassic, onClose }: DemoChooserProps) {
         position: "fixed", inset: 0, zIndex: 200,
         background: "rgba(11,17,41,0.55)", backdropFilter: "blur(4px)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        padding: 20, fontFamily: "Inter, system-ui, sans-serif",
+        padding: 20, fontFamily: "'Hanken Grotesk', system-ui, sans-serif",
         overflowY: "auto",
       }}
     >
@@ -73,7 +73,7 @@ export function DemoChooser({ onClassic, onClose }: DemoChooserProps) {
             <p style={{ fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "#C9A55F", fontWeight: 700, margin: "0 0 6px" }}>
               Coba Demo
             </p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0D1117", margin: 0, lineHeight: 1.1 }}>
+            <h2 style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 26, fontWeight: 500, color: "#0D1117", margin: 0, lineHeight: 1.1 }}>
               Pilih tampilan demo
             </h2>
             <p style={{ fontSize: 13, color: "#7A776F", margin: "6px 0 0", maxWidth: 440, lineHeight: 1.5 }}>

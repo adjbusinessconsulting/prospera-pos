@@ -4,7 +4,7 @@ import { appAuthVerify } from "../lib/appAuth";
 import { supabase } from "../lib/supabase";
 import type { CashierDB, ShiftDef } from "../types";
 
-const GK = "Inter, system-ui, sans-serif";
+const GK = "'Hanken Grotesk', system-ui, sans-serif";
 
 type DraftStatus = "existing" | "new" | "edited" | "deleted";
 interface KasirDraft { key: string; id: string | null; name: string; initials: string; role: string; pin: string; status: DraftStatus; }

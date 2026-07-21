@@ -143,7 +143,7 @@ export default function CheckIn() {
   const shift = selectedShiftName;
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#0D1117", display: "flex", flexDirection: "column", fontFamily: "Inter, system-ui, sans-serif", WebkitFontSmoothing: "antialiased" }}>
+    <div style={{ position: "fixed", inset: 0, background: "#0D1117", display: "flex", flexDirection: "column", fontFamily: "'Hanken Grotesk', system-ui, sans-serif", WebkitFontSmoothing: "antialiased" }}>
 
       {/* Header */}
       <div style={{ padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(242,237,227,0.08)", flexShrink: 0 }}>
@@ -151,7 +151,7 @@ export default function CheckIn() {
           <p style={{ fontSize: 9.5, letterSpacing: "0.22em", color: "rgba(201,165,95,0.75)", textTransform: "uppercase", margin: "0 0 2px", fontFamily: "'Courier New', monospace" }}>
             STERITH POS · VERIFIKASI MASUK
           </p>
-          <p style={{ fontSize: 17, fontWeight: 600, color: "#F2EDE3", margin: 0, fontFamily: "Georgia, 'Cormorant Garamond', serif" }}>
+          <p style={{ fontSize: 17, fontWeight: 600, color: "#F2EDE3", margin: 0, fontFamily: "Georgia, 'EB Garamond', serif" }}>
             {cashierName} · {shift}
           </p>
         </div>

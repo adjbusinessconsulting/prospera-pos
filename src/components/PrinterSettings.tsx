@@ -51,7 +51,7 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
   const label = { fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "#0D1117", fontWeight: 700 };
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1150, background: "rgba(11,17,41,0.5)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1150, background: "rgba(11,17,41,0.5)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 380, maxHeight: "90vh", overflowY: "auto", background: "white", borderRadius: 18, padding: 24, boxShadow: "0 30px 80px rgba(11,17,41,0.4)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
           <div>

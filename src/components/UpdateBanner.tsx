@@ -24,12 +24,12 @@ export default function UpdateBanner() {
             <polygon points="63,22 91,22 77,4" fill="#E5C778"/>
           </svg>
 
-          <p style={{ margin: 0, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 600, color: "#F2EDE3", letterSpacing: "0.18em", textTransform: "uppercase" }}>STERITH</p>
-          <p style={{ margin: "3px 0 0", fontFamily: "Inter, sans-serif", fontSize: 8, letterSpacing: "0.28em", color: "#C9A55F", textTransform: "uppercase" }}>BUSINESS CONSULTING</p>
+          <p style={{ margin: 0, fontFamily: "'EB Garamond', Georgia, serif", fontSize: 26, fontWeight: 600, color: "#F2EDE3", letterSpacing: "0.18em", textTransform: "uppercase" }}>STERITH</p>
+          <p style={{ margin: "3px 0 0", fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 8, letterSpacing: "0.28em", color: "#C9A55F", textTransform: "uppercase" }}>BUSINESS CONSULTING</p>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
             <span style={{ flex: 1, height: 1, width: 32, background: "rgba(201,165,95,0.5)" }} />
-            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 8, letterSpacing: "0.22em", color: "#C9A55F", textTransform: "uppercase", whiteSpace: "nowrap" }}>POS · POINT OF SALE</span>
+            <span style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 8, letterSpacing: "0.22em", color: "#C9A55F", textTransform: "uppercase", whiteSpace: "nowrap" }}>POS · POINT OF SALE</span>
             <span style={{ flex: 1, height: 1, width: 32, background: "rgba(201,165,95,0.5)" }} />
           </div>
         </div>
@@ -39,18 +39,18 @@ export default function UpdateBanner() {
 
         {/* Update info */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-          <p style={{ margin: 0, fontFamily: "Inter, sans-serif", fontSize: 12, fontWeight: 600, color: "#F2EDE3", letterSpacing: "0.04em" }}>Update Tersedia</p>
-          <p style={{ margin: 0, fontFamily: "Inter, sans-serif", fontSize: 10, color: "rgba(242,237,227,0.45)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Build {BUILD}</p>
+          <p style={{ margin: 0, fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 12, fontWeight: 600, color: "#F2EDE3", letterSpacing: "0.04em" }}>Update Tersedia</p>
+          <p style={{ margin: 0, fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 10, color: "rgba(242,237,227,0.45)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Build {BUILD}</p>
         </div>
 
         {/* Buttons */}
         <div style={{ display: "flex", gap: 8, width: "100%" }}>
           <button onClick={() => setVisible(false)}
-            style={{ flex: 1, height: 38, background: "rgba(242,237,227,0.07)", border: "1px solid rgba(242,237,227,0.1)", borderRadius: 10, fontSize: 12, fontWeight: 500, color: "rgba(242,237,227,0.45)", cursor: "pointer", fontFamily: "Inter, sans-serif", letterSpacing: "0.04em" }}>
+            style={{ flex: 1, height: 38, background: "rgba(242,237,227,0.07)", border: "1px solid rgba(242,237,227,0.1)", borderRadius: 10, fontSize: 12, fontWeight: 500, color: "rgba(242,237,227,0.45)", cursor: "pointer", fontFamily: "'Hanken Grotesk', sans-serif", letterSpacing: "0.04em" }}>
             Nanti
           </button>
           <button onClick={() => updateServiceWorker(true)}
-            style={{ flex: 1, height: 38, background: "linear-gradient(135deg, #C9A55F, #A6843F)", border: "none", borderRadius: 10, fontSize: 12, fontWeight: 700, color: "white", cursor: "pointer", fontFamily: "Inter, sans-serif", letterSpacing: "0.06em" }}>
+            style={{ flex: 1, height: 38, background: "linear-gradient(135deg, #C9A55F, #A6843F)", border: "none", borderRadius: 10, fontSize: 12, fontWeight: 700, color: "white", cursor: "pointer", fontFamily: "'Hanken Grotesk', sans-serif", letterSpacing: "0.06em" }}>
             UPDATE →
           </button>
         </div>

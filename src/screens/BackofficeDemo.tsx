@@ -221,7 +221,7 @@ export default function BackofficeDemo() {
   const cell = (extra: CSSProperties = {}): CSSProperties => ({ padding: "11px 18px", fontSize: 13, ...extra });
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: CREAM, display: "flex", flexDirection: "column", fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div style={{ position: "fixed", inset: 0, background: CREAM, display: "flex", flexDirection: "column", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
       <div style={{ flexShrink: 0, display: "flex", justifyContent: "center", padding: "8px 10px", background: CREAM, borderBottom: `1px solid ${BORDER}` }}>
         <DemoControls />
       </div>
@@ -230,7 +230,7 @@ export default function BackofficeDemo() {
         {/* Header */}
         <div style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: GOLD, fontWeight: 700 }}>Sterith · Back Office (Demo) · Premium</div>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: isMobile ? 26 : 32, fontWeight: 500, color: NAVY, marginTop: 4 }}>Toko Sembako Maju</h1>
+          <h1 style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: isMobile ? 26 : 32, fontWeight: 500, color: NAVY, marginTop: 4 }}>Toko Sembako Maju</h1>
           <p style={{ fontSize: 12.5, color: MUTE, marginTop: 2 }}>{branches.length} cabang · dikelola dari satu Back Office</p>
         </div>
 
@@ -263,7 +263,7 @@ export default function BackofficeDemo() {
                 <div style={{ fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, color: MUTE }}>Langganan</div>
                 <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: GREEN, background: "rgba(78,140,110,0.12)", borderRadius: 5, padding: "2px 7px" }}>Aktif</span>
               </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 24, fontWeight: 600, marginTop: 6, color: NAVY }}>Premium</div>
+              <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 24, fontWeight: 600, marginTop: 6, color: NAVY }}>Premium</div>
               <div style={{ fontSize: 11.5, color: MUTE, marginTop: 2 }}>Aktif s/d 9 Agu 2026 · perpanjang otomatis</div>
             </div>
             {/* Add-ons (darkened — separate purchase) */}
@@ -291,7 +291,7 @@ export default function BackofficeDemo() {
             ].map(s => (
               <div key={s.l} style={{ background: s.accent ? NAVY : CARD, border: s.accent ? "none" : `1px solid ${BORDER}`, borderRadius: 16, padding: "16px 18px" }}>
                 <div style={{ fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, color: s.accent ? "rgba(201,165,95,0.85)" : MUTE }}>{s.l}</div>
-                <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 24, fontWeight: 600, marginTop: 6, color: s.accent ? "#F2EDE3" : (s.warn ? GOLD : NAVY), fontVariantNumeric: "tabular-nums" }}>{s.v}</div>
+                <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 24, fontWeight: 600, marginTop: 6, color: s.accent ? "#F2EDE3" : (s.warn ? GOLD : NAVY), fontVariantNumeric: "tabular-nums" }}>{s.v}</div>
               </div>
             ))}
           </div>
@@ -347,7 +347,7 @@ export default function BackofficeDemo() {
             ].map(s => (
               <div key={s.l} style={{ background: s.accent ? NAVY : CARD, border: s.accent ? "none" : `1px solid ${BORDER}`, borderRadius: 16, padding: "16px 18px" }}>
                 <div style={{ fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, color: s.accent ? "rgba(201,165,95,0.85)" : MUTE }}>{s.l}</div>
-                <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 23, fontWeight: 600, marginTop: 6, color: s.accent ? "#F2EDE3" : (s.warn ? DANGER : NAVY), fontVariantNumeric: "tabular-nums" }}>{s.v}</div>
+                <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 23, fontWeight: 600, marginTop: 6, color: s.accent ? "#F2EDE3" : (s.warn ? DANGER : NAVY), fontVariantNumeric: "tabular-nums" }}>{s.v}</div>
               </div>
             ))}
           </div>
@@ -388,7 +388,7 @@ export default function BackofficeDemo() {
                       <div style={{ fontSize: 11, color: MUTE }}>{c.trx} transaksi</div>
                     </div>
                   </div>
-                  <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, fontWeight: 600, color: NAVY, fontVariantNumeric: "tabular-nums" }}>{formatRp(c.rev)}</span>
+                  <span style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 18, fontWeight: 600, color: NAVY, fontVariantNumeric: "tabular-nums" }}>{formatRp(c.rev)}</span>
                 </div>
               ))}
             </div>
@@ -625,7 +625,7 @@ export default function BackofficeDemo() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
               <div>
                 <div style={{ fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, color: MUTE }}>Paket Anda</div>
-                <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 600, marginTop: 2, color: NAVY }}>Premium</div>
+                <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 26, fontWeight: 600, marginTop: 2, color: NAVY }}>Premium</div>
                 <div style={{ fontSize: 11.5, color: MUTE, marginTop: 2 }}>Aktif s/d 9 Agu 2026 · perpanjang otomatis</div>
               </div>
               <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: GREEN, background: "rgba(78,140,110,0.12)", borderRadius: 6, padding: "4px 10px" }}>Aktif</span>

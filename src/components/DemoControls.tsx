@@ -33,7 +33,7 @@ export function DemoControls() {
   );
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 7, background: "rgba(11,17,41,0.95)", border: "1px solid rgba(201,165,95,0.4)", borderRadius: 999, padding: "4px 9px", boxShadow: "0 8px 24px rgba(0,0,0,0.3)", fontFamily: "Inter, system-ui, sans-serif", maxWidth: "96vw", flexWrap: "wrap", justifyContent: "center" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 7, background: "rgba(11,17,41,0.95)", border: "1px solid rgba(201,165,95,0.4)", borderRadius: 999, padding: "4px 9px", boxShadow: "0 8px 24px rgba(0,0,0,0.3)", fontFamily: "'Hanken Grotesk', system-ui, sans-serif", maxWidth: "96vw", flexWrap: "wrap", justifyContent: "center" }}>
       <span style={{ fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase", color: "#C9A55F", fontWeight: 800, whiteSpace: "nowrap" }}>Demo</span>
       {seg(OFFICES, demoView, (k) => setDemoView(k as "front" | "back"))}
       <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.14)" }} />

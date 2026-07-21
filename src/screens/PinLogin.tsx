@@ -124,7 +124,7 @@ export default function PinLogin() {
   /* ── First-run: capture who's on the till (no PIN, real store, no cashiers) ── */
   if (needsCashierSetup) {
     return (
-      <div style={{ height: "100%", minHeight: 0, background: "#FAFAF7", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 18px", overflowY: "auto", fontFamily: "Inter, system-ui, sans-serif" }}>
+      <div style={{ height: "100%", minHeight: 0, background: "#FAFAF7", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 18px", overflowY: "auto", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
         <div style={{ width: "100%", maxWidth: 380 }}>
           <div style={{ textAlign: "center", marginBottom: 22 }}>
             <img src="/horizontal-light.png" alt="Sterith" style={{ height: 40, width: "auto", margin: "0 auto 14px", display: "block", mixBlendMode: "multiply" }} />
@@ -135,7 +135,7 @@ export default function PinLogin() {
           <label style={{ display: "block", fontSize: 8.5, letterSpacing: "0.18em", textTransform: "uppercase", color: "#7A776F", fontWeight: 600, marginBottom: 7 }}>Nama Kasir</label>
           <input autoFocus value={ownerName} onChange={e => setOwnerName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") startAsCashier(); }}
             placeholder="mis. Budi Santoso"
-            style={{ width: "100%", height: 50, boxSizing: "border-box", border: "1.5px solid #ddd9cc", borderRadius: 12, padding: "0 16px", fontSize: 15, color: "#0D1117", background: "#fff", outline: "none", fontFamily: "Inter, sans-serif" }} />
+            style={{ width: "100%", height: 50, boxSizing: "border-box", border: "1.5px solid #ddd9cc", borderRadius: 12, padding: "0 16px", fontSize: 15, color: "#0D1117", background: "#fff", outline: "none", fontFamily: "'Hanken Grotesk', sans-serif" }} />
           <button onClick={startAsCashier} disabled={!ownerName.trim() || savingName}
             style={{ width: "100%", height: 52, marginTop: 14, borderRadius: 12, border: "none", background: ownerName.trim() ? "#0D1117" : "#D8D2C4", color: ownerName.trim() ? "#F5F0E8" : "#8A857C", fontSize: 14, fontWeight: 700, cursor: ownerName.trim() && !savingName ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", gap: 9 }}>
             {savingName ? "Menyimpan…" : "Mulai Berjualan"}
@@ -150,7 +150,7 @@ export default function PinLogin() {
   /* ── First-run for Standard+: create the first cashier (PIN + owner approval) ── */
   if (needsFirstCashierStd) {
     return (
-      <div style={{ height: "100%", minHeight: 0, background: "#FAFAF7", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 18px", overflowY: "auto", fontFamily: "Inter, system-ui, sans-serif" }}>
+      <div style={{ height: "100%", minHeight: 0, background: "#FAFAF7", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 18px", overflowY: "auto", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
         <div style={{ width: "100%", maxWidth: 380, textAlign: "center" }}>
           <img src="/horizontal-light.png" alt="Sterith" style={{ height: 40, width: "auto", margin: "0 auto 14px", display: "block", mixBlendMode: "multiply" }} />
           <p style={{ fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "#b8934a", fontWeight: 600, margin: "0 0 6px" }}>Selamat Datang di {displayName}</p>
@@ -169,7 +169,7 @@ export default function PinLogin() {
   /* ── MOBILE: single-page no-scroll layout ── */
   if (isMobile) {
     return (
-      <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column", background: "#FAFAF7", overflowY: "auto", fontFamily: "Inter, system-ui, sans-serif" }}>
+      <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column", background: "#FAFAF7", overflowY: "auto", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
 
         {/* Top bar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid #ECE7DD", flexShrink: 0 }}>

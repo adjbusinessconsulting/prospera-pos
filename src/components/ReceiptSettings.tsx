@@ -52,7 +52,7 @@ export function ReceiptSettings({ open, onClose }: { open: boolean; onClose: () 
   }
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1100, background: "rgba(11,17,41,0.5)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1100, background: "rgba(11,17,41,0.5)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 360, maxHeight: "88vh", overflowY: "auto", background: "white", borderRadius: 18, padding: 24, boxShadow: "0 30px 80px rgba(11,17,41,0.4)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
           <div>
@@ -72,7 +72,7 @@ export function ReceiptSettings({ open, onClose }: { open: boolean; onClose: () 
             <div style={{ border: "1px dashed #D8D2C4", borderRadius: 12, padding: "18px 14px", textAlign: "center", background: "#FAFAF7", marginBottom: 12 }}>
               {receiptLogo
                 ? <img src={receiptLogo} alt="" style={{ maxHeight: 56, maxWidth: 180, objectFit: "contain", margin: "0 auto", display: "block" }} />
-                : <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, fontWeight: 600, color: "#0D1117" }}>{storeName || "Toko Anda"}</div>}
+                : <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 18, fontWeight: 600, color: "#0D1117" }}>{storeName || "Toko Anda"}</div>}
             </div>
             <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" style={{ display: "none" }} onChange={onFile} />
             <div style={{ display: "flex", gap: 8 }}>

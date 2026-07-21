@@ -86,7 +86,7 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
   );
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1100, background: "rgba(11,17,41,0.5)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1100, background: "rgba(11,17,41,0.5)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 400, maxHeight: "90vh", display: "flex", flexDirection: "column", background: "white", borderRadius: 18, boxShadow: "0 30px 80px rgba(11,17,41,0.4)", overflow: "hidden" }}>
 
         {/* Header */}

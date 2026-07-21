@@ -13,7 +13,7 @@ export function RenewBanner() {
 
   return (
     <>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, maxWidth: "96vw", background: "#FCEFE0", border: "1px solid #E5B98A", borderRadius: 999, padding: "6px 8px 6px 14px", boxShadow: "0 6px 20px rgba(138,90,46,0.12)", fontFamily: "Inter, system-ui, sans-serif", flexWrap: "wrap", justifyContent: "center" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, maxWidth: "96vw", background: "#FCEFE0", border: "1px solid #E5B98A", borderRadius: 999, padding: "6px 8px 6px 14px", boxShadow: "0 6px 20px rgba(138,90,46,0.12)", fontFamily: "'Hanken Grotesk', system-ui, sans-serif", flexWrap: "wrap", justifyContent: "center" }}>
         <span style={{ fontSize: 8, color: "#B26B2E" }}>⚠</span>
         <span style={{ fontSize: 11.5, color: "#8A5A2E", fontWeight: 500 }}>
           Langganan <b style={{ textTransform: "capitalize" }}>{paidTier || "Anda"}</b> berakhir — fitur kembali ke Free.
