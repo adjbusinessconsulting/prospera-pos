@@ -31,10 +31,14 @@ export default function Produk() {
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
   const [priceTarget, setPriceTarget] = useState<Product | null>(null);
   const [priceInput, setPriceInput] = useState("");
+  const [menuTarget, setMenuTarget] = useState<Product | null>(null);   // product action sheet
+  const [renameTarget, setRenameTarget] = useState<Product | null>(null);
+  const [renameInput, setRenameInput] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
-  const { cashierInitials, setScreen, signOut, storeId, storeTier, isDemoMode, inventoryEnabled, lowStockThreshold, setInventoryEnabled, products, settings, addProduct, updateProduct } = useStore();
+  const { cashierInitials, setScreen, signOut, storeId, storeTier, isDemoMode, inventoryEnabled, lowStockThreshold, setInventoryEnabled, products, settings, addProduct, updateProduct, deleteProduct } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
   const canStock = isAtLeast(effectiveTier, 'premium');
   const threshold = lowStockThreshold || LOW_STOCK_THRESHOLD;
@@ -126,6 +130,35 @@ export default function Produk() {
       void logEvent("product.price", `Ubah harga ${p.name}: ${formatRp(p.price)} → ${formatRp(newPrice)}`);
       if (storeId && !isDemoMode) supabase.from("products").update({ price: newPrice }).eq("id", p.id);
       setPriceTarget(null); setPriceInput("");
+    };
+    if (needsOwnerConfirm) { setConfirmAction(() => apply); return; }
+    apply();
+  }
+
+  function handleSaveName() {
+    if (!renameTarget) return;
+    const p = renameTarget;
+    const name = renameInput.trim();
+    if (!name || name === p.name) { setRenameTarget(null); setRenameInput(""); return; }
+    const apply = () => {
+      updateProduct(p.id, { name });
+      void logEvent("product.edit", `Ubah nama produk: ${p.name} → ${name}`);
+      if (storeId && !isDemoMode) supabase.from("products").update({ name }).eq("id", p.id);
+      setRenameTarget(null); setRenameInput("");
+    };
+    if (needsOwnerConfirm) { setConfirmAction(() => apply); return; }
+    apply();
+  }
+
+  function handleDeleteProduct() {
+    if (!deleteTarget) return;
+    const p = deleteTarget;
+    const apply = () => {
+      deleteProduct(p.id);
+      void logEvent("product.delete", `Hapus produk: ${p.name}`);
+      // Soft-delete in the DB (active:false) so past sales keep referencing it.
+      if (storeId && !isDemoMode) supabase.from("products").update({ active: false }).eq("id", p.id);
+      setDeleteTarget(null);
     };
     if (needsOwnerConfirm) { setConfirmAction(() => apply); return; }
     apply();
@@ -292,7 +325,7 @@ export default function Produk() {
                     </td>
                     )}
                     <td className="px-4 py-3.5">
-                      <button className="w-7 h-7 rounded-[6px] flex items-center justify-center text-text-mute hover:text-navy hover:bg-cream-bg transition-colors bg-transparent border-0 cursor-pointer">
+                      <button onClick={() => setMenuTarget(p)} title="Aksi produk" className="w-7 h-7 rounded-[6px] flex items-center justify-center text-text-mute hover:text-navy hover:bg-cream-bg transition-colors bg-transparent border-0 cursor-pointer">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="5" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="19" r="1" /></svg>
                       </button>
                     </td>
@@ -340,6 +373,9 @@ export default function Produk() {
                   </div>
                   )}
                 </div>
+                <button onClick={() => setMenuTarget(p)} title="Aksi produk" className="w-8 h-8 shrink-0 rounded-[8px] flex items-center justify-center text-text-mute border border-warm-border bg-white cursor-pointer">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="5" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="19" r="1" /></svg>
+                </button>
               </div>
             ))}
           </div>
@@ -350,6 +386,92 @@ export default function Produk() {
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
       <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
       <input ref={editPhotoRef} type="file" accept="image/*" className="hidden" onChange={handleEditPhoto} />
+
+      {/* Product action sheet (kebab) */}
+      {menuTarget && (
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center" onClick={() => setMenuTarget(null)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div onClick={e => e.stopPropagation()} className="relative bg-white w-full lg:max-w-[340px] lg:mx-4 rounded-t-[20px] lg:rounded-card shadow-xl p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute">Produk</p>
+                <h3 className="font-serif text-[19px] font-medium text-navy leading-tight mt-1">{menuTarget.name}</h3>
+              </div>
+              <button onClick={() => setMenuTarget(null)} className="w-8 h-8 rounded-card flex items-center justify-center text-text-mute hover:bg-cream-bg border-0 bg-transparent cursor-pointer"><X size={16} /></button>
+            </div>
+            <div className="flex flex-col gap-2 mt-1">
+              <button onClick={() => { const p = menuTarget; setMenuTarget(null); setRenameTarget(p); setRenameInput(p.name); }}
+                className="w-full h-[46px] px-4 rounded-button border border-warm-border bg-white text-navy text-[13.5px] font-medium cursor-pointer flex items-center gap-3">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-mute"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>
+                Ubah nama
+              </button>
+              <button onClick={() => { const p = menuTarget; setMenuTarget(null); setPriceTarget(p); setPriceInput(formatIDRInput(String(p.price))); }}
+                className="w-full h-[46px] px-4 rounded-button border border-warm-border bg-white text-navy text-[13.5px] font-medium cursor-pointer flex items-center gap-3">
+                <span className="text-text-mute text-[13px] w-[15px] text-center">Rp</span>
+                Ubah harga
+              </button>
+              <button onClick={() => { const p = menuTarget; setMenuTarget(null); openEditPhoto(p.id); }}
+                className="w-full h-[46px] px-4 rounded-button border border-warm-border bg-white text-navy text-[13.5px] font-medium cursor-pointer flex items-center gap-3">
+                <Camera size={15} className="text-text-mute" />
+                Ubah foto
+              </button>
+              <button onClick={() => { const p = menuTarget; setMenuTarget(null); setDeleteTarget(p); }}
+                className="w-full h-[46px] px-4 rounded-button border cursor-pointer flex items-center gap-3 text-[13.5px] font-medium"
+                style={{ color: "#B0492F", borderColor: "rgba(176,73,47,0.35)", background: "rgba(176,73,47,0.04)" }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13h10l1-13" /></svg>
+                Hapus produk
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ubah Nama Modal */}
+      {renameTarget && (
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center" onClick={() => setRenameTarget(null)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div onClick={e => e.stopPropagation()} className="relative bg-white w-full lg:max-w-[360px] lg:mx-4 rounded-t-[20px] lg:rounded-card shadow-xl p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute">Ubah Nama</p>
+                <h3 className="font-serif text-[19px] font-medium text-navy leading-tight mt-1">{renameTarget.name}</h3>
+              </div>
+              <button onClick={() => setRenameTarget(null)} className="w-8 h-8 rounded-card flex items-center justify-center text-text-mute hover:bg-cream-bg border-0 bg-transparent cursor-pointer"><X size={16} /></button>
+            </div>
+            <label style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute block mb-2">Nama baru</label>
+            <div className="bg-cream-bg border rounded-button h-[46px] flex items-center px-4" style={{ borderColor: renameInput.trim() ? "#5C9E7E" : "#ECE7DD" }}>
+              <input autoFocus value={renameInput} onChange={e => setRenameInput(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSaveName()}
+                placeholder="Nama produk" className="flex-1 border-0 outline-none bg-transparent text-[15px] font-medium text-navy" />
+            </div>
+            {needsOwnerConfirm && <p className="text-[11px] text-text-mute mt-2">Perubahan perlu konfirmasi kata sandi pemilik.</p>}
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setRenameTarget(null)} className="flex-1 h-[46px] rounded-button border border-warm-border bg-white text-navy text-[13px] font-medium cursor-pointer">Batal</button>
+              <button onClick={handleSaveName} className="flex-[2] h-[46px] rounded-button border-0 bg-navy text-cream-text text-[13px] font-semibold cursor-pointer">Simpan Nama</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hapus Produk Konfirmasi */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center" onClick={() => setDeleteTarget(null)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div onClick={e => e.stopPropagation()} className="relative bg-white w-full lg:max-w-[360px] lg:mx-4 rounded-t-[20px] lg:rounded-card shadow-xl p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute">Hapus Produk</p>
+                <h3 className="font-serif text-[19px] font-medium text-navy leading-tight mt-1">{deleteTarget.name}</h3>
+              </div>
+              <button onClick={() => setDeleteTarget(null)} className="w-8 h-8 rounded-card flex items-center justify-center text-text-mute hover:bg-cream-bg border-0 bg-transparent cursor-pointer"><X size={16} /></button>
+            </div>
+            <p className="text-[12.5px] text-text-mute leading-relaxed">Produk ini akan dihapus dari katalog. Riwayat penjualan yang lama tetap tersimpan.</p>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setDeleteTarget(null)} className="flex-1 h-[46px] rounded-button border border-warm-border bg-white text-navy text-[13px] font-medium cursor-pointer">Batal</button>
+              <button onClick={handleDeleteProduct} className="flex-[2] h-[46px] rounded-button border-0 text-white text-[13px] font-semibold cursor-pointer" style={{ background: "#B0492F" }}>Ya, Hapus Produk</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ubah Harga Modal */}
       {priceTarget && (
