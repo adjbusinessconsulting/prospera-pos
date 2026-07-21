@@ -125,6 +125,14 @@ export default function OwnerLogin() {
         await enterStore(storeRows[0] as StoreRow);
         return;
       }
+      // Logged in but the account has no store yet (provisioning didn't stick).
+      // Never fall into the built-in seed catalog — clear it and let the owner
+      // name their store, then enter a clean slate.
+      setProductsFromDB([]);
+      setOwnerId(userId);
+      setShowCreate(true);
+      setLoading(false);
+      return;
     }
     setScreen("login");
   }
@@ -197,7 +205,8 @@ export default function OwnerLogin() {
     setCreating(false);
     if (createErr || !data) { setError("Gagal membuat toko. Coba lagi atau hubungi Sterith."); return; }
     setNewStoreName(""); setShowCreate(false);
-    setStoreChoices(prev => [...prev, data as StoreRow]);
+    // Enter the freshly-created (empty) store straight away — clean catalog.
+    await enterStore(data as StoreRow);
   }
 
   const inputStyle: React.CSSProperties = { width: "100%", height: 46, boxSizing: "border-box", border: "1.5px solid #ddd9cc", borderRadius: 10, padding: "0 14px 0 42px", fontSize: 13, color: "#0D1117", background: "#fff", fontFamily: "'Hanken Grotesk', sans-serif", outline: "none" };
@@ -351,6 +360,32 @@ export default function OwnerLogin() {
   );
 
   const fonts = <style>{`@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');`}</style>;
+
+  // ── First store (logged in, but the account has no store yet) ──
+  if (ownerId && storeChoices.length === 0) {
+    return (
+      <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
+        {fonts}
+        <img src="/horizontal-light.png" alt="Sterith" style={{ height: 56, width: "auto", marginBottom: 24 }} />
+        <div style={{ width: "100%", maxWidth: 420 }}>
+          <p style={{ fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "#C9A55F", fontWeight: 600, textAlign: "center", marginBottom: 8 }}>TOKO BARU</p>
+          <h1 style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 30, fontWeight: 500, color: "#0D1117", textAlign: "center", margin: "0 0 6px" }}>Beri nama toko Anda</h1>
+          <p style={{ fontSize: 13, color: "#7A776F", textAlign: "center", margin: "0 0 24px" }}>Mulai dari awal yang bersih — katalog kosong, siap Anda isi.</p>
+          <input autoFocus value={newStoreName} onChange={e => setNewStoreName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") createStore(); }} placeholder="mis. Cafe Kopi Cinta"
+            style={{ ...inputStyle, paddingLeft: 14, marginBottom: 12 }} />
+          {error && <p style={{ fontSize: 12, color: "#B0492F", margin: "0 0 12px" }}>{error}</p>}
+          <button onClick={createStore} disabled={!newStoreName.trim() || creating}
+            style={{ width: "100%", height: 48, borderRadius: 11, border: "none", background: "#0D1117", color: "#FAFAF7", fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", cursor: (!newStoreName.trim() || creating) ? "default" : "pointer", opacity: (!newStoreName.trim() || creating) ? 0.5 : 1 }}>
+            {creating ? "Membuat…" : "Buat Toko"}
+          </button>
+          <button onClick={() => { setOwnerId(""); setShowCreate(false); setNewStoreName(""); setError(""); supabase.auth.signOut(); }}
+            style={{ width: "100%", marginTop: 12, background: "transparent", border: "none", fontSize: 12, color: "#8f897a", cursor: "pointer", fontFamily: "'Hanken Grotesk', sans-serif" }}>
+            Keluar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ── Multi-store picker (shown after login when the account has >1 store) ──
   if (storeChoices.length > 0) {
