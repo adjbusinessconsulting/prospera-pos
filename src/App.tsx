@@ -45,24 +45,11 @@ export default function App() {
   const subscriptionExpired = useStore(s => s.subscriptionExpired);
   const storeId = useStore(s => s.storeId);
   const signOut = useStore(s => s.signOut);
-  const [scale, setScale] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    const calc = () => {
-      const w = window.innerWidth;
-      const mobile = w < 768;
-      setIsMobile(mobile);
-      if (!mobile) {
-        const s = Math.min(
-          (w * 0.96) / 1366,
-          (window.innerHeight - 32) / 900,
-          1
-        );
-        setScale(s);
-      }
-    };
+    const calc = () => setIsMobile(window.innerWidth < 768);
     calc();
     window.addEventListener("resize", calc);
     return () => window.removeEventListener("resize", calc);
@@ -144,28 +131,23 @@ export default function App() {
   }
 
   return (
-    <div className="fixed inset-0 bg-cream-deep flex flex-col items-center justify-center gap-2 overflow-hidden">
+    <div className="fixed inset-0 bg-cream-bg overflow-hidden flex flex-col">
       <UpdateBanner />
-      {isDemoMode && <DemoControls />}
-      {!isDemoMode && subscriptionExpired && <RenewBanner />}
-      <div
-        className="rounded-card shadow-tablet overflow-hidden bg-cream-bg"
-        style={{ width: Math.round(1366 * scale), height: Math.round(900 * scale) }}
-      >
-        <div style={{ width: 1366, height: 900, transformOrigin: "top left", transform: `scale(${scale})` }}>
-          {screen === "login"        && <PinLogin />}
-          {screen === "sales"        && <Sales />}
-          {screen === "payment"      && <Payment />}
-          {screen === "receipt"      && <Receipt />}
-          {screen === "riwayat"      && <Riwayat />}
-          {screen === "produk"       && <Produk />}
-          {screen === "kas"          && <Kas />}
-          {screen === "hutang"       && <Hutang />}
-          {screen === "laporan"      && <Laporan />}
-          {screen === "pindah-shift" && <PindahShift />}
-          {screen === "tutup-toko"   && <TutupToko />}
-          {screen === "log"          && <LogAktivitas />}
-        </div>
+      {isDemoMode && <div className="shrink-0 flex justify-center py-1.5 bg-cream-deep"><DemoControls /></div>}
+      {!isDemoMode && subscriptionExpired && <div className="shrink-0 flex justify-center py-1.5 bg-cream-deep"><RenewBanner /></div>}
+      <div className="flex-1 min-h-0 relative">
+        {screen === "login"        && <PinLogin />}
+        {screen === "sales"        && <Sales />}
+        {screen === "payment"      && <Payment />}
+        {screen === "receipt"      && <Receipt />}
+        {screen === "riwayat"      && <Riwayat />}
+        {screen === "produk"       && <Produk />}
+        {screen === "kas"          && <Kas />}
+        {screen === "hutang"       && <Hutang />}
+        {screen === "laporan"      && <Laporan />}
+        {screen === "pindah-shift" && <PindahShift />}
+        {screen === "tutup-toko"   && <TutupToko />}
+        {screen === "log"          && <LogAktivitas />}
       </div>
     </div>
   );
