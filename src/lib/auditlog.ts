@@ -6,8 +6,16 @@ import { supabase } from "./supabase";
 // and is detectable. There is intentionally NO delete/edit API — write-once.
 // (Premium also mirrors entries to Backoffice's server; added separately.)
 
-const KEY = "sterith_audit_log_v1";
+const KEY_BASE = "sterith_audit_log_v1";
 const SKEY = "sterith_audit_server_queue_v1"; // Premium: pending pushes to Backoffice
+
+// Scope the on-device log PER STORE so a different account/store on the same
+// device (browser) never sees another store's entries. Falls back to the legacy
+// un-suffixed key only when there's no store (shouldn't happen on the log screen).
+function logKey(): string {
+  const sid = useStore.getState().storeId;
+  return sid ? `${KEY_BASE}:${sid}` : KEY_BASE;
+}
 
 export interface AuditEntry {
   seq: number;
@@ -28,10 +36,10 @@ function chainInput(e: Omit<AuditEntry, "hash">): string {
 }
 
 function read(): AuditEntry[] {
-  try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; }
+  try { return JSON.parse(localStorage.getItem(logKey()) || "[]"); } catch { return []; }
 }
 function write(list: AuditEntry[]) {
-  localStorage.setItem(KEY, JSON.stringify(list));
+  localStorage.setItem(logKey(), JSON.stringify(list));
 }
 
 // ── Demo: ephemeral, seeded, in-memory (never touches the real log) ──
@@ -121,6 +129,9 @@ const RETENTION_DAYS: Record<string, number> = { free: 1, standard: 30, premium:
 export async function pruneLog(tier: string) {
   try {
     if (isDemo()) return;
+    // One-time cleanup: the pre-scoping global log mixed entries across accounts on
+    // this device. It's now orphaned — drop it so old cross-account entries can't show.
+    try { localStorage.removeItem(KEY_BASE); } catch { /* ignore */ }
     const days = RETENTION_DAYS[(tier || "free").toLowerCase()] ?? 1;
     const cutoff = Date.now() - days * 86400000;
     const list = read();
