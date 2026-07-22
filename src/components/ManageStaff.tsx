@@ -6,6 +6,34 @@ import type { CashierDB, ShiftDef } from "../types";
 
 const GK = "'Hanken Grotesk', system-ui, sans-serif";
 
+// 24-hour time field the owner TYPES (no locale AM/PM picker). Accepts digits
+// with an optional : or . separator; auto-inserts the colon and clamps to a
+// valid 00:00–23:59 on blur. Value in/out is always "HH:MM", same as before.
+function formatTimeInput(raw: string): string {
+  const d = raw.replace(/\D/g, "").slice(0, 4);   // keep up to 4 digits
+  return d.length <= 2 ? d : `${d.slice(0, 2)}:${d.slice(2)}`;
+}
+function clampTime(v: string): string {
+  const d = v.replace(/\D/g, "");
+  if (!d) return "";
+  const h = Math.min(23, parseInt(d.slice(0, 2) || "0", 10) || 0);
+  const m = Math.min(59, parseInt(d.slice(2, 4) || "0", 10) || 0);
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+function Time24({ value, onChange, style }: { value: string; onChange: (v: string) => void; style: React.CSSProperties }) {
+  return (
+    <input
+      inputMode="numeric"
+      value={value}
+      onChange={(e) => onChange(formatTimeInput(e.target.value))}
+      onBlur={(e) => onChange(clampTime(e.target.value))}
+      placeholder="mis. 13:47"
+      maxLength={5}
+      style={{ ...style, textAlign: "center", letterSpacing: "0.05em", fontVariantNumeric: "tabular-nums" }}
+    />
+  );
+}
+
 type DraftStatus = "existing" | "new" | "edited" | "deleted";
 interface KasirDraft { key: string; id: string | null; name: string; initials: string; role: string; pin: string; status: DraftStatus; }
 interface ShiftDraft { key: string; id: string; name: string; start_time: string; end_time: string; status: DraftStatus; }
@@ -307,8 +335,8 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
                       </div>
                       <input value={sName} onChange={(e) => setSName(e.target.value)} placeholder="Nama shift (mis. Shift Pagi)" style={input} />
                       <div style={{ display: "flex", gap: 8 }}>
-                        <div style={{ flex: 1 }}><label style={label}>Mulai</label><input type="time" value={sStart} onChange={(e) => setSStart(e.target.value)} style={input} /></div>
-                        <div style={{ flex: 1 }}><label style={label}>Selesai</label><input type="time" value={sEnd} onChange={(e) => setSEnd(e.target.value)} style={input} /></div>
+                        <div style={{ flex: 1 }}><label style={label}>Mulai</label><Time24 value={sStart} onChange={setSStart} style={input} /></div>
+                        <div style={{ flex: 1 }}><label style={label}>Selesai</label><Time24 value={sEnd} onChange={setSEnd} style={input} /></div>
                       </div>
                       {sErr && <div style={{ fontSize: 12, color: "#C25E3D", background: "rgba(194,94,61,0.06)", border: "1px solid rgba(194,94,61,0.2)", borderRadius: 8, padding: "9px 12px" }}>{sErr}</div>}
                       <button type="submit" style={{ height: 42, borderRadius: 10, border: "none", background: "#0D1117", color: "#FAFAF7", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>{sEditKey ? "Simpan Perubahan" : "Tambah Shift"}</button>
