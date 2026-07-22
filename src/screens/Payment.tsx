@@ -638,7 +638,7 @@ export default function Payment() {
       {showHutangModal && (
         <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={cancelHutang} />
-          <div className="relative bg-white w-full lg:max-w-[400px] lg:mx-4 rounded-t-[20px] lg:rounded-card shadow-xl flex flex-col max-h-[94dvh]">
+          <div className="relative bg-white w-full lg:max-w-[400px] lg:mx-4 rounded-t-[20px] lg:rounded-card shadow-xl flex flex-col" style={{ maxHeight: "92vh" }}>
             <div className="px-6 pt-4 pb-3 border-b border-warm-border shrink-0">
               <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-0.5">HUTANG / BON</p>
               <h3 className="font-serif text-[19px] font-medium text-navy leading-tight">Siapa yang berhutang?</h3>
