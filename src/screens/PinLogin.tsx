@@ -38,13 +38,16 @@ export default function PinLogin() {
   const requiresPin = isAtLeast(effectiveTier, 'standard') && settings.pinWajib;
   const afterLogin = isAtLeast(effectiveTier, "standard") ? "checkin" : "sales";
 
-  // First-run on a real store with no cashiers yet. Free: owner names themselves
-  // (single Pemilik login, no PIN). Standard & Premium: go straight to creating a
-  // cashier (with a PIN) — no owner-name step; making more than one is optional.
+  // First-run on a real store with no cashiers yet.
+  //  Free     → owner names themselves (single Pemilik login, no PIN)
+  //  Standard → create a cashier (with a PIN) here in POS
+  //  Premium  → cashiers & shifts are built in Back Office; POS just receives them
   const isFreeTier = !isAtLeast(effectiveTier, "standard");
+  const isPremium = isAtLeast(effectiveTier, "premium");
   const noCashiers = !isDemoMode && !!storeId && dbCashiers.length === 0;
   const needsCashierSetup = noCashiers && isFreeTier;
-  const needsFirstCashierStd = noCashiers && !isFreeTier;
+  const needsFirstCashierStd = noCashiers && !isFreeTier && !isPremium;
+  const needsBackofficeSetup = noCashiers && isPremium;
   const [ownerName, setOwnerName] = useState("");
   const [savingName, setSavingName] = useState(false);
 
@@ -74,6 +77,15 @@ export default function PinLogin() {
     ? dbShifts.map((s, i) => ({ pos: i + 1, name: s.name, time: `${s.start_time}–${s.end_time}`, isNow: shiftContainsNow(s.start_time, s.end_time, nowMinutes) }))
     : ([1, 2, 3] as const).map(n => ({ pos: n, name: SHIFT_LABELS[n], time: "", isNow: currentShiftLabel() === n }));
 
+  // Keep the selected cashier valid — if it points at a stale/demo id, snap it to
+  // a real one so a card is highlighted and Masuk works.
+  useEffect(() => {
+    if (dbCashiers.length > 0 && !dbCashiers.some(c => c.id === selectedCashier)) {
+      selectCashier(dbCashiers[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dbCashiers]);
+
   // When the store has configured shifts, default-select the one active right now
   useEffect(() => {
     if (dbShifts.length === 0) return;
@@ -85,8 +97,9 @@ export default function PinLogin() {
   const [showManage, setShowManage] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
 
-  // Owner-only "Kelola" (manage kasir) button — real stores only, hidden in demo
-  const manageBtn = storeId ? (
+  // Owner-only "Kelola" (manage kasir) button — real stores only, hidden in demo.
+  // Premium manages cashiers & shifts in Back Office, so no in-POS Kelola.
+  const manageBtn = storeId && !isPremium ? (
     <button onClick={() => setShowManage(true)}
       style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: "#A6843F", fontSize: 11, fontWeight: 600, fontFamily: "inherit", padding: 0 }}>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
@@ -118,8 +131,9 @@ export default function PinLogin() {
     // Shift check-in selfie is a staff-accountability feature — Standard+ only. A solo
     // Free owner (no PIN either) goes straight to jualan.
     if (dbCashiers.length === 0) { setScreen(afterLogin); return; }
-    const cashier = dbCashiers.find(c => c.id === selectedCashier);
-    if (!cashier) return;
+    // Resolve the picked cashier — fall back to the first if the selection is stale
+    // (a leftover demo/owner id), so Masuk never silently does nothing.
+    const cashier = dbCashiers.find(c => c.id === selectedCashier) ?? dbCashiers[0];
     if (!requiresPin) { setScreen(afterLogin); return; }  // PIN off (Free, or Standard+ trusted team)
     // Compare as trimmed strings — the DB may return the PIN as a number or with
     // stray whitespace, which would make a strict === fail on a correct PIN.
@@ -163,6 +177,23 @@ export default function PinLogin() {
   }
 
   /* ── First-run for Standard+: create the first cashier (PIN + owner approval) ── */
+  if (needsBackofficeSetup) {
+    return (
+      <div style={{ height: "100%", minHeight: 0, background: "#FAFAF7", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 18px", overflowY: "auto", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
+        <div style={{ width: "100%", maxWidth: 400, textAlign: "center" }}>
+          <img src="/horizontal-light.png" alt="Sterith" style={{ height: 40, width: "auto", margin: "0 auto 14px", display: "block", mixBlendMode: "multiply" }} />
+          <p style={{ fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "#b8934a", fontWeight: 600, margin: "0 0 6px" }}>Selamat Datang di {displayName}</p>
+          <h1 style={{ fontFamily: "Georgia, serif", fontSize: 24, fontWeight: 600, color: "#0D1117", margin: "0 0 8px" }}>Atur kasir & shift di Back Office</h1>
+          <p style={{ fontSize: 12.5, color: "#7A776F", margin: "0 0 18px", lineHeight: 1.6 }}>Untuk paket <b style={{ color: "#0D1117" }}>Premium</b>, kasir, shift, dan pengaturan toko dikelola dari <b style={{ color: "#0D1117" }}>Back Office</b> (backoffice.sterith.com) dengan akun pemilik Anda. Setelah kasir dibuat di sana, langsung muncul di sini — front office tinggal pakai.</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 9, justifyContent: "center", background: "rgba(201,165,95,0.08)", border: "1px solid rgba(201,165,95,0.3)", borderRadius: 11, padding: "12px 14px" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A6843F" strokeWidth="1.8"><path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
+            <span style={{ fontSize: 11.5, color: "#0D1117", lineHeight: 1.5, textAlign: "left" }}>Buka <b>Back Office</b> → menu <b>Manajemen · Staf</b> untuk menambah kasir &amp; PIN.</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (needsFirstCashierStd) {
     return (
       <div style={{ height: "100%", minHeight: 0, background: "#FAFAF7", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 18px", overflowY: "auto", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
