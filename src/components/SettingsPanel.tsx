@@ -26,32 +26,41 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
   const inventoryEnabled = useStore((s) => s.inventoryEnabled);
   const setSettings = useStore((s) => s.setSettings);
   const setInventoryEnabled = useStore((s) => s.setInventoryEnabled);
+  const storeName = useStore((s) => s.storeName);
+  const storeAddress = useStore((s) => s.storeAddress);
+  const storePhone = useStore((s) => s.storePhone);
+  const setStoreInfo = useStore((s) => s.setStoreInfo);
 
   const isStd = isAtLeast(storeTier, "standard");
   const isPre = isAtLeast(storeTier, "premium");
 
   const [draft, setDraft] = useState<StoreSettings>(settings);
   const [draftInv, setDraftInv] = useState(inventoryEnabled);
+  const [draftName, setDraftName] = useState(storeName);
+  const [draftAddr, setDraftAddr] = useState(storeAddress);
+  const [draftPhone, setDraftPhone] = useState(storePhone);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { if (open) { setDraft(settings); setDraftInv(inventoryEnabled); } }, [open, settings, inventoryEnabled]);
+  useEffect(() => { if (open) { setDraft(settings); setDraftInv(inventoryEnabled); setDraftName(storeName); setDraftAddr(storeAddress); setDraftPhone(storePhone); } }, [open, settings, inventoryEnabled, storeName, storeAddress, storePhone]);
 
   if (!open) return null;
 
-  const dirty = JSON.stringify(draft) !== JSON.stringify(settings) || draftInv !== inventoryEnabled;
+  const infoDirty = draftName !== storeName || draftAddr !== storeAddress || draftPhone !== storePhone;
+  const dirty = JSON.stringify(draft) !== JSON.stringify(settings) || draftInv !== inventoryEnabled || infoDirty;
   const flip = (k: Key) => setDraft((d) => ({ ...d, [k]: !d[k] }));
 
   async function persist() {
     setSaving(true);
     if (storeId && !isDemoMode) {
       try {
-        await supabase.from("stores").update({ settings: draft, inventory_enabled: draftInv }).eq("id", storeId);
-        void logEvent("settings.update", "Pengaturan fitur diperbarui");
+        await supabase.from("stores").update({ settings: draft, inventory_enabled: draftInv, name: draftName.trim() || storeName, address: draftAddr.trim() || null, phone: draftPhone.trim() || null }).eq("id", storeId);
+        void logEvent("settings.update", "Pengaturan diperbarui");
       } catch { /* keep local */ }
     }
     setSettings(draft);
     setInventoryEnabled(draftInv);
+    setStoreInfo(draftName.trim() || storeName, draftAddr.trim(), draftPhone.trim());
     setSaving(false);
     setConfirmOpen(false);
     onClose();
@@ -128,6 +137,22 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
                 Matikan fitur yang tidak Anda pakai. <b>Data lama tidak hilang</b> — mematikan
                 fitur hanya menyembunyikan pembuatan baru, bukan data yang sudah ada.
               </p>
+
+              <SectionHead title="Informasi Toko" />
+              {(() => {
+                const inp: React.CSSProperties = { width: "100%", height: 42, boxSizing: "border-box", border: "1px solid #ECE7DD", background: "#FAFAF7", borderRadius: 10, padding: "0 12px", fontSize: 13.5, color: "#0D1117", outline: "none", fontFamily: "inherit" };
+                const lbl: React.CSSProperties = { display: "block", fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "#7A776F", fontWeight: 600, margin: "10px 0 5px" };
+                return (
+                  <div>
+                    <label style={lbl}>Nama Toko</label>
+                    <input value={draftName} onChange={e => setDraftName(e.target.value)} placeholder="mis. Toko Anda" style={inp} />
+                    <label style={lbl}>Alamat <span style={{ textTransform: "none", letterSpacing: 0, color: "#B0A99A" }}>(tampil di struk)</span></label>
+                    <input value={draftAddr} onChange={e => setDraftAddr(e.target.value)} placeholder="mis. Jl. Melati No. 7, Palu" style={inp} />
+                    <label style={lbl}>No. WhatsApp / Telp <span style={{ textTransform: "none", letterSpacing: 0, color: "#B0A99A" }}>(tampil di struk)</span></label>
+                    <input value={draftPhone} onChange={e => setDraftPhone(e.target.value)} inputMode="tel" placeholder="0812-xxxx-xxxx" style={inp} />
+                  </div>
+                );
+              })()}
 
               <SectionHead title="Metode Pembayaran" />
               <Row k="pay_tunai"    label="Tunai" desc="Terima pembayaran tunai." />

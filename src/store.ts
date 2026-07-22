@@ -54,6 +54,7 @@ interface POSState {
   setInventoryEnabled: (v: boolean) => void;
   setInventorySettings: (enabled: boolean, threshold: number) => void;
   setReceiptLogo: (v: string) => void;
+  setStoreInfo: (name: string, address: string, phone: string) => void;
   setQrisImageUrl: (v: string) => void;
   startDemo: () => void;
   selectCashier: (id: string) => void;
@@ -194,6 +195,7 @@ export const useStore = create<POSState>((set) => ({
   setInventoryEnabled: (inventoryEnabled) => set({ inventoryEnabled }),
   setInventorySettings: (inventoryEnabled, lowStockThreshold) => set({ inventoryEnabled, lowStockThreshold }),
   setReceiptLogo: (receiptLogo) => set({ receiptLogo }),
+  setStoreInfo: (storeName, storeAddress, storePhone) => set({ storeName, storeAddress, storePhone }),
   setQrisImageUrl: (qrisImageUrl) => set({ qrisImageUrl }),
 
   // Enter the full demo: premium tier + demo store. Lands on the cashier PIN login
