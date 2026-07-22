@@ -133,7 +133,11 @@ export async function pruneLog(tier: string) {
     // this device. It's now orphaned — drop it so old cross-account entries can't show.
     try { localStorage.removeItem(KEY_BASE); } catch { /* ignore */ }
     const days = RETENTION_DAYS[(tier || "free").toLowerCase()] ?? 1;
-    const cutoff = Date.now() - days * 86400000;
+    // Calendar-day retention (match the server): keep entries whose LOCAL date is
+    // within the last `days` calendar days — so a Free entry made yesterday stays
+    // until TODAY 23:59, not 24h-to-the-minute after it was written.
+    const midnightToday = new Date(); midnightToday.setHours(0, 0, 0, 0);
+    const cutoff = midnightToday.getTime() - days * 86400000;
     const list = read();
     const kept = list.filter((e) => new Date(e.time).getTime() >= cutoff);
     if (kept.length === list.length) return;      // nothing expired
