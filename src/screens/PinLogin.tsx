@@ -382,7 +382,7 @@ export default function PinLogin() {
                   const filled = i < pin.length;
                   const active = i === pin.length && pin.length < 6;
                   return (
-                    <div key={i} className={`w-[50px] h-[52px] rounded-card bg-white flex items-center justify-center border transition-all ${pinError ? "border-warning border-[1.5px]" : active ? "border-gold border-[1.5px] shadow-pin-glow" : "border-warm-border"}`}>
+                    <div key={i} style={{ width: 46, height: 50 }} className={`rounded-card bg-white flex items-center justify-center border transition-all ${pinError ? "border-warning border-[1.5px]" : active ? "border-gold border-[1.5px] shadow-pin-glow" : "border-warm-border"}`}>
                       {filled && <div className={`w-4 h-4 rounded-full ${pinError ? "bg-warning" : "bg-navy"}`} />}
                       {active && !filled && <div className="w-0.5 h-6 bg-navy cursor-blink" />}
                     </div>
@@ -396,21 +396,21 @@ export default function PinLogin() {
 
               <div className="grid grid-cols-3 gap-2">
                 {["1","2","3","4","5","6","7","8","9"].map(d => (
-                  <button key={d} onClick={() => { addPin(d); setPinError(""); }}
-                    className="bg-white border border-warm-border rounded-card py-2.5 text-[19px] font-medium text-navy hover:bg-cream-pill transition-colors">
+                  <button key={d} onClick={() => { addPin(d); setPinError(""); }} style={{ height: 48 }}
+                    className="bg-white border border-warm-border rounded-card text-[19px] font-medium text-navy hover:bg-cream-pill transition-colors">
                     {d}
                   </button>
                 ))}
-                <button onClick={() => { removePin(); setPinError(""); }}
-                  className="rounded-card py-2.5 flex items-center justify-center bg-transparent border-0 text-text-mute hover:text-navy transition-colors">
+                <button onClick={() => { removePin(); setPinError(""); }} style={{ height: 48 }}
+                  className="rounded-card flex items-center justify-center bg-transparent border-0 text-text-mute hover:text-navy transition-colors">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="13" y2="14"/><line x1="13" y1="9" x2="18" y2="14"/></svg>
                 </button>
-                <button onClick={() => { addPin("0"); setPinError(""); }}
-                  className="bg-white border border-warm-border rounded-card py-2.5 text-[19px] font-medium text-navy hover:bg-cream-pill transition-colors">
+                <button onClick={() => { addPin("0"); setPinError(""); }} style={{ height: 48 }}
+                  className="bg-white border border-warm-border rounded-card text-[19px] font-medium text-navy hover:bg-cream-pill transition-colors">
                   0
                 </button>
-                <button onClick={() => pin.length >= 1 && handleLogin()}
-                  className={`rounded-card py-2.5 flex items-center justify-center gap-2 text-[13px] font-medium tracking-[0.1em] transition-colors ${pin.length >= 1 ? "bg-navy text-cream-text hover:bg-navy-soft" : "bg-warm-border text-text-mute cursor-not-allowed"}`}>
+                <button onClick={() => pin.length >= 1 && handleLogin()} style={{ height: 48 }}
+                  className={`rounded-card flex items-center justify-center gap-2 text-[13px] font-medium tracking-[0.1em] transition-colors ${pin.length >= 1 ? "bg-navy text-cream-text hover:bg-navy-soft" : "bg-warm-border text-text-mute cursor-not-allowed"}`}>
                   <span>MASUK</span>
                   {pin.length >= 1 && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
                 </button>
