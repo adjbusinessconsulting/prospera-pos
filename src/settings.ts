@@ -42,7 +42,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   kas: true,
   fotoBuktiWajib: false,
   rekonsiliasi: true,
-  pinWajib: true,
+  pinWajib: false,   // off by default — a solo owner shouldn't be gated by a PIN they never set; turn on in Pengaturan for multi-kasir accountability
   gantiShift: true,
   whatsappShare: true,
 };
