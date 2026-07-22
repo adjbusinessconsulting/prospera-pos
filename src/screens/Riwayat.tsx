@@ -296,6 +296,10 @@ export default function Riwayat() {
                 className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-medium text-text-mute hover:text-navy transition-colors bg-transparent border-0 cursor-pointer">
                 Hutang
               </button>
+              <button onClick={() => setScreen("log")}
+                className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-medium text-text-mute hover:text-navy transition-colors bg-transparent border-0 cursor-pointer">
+                Log
+              </button>
             </div>
           </div>
         </div>
