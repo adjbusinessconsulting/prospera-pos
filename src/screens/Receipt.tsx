@@ -102,9 +102,11 @@ export default function Receipt() {
     restart();
   }
 
-  const displayName = storeName || "Toko Sembako Maju";
-  const displayAddress = storeAddress || "Jl. Diponegoro No. 24, Palu Timur";
-  const displayPhone = storePhone || "0812-3456-7890";
+  // Real store shows its own details; the demo placeholders apply only in demo mode
+  // (never print the fake "Jl. Diponegoro" address / demo phone on a real struk).
+  const displayName = storeName || (isDemoMode ? "Toko Sembako Maju" : "Toko");
+  const displayAddress = storeAddress || (isDemoMode ? "Jl. Diponegoro No. 24, Palu Timur" : "");
+  const displayPhone = storePhone || (isDemoMode ? "0812-3456-7890" : "");
 
   const waMessage =
     `*Struk dari ${displayName}*\nNo: ${trxId}\nTanggal: ${dateStr} ${timeStr}\n\n` +
@@ -133,8 +135,9 @@ export default function Receipt() {
     ctx.fillStyle = "#0D1117"; ctx.textAlign = "center";
     ctx.font = "600 20px Georgia, serif"; ctx.fillText(clip(displayName, W - pad * 2), W / 2, y); y += 28;
     ctx.fillStyle = "#6b6b6b"; ctx.font = "400 11px Arial, sans-serif";
-    ctx.fillText(clip(displayAddress, W - pad * 2), W / 2, y); y += 16;
-    ctx.fillText("WhatsApp " + displayPhone, W / 2, y); y += 22;
+    if (displayAddress) { ctx.fillText(clip(displayAddress, W - pad * 2), W / 2, y); y += 16; }
+    if (displayPhone) { ctx.fillText("WhatsApp " + displayPhone, W / 2, y); y += 16; }
+    y += 6;
     divider(y); y += 12;
     ctx.fillStyle = "#0D1117"; ctx.textAlign = "left"; ctx.font = "400 12px Arial, sans-serif";
     ctx.fillText(`No. ${trxId}`, pad, y); ctx.textAlign = "right"; ctx.fillText(`${dateStr} ${timeStr}`, W - pad, y); y += 18;
