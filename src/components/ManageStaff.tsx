@@ -164,11 +164,13 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
     if (clash) { setSErr(`Jam bertabrakan dengan "${clash.name}" (${clash.start_time}–${clash.end_time}).`); return; }
     if (sEditKey) {
       setShiftsD(list => list.map(s => s.key === sEditKey ? { ...s, name: sName.trim(), start_time: sStart, end_time: sEnd, status: s.status === "new" ? "new" : "edited" } : s));
+      resetSForm();
     } else {
       if (visShifts.length >= sLimit) { setSErr(`Batas ${sLimit} shift tercapai. Upgrade ke ${nextTierLabel(storeTier)}.`); return; }
       setShiftsD(list => [...list, { key: genId(), id: genId(), name: sName.trim(), start_time: sStart, end_time: sEnd, status: "new" }]);
+      // Chain the next shift: start where this one ended (owner can still change it).
+      setSName(""); setSEnd(""); setSEditKey(null); setSErr(""); setSStart(sEnd);
     }
-    resetSForm();
   }
   function removeShift(s: ShiftDraft) {
     setShiftsD(list => s.status === "new" ? list.filter(x => x.key !== s.key) : list.map(x => x.key === s.key ? { ...x, status: "deleted" } : x));

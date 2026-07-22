@@ -118,7 +118,9 @@ export default function PinLogin() {
     const cashier = dbCashiers.find(c => c.id === selectedCashier);
     if (!cashier) return;
     if (!requiresPin) { setScreen(afterLogin); return; }  // PIN off (Free, or Standard+ trusted team)
-    if (cashier.pin === pin) { setScreen(afterLogin); }
+    // Compare as trimmed strings — the DB may return the PIN as a number or with
+    // stray whitespace, which would make a strict === fail on a correct PIN.
+    if (String(cashier.pin ?? "").trim() === pin.trim()) { setScreen(afterLogin); }
     else { setPinError("PIN salah. Coba lagi."); clearPin(); }
   }
 
@@ -310,16 +312,16 @@ export default function PinLogin() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto flex items-start justify-center px-8 py-6">
+      <div className="flex-1 min-h-0 overflow-auto flex items-center justify-center px-8 py-3">
         <div className="w-full max-w-[620px]">
-          <div className="text-center mb-6">
-            <p style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans text-[10px] tracking-eyebrow uppercase text-gold mb-3">SELAMAT DATANG</p>
-            <h1 className="font-serif text-display-xl font-medium text-navy mb-1.5">{displayName}</h1>
-            <p className="text-[13.5px] text-text-mute">{displayAddress}</p>
+          <div className="text-center mb-3">
+            <p style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans text-[10px] tracking-eyebrow uppercase text-gold mb-1.5">SELAMAT DATANG</p>
+            <h1 className="font-serif text-[26px] font-medium text-navy mb-1 leading-tight">{displayName}</h1>
+            <p className="text-[13px] text-text-mute">{displayAddress}</p>
           </div>
 
-          <p style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans text-[10px] tracking-[0.18em] uppercase text-text-mute mb-2.5">PILIH SHIFT</p>
-          <div className="flex gap-2 mb-6 flex-wrap">
+          <p style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans text-[10px] tracking-[0.18em] uppercase text-text-mute mb-2">PILIH SHIFT</p>
+          <div className="flex gap-2 mb-4 flex-wrap">
             {shiftOptions.map(o => {
               const isActive = selectedShift === o.pos;
               const shiftLocked = !hasConfiguredShifts && !canChangeShift && !o.isNow;
@@ -344,11 +346,11 @@ export default function PinLogin() {
             })}
           </div>
 
-          <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center justify-between mb-2">
             <p style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans text-[10px] tracking-[0.18em] uppercase text-text-mute">PILIH KASIR · SELECT CASHIER</p>
             {manageBtn}
           </div>
-          <div className="flex gap-2.5 mb-6">
+          <div className="flex gap-2.5 mb-4">
             {cashierList.map(c => {
               const active = selectedCashier === c.id;
               return (
@@ -369,13 +371,13 @@ export default function PinLogin() {
 
           {requiresPin ? (
             <>
-              <p style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans text-[10px] tracking-[0.18em] uppercase text-text-mute mb-3">MASUKKAN PIN · ENTER PIN</p>
-              <div className="flex gap-2.5 justify-center mb-3">
+              <p style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans text-[10px] tracking-[0.18em] uppercase text-text-mute mb-2">MASUKKAN PIN · ENTER PIN</p>
+              <div className="flex gap-2.5 justify-center mb-2">
                 {Array(6).fill(0).map((_, i) => {
                   const filled = i < pin.length;
                   const active = i === pin.length && pin.length < 6;
                   return (
-                    <div key={i} className={`w-[56px] h-[64px] rounded-card bg-white flex items-center justify-center border transition-all ${pinError ? "border-warning border-[1.5px]" : active ? "border-gold border-[1.5px] shadow-pin-glow" : "border-warm-border"}`}>
+                    <div key={i} className={`w-[50px] h-[52px] rounded-card bg-white flex items-center justify-center border transition-all ${pinError ? "border-warning border-[1.5px]" : active ? "border-gold border-[1.5px] shadow-pin-glow" : "border-warm-border"}`}>
                       {filled && <div className={`w-4 h-4 rounded-full ${pinError ? "bg-warning" : "bg-navy"}`} />}
                       {active && !filled && <div className="w-0.5 h-6 bg-navy cursor-blink" />}
                     </div>
@@ -383,26 +385,27 @@ export default function PinLogin() {
                 })}
               </div>
 
-              {pinError && <p className="text-center text-[12px] mb-4" style={{ color: "#C25E3D" }}>{pinError}</p>}
-              {!pinError && <div className="mb-4" />}
+              <div className="h-5 mb-1 text-center">
+                {pinError && <p className="text-[12px]" style={{ color: "#C25E3D" }}>{pinError}</p>}
+              </div>
 
               <div className="grid grid-cols-3 gap-2">
                 {["1","2","3","4","5","6","7","8","9"].map(d => (
                   <button key={d} onClick={() => { addPin(d); setPinError(""); }}
-                    className="bg-white border border-warm-border rounded-card py-4 text-[22px] font-medium text-navy hover:bg-cream-pill transition-colors">
+                    className="bg-white border border-warm-border rounded-card py-3 text-[20px] font-medium text-navy hover:bg-cream-pill transition-colors">
                     {d}
                   </button>
                 ))}
                 <button onClick={() => { removePin(); setPinError(""); }}
-                  className="rounded-card py-4 flex items-center justify-center bg-transparent border-0 text-text-mute hover:text-navy transition-colors">
+                  className="rounded-card py-3 flex items-center justify-center bg-transparent border-0 text-text-mute hover:text-navy transition-colors">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="13" y2="14"/><line x1="13" y1="9" x2="18" y2="14"/></svg>
                 </button>
                 <button onClick={() => { addPin("0"); setPinError(""); }}
-                  className="bg-white border border-warm-border rounded-card py-4 text-[22px] font-medium text-navy hover:bg-cream-pill transition-colors">
+                  className="bg-white border border-warm-border rounded-card py-3 text-[20px] font-medium text-navy hover:bg-cream-pill transition-colors">
                   0
                 </button>
                 <button onClick={() => pin.length >= 1 && handleLogin()}
-                  className={`rounded-card py-4 flex items-center justify-center gap-2 text-[13px] font-medium tracking-[0.1em] transition-colors ${pin.length >= 1 ? "bg-navy text-cream-text hover:bg-navy-soft" : "bg-warm-border text-text-mute cursor-not-allowed"}`}>
+                  className={`rounded-card py-3 flex items-center justify-center gap-2 text-[13px] font-medium tracking-[0.1em] transition-colors ${pin.length >= 1 ? "bg-navy text-cream-text hover:bg-navy-soft" : "bg-warm-border text-text-mute cursor-not-allowed"}`}>
                   <span>MASUK</span>
                   {pin.length >= 1 && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
                 </button>
