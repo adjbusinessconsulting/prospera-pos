@@ -35,6 +35,7 @@ export default function Produk() {
   const [renameTarget, setRenameTarget] = useState<Product | null>(null);
   const [renameInput, setRenameInput] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [queue, setQueue] = useState<Product[]>([]);   // Standard+: batch-add draft list
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
@@ -100,19 +101,69 @@ export default function Produk() {
     editPhotoRef.current?.click();
   }
 
+  function clearForm() {
+    setAddName(""); setAddPrice(""); setAddDesc(""); setAddPhoto(null); setAddCategory("SBK");
+  }
   function closeModal() {
     setShowAddModal(false);
-    setAddName("");
-    setAddPrice("");
-    setAddDesc("");
-    setAddPhoto(null);
-    setAddCategory("SBK");
+    clearForm();
+    setQueue([]);
   }
+
+  // Standard+ can queue several products and save them all in one go.
+  const canBatch = isAtLeast(effectiveTier, "standard");
 
   // Free is trusted; Standard+ requires the owner's login password before product/price
   // edits (when the toggle is on). Shown in the demo too — OwnerConfirm accepts any
   // password there — so prospects see the anti-cheat protection.
   const needsOwnerConfirm = isAtLeast(effectiveTier, "standard") && !!storeId && settings.passwordConfirmPrice;
+
+  // Build a Product from the current form (name + price required).
+  function buildProduct(): Product | null {
+    if (!canSave) return null;
+    const price = parseIDRInput(addPrice);
+    const words = addName.trim().split(/\s+/);
+    const monogram = words.length >= 2 ? (words[0][0].toUpperCase() + words[1][0].toLowerCase()) : addName.trim().slice(0, 2);
+    return { id: `u${Date.now()}${Math.floor(Math.random() * 1000)}`, name: addName.trim(), monogram, emoji: "📦", category: addCategory, unit: "pcs", price, stock: 0, ...(addPhoto ? { photo: addPhoto } : {}) };
+  }
+
+  // Add the current form entry to the draft list and reset for the next one.
+  function addToQueue() {
+    const p = buildProduct();
+    if (!p) return;
+    setQueue(q => [...q, p]);
+    clearForm();
+  }
+
+  // Persist one product to store + Supabase. Returns an error message or null.
+  async function persistProduct(p: Product): Promise<string | null> {
+    addProduct(p);
+    void logEvent("product.add", `Produk baru: ${p.name} — ${formatRp(p.price)}`);
+    if (storeId && !isDemoMode) {
+      const { error } = await supabase.from("products").insert({ id: p.id, store_id: storeId, name: p.name, monogram: p.monogram, emoji: p.emoji, category: p.category, unit: p.unit, price: p.price, stock: 0 });
+      if (error) return error.message;
+    }
+    return null;
+  }
+
+  // Save everything: the queued drafts plus the current form entry if filled.
+  async function saveAll() {
+    const list = [...queue];
+    const current = buildProduct();
+    if (current) list.push(current);
+    if (list.length === 0) return;
+    for (const p of list) {
+      const err = await persistProduct(p);
+      if (err) { alert(`Sebagian produk belum tersimpan: ${err}`); return; }
+    }
+    closeModal();
+  }
+  function handleSaveAll() {
+    const total = queue.length + (canSave ? 1 : 0);
+    if (total === 0) return;
+    if (needsOwnerConfirm) { setConfirmAction(() => saveAll); return; }
+    saveAll();
+  }
 
   function handleSave() {
     if (!canSave) return;
@@ -672,19 +723,61 @@ export default function Produk() {
               {(addName || addPrice) && !canSave && (
                 <p className="text-[11px] text-text-mute -mt-2">Nama produk dan harga wajib diisi untuk menyimpan.</p>
               )}
+
+              {/* Standard+: draft list of products queued to save together */}
+              {canBatch && queue.length > 0 && (
+                <div className="border border-warm-border rounded-card overflow-hidden">
+                  <div className="px-3.5 py-2 bg-cream-bg text-[9.5px] tracking-[0.16em] uppercase text-text-mute font-semibold">Daftar Produk · {queue.length}</div>
+                  <div className="max-h-[140px] overflow-auto divide-y divide-[#F2EDE3]">
+                    {queue.map(p => (
+                      <div key={p.id} className="flex items-center gap-2.5 px-3.5 py-2">
+                        <span className="flex-1 min-w-0 truncate text-[13px] text-navy font-medium">{p.name}</span>
+                        <span className="font-serif text-[13px] text-navy shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.price)}</span>
+                        <button onClick={() => setQueue(q => q.filter(x => x.id !== p.id))} title="Hapus dari daftar"
+                          className="w-6 h-6 rounded-[6px] flex items-center justify-center bg-transparent border-0 text-text-mute hover:text-[#C0392B] cursor-pointer shrink-0">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="px-6 pb-7 pt-3 border-t border-warm-border shrink-0 flex gap-2.5">
-              <button onClick={closeModal}
-                className="flex-1 bg-cream-bg border border-warm-border rounded-card h-[46px] text-[13px] font-medium text-navy hover:border-navy/40 transition-colors cursor-pointer">
-                Batal
-              </button>
-              <button
-                disabled={!canSave}
-                onClick={handleSave}
-                className={`flex-1 rounded-card h-[46px] text-[13px] font-semibold border-0 transition-opacity ${canSave ? "bg-navy text-cream-text hover:opacity-90 cursor-pointer" : "bg-navy/20 text-navy/40 cursor-not-allowed"}`}>
-                Simpan Produk
-              </button>
+            <div className="px-6 pb-7 pt-3 border-t border-warm-border shrink-0 flex flex-col gap-2.5">
+              {canBatch ? (
+                <>
+                  <button onClick={addToQueue} disabled={!canSave}
+                    className={`w-full rounded-card h-[44px] text-[13px] font-semibold border transition-opacity ${canSave ? "bg-white border-navy/40 text-navy hover:bg-cream-bg cursor-pointer" : "bg-cream-bg border-warm-border text-navy/30 cursor-not-allowed"}`}>
+                    + Tambah ke Daftar
+                  </button>
+                  <div className="flex gap-2.5">
+                    <button onClick={closeModal}
+                      className="flex-1 bg-cream-bg border border-warm-border rounded-card h-[46px] text-[13px] font-medium text-navy hover:border-navy/40 transition-colors cursor-pointer">
+                      Batal
+                    </button>
+                    <button
+                      disabled={queue.length === 0 && !canSave}
+                      onClick={handleSaveAll}
+                      className={`flex-[1.4] rounded-card h-[46px] text-[13px] font-semibold border-0 transition-opacity ${(queue.length > 0 || canSave) ? "bg-navy text-cream-text hover:opacity-90 cursor-pointer" : "bg-navy/20 text-navy/40 cursor-not-allowed"}`}>
+                      Simpan Semua{(() => { const n = queue.length + (canSave ? 1 : 0); return n > 0 ? ` (${n})` : ""; })()}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex gap-2.5">
+                  <button onClick={closeModal}
+                    className="flex-1 bg-cream-bg border border-warm-border rounded-card h-[46px] text-[13px] font-medium text-navy hover:border-navy/40 transition-colors cursor-pointer">
+                    Batal
+                  </button>
+                  <button
+                    disabled={!canSave}
+                    onClick={handleSave}
+                    className={`flex-1 rounded-card h-[46px] text-[13px] font-semibold border-0 transition-opacity ${canSave ? "bg-navy text-cream-text hover:opacity-90 cursor-pointer" : "bg-navy/20 text-navy/40 cursor-not-allowed"}`}>
+                    Simpan Produk
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
