@@ -33,9 +33,11 @@ export default function PinLogin() {
   // Demo shows all features; Free locks non-current shifts (only when shifts aren't configured)
   const effectiveTier = storeId ? storeTier : 'free';
   const canChangeShift = isAtLeast(effectiveTier, 'standard');
-  // Free skips the PIN; Standard+ requires it (multi-kasir attribution) — but the
-  // owner can turn PIN off (Pengaturan) for a small trusted team.
-  const requiresPin = isAtLeast(effectiveTier, 'standard') && settings.pinWajib;
+  // Free skips the PIN. Standard+ asks for a PIN once there's more than one cashier
+  // (staff accountability) or the owner turned "PIN wajib" on — but only for a
+  // cashier who actually has a PIN set, so a solo owner (no PIN) stays one-tap.
+  const selectedHasPin = !!String(dbCashiers.find(c => c.id === selectedCashier)?.pin ?? "").trim();
+  const requiresPin = isAtLeast(effectiveTier, 'standard') && (settings.pinWajib || dbCashiers.length > 1) && selectedHasPin;
   const afterLogin = isAtLeast(effectiveTier, "standard") ? "checkin" : "sales";
 
   // First-run on a real store with no cashiers yet. Free: quick name, no PIN.
