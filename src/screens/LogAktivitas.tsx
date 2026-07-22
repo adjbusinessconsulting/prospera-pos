@@ -3,6 +3,7 @@ import { ShieldCheck, ShieldAlert, Download } from "lucide-react";
 import { useStore, isAtLeast } from "../store";
 import { AppSidebar } from "../components/AppSidebar";
 import { getLog, verifyLog, type AuditEntry } from "../lib/auditlog";
+import type { Screen } from "../types";
 
 const TYPE_LABEL: Record<string, string> = {
   "product.add": "Produk baru",
@@ -63,7 +64,7 @@ export default function LogAktivitas() {
     a.click();
   }
 
-  const tab = (label: string, screen: string, active = false) => (
+  const tab = (label: string, screen: Screen, active = false) => (
     <button onClick={active ? undefined : () => setScreen(screen)}
       className={`px-3 lg:px-4 py-2 rounded-[8px] text-[12px] transition-colors border-0 ${active ? "font-semibold bg-navy text-cream-text" : "font-medium text-text-mute hover:text-navy bg-transparent cursor-pointer"}`}>
       {label}
