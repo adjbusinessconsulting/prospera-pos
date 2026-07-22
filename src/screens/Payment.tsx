@@ -430,13 +430,25 @@ export default function Payment() {
               </div>
               <div className="bg-cream-bg border-[1.5px] border-navy rounded-button px-4 py-3 flex items-center gap-2 mb-2.5">
                 <span className="font-serif text-[18px] text-text-mute font-medium leading-none shrink-0">Rp</span>
-                <span style={{ fontVariantNumeric: "tabular-nums" }} className="font-serif text-[22px] font-semibold text-navy leading-none flex-1">{cashReceived.toLocaleString("id-ID")}</span>
+                <input
+                  inputMode="numeric"
+                  value={cashReceived ? cashReceived.toLocaleString("id-ID") : ""}
+                  onChange={e => setCashReceived(parseInt(e.target.value.replace(/\D/g, ""), 10) || 0)}
+                  onFocus={e => e.target.select()}
+                  placeholder="0"
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                  className="font-serif text-[22px] font-semibold text-navy leading-none flex-1 min-w-0 w-full bg-transparent border-0 outline-none placeholder:text-text-mute" />
+                {cashReceived > 0 && (
+                  <button onClick={() => setCashReceived(0)} title="Kosongkan" className="shrink-0 text-text-mute hover:text-navy bg-transparent border-0 cursor-pointer p-0 flex">
+                    <XCircle size={16} />
+                  </button>
+                )}
               </div>
               <div className="grid grid-cols-4 gap-2 mb-3">
                 {QUICK.map(a => (
-                  <button key={a} onClick={() => setCashReceived(a)}
-                    className={`rounded-chip py-1.5 text-[11px] font-medium border transition-colors ${cashReceived === a ? "bg-navy text-cream-text border-navy" : "bg-cream-bg text-navy border-warm-border"}`}>
-                    {cashReceived === a ? `${a >= 1000 ? a/1000 + "rb" : a}` : `+${a >= 1000 ? a/1000 + "rb" : a}`}
+                  <button key={a} onClick={() => setCashReceived(cashReceived + a)}
+                    className="rounded-chip py-1.5 text-[11px] font-medium border transition-colors bg-cream-bg text-navy border-warm-border hover:border-navy/40 cursor-pointer">
+                    +{a >= 1000 ? a / 1000 + "rb" : a}
                   </button>
                 ))}
               </div>
