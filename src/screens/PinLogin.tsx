@@ -120,7 +120,12 @@ export default function PinLogin() {
     if (!requiresPin) { setScreen(afterLogin); return; }  // PIN off (Free, or Standard+ trusted team)
     // Compare as trimmed strings — the DB may return the PIN as a number or with
     // stray whitespace, which would make a strict === fail on a correct PIN.
-    if (String(cashier.pin ?? "").trim() === pin.trim()) { setScreen(afterLogin); }
+    const storedPin = String(cashier.pin ?? "").trim();
+    // No PIN configured for this cashier (e.g. owner created before PIN was
+    // required, or a tier change). Can't gate on a PIN that doesn't exist — let
+    // them in rather than locking the owner out; they can set one in Kelola.
+    if (storedPin === "") { setScreen(afterLogin); return; }
+    if (storedPin === pin.trim()) { setScreen(afterLogin); }
     else { setPinError("PIN salah. Coba lagi."); clearPin(); }
   }
 
@@ -313,7 +318,7 @@ export default function PinLogin() {
       </div>
 
       <div className="flex-1 min-h-0 overflow-auto flex items-center justify-center px-8 py-3">
-        <div className="w-full max-w-[620px]">
+        <div className="w-full" style={{ maxWidth: 480 }}>
           <div className="text-center mb-3">
             <p style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans text-[10px] tracking-eyebrow uppercase text-gold mb-1.5">SELAMAT DATANG</p>
             <h1 className="font-serif text-[26px] font-medium text-navy mb-1 leading-tight">{displayName}</h1>
@@ -392,20 +397,20 @@ export default function PinLogin() {
               <div className="grid grid-cols-3 gap-2">
                 {["1","2","3","4","5","6","7","8","9"].map(d => (
                   <button key={d} onClick={() => { addPin(d); setPinError(""); }}
-                    className="bg-white border border-warm-border rounded-card py-3 text-[20px] font-medium text-navy hover:bg-cream-pill transition-colors">
+                    className="bg-white border border-warm-border rounded-card py-2.5 text-[19px] font-medium text-navy hover:bg-cream-pill transition-colors">
                     {d}
                   </button>
                 ))}
                 <button onClick={() => { removePin(); setPinError(""); }}
-                  className="rounded-card py-3 flex items-center justify-center bg-transparent border-0 text-text-mute hover:text-navy transition-colors">
+                  className="rounded-card py-2.5 flex items-center justify-center bg-transparent border-0 text-text-mute hover:text-navy transition-colors">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="13" y2="14"/><line x1="13" y1="9" x2="18" y2="14"/></svg>
                 </button>
                 <button onClick={() => { addPin("0"); setPinError(""); }}
-                  className="bg-white border border-warm-border rounded-card py-3 text-[20px] font-medium text-navy hover:bg-cream-pill transition-colors">
+                  className="bg-white border border-warm-border rounded-card py-2.5 text-[19px] font-medium text-navy hover:bg-cream-pill transition-colors">
                   0
                 </button>
                 <button onClick={() => pin.length >= 1 && handleLogin()}
-                  className={`rounded-card py-3 flex items-center justify-center gap-2 text-[13px] font-medium tracking-[0.1em] transition-colors ${pin.length >= 1 ? "bg-navy text-cream-text hover:bg-navy-soft" : "bg-warm-border text-text-mute cursor-not-allowed"}`}>
+                  className={`rounded-card py-2.5 flex items-center justify-center gap-2 text-[13px] font-medium tracking-[0.1em] transition-colors ${pin.length >= 1 ? "bg-navy text-cream-text hover:bg-navy-soft" : "bg-warm-border text-text-mute cursor-not-allowed"}`}>
                   <span>MASUK</span>
                   {pin.length >= 1 && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
                 </button>
