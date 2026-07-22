@@ -46,14 +46,22 @@ export default function Hutang() {
   const [method, setMethod] = useState("tunai");
   const [saving, setSaving] = useState(false);
   const [lunasReceipt, setLunasReceipt] = useState<HutangRow | null>(null);
+  // Customer book (name → photo/address) so debts show the debtor's face + address.
+  const [custMap, setCustMap] = useState<Record<string, { photo: string | null; address: string | null }>>({});
 
   async function load() {
     if (!storeId || isDemoMode) return;
     setLoading(true);
-    const { data } = await supabase.from("hutang")
-      .select("*").eq("store_id", storeId)
-      .order("created_at", { ascending: false });
+    const [{ data }, { data: custs }] = await Promise.all([
+      supabase.from("hutang").select("*").eq("store_id", storeId).order("created_at", { ascending: false }),
+      supabase.from("customers").select("name,photo,address").eq("store_id", storeId),
+    ]);
     setRows((data ?? []) as HutangRow[]);
+    const map: Record<string, { photo: string | null; address: string | null }> = {};
+    for (const c of (custs ?? []) as { name: string; photo: string | null; address: string | null }[]) {
+      map[c.name.toLowerCase()] = { photo: c.photo, address: c.address };
+    }
+    setCustMap(map);
     setLoading(false);
   }
   useEffect(() => { if (canHutang) void load(); /* eslint-disable-next-line */ }, [storeId, isDemoMode]);
@@ -177,8 +185,15 @@ export default function Hutang() {
                     const isLunas = r.status === "lunas";
                     const accent = isLunas ? "#3D7A5E" : "#C25E3D";
                     const accentBg = isLunas ? "rgba(61,122,94,0.10)" : "rgba(194,94,61,0.10)";
+                    const cust = custMap[r.customer_name.toLowerCase()];
+                    const initials = r.customer_name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase();
                     return (
                       <div key={r.id} className="bg-white border rounded-card px-4 lg:px-5 py-4 flex items-center gap-3" style={{ borderColor: `${accent}33`, borderLeft: `3px solid ${accent}` }}>
+                        <div className="w-10 h-10 rounded-full shrink-0 overflow-hidden flex items-center justify-center" style={{ background: cust?.photo ? "transparent" : "#F0EBE1" }}>
+                          {cust?.photo
+                            ? <img src={cust.photo} alt={r.customer_name} className="w-full h-full object-cover" />
+                            : <span className="font-serif text-[14px] font-semibold text-text-mute">{initials}</span>}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-[13.5px] font-semibold text-navy truncate">{r.customer_name}</span>
@@ -188,6 +203,12 @@ export default function Hutang() {
                             {r.trx_id ? `${r.trx_id} · ` : ""}Bon {fmtDate(r.created_at)}
                             {r.phone ? ` · ${r.phone}` : ""}
                           </div>
+                          {cust?.address && (
+                            <div className="text-[11px] text-text-mute mt-0.5 truncate flex items-center gap-1">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                              <span className="truncate">{cust.address}</span>
+                            </div>
+                          )}
                           {isLunas && (
                             <div className="text-[11px] font-medium mt-1" style={{ color: accent }}>
                               ✓ Lunas {fmtDate(r.settled_at)} · {METHOD_LABEL[r.settled_method ?? "tunai"]}
