@@ -106,11 +106,77 @@ export default function Receipt() {
   const displayAddress = storeAddress || "Jl. Diponegoro No. 24, Palu Timur";
   const displayPhone = storePhone || "0812-3456-7890";
 
-  const waText = encodeURIComponent(
+  const waMessage =
     `*Struk dari ${displayName}*\nNo: ${trxId}\nTanggal: ${dateStr} ${timeStr}\n\n` +
     cart.map(i => `${i.product.name} x${i.qty}  ${formatRp(i.product.price * i.qty)}`).join("\n") +
-    `\n\nTotal: ${formatRp(total)}\nTerima kasih!`
-  );
+    `\n\nTotal: ${formatRp(total)}\nTerima kasih!`;
+  const waText = encodeURIComponent(waMessage);
+
+  // Render the struk as a receipt-style PNG so it can be shared as a picture
+  // (not just text). Drawn on a canvas — no external library needed.
+  function buildReceiptImage(): Blob | Promise<Blob | null> | null {
+    const W = 380, pad = 22;
+    const notPremium = !isAtLeast(effectiveTier, "premium");
+    let h = pad + 26 + 34 + 24 + 3 * 18 + 24 + cart.length * 22 + 24 + 30
+      + (paymentMethod === "tunai" ? 3 : 1) * 18 + 26 + (notPremium ? 44 : 0) + pad;
+    const scale = 2;
+    const canvas = document.createElement("canvas");
+    canvas.width = W * scale; canvas.height = Math.ceil(h) * scale;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.scale(scale, scale);
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, h);
+    ctx.textBaseline = "top";
+    const divider = (yy: number) => { ctx.strokeStyle = "#E2DDD0"; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(pad, yy); ctx.lineTo(W - pad, yy); ctx.stroke(); ctx.setLineDash([]); };
+    const clip = (s: string, max: number) => { let t = s; while (ctx.measureText(t).width > max && t.length > 1) t = t.slice(0, -1); return t === s ? s : t.slice(0, -1) + "…"; };
+    let y = pad;
+    ctx.fillStyle = "#0D1117"; ctx.textAlign = "center";
+    ctx.font = "600 20px Georgia, serif"; ctx.fillText(clip(displayName, W - pad * 2), W / 2, y); y += 28;
+    ctx.fillStyle = "#6b6b6b"; ctx.font = "400 11px Arial, sans-serif";
+    ctx.fillText(clip(displayAddress, W - pad * 2), W / 2, y); y += 16;
+    ctx.fillText("WhatsApp " + displayPhone, W / 2, y); y += 22;
+    divider(y); y += 12;
+    ctx.fillStyle = "#0D1117"; ctx.textAlign = "left"; ctx.font = "400 12px Arial, sans-serif";
+    ctx.fillText(`No. ${trxId}`, pad, y); ctx.textAlign = "right"; ctx.fillText(`${dateStr} ${timeStr}`, W - pad, y); y += 18;
+    ctx.textAlign = "left"; ctx.fillText(`Kasir: ${cashierName}`, pad, y); ctx.textAlign = "right"; ctx.fillText(selectedShiftName, W - pad, y); y += 18;
+    y += 6; divider(y); y += 12;
+    ctx.font = "400 12.5px Arial, sans-serif";
+    cart.forEach(i => {
+      ctx.textAlign = "left"; ctx.fillText(clip(`${i.product.name}  x${i.qty}`, W - pad * 2 - 90), pad, y);
+      ctx.textAlign = "right"; ctx.fillText(formatRp(i.product.price * i.qty), W - pad, y); y += 22;
+    });
+    divider(y); y += 12;
+    ctx.textAlign = "left"; ctx.font = "700 15px Georgia, serif"; ctx.fillText("TOTAL", pad, y);
+    ctx.textAlign = "right"; ctx.fillText(formatRp(total), W - pad, y); y += 26;
+    ctx.font = "400 12px Arial, sans-serif"; ctx.fillStyle = "#4a4a4a";
+    const methodLabel: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", hutang: "Hutang/Bon" };
+    ctx.textAlign = "left"; ctx.fillText("Metode", pad, y); ctx.textAlign = "right"; ctx.fillText(methodLabel[paymentMethod] ?? paymentMethod, W - pad, y); y += 18;
+    if (paymentMethod === "tunai") {
+      ctx.textAlign = "left"; ctx.fillText("Tunai", pad, y); ctx.textAlign = "right"; ctx.fillText(formatRp(cashReceived), W - pad, y); y += 18;
+      ctx.textAlign = "left"; ctx.fillText("Kembali", pad, y); ctx.textAlign = "right"; ctx.fillText(formatRp(change), W - pad, y); y += 18;
+    }
+    y += 6; ctx.textAlign = "center"; ctx.fillStyle = "#0D1117"; ctx.font = "italic 400 12px Georgia, serif";
+    ctx.fillText("Terima kasih, sampai jumpa lagi", W / 2, y); y += 20;
+    if (notPremium) { ctx.fillStyle = "#A6843F"; ctx.font = "600 9px Arial, sans-serif"; ctx.fillText(isAtLeast(effectiveTier, "standard") ? "Powered by Sterith Business Consulting POS" : "Powered by Sterith Business Consulting", W / 2, y + 8); }
+    return new Promise<Blob | null>(res => canvas.toBlob(b => res(b), "image/png"));
+  }
+
+  async function shareReceiptWA() {
+    if (!canWhatsApp) return;
+    try {
+      const blob = await buildReceiptImage();
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (blob) {
+        const file = new File([blob], `struk-${trxId}.png`, { type: "image/png" });
+        if (nav.share && nav.canShare && nav.canShare({ files: [file] })) {
+          await nav.share({ files: [file], text: waMessage, title: `Struk ${trxId}` });
+          return;
+        }
+      }
+    } catch { /* fall back to text link below */ }
+    // Fallback (desktop / share unsupported): wa.me carries text only.
+    window.open(`https://wa.me/?text=${waText}`, "_blank");
+  }
 
   return (
     <div className="w-full h-full bg-cream-bg flex flex-col animate-screen-in">
@@ -225,7 +291,7 @@ export default function Receipt() {
             {showWhatsApp && (
             <div className="relative">
               <button
-                onClick={() => canWhatsApp && window.open(`https://wa.me/?text=${waText}`, "_blank")}
+                onClick={() => shareReceiptWA()}
                 className={`w-full bg-white border border-warm-border rounded-button py-3.5 flex flex-col items-center gap-1.5 text-navy transition-colors ${canWhatsApp ? "hover:border-navy/30 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" /></svg>
                 <span className="text-[11px]">WhatsApp</span>
@@ -257,7 +323,7 @@ export default function Receipt() {
             {showWhatsApp && (
             <div className="relative">
               <button
-                onClick={() => canWhatsApp && window.open(`https://wa.me/?text=${waText}`, "_blank")}
+                onClick={() => shareReceiptWA()}
                 className={`w-full flex items-center gap-3 bg-cream-bg border border-warm-border rounded-card px-4 py-3.5 text-[13px] font-medium text-navy transition-colors ${canWhatsApp ? "hover:border-navy/30 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="shrink-0"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" /></svg>
                 Kirim via WhatsApp
