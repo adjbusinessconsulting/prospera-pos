@@ -638,16 +638,16 @@ export default function Payment() {
       {showHutangModal && (
         <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={cancelHutang} />
-          <div className="relative bg-white w-full lg:max-w-[400px] lg:mx-4 rounded-t-[20px] lg:rounded-card shadow-xl">
-            <div className="px-6 pt-5 pb-4 border-b border-warm-border">
+          <div className="relative bg-white w-full lg:max-w-[400px] lg:mx-4 rounded-t-[20px] lg:rounded-card shadow-xl flex flex-col max-h-[94dvh]">
+            <div className="px-6 pt-4 pb-3 border-b border-warm-border shrink-0">
               <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-0.5">HUTANG / BON</p>
-              <h3 className="font-serif text-[20px] font-medium text-navy leading-tight">Siapa yang berhutang?</h3>
-              <p className="text-[12px] text-text-mute mt-1">Rp {new Intl.NumberFormat("id-ID").format(total)} akan dicatat di Buku Hutang.</p>
+              <h3 className="font-serif text-[19px] font-medium text-navy leading-tight">Siapa yang berhutang?</h3>
+              <p className="text-[12px] text-text-mute mt-0.5">Rp {new Intl.NumberFormat("id-ID").format(total)} akan dicatat di Buku Hutang.</p>
             </div>
-            <div className="px-6 py-5 flex flex-col gap-4">
+            <div className="px-6 py-4 flex flex-col gap-3 overflow-auto">
               {recentCustomers.length > 0 && (
                 <div>
-                  <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">PELANGGAN TERAKHIR</span></label>
+                  <label className="block mb-1.5"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">PELANGGAN TERAKHIR</span></label>
                   <div className="flex flex-wrap gap-2">
                     {recentCustomers.slice(0, 8).map((c, i) => (
                       <button key={i} type="button" onClick={() => fillCustomer(c)}
@@ -659,10 +659,10 @@ export default function Payment() {
                 </div>
               )}
               <div>
-                <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">NAMA PELANGGAN <span className="text-warning">*</span></span></label>
+                <label className="block mb-1.5"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">NAMA PELANGGAN <span className="text-warning">*</span></span></label>
                 <div className="relative">
                   <input value={hutangName} onChange={e => setHutangName(e.target.value)} autoFocus placeholder="mis. Bu Sari" autoComplete="off"
-                    className="w-full bg-cream-bg border rounded-button px-4 h-[48px] text-[14px] text-navy outline-none placeholder:text-text-mute"
+                    className="w-full bg-cream-bg border rounded-button px-4 h-[44px] text-[14px] text-navy outline-none placeholder:text-text-mute"
                     style={{ borderColor: hutangName.trim() ? "#3D7A5E" : "#ECE7DD" }} />
                   {custMatches.length > 0 && (
                     <div className="absolute left-0 right-0 top-full mt-1 z-10 bg-white border border-warm-border rounded-card shadow-lg overflow-hidden">
@@ -684,17 +684,17 @@ export default function Payment() {
                 )}
               </div>
               <div>
-                <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">WHATSAPP <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></span></label>
+                <label className="block mb-1.5"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">WHATSAPP <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></span></label>
                 <input value={hutangPhone} onChange={e => setHutangPhone(e.target.value)} inputMode="tel" placeholder="0812-xxxx-xxxx"
                   className="w-full bg-cream-bg border border-warm-border rounded-button px-4 h-[44px] text-[13.5px] text-navy outline-none placeholder:text-text-mute" />
               </div>
               <div>
-                <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">ALAMAT RUMAH <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></span></label>
+                <label className="block mb-1.5"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">ALAMAT RUMAH <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></span></label>
                 <input value={hutangAddress} onChange={e => setHutangAddress(e.target.value)} placeholder="mis. Jl. Melati No. 7, RT 03"
                   className="w-full bg-cream-bg border border-warm-border rounded-button px-4 h-[44px] text-[13.5px] text-navy outline-none placeholder:text-text-mute" />
               </div>
               <div>
-                <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">FOTO <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></span></label>
+                <label className="block mb-1.5"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">FOTO <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></span></label>
                 <input ref={custPhotoRef} type="file" accept="image/*" className="hidden" onChange={onCustPhoto} />
                 {hutangPhoto ? (
                   <div className="flex items-center gap-3">
@@ -720,7 +720,7 @@ export default function Payment() {
                 <p className="text-[11px] text-text-mute mt-2 leading-relaxed">Seluruh jumlah dicatat sebagai hutang. Dilunasi sekaligus nanti di <b className="text-navy">Buku Hutang</b>.</p>
               </div>
             </div>
-            <div className="px-6 pb-7 pt-3 border-t border-warm-border flex gap-2.5">
+            <div className="px-6 pb-5 pt-3 border-t border-warm-border flex gap-2.5 shrink-0">
               <button onClick={cancelHutang} className="flex-1 bg-cream-bg border border-warm-border rounded-card h-[46px] text-[13px] font-medium text-navy hover:border-navy/40 cursor-pointer">Batal</button>
               <button disabled={!hutangName.trim()} onClick={confirmHutang}
                 className={`flex-1 rounded-card h-[46px] text-[13px] font-semibold border-0 ${hutangName.trim() ? "bg-navy text-cream-text hover:opacity-90 cursor-pointer" : "bg-navy/20 text-navy/40 cursor-not-allowed"}`}>
