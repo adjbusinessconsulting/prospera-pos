@@ -142,6 +142,7 @@ export default function Hutang() {
               <button onClick={() => setScreen("kas")} className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-medium text-text-mute hover:text-navy bg-transparent border-0 cursor-pointer">Kas</button>
               <button className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-semibold bg-navy text-cream-text border-0">Hutang</button>
               <button onClick={() => setScreen("log")} className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-medium text-text-mute hover:text-navy bg-transparent border-0 cursor-pointer">Log</button>
+              <button onClick={() => setScreen("shift-riwayat")} className="px-3 lg:px-4 py-2 rounded-[8px] text-[12px] font-medium text-text-mute hover:text-navy bg-transparent border-0 cursor-pointer whitespace-nowrap">Tutup Shift</button>
             </div>
           </div>
         </div>

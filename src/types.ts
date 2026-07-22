@@ -1,4 +1,4 @@
-export type Screen = 'owner-login' | 'login' | 'checkin' | 'sales' | 'payment' | 'receipt' | 'riwayat' | 'produk' | 'kas' | 'laporan' | 'pindah-shift' | 'tutup-toko' | 'reset-password' | 'log' | 'hutang';
+export type Screen = 'owner-login' | 'login' | 'checkin' | 'sales' | 'payment' | 'receipt' | 'riwayat' | 'produk' | 'kas' | 'laporan' | 'pindah-shift' | 'tutup-toko' | 'reset-password' | 'log' | 'hutang' | 'shift-riwayat';
 
 export interface Product {
   id: string;

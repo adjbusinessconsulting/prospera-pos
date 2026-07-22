@@ -3,13 +3,14 @@ import { useStore, isAtLeast } from "../store";
 import { formatRp, formatIDRInput } from "../data";
 import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
+import { saveShiftClosing } from "../lib/shift";
 
 const RETENTION: Record<string, number> = { free: 1, standard: 30, premium: 90, business: 1095, enterprise: 1825 };
 const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet" };
 const METHOD_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet"];
 
 export default function TutupToko() {
-  const { signOut, setScreen, storeId, storeTier, isDemoMode, settings } = useStore();
+  const { signOut, setScreen, storeId, storeTier, isDemoMode, settings, cashierName } = useStore();
   const effectiveTier = storeId ? storeTier : "free";
   const isStd = isAtLeast(effectiveTier, "standard");
   const recOn = isStd && settings.rekonsiliasi;   // owner can hide the reconciliation tool
@@ -80,11 +81,20 @@ export default function TutupToko() {
 
   async function closeAndLogout() {
     const reconciled = recOn && counted !== "";
-    if (storeId && !isDemoMode && shiftId) {
+    if (storeId && !isDemoMode) {
       try {
-        const patch: Record<string, unknown> = { closed_at: new Date().toISOString(), modal_akhir: reconciled ? countedNum : null };
-        if (reconciled) { patch.selisih_type = selType; patch.selisih_amount = Math.abs(selisih); }
-        await supabase.from("shifts").update(patch).eq("id", shiftId);
+        if (shiftId) {
+          const patch: Record<string, unknown> = { closed_at: new Date().toISOString(), modal_akhir: reconciled ? countedNum : null };
+          if (reconciled) { patch.selisih_type = selType; patch.selisih_amount = Math.abs(selisih); }
+          await supabase.from("shifts").update(patch).eq("id", shiftId);
+        }
+        // Save the closing nota (viewable later in Laporan → Tutup Shift).
+        await saveShiftClosing(storeId, {
+          cashierName: cashierName || null, omzet, trx, shiftCount,
+          cash, kasMasuk, kasKeluar, hutangSettle,
+          expected: cash + kasMasuk + hutangSettle - kasKeluar, breakdown,
+          modalAwal, counted: reconciled ? countedNum : null, selisih: reconciled ? selisih : null, reconciled,
+        });
         if (reconciled) void logEvent("shift.rekonsiliasi", `Rekonsiliasi ${selType.toUpperCase()} · dihitung ${formatRp(countedNum)} vs seharusnya ${formatRp(expected)} (selisih ${selisih >= 0 ? "+" : ""}${formatRp(selisih)})`);
         else void logEvent("shift.close", "Tutup shift · tanpa hitung kas");
       } catch { /* still let them log out */ }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useStore, localDateISO } from "../store";
 import { supabase } from "../lib/supabase";
 import { appAuthLogin, AUTH_BASE } from "../lib/appAuth";
+import { autoCloseStaleShifts } from "../lib/shift";
 import { pruneLog } from "../lib/auditlog";
 import type { CashierDB } from "../types";
 import { BUILD } from "../version";
@@ -190,6 +191,7 @@ export default function OwnerLogin() {
     setProductsFromDB(mapped as unknown as import("../types").Product[]);
     setDbShifts((shiftRows ?? []) as import("../types").ShiftDef[]);
     setTrxCounter((saleCount ?? 0) + 1);
+    void autoCloseStaleShifts(store.id);   // precaution: close any day left open
     setScreen("login");
   }
 

@@ -81,11 +81,12 @@ export default function LogAktivitas() {
           <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute mb-0.5">LAPORAN</p>
           <div className="flex items-start justify-between gap-2">
             <h1 className="font-serif text-[24px] lg:text-display-l font-medium text-navy leading-tight">Performa toko</h1>
-            <div className="flex gap-0.5 bg-cream-bg border border-warm-border rounded-[10px] p-0.5 shrink-0 mt-0.5">
+            <div className="flex gap-0.5 bg-cream-bg border border-warm-border rounded-[10px] p-0.5 shrink-0 mt-0.5 flex-wrap">
               {tab("Riwayat", "riwayat")}
               {tab("Kas", "kas")}
               {tab("Hutang", "hutang")}
               {tab("Log", "log", true)}
+              {tab("Tutup Shift", "shift-riwayat")}
             </div>
           </div>
         </div>

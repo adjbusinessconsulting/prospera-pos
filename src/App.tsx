@@ -8,6 +8,7 @@ import { DemoControls } from "./components/DemoControls";
 import { RenewBanner } from "./components/RenewBanner";
 import { initSync } from "./lib/sync";
 import LogAktivitas from "./screens/LogAktivitas";
+import TutupShiftRiwayat from "./screens/TutupShiftRiwayat";
 import BackofficeDemo from "./screens/BackofficeDemo";
 import SplashScreen from "./components/SplashScreen";
 import PinLogin from "./screens/PinLogin";
@@ -125,6 +126,7 @@ export default function App() {
           {screen === "pindah-shift" && <PindahShift />}
           {screen === "tutup-toko"   && <TutupToko />}
           {screen === "log"          && <LogAktivitas />}
+          {screen === "shift-riwayat" && <TutupShiftRiwayat />}
         </div>
       </div>
     );
@@ -148,6 +150,7 @@ export default function App() {
         {screen === "pindah-shift" && <PindahShift />}
         {screen === "tutup-toko"   && <TutupToko />}
         {screen === "log"          && <LogAktivitas />}
+          {screen === "shift-riwayat" && <TutupShiftRiwayat />}
       </div>
     </div>
   );
