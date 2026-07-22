@@ -3,7 +3,7 @@ import { supabase } from "./supabase";
 // Per-app auth: verify the POS password via Master Office and redeem the returned
 // magic-link token for a Supabase session. Falls back to the legacy Supabase password
 // so existing owners who haven't set a POS password yet still log in.
-const AUTH_BASE = "https://masteroffice.sterith.com";
+export const AUTH_BASE = "https://masteroffice.sterith.com";
 
 export async function appAuthLogin(email: string, password: string, app = "pos"): Promise<void> {
   let tokenHash: string | null = null;

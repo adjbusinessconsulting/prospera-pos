@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useStore, localDateISO } from "../store";
 import { supabase } from "../lib/supabase";
-import { appAuthLogin } from "../lib/appAuth";
+import { appAuthLogin, AUTH_BASE } from "../lib/appAuth";
 import { pruneLog } from "../lib/auditlog";
 import type { CashierDB } from "../types";
 import { BUILD } from "../version";
@@ -197,6 +197,30 @@ export default function OwnerLogin() {
     const name = newStoreName.trim();
     if (!name || !ownerId) return;
     setCreating(true); setError("");
+
+    // First store (self-heal, no existing stores): provision via Master Office so
+    // the store inherits the owner's real tier from their tenant record instead of
+    // a client-side FREE default. Falls back to the direct insert below on failure.
+    if (storeChoices.length === 0) {
+      try {
+        const { data: sess } = await supabase.auth.getSession();
+        const token = sess.session?.access_token;
+        if (token) {
+          const res = await fetch(`${AUTH_BASE}/api/provision-store`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ name }),
+          });
+          const j = await res.json().catch(() => ({}));
+          if (res.ok && j.store) {
+            setCreating(false); setNewStoreName(""); setShowCreate(false);
+            await enterStore(j.store as StoreRow);
+            return;
+          }
+        }
+      } catch { /* fall through to the direct insert */ }
+    }
+
     const tier = storeChoices[0]?.tier || "free";  // inherit the owner's tier
     const { data, error: createErr } = await supabase.from("stores")
       .insert({ owner_id: ownerId, name, tier, status: "active" })
