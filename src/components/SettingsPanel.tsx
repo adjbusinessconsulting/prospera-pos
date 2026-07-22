@@ -5,7 +5,8 @@ import { logEvent } from "../lib/auditlog";
 import { DEFAULT_SETTINGS, type StoreSettings } from "../settings";
 import { OwnerConfirm } from "./OwnerConfirm";
 
-type Key = keyof StoreSettings;
+// Only the boolean toggle keys (excludes non-boolean settings like quickCash).
+type Key = { [K in keyof StoreSettings]: StoreSettings[K] extends boolean ? K : never }[keyof StoreSettings];
 
 function Switch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
@@ -160,6 +161,19 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
               <Row k="pay_transfer" label="Transfer" desc="Terima transfer bank." />
               {isPre && <Row k="pay_debit"   label="Kartu Debit" desc="Terima kartu debit." />}
               {isPre && <Row k="pay_ewallet" label="E-Wallet" desc="OVO, GoPay, Dana, dll." />}
+
+              <SectionHead title="Nominal Cepat (Uang Diterima)" />
+              <p style={{ margin: "2px 0 8px", fontSize: 11.5, color: "#7A776F", lineHeight: 1.5 }}>Tombol nominal cepat saat terima tunai. Kasir tetap bisa ketik angka sendiri.</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {(draft.quickCash ?? DEFAULT_SETTINGS.quickCash).map((amt, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid #ECE7DD", background: "#FAFAF7", borderRadius: 10, padding: "0 12px", height: 42 }}>
+                    <span style={{ fontSize: 12.5, color: "#7A776F" }}>+Rp</span>
+                    <input inputMode="numeric" value={(amt || 0).toLocaleString("id-ID")}
+                      onChange={e => { const v = parseInt(e.target.value.replace(/\D/g, ""), 10) || 0; setDraft(d => ({ ...d, quickCash: (d.quickCash ?? DEFAULT_SETTINGS.quickCash).map((x, j) => j === i ? v : x) })); }}
+                      style={{ flex: 1, minWidth: 0, width: "100%", background: "transparent", border: "none", outline: "none", fontSize: 14, fontWeight: 600, color: "#0D1117", fontVariantNumeric: "tabular-nums" }} />
+                  </div>
+                ))}
+              </div>
 
               <SectionHead title="Kasir & Struk" />
               <Row k="printReceipt" label="Cetak struk" desc="Tampilkan tombol cetak struk & aktifkan pengaturan printer." />

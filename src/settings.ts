@@ -27,6 +27,7 @@ export interface StoreSettings {
   pinWajib: boolean;
   gantiShift: boolean;
   whatsappShare: boolean;
+  quickCash: number[];   // customizable "uang diterima" quick-add denominations
 }
 
 export const DEFAULT_SETTINGS: StoreSettings = {
@@ -45,6 +46,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   pinWajib: true,   // Standard/Premium require a cashier PIN by default (safety); owner can turn off in Pengaturan
   gantiShift: true,
   whatsappShare: true,
+  quickCash: [50000, 100000, 200000, 500000],
 };
 
 // Merge whatever is stored (possibly partial / from an older schema) over the

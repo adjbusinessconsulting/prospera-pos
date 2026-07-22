@@ -445,7 +445,7 @@ export default function Payment() {
                 )}
               </div>
               <div className="grid grid-cols-4 gap-2 mb-3">
-                {QUICK.map(a => (
+                {(settings.quickCash?.length ? settings.quickCash : QUICK).map(a => (
                   <button key={a} onClick={() => setCashReceived(cashReceived + a)}
                     className="rounded-chip py-1.5 text-[11px] font-medium border transition-colors bg-cream-bg text-navy border-warm-border hover:border-navy/40 cursor-pointer">
                     +{a >= 1000 ? a / 1000 + "rb" : a}
