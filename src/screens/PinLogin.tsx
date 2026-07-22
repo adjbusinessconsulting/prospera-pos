@@ -40,12 +40,14 @@ export default function PinLogin() {
   const requiresPin = isAtLeast(effectiveTier, 'standard') && (settings.pinWajib || dbCashiers.length > 1) && selectedHasPin;
   const afterLogin = isAtLeast(effectiveTier, "standard") ? "checkin" : "sales";
 
-  // First-run on a real store with no cashiers yet. Free: quick name, no PIN.
-  // Standard+: create a proper cashier (PIN) with owner-password approval via Kelola.
-  const isFreeTier = !isAtLeast(effectiveTier, "standard");
+  // First-run on a real store with no cashiers yet. Free & Standard: the owner
+  // just names themselves (becomes Pemilik) — no PIN, no forced staff. They can
+  // add staff cashiers (with PINs) later in Kelola. Premium manages staff in
+  // Back Office, so it uses the create-cashier flow there.
+  const isPremium = isAtLeast(effectiveTier, "premium");
   const noCashiers = !isDemoMode && !!storeId && dbCashiers.length === 0;
-  const needsCashierSetup = noCashiers && isFreeTier;
-  const needsFirstCashierStd = noCashiers && !isFreeTier;
+  const needsCashierSetup = noCashiers && !isPremium;
+  const needsFirstCashierStd = noCashiers && isPremium;
   const [ownerName, setOwnerName] = useState("");
   const [savingName, setSavingName] = useState(false);
 
