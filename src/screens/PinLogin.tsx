@@ -33,21 +33,18 @@ export default function PinLogin() {
   // Demo shows all features; Free locks non-current shifts (only when shifts aren't configured)
   const effectiveTier = storeId ? storeTier : 'free';
   const canChangeShift = isAtLeast(effectiveTier, 'standard');
-  // Free skips the PIN. Standard+ asks for a PIN once there's more than one cashier
-  // (staff accountability) or the owner turned "PIN wajib" on — but only for a
-  // cashier who actually has a PIN set, so a solo owner (no PIN) stays one-tap.
-  const selectedHasPin = !!String(dbCashiers.find(c => c.id === selectedCashier)?.pin ?? "").trim();
-  const requiresPin = isAtLeast(effectiveTier, 'standard') && (settings.pinWajib || dbCashiers.length > 1) && selectedHasPin;
+  // Free skips the PIN entirely. Standard & Premium require a PIN for everyone
+  // (safety) — the owner can still turn it off in Pengaturan.
+  const requiresPin = isAtLeast(effectiveTier, 'standard') && settings.pinWajib;
   const afterLogin = isAtLeast(effectiveTier, "standard") ? "checkin" : "sales";
 
-  // First-run on a real store with no cashiers yet. Free & Standard: the owner
-  // just names themselves (becomes Pemilik) — no PIN, no forced staff. They can
-  // add staff cashiers (with PINs) later in Kelola. Premium manages staff in
-  // Back Office, so it uses the create-cashier flow there.
-  const isPremium = isAtLeast(effectiveTier, "premium");
+  // First-run on a real store with no cashiers yet. Free: owner names themselves
+  // (single Pemilik login, no PIN). Standard & Premium: go straight to creating a
+  // cashier (with a PIN) — no owner-name step; making more than one is optional.
+  const isFreeTier = !isAtLeast(effectiveTier, "standard");
   const noCashiers = !isDemoMode && !!storeId && dbCashiers.length === 0;
-  const needsCashierSetup = noCashiers && !isPremium;
-  const needsFirstCashierStd = noCashiers && isPremium;
+  const needsCashierSetup = noCashiers && isFreeTier;
+  const needsFirstCashierStd = noCashiers && !isFreeTier;
   const [ownerName, setOwnerName] = useState("");
   const [savingName, setSavingName] = useState(false);
 
