@@ -301,7 +301,7 @@ export default function OwnerLogin() {
             <label style={labelStyle}>Nama Toko</label>
             <div style={{ position: "relative" }}>
               <svg style={iconStyle} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-              <input type="text" value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="Toko Sembako Maju" required style={inputStyle} />
+              <input type="text" value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="mis. Toko Anda" required style={inputStyle} />
             </div>
           </div>
         )}
@@ -454,7 +454,7 @@ export default function OwnerLogin() {
             if (showCreate) return (
               <div style={{ marginTop: 12, background: "white", border: "1px solid #ECE7DD", borderRadius: 14, padding: 14 }}>
                 <p style={{ fontSize: 9.5, letterSpacing: "0.2em", textTransform: "uppercase", color: "#7A776F", fontWeight: 600, marginBottom: 8 }}>Toko Baru</p>
-                <input autoFocus value={newStoreName} onChange={e => setNewStoreName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") createStore(); }} placeholder="mis. Toko Sembako Maju · Cabang 2"
+                <input autoFocus value={newStoreName} onChange={e => setNewStoreName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") createStore(); }} placeholder="mis. Cabang 2"
                   style={{ width: "100%", height: 46, borderRadius: 10, border: `1px solid ${newStoreName.trim() ? "#5C9E7E" : "#ECE7DD"}`, padding: "0 14px", fontSize: 14, color: "#0D1117", outline: "none", boxSizing: "border-box" }} />
                 <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                   <button onClick={() => { setShowCreate(false); setNewStoreName(""); setError(""); }} style={{ flex: 1, height: 44, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0D1117", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Batal</button>
