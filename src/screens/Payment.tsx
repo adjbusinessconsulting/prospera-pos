@@ -73,10 +73,21 @@ export default function Payment() {
   useEffect(() => {
     if (!storeId) return;
     let cancelled = false;
-    supabase.from("customers").select("name,phone").eq("store_id", storeId).order("created_at", { ascending: false }).limit(8)
+    // Load the saved customer book so typing a name can recognise a repeat debtor
+    // and auto-fill their WhatsApp. The first 8 also power the "Pelanggan Terakhir" chips.
+    supabase.from("customers").select("name,phone").eq("store_id", storeId).order("created_at", { ascending: false }).limit(400)
       .then(({ data }) => { if (!cancelled) setRecentCustomers((data ?? []) as { name: string; phone: string | null }[]); });
     return () => { cancelled = true; };
   }, [storeId]);
+
+  // Suggestions: saved customers whose name matches what's being typed (skip an
+  // exact match — no point suggesting what's already entered).
+  const custQuery = hutangName.trim().toLowerCase();
+  const custMatches = custQuery.length >= 1
+    ? recentCustomers.filter(c => c.name.toLowerCase().includes(custQuery) && c.name.toLowerCase() !== custQuery).slice(0, 5)
+    : [];
+  // Exact recognised customer (name entered matches a saved one) → show a hint.
+  const recognised = recentCustomers.find(c => c.name.toLowerCase() === custQuery && custQuery.length >= 1);
   function confirmHutang() {
     const name = hutangName.trim();
     if (!name) return;
@@ -98,9 +109,20 @@ export default function Payment() {
   async function recordHutangDB(name: string, phone: string, amount: number, trx_id: string) {
     try {
       let customer_id: string | null = null;
+      // Match an existing customer by phone first, then by name — so a recognised
+      // repeat debtor isn't duplicated in the customer book.
       if (phone) {
         const { data } = await supabase.from("customers").select("id").eq("store_id", storeId).eq("phone", phone).limit(1).maybeSingle();
         customer_id = (data as { id?: string } | null)?.id ?? null;
+      }
+      if (!customer_id) {
+        const { data } = await supabase.from("customers").select("id, phone").eq("store_id", storeId).ilike("name", name).limit(1).maybeSingle();
+        const row = data as { id?: string; phone?: string | null } | null;
+        if (row?.id) {
+          customer_id = row.id;
+          // Fill in a WhatsApp number if we now have one and the record was missing it.
+          if (phone && !row.phone) await supabase.from("customers").update({ phone }).eq("id", row.id);
+        }
       }
       if (!customer_id) {
         const { data } = await supabase.from("customers").insert({ store_id: storeId, name, phone: phone || null }).select("id").single();
@@ -603,7 +625,7 @@ export default function Payment() {
                 <div>
                   <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">PELANGGAN TERAKHIR</span></label>
                   <div className="flex flex-wrap gap-2">
-                    {recentCustomers.map((c, i) => (
+                    {recentCustomers.slice(0, 8).map((c, i) => (
                       <button key={i} type="button" onClick={() => { setHutangName(c.name); setHutangPhone(c.phone ?? ""); }}
                         className="h-8 px-3 rounded-full border border-warm-border bg-cream-bg text-[12px] text-navy hover:border-navy/40 cursor-pointer whitespace-nowrap">
                         {c.name}
@@ -614,9 +636,28 @@ export default function Payment() {
               )}
               <div>
                 <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">NAMA PELANGGAN <span className="text-warning">*</span></span></label>
-                <input value={hutangName} onChange={e => setHutangName(e.target.value)} autoFocus placeholder="mis. Bu Sari"
-                  className="w-full bg-cream-bg border rounded-button px-4 h-[48px] text-[14px] text-navy outline-none placeholder:text-text-mute"
-                  style={{ borderColor: hutangName.trim() ? "#3D7A5E" : "#ECE7DD" }} />
+                <div className="relative">
+                  <input value={hutangName} onChange={e => setHutangName(e.target.value)} autoFocus placeholder="mis. Bu Sari" autoComplete="off"
+                    className="w-full bg-cream-bg border rounded-button px-4 h-[48px] text-[14px] text-navy outline-none placeholder:text-text-mute"
+                    style={{ borderColor: hutangName.trim() ? "#3D7A5E" : "#ECE7DD" }} />
+                  {custMatches.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 z-10 bg-white border border-warm-border rounded-card shadow-lg overflow-hidden">
+                      {custMatches.map((c, i) => (
+                        <button key={i} type="button" onClick={() => { setHutangName(c.name); setHutangPhone(c.phone ?? ""); }}
+                          className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-cream-bg border-0 bg-transparent cursor-pointer border-b border-[#F2EDE3] last:border-b-0">
+                          <span className="text-[13.5px] text-navy font-medium truncate">{c.name}</span>
+                          {c.phone && <span className="text-[11.5px] text-text-mute shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{c.phone}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {recognised && (
+                  <p className="text-[11.5px] mt-1.5 flex items-center gap-1.5" style={{ color: "#3D7A5E" }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                    Pelanggan dikenali{recognised.phone ? ` · ${recognised.phone}` : " · belum ada WhatsApp"}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">WHATSAPP <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></span></label>
