@@ -184,8 +184,18 @@ export default function CheckIn() {
 
         {camError ? (
           <div style={{ textAlign: "center", padding: "32px 20px", maxWidth: 340 }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>📷</div>
-            <p style={{ color: "#C25E3D", fontSize: 14, lineHeight: 1.7, margin: 0 }}>{camError}</p>
+            <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#C25E3D" strokeWidth="1.6" style={{ margin: "0 auto 16px", display: "block" }}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            <p style={{ color: "#C25E3D", fontSize: 14, lineHeight: 1.7, margin: "0 0 20px" }}>{camError}</p>
+            {/* Never strand a cashier on a device without a camera — let them proceed
+                without the selfie (logged as skipped) or go back to login. */}
+            <button onClick={() => { stopStream(); setScreen("sales"); }}
+              style={{ width: "100%", height: 48, borderRadius: 12, border: "none", background: "#e7c987", color: "#0D1117", fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", cursor: "pointer", marginBottom: 10 }}>
+              Lewati foto &amp; Masuk
+            </button>
+            <button onClick={() => { stopStream(); setScreen("login"); }}
+              style={{ width: "100%", height: 44, borderRadius: 12, border: "1px solid rgba(242,237,227,0.15)", background: "transparent", color: "rgba(242,237,227,0.6)", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
+              Kembali ke pilih kasir
+            </button>
           </div>
         ) : (
           <div style={{ position: "relative", width: "100%", maxWidth: 500, borderRadius: 16, overflow: "hidden", background: "#000", aspectRatio: "4/3", flexShrink: 0, boxShadow: "0 0 0 1px rgba(201,165,95,0.2), 0 20px 60px rgba(0,0,0,0.5)" }}>

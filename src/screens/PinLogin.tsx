@@ -29,7 +29,7 @@ function shiftContainsNow(start: string, end: string, nowMin: number) {
 interface ShiftOption { pos: number; name: string; time: string; isNow: boolean; }
 
 export default function PinLogin() {
-  const { selectedCashier, selectedShift, selectCashier, setShift, pin, addPin, removePin, clearPin, setScreen, storeName, storeAddress, storeTier, storeId, dbCashiers, setDbCashiers, dbShifts, settings, isDemoMode } = useStore();
+  const { selectedCashier, selectedShift, selectCashier, setShift, pin, addPin, removePin, clearPin, setScreen, storeName, storeAddress, storeTier, storeId, dbCashiers, setDbCashiers, dbShifts, settings, isDemoMode, signOut } = useStore();
   // Demo shows all features; Free locks non-current shifts (only when shifts aren't configured)
   const effectiveTier = storeId ? storeTier : 'free';
   const canChangeShift = isAtLeast(effectiveTier, 'standard');
@@ -188,6 +188,17 @@ export default function PinLogin() {
           <div style={{ display: "flex", alignItems: "center", gap: 9, justifyContent: "center", background: "rgba(201,165,95,0.08)", border: "1px solid rgba(201,165,95,0.3)", borderRadius: 11, padding: "12px 14px" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A6843F" strokeWidth="1.8"><path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
             <span style={{ fontSize: 11.5, color: "#0D1117", lineHeight: 1.5, textAlign: "left" }}>Buka <b>Back Office</b> → menu <b>Manajemen · Staf</b> untuk menambah kasir &amp; PIN.</span>
+          </div>
+          {/* Escape hatches so a Premium owner isn't stranded here before staff exist. */}
+          <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+            <button onClick={() => window.location.reload()}
+              style={{ flex: 1, height: 44, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0D1117", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
+              Muat ulang
+            </button>
+            <button onClick={async () => { await supabase.auth.signOut(); signOut(); }}
+              style={{ flex: 1, height: 44, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#7A776F", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
+              Keluar
+            </button>
           </div>
         </div>
       </div>
