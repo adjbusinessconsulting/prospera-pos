@@ -164,7 +164,7 @@ export default function Produk() {
     apply();
   }
 
-  function doSave() {
+  async function doSave() {
     if (!canSave) return;
     const price = parseIDRInput(addPrice);
     const words = addName.trim().split(/\s+/);
@@ -185,12 +185,15 @@ export default function Produk() {
     addProduct(newProduct);
     void logEvent("product.add", `Produk baru: ${newProduct.name} — ${formatRp(newProduct.price)}`);
     if (storeId && !isDemoMode) {
-      supabase.from("products").insert({
+      // Await + surface errors: a silent failure here means the product only lives
+      // in memory and disappears on next login (RLS or a missing column).
+      const { error } = await supabase.from("products").insert({
         id: newProduct.id, store_id: storeId,
         name: newProduct.name, monogram: newProduct.monogram,
         emoji: newProduct.emoji, category: newProduct.category,
         unit: newProduct.unit, price: newProduct.price, stock: 0,
       });
+      if (error) { alert(`Produk belum tersimpan ke server: ${error.message}`); return; }
     }
     closeModal();
   }

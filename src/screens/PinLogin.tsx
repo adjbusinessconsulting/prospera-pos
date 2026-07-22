@@ -52,13 +52,18 @@ export default function PinLogin() {
     if (!name) return;
     setSavingName(true);
     const initials = name.split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase();
-    try {
-      const { data } = await supabase.from("cashiers")
-        .insert({ store_id: storeId, name, initials, role: "Pemilik", pin: "", active: true })
-        .select("*").single();
-      if (data) { setDbCashiers([data as CashierDB]); selectCashier((data as CashierDB).id); }
-    } catch { /* offline / failed — proceed with the session name anyway */ }
+    const { data, error } = await supabase.from("cashiers")
+      .insert({ store_id: storeId, name, initials, role: "Pemilik", pin: "", active: true })
+      .select("*").single();
     setSavingName(false);
+    if (error || !data) {
+      // Don't silently proceed — a failed insert means the cashier vanishes on
+      // next login (RLS or a missing column). Tell the owner why.
+      alert(`Kasir belum tersimpan ke server: ${error?.message ?? "coba lagi"}`);
+      return;
+    }
+    setDbCashiers([data as CashierDB]);
+    selectCashier((data as CashierDB).id);
     setScreen(afterLogin);
   }
 

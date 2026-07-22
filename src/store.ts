@@ -314,6 +314,11 @@ export const useStore = create<POSState>((set) => ({
     midtransClientKey,
     dbCashiers: cashiers,
     selectedCashier: cashiers.length > 0 ? cashiers[0].id : 'ae',
+    // Sync the greeting/attribution to the loaded cashier so a returning session
+    // shows the real name, not the initial 'Aerith' fallback.
+    ...(cashiers.length > 0
+      ? { cashierName: cashiers[0].name.split(' ')[0], cashierInitials: cashiers[0].initials }
+      : {}),
   }),
 }));
 
