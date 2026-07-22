@@ -69,14 +69,18 @@ export default function Payment() {
   const [showHutangModal, setShowHutangModal] = useState(false);
   const [hutangName, setHutangName] = useState("");
   const [hutangPhone, setHutangPhone] = useState("");
-  const [recentCustomers, setRecentCustomers] = useState<{ name: string; phone: string | null }[]>([]);
+  const [hutangAddress, setHutangAddress] = useState("");        // optional
+  const [hutangPhoto, setHutangPhoto] = useState<string | null>(null);  // optional (data URL)
+  const custPhotoRef = useRef<HTMLInputElement>(null);
+  type Cust = { name: string; phone: string | null; address: string | null; photo: string | null };
+  const [recentCustomers, setRecentCustomers] = useState<Cust[]>([]);
   useEffect(() => {
     if (!storeId) return;
     let cancelled = false;
     // Load the saved customer book so typing a name can recognise a repeat debtor
     // and auto-fill their WhatsApp. The first 8 also power the "Pelanggan Terakhir" chips.
-    supabase.from("customers").select("name,phone").eq("store_id", storeId).order("created_at", { ascending: false }).limit(400)
-      .then(({ data }) => { if (!cancelled) setRecentCustomers((data ?? []) as { name: string; phone: string | null }[]); });
+    supabase.from("customers").select("name,phone,address,photo").eq("store_id", storeId).order("created_at", { ascending: false }).limit(400)
+      .then(({ data }) => { if (!cancelled) setRecentCustomers((data ?? []) as Cust[]); });
     return () => { cancelled = true; };
   }, [storeId]);
 
@@ -88,10 +92,25 @@ export default function Payment() {
     : [];
   // Exact recognised customer (name entered matches a saved one) → show a hint.
   const recognised = recentCustomers.find(c => c.name.toLowerCase() === custQuery && custQuery.length >= 1);
+  // Fill every field from a chosen saved customer (chip / suggestion).
+  function fillCustomer(c: Cust) {
+    setHutangName(c.name); setHutangPhone(c.phone ?? ""); setHutangAddress(c.address ?? ""); setHutangPhoto(c.photo ?? null);
+  }
+  function onCustPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]; if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => setHutangPhoto(reader.result as string);
+    reader.readAsDataURL(f);
+    e.target.value = "";
+  }
+  function resetHutangForm() { setHutangName(""); setHutangPhone(""); setHutangAddress(""); setHutangPhoto(null); }
+  function cancelHutang() { setShowHutangModal(false); resetHutangForm(); }
   function confirmHutang() {
     const name = hutangName.trim();
     if (!name) return;
     const phone = hutangPhone.trim();
+    const address = hutangAddress.trim();
+    const photo = hutangPhoto;
     // Hutang is all-or-nothing: the full cart amount is owed and later settled
     // in ONE full pelunasan (no down-payment, no installments).
     setHutangCustomer({ name, phone, paidNow: 0 });
@@ -100,13 +119,14 @@ export default function Payment() {
     if (isDemoMode) {
       addDemoHutang({ id: `dh-${Date.now()}`, customer_name: name, phone: phone || null, amount: total, paid_amount: 0, status: "open", cashier_name: cashierName, created_at: new Date().toISOString(), trx_id: trxId });
     } else if (storeId) {
-      void recordHutangDB(name, phone, total, trxId);
+      void recordHutangDB(name, phone, address, photo, total, trxId);
     }
     setShowHutangModal(false);
+    resetHutangForm();
     setScreen("receipt");
   }
 
-  async function recordHutangDB(name: string, phone: string, amount: number, trx_id: string) {
+  async function recordHutangDB(name: string, phone: string, address: string, photo: string | null, amount: number, trx_id: string) {
     try {
       let customer_id: string | null = null;
       // Match an existing customer by phone first, then by name — so a recognised
@@ -116,16 +136,20 @@ export default function Payment() {
         customer_id = (data as { id?: string } | null)?.id ?? null;
       }
       if (!customer_id) {
-        const { data } = await supabase.from("customers").select("id, phone").eq("store_id", storeId).ilike("name", name).limit(1).maybeSingle();
-        const row = data as { id?: string; phone?: string | null } | null;
+        const { data } = await supabase.from("customers").select("id, phone, address, photo").eq("store_id", storeId).ilike("name", name).limit(1).maybeSingle();
+        const row = data as { id?: string; phone?: string | null; address?: string | null; photo?: string | null } | null;
         if (row?.id) {
           customer_id = row.id;
-          // Fill in a WhatsApp number if we now have one and the record was missing it.
-          if (phone && !row.phone) await supabase.from("customers").update({ phone }).eq("id", row.id);
+          // Backfill any newly-provided details the record was missing.
+          const upd: Record<string, string> = {};
+          if (phone && !row.phone) upd.phone = phone;
+          if (address && !row.address) upd.address = address;
+          if (photo && !row.photo) upd.photo = photo;
+          if (Object.keys(upd).length) await supabase.from("customers").update(upd).eq("id", row.id);
         }
       }
       if (!customer_id) {
-        const { data } = await supabase.from("customers").insert({ store_id: storeId, name, phone: phone || null }).select("id").single();
+        const { data } = await supabase.from("customers").insert({ store_id: storeId, name, phone: phone || null, address: address || null, photo: photo || null }).select("id").single();
         customer_id = (data as { id?: string } | null)?.id ?? null;
       }
       await supabase.from("hutang").insert({
@@ -613,7 +637,7 @@ export default function Payment() {
       {/* Hutang: capture customer name / WhatsApp */}
       {showHutangModal && (
         <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowHutangModal(false)} />
+          <div className="absolute inset-0 bg-black/40" onClick={cancelHutang} />
           <div className="relative bg-white w-full lg:max-w-[400px] lg:mx-4 rounded-t-[20px] lg:rounded-card shadow-xl">
             <div className="px-6 pt-5 pb-4 border-b border-warm-border">
               <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-0.5">HUTANG / BON</p>
@@ -626,7 +650,7 @@ export default function Payment() {
                   <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">PELANGGAN TERAKHIR</span></label>
                   <div className="flex flex-wrap gap-2">
                     {recentCustomers.slice(0, 8).map((c, i) => (
-                      <button key={i} type="button" onClick={() => { setHutangName(c.name); setHutangPhone(c.phone ?? ""); }}
+                      <button key={i} type="button" onClick={() => fillCustomer(c)}
                         className="h-8 px-3 rounded-full border border-warm-border bg-cream-bg text-[12px] text-navy hover:border-navy/40 cursor-pointer whitespace-nowrap">
                         {c.name}
                       </button>
@@ -643,7 +667,7 @@ export default function Payment() {
                   {custMatches.length > 0 && (
                     <div className="absolute left-0 right-0 top-full mt-1 z-10 bg-white border border-warm-border rounded-card shadow-lg overflow-hidden">
                       {custMatches.map((c, i) => (
-                        <button key={i} type="button" onClick={() => { setHutangName(c.name); setHutangPhone(c.phone ?? ""); }}
+                        <button key={i} type="button" onClick={() => fillCustomer(c)}
                           className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-cream-bg border-0 bg-transparent cursor-pointer border-b border-[#F2EDE3] last:border-b-0">
                           <span className="text-[13.5px] text-navy font-medium truncate">{c.name}</span>
                           {c.phone && <span className="text-[11.5px] text-text-mute shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{c.phone}</span>}
@@ -664,6 +688,28 @@ export default function Payment() {
                 <input value={hutangPhone} onChange={e => setHutangPhone(e.target.value)} inputMode="tel" placeholder="0812-xxxx-xxxx"
                   className="w-full bg-cream-bg border border-warm-border rounded-button px-4 h-[44px] text-[13.5px] text-navy outline-none placeholder:text-text-mute" />
               </div>
+              <div>
+                <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">ALAMAT RUMAH <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></span></label>
+                <input value={hutangAddress} onChange={e => setHutangAddress(e.target.value)} placeholder="mis. Jl. Melati No. 7, RT 03"
+                  className="w-full bg-cream-bg border border-warm-border rounded-button px-4 h-[44px] text-[13.5px] text-navy outline-none placeholder:text-text-mute" />
+              </div>
+              <div>
+                <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">FOTO <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></span></label>
+                <input ref={custPhotoRef} type="file" accept="image/*" className="hidden" onChange={onCustPhoto} />
+                {hutangPhoto ? (
+                  <div className="flex items-center gap-3">
+                    <img src={hutangPhoto} alt="Foto pelanggan" className="w-14 h-14 rounded-[10px] object-cover border border-warm-border" />
+                    <button type="button" onClick={() => custPhotoRef.current?.click()} className="text-[12px] text-navy underline underline-offset-2 bg-transparent border-0 cursor-pointer">Ganti</button>
+                    <button type="button" onClick={() => setHutangPhoto(null)} className="text-[12px] text-warning bg-transparent border-0 cursor-pointer">Hapus</button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => custPhotoRef.current?.click()}
+                    className="w-full h-[44px] bg-cream-bg border border-dashed border-warm-dashed rounded-button flex items-center justify-center gap-2 text-[12.5px] text-text-mute hover:border-navy/40 cursor-pointer">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    Tambah foto pelanggan
+                  </button>
+                )}
+              </div>
 
               {/* Total bon — owed in full, settled later in one pelunasan */}
               <div className="border-t border-dashed border-warm-dashed pt-4">
@@ -675,7 +721,7 @@ export default function Payment() {
               </div>
             </div>
             <div className="px-6 pb-7 pt-3 border-t border-warm-border flex gap-2.5">
-              <button onClick={() => setShowHutangModal(false)} className="flex-1 bg-cream-bg border border-warm-border rounded-card h-[46px] text-[13px] font-medium text-navy hover:border-navy/40 cursor-pointer">Batal</button>
+              <button onClick={cancelHutang} className="flex-1 bg-cream-bg border border-warm-border rounded-card h-[46px] text-[13px] font-medium text-navy hover:border-navy/40 cursor-pointer">Batal</button>
               <button disabled={!hutangName.trim()} onClick={confirmHutang}
                 className={`flex-1 rounded-card h-[46px] text-[13px] font-semibold border-0 ${hutangName.trim() ? "bg-navy text-cream-text hover:opacity-90 cursor-pointer" : "bg-navy/20 text-navy/40 cursor-not-allowed"}`}>
                 Catat Hutang
