@@ -414,6 +414,7 @@ export default function OwnerLogin() {
 
   // ── Blocked: this account is already logged in on another live device ──
   if (blockedStore) {
+    const bs = blockedStore;   // narrowed for the async handlers below
     return (
       <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
         {fonts}
@@ -427,15 +428,15 @@ export default function OwnerLogin() {
           <p style={{ fontSize: 13, color: "#7A776F", margin: "0 0 24px", lineHeight: 1.6 }}>
             Akun <b style={{ color: "#0D1117" }}>{blockedStore.name}</b> sedang login di perangkat lain. Satu akun hanya bisa aktif di satu perangkat. Keluar dulu dari perangkat itu, lalu tekan <b style={{ color: "#0D1117" }}>Coba lagi</b>.
           </p>
-          <button onClick={async () => { setRetrying(true); const s = blockedStore; setBlockedStore(null); await enterStore(s); setRetrying(false); }} disabled={retrying}
+          <button onClick={async () => { setRetrying(true); await enterStore(bs); setRetrying(false); }} disabled={retrying}
             style={{ width: "100%", height: 48, borderRadius: 11, border: "none", background: "#0D1117", color: "#FAFAF7", fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", cursor: retrying ? "default" : "pointer", opacity: retrying ? 0.6 : 1 }}>
             {retrying ? "Mengecek…" : "Coba lagi"}
           </button>
-          <button onClick={() => { const s = blockedStore; setBlockedStore(null); void enterStore(s, true); }} disabled={retrying}
-            style={{ width: "100%", marginTop: 10, height: 44, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0D1117", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
-            Paksa masuk di sini (keluarkan perangkat lain)
+          <button onClick={async () => { setRetrying(true); await enterStore(bs, true); }} disabled={retrying}
+            style={{ width: "100%", marginTop: 10, height: 44, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0D1117", fontSize: 12.5, fontWeight: 600, cursor: retrying ? "default" : "pointer", opacity: retrying ? 0.6 : 1 }}>
+            {retrying ? "Masuk ke perangkat ini…" : "Paksa masuk di sini (keluarkan perangkat lain)"}
           </button>
-          <button onClick={() => { setBlockedStore(null); setStoreChoices([]); setOwnerId(""); void supabase.auth.signOut(); }}
+          <button onClick={() => { setBlockedStore(null); setStoreChoices([]); setOwnerId(""); void supabase.auth.signOut(); }} disabled={retrying}
             style={{ width: "100%", marginTop: 10, background: "transparent", border: "none", fontSize: 12, color: "#8f897a", cursor: "pointer", fontFamily: "'Hanken Grotesk', sans-serif" }}>
             Batal
           </button>
