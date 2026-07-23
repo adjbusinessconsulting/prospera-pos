@@ -76,6 +76,8 @@ interface POSState {
   addCash: (n: number) => void;
   restart: () => void;
   signOut: () => void;
+  kickedOut: boolean;                    // signed out because another device took over the store
+  setKickedOut: (v: boolean) => void;
   setCheckinPhoto: (photo: string) => void;
   setProductsFromDB: (products: Product[]) => void;
   setDbCashiers: (cashiers: CashierDB[]) => void;
@@ -159,6 +161,7 @@ export const useStore = create<POSState>((set) => ({
   trxCounter: 42,
 
   storeId: '',
+  kickedOut: false,
   storeName: '',
   storeAddress: '',
   storePhone: '',
@@ -190,6 +193,7 @@ export const useStore = create<POSState>((set) => ({
     lastSyncedAt: s.lastSyncedAt !== undefined ? s.lastSyncedAt : st.lastSyncedAt,
   })),
   setStoreTier: (storeTier) => set({ storeTier }),
+  setKickedOut: (kickedOut) => set({ kickedOut }),
   setSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
   loadSettings: (raw) => set({ settings: mergeSettings(raw) }),
   setInventoryEnabled: (inventoryEnabled) => set({ inventoryEnabled }),

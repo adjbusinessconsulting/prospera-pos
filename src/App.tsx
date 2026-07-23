@@ -7,6 +7,7 @@ import UpdateBanner from "./components/UpdateBanner";
 import { DemoControls } from "./components/DemoControls";
 import { RenewBanner } from "./components/RenewBanner";
 import { initSync } from "./lib/sync";
+import { deviceId } from "./lib/deviceLock";
 import LogAktivitas from "./screens/LogAktivitas";
 import TutupShiftRiwayat from "./screens/TutupShiftRiwayat";
 import BukaToko from "./screens/BukaToko";
@@ -73,19 +74,29 @@ export default function App() {
 
   // Auto-logout when the store is suspended from Masteroffice (checked while the
   // session is still valid, so it kicks in before the banned token even expires).
+  // One poll covers two auto-logouts: (1) store suspended from Masteroffice, and
+  // (2) single-device lock — another device claimed this store (last login wins).
+  // Runs every 20s + whenever the tab/app regains focus, so switching back to the
+  // older device signs it out promptly.
   useEffect(() => {
     if (!storeId || isDemoMode) return;
     let cancelled = false;
     const check = async () => {
-      const { data } = await supabase.from("stores").select("status").eq("id", storeId).maybeSingle();
-      if (!cancelled && data && data.status && data.status !== "active") {
+      const { data } = await supabase.from("stores").select("status, active_device_id").eq("id", storeId).maybeSingle();
+      if (cancelled || !data) return;
+      const suspended = data.status && data.status !== "active";
+      const takenOver = data.active_device_id && data.active_device_id !== deviceId();
+      if (suspended || takenOver) {
         await supabase.auth.signOut();
         signOut();
+        if (takenOver && !suspended) useStore.getState().setKickedOut(true);
       }
     };
     check();
-    const t = setInterval(check, 60000);
-    return () => { cancelled = true; clearInterval(t); };
+    const t = setInterval(check, 20000);
+    const onVis = () => { if (document.visibilityState === "visible") check(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => { cancelled = true; clearInterval(t); document.removeEventListener("visibilitychange", onVis); };
   }, [storeId, isDemoMode, signOut]);
 
   useEffect(() => {

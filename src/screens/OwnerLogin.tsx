@@ -3,6 +3,7 @@ import { useStore, localDateISO } from "../store";
 import { supabase } from "../lib/supabase";
 import { appAuthLogin, AUTH_BASE } from "../lib/appAuth";
 import { autoCloseStaleShifts } from "../lib/shift";
+import { claimStore } from "../lib/deviceLock";
 import { pruneLog } from "../lib/auditlog";
 import type { CashierDB } from "../types";
 import { BUILD } from "../version";
@@ -42,7 +43,7 @@ interface StoreRow {
 }
 
 export default function OwnerLogin() {
-  const { setScreen, setStoreData, setProductsFromDB, setTrxCounter, setDbShifts, startDemo, setInventorySettings, setSubscription, setReceiptLogo, loadSettings } = useStore();
+  const { setScreen, setStoreData, setProductsFromDB, setTrxCounter, setDbShifts, startDemo, setInventorySettings, setSubscription, setReceiptLogo, loadSettings, setKickedOut, kickedOut } = useStore();
   const [storeChoices, setStoreChoices] = useState<StoreRow[]>([]);
   const [ownerId, setOwnerId] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -192,6 +193,8 @@ export default function OwnerLogin() {
     setDbShifts((shiftRows ?? []) as import("../types").ShiftDef[]);
     setTrxCounter((saleCount ?? 0) + 1);
     void autoCloseStaleShifts(store.id);   // precaution: close any day left open
+    void claimStore(store.id);             // single-device: this device now owns the store
+    setKickedOut(false);                    // fresh login clears any "kicked out" banner
     setScreen("login");
   }
 
@@ -273,6 +276,13 @@ export default function OwnerLogin() {
           {mode === "signup" ? "Daftarkan toko Anda ke Sterith POS." : mode === "forgot" ? "Kami kirim link atur ulang ke email Anda." : "Masuk untuk mulai berjualan hari ini."}
         </p>
       </div>
+
+      {/* Signed out because another device took over this account */}
+      {kickedOut && mode === "signin" && (
+        <div style={{ fontSize: 12, color: "#0D1117", background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.4)", padding: "10px 12px", borderRadius: 10, marginBottom: 14, lineHeight: 1.5 }}>
+          Akun ini baru saja masuk di perangkat lain, jadi sesi di perangkat ini ditutup. Satu akun hanya bisa aktif di satu perangkat.
+        </div>
+      )}
 
       {/* Forgot password form */}
       {mode === "forgot" && (
