@@ -7,7 +7,7 @@ import UpdateBanner from "./components/UpdateBanner";
 import { DemoControls } from "./components/DemoControls";
 import { RenewBanner } from "./components/RenewBanner";
 import { initSync } from "./lib/sync";
-import { deviceId, touchLock } from "./lib/deviceLock";
+import { deviceId, touchLock, releaseStore } from "./lib/deviceLock";
 import LogAktivitas from "./screens/LogAktivitas";
 import TutupShiftRiwayat from "./screens/TutupShiftRiwayat";
 import BukaToko from "./screens/BukaToko";
@@ -98,7 +98,12 @@ export default function App() {
     const t = setInterval(check, 20000);
     const onVis = () => { if (document.visibilityState === "visible") check(); };
     document.addEventListener("visibilitychange", onVis);
-    return () => { cancelled = true; clearInterval(t); document.removeEventListener("visibilitychange", onVis); };
+    // Best-effort: free the lock when the app is actually closed (not just tab-switch
+    // or bfcache), so the next device isn't falsely blocked. The 2-min stale timeout
+    // is the fallback if this doesn't land.
+    const onHide = (e: PageTransitionEvent) => { if (!e.persisted) void releaseStore(storeId); };
+    window.addEventListener("pagehide", onHide);
+    return () => { cancelled = true; clearInterval(t); document.removeEventListener("visibilitychange", onVis); window.removeEventListener("pagehide", onHide); };
   }, [storeId, isDemoMode, signOut]);
 
   useEffect(() => {

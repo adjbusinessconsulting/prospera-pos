@@ -48,8 +48,11 @@ export async function isLockedByOther(storeId: string): Promise<boolean> {
     const id = (data as { active_device_id?: string | null }).active_device_id;
     const at = (data as { active_device_at?: string | null }).active_device_at;
     if (!id || id === deviceId()) return false;              // free, or already mine
-    if (!at) return true;                                    // held but no heartbeat → treat as live
-    return (Date.now() - new Date(at).getTime()) < STALE_MS; // live only if the heartbeat is recent
+    const curAt = at ? new Date(at).getTime() : 0;
+    // Block ONLY if another device is proven live (a RECENT heartbeat). A missing
+    // or stale timestamp means the holder is gone → not blocked. This avoids ghost
+    // locks that said "already logged in" when nothing was actually connected.
+    return curAt > 0 && (Date.now() - curAt) < STALE_MS;
   } catch {
     return false;   // offline / error → fail open (don't block selling)
   }
