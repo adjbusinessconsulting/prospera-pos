@@ -10,6 +10,7 @@ const TYPE_LABEL: Record<string, string> = {
   "sale": "Penjualan",
   "void": "Void / batal",
   "shift.open": "Buka toko",
+  "shift.pindah": "Pindah shift",
   "shift.close": "Tutup shift",
   "shift.rekonsiliasi": "Rekonsiliasi kas",
   "kas.masuk": "Kas masuk",

@@ -1,23 +1,71 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore, shiftNameFor } from "../store";
-import { CASHIERS, formatRp } from "../data";
+import { formatRp } from "../data";
+import { supabase } from "../lib/supabase";
+import { modalAwalToday } from "../lib/dayopen";
+import { logEvent } from "../lib/auditlog";
+
+function initialsOf(name: string) {
+  return name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase() || "–";
+}
 
 export default function PindahShift() {
-  const { cashierName, selectedShift, selectedShiftName, dbShifts, setScreen, setShift, selectCashier } = useStore();
+  const { cashierName, selectedShift, selectedShiftName, dbShifts, dbCashiers, storeId, storeTier, isDemoMode, setScreen, setShift, selectCashier } = useStore();
   const shiftCount = dbShifts.length > 0 ? dbShifts.length : 3;
+  const effectiveTier = storeId ? storeTier : "premium";
 
-  const modalAwal = 500000;
-  const penjualanTunai = 2680000;
-  const kasKeluar = 115000;
+  // Real drawer figures for today (demo keeps the seeded numbers).
+  const [modalAwal, setModalAwal] = useState(isDemoMode ? 500000 : 0);
+  const [penjualanTunai, setPenjualanTunai] = useState(isDemoMode ? 2680000 : 0);
+  const [tunaiTrx, setTunaiTrx] = useState(isDemoMode ? 18 : 0);
+  const [kasKeluar, setKasKeluar] = useState(isDemoMode ? 115000 : 0);
+  const [kasKeluarTrx, setKasKeluarTrx] = useState(isDemoMode ? 2 : 0);
+
+  useEffect(() => {
+    if (!storeId || isDemoMode) return;
+    let cancelled = false;
+    (async () => {
+      const start = new Date(); start.setHours(0, 0, 0, 0); const startISO = start.toISOString();
+      const [{ data: sales }, { data: kas }] = await Promise.all([
+        supabase.from("sales").select("total,payment_method,created_at").eq("store_id", storeId).gte("created_at", startISO),
+        supabase.from("kas_entries").select("type,amount,created_at").eq("store_id", storeId).gte("created_at", startISO),
+      ]);
+      if (cancelled) return;
+      const tunai = (sales ?? []).filter(s => (s as { payment_method?: string }).payment_method === "tunai");
+      setPenjualanTunai(tunai.reduce((a, s) => a + ((s as { total?: number }).total ?? 0), 0));
+      setTunaiTrx(tunai.length);
+      const keluar = (kas ?? []).filter(k => (k as { type?: string }).type === "keluar");
+      setKasKeluar(keluar.reduce((a, k) => a + ((k as { amount?: number }).amount ?? 0), 0));
+      setKasKeluarTrx(keluar.length);
+      setModalAwal(modalAwalToday(storeId));
+    })();
+    return () => { cancelled = true; };
+  }, [storeId, isDemoMode]);
+
   const seharusnya = modalAwal + penjualanTunai - kasKeluar;
 
-  const [hitungFisik, setHitungFisik] = useState(String(seharusnya));
-  const [nextCashierId, setNextCashierId] = useState(CASHIERS[1].id);
+  // Real cashiers for the "next cashier" picker (demo falls back to seeded names).
+  const cashiers = isDemoMode
+    ? [{ id: "ae", name: "Aerith D." }, { id: "st", name: "Stevany C." }]
+    : dbCashiers.map(c => ({ id: c.id, name: c.name }));
+
+  const [hitungFisik, setHitungFisik] = useState("");
+  const [touched, setTouched] = useState(false);
+  const [nextCashierId, setNextCashierId] = useState("");
   const [catatan, setCatatan] = useState("");
+
+  // Default the next cashier to the first one who isn't the current cashier.
+  useEffect(() => {
+    if (nextCashierId || cashiers.length === 0) return;
+    setNextCashierId((cashiers.find(c => c.name !== cashierName) ?? cashiers[0]).id);
+  }, [cashiers, cashierName, nextCashierId]);
+
+  // Pre-fill the physical count with the expected drawer until the cashier edits it.
+  useEffect(() => { if (!touched) setHitungFisik(String(seharusnya)); }, [seharusnya, touched]);
 
   const next = (selectedShift % shiftCount) + 1;
   const nextName = shiftNameFor(dbShifts, next);
-  const fisikNum = parseInt(hitungFisik.replace(/\D/g, "") || "0");
+  const fisikNum = parseInt(hitungFisik.replace(/\D/g, "") || String(seharusnya));
   const selisih = fisikNum - seharusnya;
   const balanced = selisih === 0;
 
@@ -25,11 +73,15 @@ export default function PindahShift() {
   const dateStr = now.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" });
   const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
 
-  const nextCashier = CASHIERS.find(c => c.id === nextCashierId) || CASHIERS[1];
+  const nextCashier = cashiers.find(c => c.id === nextCashierId);
+  const nextCashierName = nextCashier?.name ?? "Kasir";
 
   function handleConfirm() {
+    if (!isDemoMode && storeId) {
+      void logEvent("shift.pindah", `Pindah shift ${selectedShiftName} → ${nextName} · ke ${nextCashierName} · dihitung ${formatRp(fisikNum)} (selisih ${selisih >= 0 ? "+" : "−"}${formatRp(Math.abs(selisih))})${catatan.trim() ? " · " + catatan.trim() : ""}`);
+    }
     setShift(next);
-    selectCashier(nextCashierId);
+    if (nextCashierId) selectCashier(nextCashierId);
     setScreen("login");
   }
 
@@ -50,7 +102,7 @@ export default function PindahShift() {
           <p className="text-[11px] text-text-mute hidden lg:block mt-0.5">{cashierName} · {dateStr} · {timeStr}</p>
           <p className="text-[10.5px] text-text-mute lg:hidden mt-0.5">{cashierName} · {timeStr}</p>
         </div>
-        <span style={{ background: "rgba(122,119,111,0.10)", border: "1px solid rgba(122,119,111,0.28)", color: "#7A776F", fontSize: 9, letterSpacing: "0.16em", fontWeight: 600, padding: "3px 8px", borderRadius: 9999, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>FREE</span>
+        <span style={{ background: "rgba(122,119,111,0.10)", border: "1px solid rgba(122,119,111,0.28)", color: "#7A776F", fontSize: 9, letterSpacing: "0.16em", fontWeight: 600, padding: "3px 8px", borderRadius: 9999, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>{effectiveTier}</span>
       </div>
 
       {/* Main */}
@@ -68,20 +120,20 @@ export default function PindahShift() {
             <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-4">PERHITUNGAN SISTEM</p>
             <div className="flex flex-col gap-2.5">
               <div className="flex justify-between text-[12.5px]">
-                <span className="text-text-mute">Modal awal shift</span>
-                <span className="text-navy font-medium" style={{ fontVariantNumeric: "tabular-nums" }}>+ {formatRp(modalAwal)}</span>
+                <span className="text-text-mute">Modal awal</span>
+                <span className="num text-navy font-medium" style={{ fontVariantNumeric: "tabular-nums" }}>+ {formatRp(modalAwal)}</span>
               </div>
               <div className="flex justify-between text-[12.5px]">
-                <span className="text-text-mute">Penjualan tunai · 18 trx</span>
-                <span className="text-navy font-medium" style={{ fontVariantNumeric: "tabular-nums" }}>+ {formatRp(penjualanTunai)}</span>
+                <span className="text-text-mute">Penjualan tunai · {tunaiTrx} trx</span>
+                <span className="num text-navy font-medium" style={{ fontVariantNumeric: "tabular-nums" }}>+ {formatRp(penjualanTunai)}</span>
               </div>
               <div className="flex justify-between text-[12.5px]">
-                <span className="text-text-mute">Kas keluar · 2 trx</span>
-                <span style={{ color: "#C25E3D", fontVariantNumeric: "tabular-nums" }} className="font-medium">− {formatRp(kasKeluar)}</span>
+                <span className="text-text-mute">Kas keluar · {kasKeluarTrx} trx</span>
+                <span style={{ color: "#C25E3D", fontVariantNumeric: "tabular-nums" }} className="num font-medium">− {formatRp(kasKeluar)}</span>
               </div>
               <div className="border-t border-dashed border-warm-dashed mt-1 pt-3 flex justify-between items-center">
                 <span className="text-[11px] font-semibold text-navy uppercase tracking-[0.08em]">SEHARUSNYA DI LACI</span>
-                <span className="num text-[20px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(seharusnya)}</span>
+                <span className="num text-[20px] font-bold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(seharusnya)}</span>
               </div>
             </div>
           </div>
@@ -94,7 +146,7 @@ export default function PindahShift() {
               <input
                 type="number"
                 value={hitungFisik}
-                onChange={e => setHitungFisik(e.target.value)}
+                onChange={e => { setTouched(true); setHitungFisik(e.target.value); }}
                 className="flex-1 bg-transparent border-0 outline-none num text-[22px] font-semibold text-navy"
                 style={{ fontVariantNumeric: "tabular-nums" }}
               />
@@ -122,27 +174,33 @@ export default function PindahShift() {
           {/* Next cashier */}
           <div className="bg-white border border-warm-border rounded-card px-6 py-5">
             <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-3">KASIR BERIKUTNYA</p>
-            <div className="relative mb-3">
-              <select
-                value={nextCashierId}
-                onChange={e => setNextCashierId(e.target.value)}
-                className="w-full bg-cream-bg border border-warm-border rounded-card px-4 py-3 text-[13px] text-navy font-medium appearance-none outline-none cursor-pointer"
-              >
-                {CASHIERS.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              <svg className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-cream-bg rounded-[10px]">
-              <div className="w-9 h-9 rounded-full bg-navy flex items-center justify-center text-[11px] font-semibold text-cream-text shrink-0">
-                {nextCashier.initials}
-              </div>
-              <div>
-                <div className="text-[13px] font-semibold text-navy">{nextCashier.name}</div>
-                <div className="text-[11px] text-text-mute">{nextName}</div>
-              </div>
-            </div>
+            {cashiers.length === 0 ? (
+              <p className="text-[12px] text-text-mute">Belum ada kasir lain. Tambah kasir di Kelola.</p>
+            ) : (
+              <>
+                <div className="relative mb-3">
+                  <select
+                    value={nextCashierId}
+                    onChange={e => setNextCashierId(e.target.value)}
+                    className="w-full bg-cream-bg border border-warm-border rounded-card px-4 py-3 text-[13px] text-navy font-medium appearance-none outline-none cursor-pointer"
+                  >
+                    {cashiers.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-cream-bg rounded-[10px]">
+                  <div className="w-9 h-9 rounded-full bg-navy flex items-center justify-center text-[11px] font-semibold text-cream-text shrink-0">
+                    {initialsOf(nextCashierName)}
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-semibold text-navy">{nextCashierName}</div>
+                    <div className="text-[11px] text-text-mute">{nextName}</div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Handover note */}
@@ -151,7 +209,7 @@ export default function PindahShift() {
             <textarea
               value={catatan}
               onChange={e => setCatatan(e.target.value)}
-              placeholder="Stok susu rendah, sudah pesan ke supplier. Kunci laci di laci kanan."
+              placeholder="mis. Stok menipis, sudah pesan. Kunci laci di brankas."
               className="min-h-[110px] bg-cream-bg border border-warm-border rounded-[10px] px-4 py-3 text-[12.5px] text-navy placeholder:text-text-mute outline-none resize-none"
             />
           </div>
@@ -163,7 +221,7 @@ export default function PindahShift() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
           </button>
           <p className="text-[11px] text-text-mute text-center pb-2">
-            Layar kembali ke login PIN untuk {nextCashier.name.split(" ")[0]}.
+            Layar kembali ke login PIN untuk {nextCashierName.split(" ")[0]}.
           </p>
         </div>
       </div>
