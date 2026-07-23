@@ -11,13 +11,29 @@ import { supabase } from "./supabase";
 const DEV_KEY = "sterith_device_id";
 const STALE_MS = 2 * 60 * 1000;   // lock older than 2 min → holder is gone
 
-export function deviceId(): string {
+// Installed PWA vs browser tab. On desktop these share the same origin (and thus
+// the same localStorage), so we must fold the display mode into the id — otherwise
+// web + PWA on one machine look like the same device and never block each other.
+// Reopening the SAME mode keeps the same id, so a device never blocks itself.
+function displayMode(): string {
   try {
-    let id = localStorage.getItem(DEV_KEY);
-    if (!id) { id = crypto.randomUUID(); localStorage.setItem(DEV_KEY, id); }
-    return id;
+    const standalone =
+      (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+      (typeof navigator !== "undefined" && (navigator as unknown as { standalone?: boolean }).standalone === true);
+    return standalone ? "pwa" : "web";
   } catch {
-    return "nodevice";
+    return "web";
+  }
+}
+
+export function deviceId(): string {
+  const mode = displayMode();
+  try {
+    let base = localStorage.getItem(DEV_KEY);
+    if (!base) { base = crypto.randomUUID(); localStorage.setItem(DEV_KEY, base); }
+    return `${base}-${mode}`;
+  } catch {
+    return `nodevice-${mode}`;
   }
 }
 
