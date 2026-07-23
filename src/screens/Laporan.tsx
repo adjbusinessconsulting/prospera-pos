@@ -289,7 +289,7 @@ export default function Laporan() {
               <div className="flex justify-between items-start gap-3 mb-4">
                 <div>
                   <p style={{ fontSize: 10, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute font-bold">Ringkasan hari ini</p>
-                  <p className="font-serif text-[19px] font-bold text-navy mt-0.5">Buka {openHour}.00 · sampai jam {freeToday.upto}.00</p>
+                  <p className="num text-[19px] font-bold text-navy mt-0.5">Buka {openHour}.00 · sampai jam {freeToday.upto}.00</p>
                 </div>
                 <span style={{ fontSize: 8.5, letterSpacing: "0.1em" }} className="shrink-0 font-bold uppercase text-gold bg-gold/10 border border-gold/30 rounded-md px-2 py-1">Paket Free</span>
               </div>
@@ -363,7 +363,7 @@ export default function Laporan() {
                 ].map(card => (
                   <div key={card.label} className={`rounded-card px-5 py-4 ${card.accent ? "bg-navy" : "bg-white border border-warm-border"}`}>
                     <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className={`font-sans uppercase mb-1 ${card.accent ? "text-gold/70" : "text-text-mute"}`}>{card.label}</p>
-                    <p className={`font-serif text-[20px] font-semibold leading-tight ${card.accent ? "text-cream-text" : "text-navy"}`} style={{ fontVariantNumeric: "tabular-nums" }}>{card.value}</p>
+                    <p className={`num text-[20px] font-semibold leading-tight ${card.accent ? "text-cream-text" : "text-navy"}`} style={{ fontVariantNumeric: "tabular-nums" }}>{card.value}</p>
                   </div>
                 ))}
               </div>
@@ -419,7 +419,7 @@ export default function Laporan() {
                           <div className="text-[12.5px] font-medium text-navy truncate">{p.name}</div>
                           <div className="text-[11px] text-text-mute">{p.sold} terjual</div>
                         </div>
-                        <span className="font-serif text-[13px] font-semibold text-navy shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.sold * p.price)}</span>
+                        <span className="num text-[13px] font-semibold text-navy shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.sold * p.price)}</span>
                       </div>
                     ))}
                   </div>

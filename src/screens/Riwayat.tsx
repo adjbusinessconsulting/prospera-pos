@@ -370,15 +370,15 @@ export default function Riwayat() {
         <div className="mx-5 lg:mx-10 mt-3 shrink-0 bg-navy rounded-card px-5 lg:px-7 py-4 flex gap-5 lg:gap-8">
           <div>
             <p style={{ fontSize: 8.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">TOTAL OMZET</p>
-            <p className="font-serif text-[18px] lg:text-[20px] font-semibold text-cream-text" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</p>
+            <p className="num text-[18px] lg:text-[20px] font-semibold text-cream-text" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</p>
           </div>
           <div>
             <p style={{ fontSize: 8.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">TRANSAKSI</p>
-            <p className="font-serif text-[18px] lg:text-[20px] font-semibold text-cream-text">{filtered.length}</p>
+            <p className="num text-[18px] lg:text-[20px] font-semibold text-cream-text">{filtered.length}</p>
           </div>
           <div className="hidden lg:block">
             <p style={{ fontSize: 8.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">RATA-RATA</p>
-            <p className="font-serif text-[18px] lg:text-[20px] font-semibold text-cream-text" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(avg)}</p>
+            <p className="num text-[18px] lg:text-[20px] font-semibold text-cream-text" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(avg)}</p>
           </div>
           <div className="hidden lg:block">
             <p style={{ fontSize: 8.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">SHIFT AKTIF</p>
@@ -517,7 +517,7 @@ export default function Riwayat() {
                         </td>
                         <td className="px-5 py-3.5 text-right">
                           {(() => { const h = hutangStatusOf(t); return (
-                            <span className="font-serif text-[14px] font-semibold" style={{ color: h && !h.paid ? "#C25E3D" : "#0D1117", fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</span>
+                            <span className="num text-[14px] font-semibold" style={{ color: h && !h.paid ? "#C25E3D" : "#0D1117", fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</span>
                           ); })()}
                         </td>
                       </tr>
@@ -544,7 +544,7 @@ export default function Riwayat() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-serif text-[16px] font-semibold" style={{ color: h && !h.paid ? "#C25E3D" : "#0D1117", fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</p>
+                        <p className="num text-[16px] font-semibold" style={{ color: h && !h.paid ? "#C25E3D" : "#0D1117", fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</p>
                         <div className="flex items-center gap-1 justify-end mt-0.5">
                           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: `${METHOD_COLOR[m] || "#7A776F"}14`, color: METHOD_COLOR[m] || "#7A776F" }}>{m}</span>
                           {h && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: h.paid ? "rgba(61,122,94,0.10)" : "rgba(194,94,61,0.10)", color: h.paid ? "#3D7A5E" : "#C25E3D" }}>{h.paid ? "Lunas" : "Belum"}</span>}

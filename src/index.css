@@ -11,6 +11,12 @@
   ::-webkit-scrollbar { width: 0; height: 0; }
 }
 
+/* Numeric figures — Hanken Grotesk with tabular lining numerals. Replaces the
+   old serif (Cormorant) old-style figures for every number, price, Rp amount,
+   quantity, KPI, %, and date/time figure. Serif titles/headlines keep font-serif;
+   this class is for NUMBERS ONLY. Weight is set per-use (600 default, 700 totals). */
+.num { font-family: 'Hanken Grotesk', system-ui, sans-serif; font-variant-numeric: tabular-nums lining-nums; }
+
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }

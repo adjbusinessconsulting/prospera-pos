@@ -158,7 +158,7 @@ export default function Hutang() {
               {/* Outstanding summary */}
               <div className="bg-navy rounded-card px-6 py-5 mb-4 max-w-[460px]">
                 <p style={{ fontSize: 9.5, letterSpacing: "0.22em" }} className="font-sans uppercase text-gold/70 mb-1.5">TOTAL PIUTANG (BELUM LUNAS)</p>
-                <p className="font-serif text-[32px] font-semibold text-cream-text leading-none" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(outstanding)}</p>
+                <p className="num text-[32px] font-bold text-cream-text leading-none" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(outstanding)}</p>
                 <p className="text-[11px] text-white/40 mt-1.5">{belum.length} pelanggan berhutang</p>
               </div>
 
@@ -218,7 +218,7 @@ export default function Hutang() {
                           )}
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="font-serif text-[16px] font-semibold" style={{ color: accent, fontVariantNumeric: "tabular-nums" }}>{formatRp(r.amount)}</div>
+                          <div className="num text-[16px] font-semibold" style={{ color: accent, fontVariantNumeric: "tabular-nums" }}>{formatRp(r.amount)}</div>
                         </div>
                         {isLunas ? (
                           <button onClick={() => setLunasReceipt(r)}
@@ -256,7 +256,7 @@ export default function Hutang() {
             <div className="px-6 py-5 flex flex-col gap-4">
               <div className="bg-cream-bg border border-warm-border rounded-card px-4 py-3 flex justify-between items-center">
                 <span className="text-[12px] text-text-mute">Jumlah dilunasi {target.trx_id ? `· ${target.trx_id}` : ""}</span>
-                <b className="font-serif text-[20px] text-[#C25E3D]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(target.amount)}</b>
+                <b className="num text-[20px] text-[#C25E3D]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(target.amount)}</b>
               </div>
               <p className="text-[11px] text-text-mute -mt-1">Dibayar sekaligus penuh. Jumlah ini masuk ke omzet <b className="text-navy">hari bon dibuat</b> ({fmtDate(target.created_at)}), bukan hari ini.</p>
               <div>
@@ -302,7 +302,7 @@ export default function Hutang() {
               <div className="flex justify-between"><span className="text-text-mute">Tanggal lunas</span><span className="text-navy">{fmtDate(lunasReceipt.settled_at)}</span></div>
               <div className="flex justify-between items-center pt-3 mt-1 border-t border-dashed border-warm-dashed">
                 <span className="text-[13px] font-semibold text-navy">Jumlah</span>
-                <span className="font-serif text-[22px] font-bold text-[#3D7A5E]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(lunasReceipt.amount)}</span>
+                <span className="num text-[22px] font-bold text-[#3D7A5E]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(lunasReceipt.amount)}</span>
               </div>
             </div>
             <div className="px-6 pb-7 pt-1 flex gap-2.5">

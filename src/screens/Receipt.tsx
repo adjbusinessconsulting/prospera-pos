@@ -254,7 +254,7 @@ export default function Receipt() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-sans text-[11px] font-semibold tracking-[0.05em] text-navy">TOTAL</span>
-                <span className="font-serif text-[24px] font-semibold text-navy leading-none" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</span>
+                <span className="num text-[24px] font-bold text-navy leading-none" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</span>
               </div>
             </div>
 

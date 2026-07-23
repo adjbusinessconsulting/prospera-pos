@@ -329,7 +329,7 @@ export default function Payment() {
             Kembali ke keranjang
           </button>
           <p style={{ fontSize: 9.5, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute mb-1">RINGKASAN PESANAN</p>
-          <h2 className="font-serif text-[24px] font-medium text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{trxId}</h2>
+          <h2 className="num text-[24px] font-medium text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{trxId}</h2>
           <p className="text-[12px] text-text-mute mt-0.5">Kasir: {cashierName} · {timeStr}</p>
         </div>
 
@@ -347,7 +347,7 @@ export default function Payment() {
                   {item.qty} × Rp {item.product.price.toLocaleString("id-ID")}
                 </div>
               </div>
-              <div className="font-serif text-[15px] font-semibold text-navy shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>
+              <div className="num text-[15px] font-semibold text-navy shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>
                 {(item.product.price * item.qty).toLocaleString("id-ID")}
               </div>
             </div>
@@ -365,7 +365,7 @@ export default function Payment() {
           </div>
           <div className="flex justify-between items-end pt-3 border-t border-dashed border-warm-dashed">
             <span style={{ fontSize: 9.5, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute">TOTAL TAGIHAN</span>
-            <span className="font-serif text-[26px] font-semibold text-navy leading-none" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</span>
+            <span className="num text-[26px] font-bold text-navy leading-none" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</span>
           </div>
         </div>
       </div>
@@ -429,7 +429,7 @@ export default function Payment() {
                 <button onClick={() => setCashReceived(total)} className="text-[11px] text-text-mute underline underline-offset-[3px] bg-transparent border-0 p-0">PAS</button>
               </div>
               <div className="bg-cream-bg border-[1.5px] border-navy rounded-button px-4 py-3 flex items-center gap-2 mb-2.5">
-                <span className="font-serif text-[18px] text-text-mute font-medium leading-none shrink-0">Rp</span>
+                <span className="num text-[18px] text-text-mute font-medium leading-none shrink-0">Rp</span>
                 <input
                   inputMode="numeric"
                   value={cashReceived ? cashReceived.toLocaleString("id-ID") : ""}
@@ -437,7 +437,7 @@ export default function Payment() {
                   onFocus={e => e.target.select()}
                   placeholder="0"
                   style={{ fontVariantNumeric: "tabular-nums" }}
-                  className="font-serif text-[22px] font-semibold text-navy leading-none flex-1 min-w-0 w-full bg-transparent border-0 outline-none placeholder:text-text-mute" />
+                  className="num text-[22px] font-semibold text-navy leading-none flex-1 min-w-0 w-full bg-transparent border-0 outline-none placeholder:text-text-mute" />
                 {cashReceived > 0 && (
                   <button onClick={() => setCashReceived(0)} title="Kosongkan" className="shrink-0 text-text-mute hover:text-navy bg-transparent border-0 cursor-pointer p-0 flex">
                     <XCircle size={16} />
@@ -454,7 +454,7 @@ export default function Payment() {
               </div>
               <div className="flex justify-between items-center">
                 <p style={{ fontSize: 10, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">KEMBALIAN</p>
-                <span className={`font-serif text-[20px] font-semibold leading-none ${change >= 0 ? "text-success" : "text-warning"}`}>
+                <span className={`num text-[20px] font-semibold leading-none ${change >= 0 ? "text-success" : "text-warning"}`}>
                   {change >= 0 ? formatRp(change) : `−${formatRp(-change)}`}
                 </span>
               </div>
@@ -464,7 +464,7 @@ export default function Payment() {
           <div className="flex items-center gap-3">
             <div className="hidden lg:block">
               <p style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">TOTAL</p>
-              <span className="font-serif text-[22px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</span>
+              <span className="num text-[22px] font-bold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</span>
             </div>
             <button
               onClick={handleSelesaikan}
@@ -727,7 +727,7 @@ export default function Payment() {
               <div className="border-t border-dashed border-warm-dashed pt-4">
                 <div className="flex justify-between items-baseline">
                   <span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">TOTAL BON</span>
-                  <span className="font-serif text-[22px] font-bold text-[#C25E3D]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</span>
+                  <span className="num text-[22px] font-bold text-[#C25E3D]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(total)}</span>
                 </div>
                 <p className="text-[11px] text-text-mute mt-2 leading-relaxed">Seluruh jumlah dicatat sebagai hutang. Dilunasi sekaligus nanti di <b className="text-navy">Buku Hutang</b>.</p>
               </div>

@@ -81,7 +81,7 @@ export default function PindahShift() {
               </div>
               <div className="border-t border-dashed border-warm-dashed mt-1 pt-3 flex justify-between items-center">
                 <span className="text-[11px] font-semibold text-navy uppercase tracking-[0.08em]">SEHARUSNYA DI LACI</span>
-                <span className="font-serif text-[20px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(seharusnya)}</span>
+                <span className="num text-[20px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(seharusnya)}</span>
               </div>
             </div>
           </div>
@@ -90,12 +90,12 @@ export default function PindahShift() {
           <div className="bg-white border border-warm-border rounded-card px-6 py-5">
             <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-3">HITUNG FISIK DI LACI</p>
             <div className="bg-cream-bg border-[1.5px] border-navy rounded-button px-4 py-3 flex items-center gap-2 mb-3">
-              <span className="font-serif text-[16px] text-text-mute font-medium shrink-0">Rp</span>
+              <span className="num text-[16px] text-text-mute font-medium shrink-0">Rp</span>
               <input
                 type="number"
                 value={hitungFisik}
                 onChange={e => setHitungFisik(e.target.value)}
-                className="flex-1 bg-transparent border-0 outline-none font-serif text-[22px] font-semibold text-navy"
+                className="flex-1 bg-transparent border-0 outline-none num text-[22px] font-semibold text-navy"
                 style={{ fontVariantNumeric: "tabular-nums" }}
               />
             </div>
@@ -109,7 +109,7 @@ export default function PindahShift() {
                   SELISIH {balanced ? "· BALANCED" : "· TIDAK BALANCE"}
                 </span>
               </div>
-              <span className="font-serif text-[15px] font-semibold" style={{ fontVariantNumeric: "tabular-nums", color: balanced ? "#5C9E7E" : "#C25E3D" }}>
+              <span className="num text-[15px] font-semibold" style={{ fontVariantNumeric: "tabular-nums", color: balanced ? "#5C9E7E" : "#C25E3D" }}>
                 {selisih >= 0 ? "+" : "−"}{formatRp(Math.abs(selisih))}
               </span>
             </div>

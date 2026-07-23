@@ -145,7 +145,7 @@ export default function Sales() {
                     </div>
                     <div className="text-[12px] font-medium text-navy leading-tight mb-0.5">{p.name}</div>
                     <div className="text-[10.5px] text-text-mute mb-1">{p.category} · {p.unit}</div>
-                    <div className="font-serif text-[16px] font-semibold text-navy">Rp {p.price.toLocaleString("id-ID")}</div>
+                    <div className="num text-[16px] font-semibold text-navy">Rp {p.price.toLocaleString("id-ID")}</div>
                   </button>
                 );
               })}
@@ -159,7 +159,7 @@ export default function Sales() {
             <div className="flex justify-between items-start mb-3">
               <div>
                 <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute">KERANJANG · CART</p>
-                <h2 className="font-serif text-display-s font-medium text-navy mt-0.5">{itemCount} item</h2>
+                <h2 className="num text-display-s font-medium text-navy mt-0.5">{itemCount} item</h2>
               </div>
               <button onClick={clearCart} className="text-[12px] text-text-mute underline underline-offset-[3px] mt-1">Kosongkan</button>
             </div>
@@ -191,7 +191,7 @@ export default function Sales() {
                   <div className="text-[11px] text-text-mute mt-0.5" style={{ fontVariantNumeric: "tabular-nums" }}>{item.qty} × Rp {item.product.price.toLocaleString("id-ID")}</div>
                 </div>
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <span className="font-serif text-[15px] font-semibold text-navy">{(item.product.price * item.qty).toLocaleString("id-ID")}</span>
+                  <span className="num text-[15px] font-semibold text-navy">{(item.product.price * item.qty).toLocaleString("id-ID")}</span>
                   <div className="flex items-center gap-1.5">
                     <button onClick={() => updateQty(item.product.id, -1)} className="w-6 h-6 border border-warm-border bg-white rounded-stepper flex items-center justify-center text-text-mute text-[13px] leading-none">−</button>
                     <span style={{ fontVariantNumeric: "tabular-nums" }} className="text-[11px] w-3.5 text-center text-navy">{item.qty}</span>
@@ -214,7 +214,7 @@ export default function Sales() {
                 <p style={{ fontSize: 9.5, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute mb-0.5">TOTAL</p>
                 <p className="text-[11px] text-text-mute">{itemCount} item · belum termasuk pajak</p>
               </div>
-              <span className="font-serif text-amount-l font-semibold text-navy leading-none">Rp {total.toLocaleString("id-ID")}</span>
+              <span className="num text-amount-l font-bold text-navy leading-none">Rp {total.toLocaleString("id-ID")}</span>
             </div>
             <button onClick={() => cart.length > 0 && setScreen("payment")}
               className={`w-full rounded-button h-[50px] flex items-center justify-center gap-2.5 text-[14px] font-semibold tracking-[0.02em] transition-colors ${cart.length > 0 ? "bg-navy text-cream-text" : "bg-warm-border text-text-mute"}`}>
@@ -229,7 +229,7 @@ export default function Sales() {
           <button onClick={() => setCartOpen(true)} className="flex-1 flex items-center gap-2.5 text-cream-text">
             <span className="text-[13.5px] font-medium">{itemCount} item</span>
             <span className="text-text-mute text-[13px]">·</span>
-            <span style={{ fontVariantNumeric: "tabular-nums" }} className="font-serif text-[15px] font-semibold">Rp {total.toLocaleString("id-ID")}</span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }} className="num text-[15px] font-semibold">Rp {total.toLocaleString("id-ID")}</span>
             {itemCount > 0 && <ChevronUp size={15} className="text-gold" />}
           </button>
           <button onClick={() => cart.length > 0 && setScreen("payment")}
@@ -246,7 +246,7 @@ export default function Sales() {
               <div className="flex justify-between items-center px-6 py-4 border-b border-warm-border shrink-0">
                 <div>
                   <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute">KERANJANG</p>
-                  <h2 className="font-serif text-[22px] font-medium text-navy mt-0.5">{itemCount} item</h2>
+                  <h2 className="num text-[22px] font-medium text-navy mt-0.5">{itemCount} item</h2>
                 </div>
                 <button onClick={() => setCartOpen(false)} className="w-[34px] h-[34px] rounded-full bg-cream-pill flex items-center justify-center text-text-mute">
                   <X size={16} />
@@ -283,7 +283,7 @@ export default function Sales() {
                 </div>
                 <div className="flex justify-between items-center pt-3 border-t border-dashed border-warm-dashed mb-3.5">
                   <span style={{ fontSize: 9.5, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute">TOTAL</span>
-                  <span className="font-serif text-[22px] font-semibold text-navy">Rp {total.toLocaleString("id-ID")}</span>
+                  <span className="num text-[22px] font-bold text-navy">Rp {total.toLocaleString("id-ID")}</span>
                 </div>
                 <button onClick={() => { setCartOpen(false); cart.length > 0 && setScreen("payment"); }}
                   className={`w-full rounded-button h-[50px] flex items-center justify-center gap-2.5 text-[14px] font-semibold ${cart.length > 0 ? "bg-navy text-cream-text" : "bg-warm-border text-text-mute"}`}>

@@ -204,7 +204,7 @@ export default function Kas() {
             {/* Saldo card */}
             <div className="bg-navy rounded-card px-6 py-6">
               <p style={{ fontSize: 9.5, letterSpacing: "0.22em" }} className="font-sans uppercase text-gold/70 mb-2">SALDO LACI KAS</p>
-              <p className="font-serif text-[38px] font-semibold text-cream-text leading-none" style={{ fontVariantNumeric: "tabular-nums" }}>
+              <p className="num text-[38px] font-bold text-cream-text leading-none" style={{ fontVariantNumeric: "tabular-nums" }}>
                 {formatRp(saldo)}
               </p>
               <p className="text-[11px] text-white/40 mt-1.5">Modal awal {formatRp(modalAwal)} + omzet tunai</p>
@@ -277,7 +277,7 @@ export default function Kas() {
                       <div className="text-[10.5px] text-text-mute mt-0.5">{p.time} · {p.desc}</div>
                     </div>
                     {p.photo && <PhotoThumb size="sm" />}
-                    <span className="font-serif text-[13px] font-semibold shrink-0" style={{ color: accent, fontVariantNumeric: "tabular-nums" }}>
+                    <span className="num text-[13px] font-semibold shrink-0" style={{ color: accent, fontVariantNumeric: "tabular-nums" }}>
                       {p.amount > 0 ? "+" : "−"}{formatRp(Math.abs(p.amount))}
                     </span>
                   </div>
@@ -336,7 +336,7 @@ export default function Kas() {
                       <div className="text-[11px] text-text-mute mt-0.5">{p.time} · {p.desc}</div>
                     </div>
                     {p.photo && <PhotoThumb size="md" />}
-                    <span className="font-serif text-[15px] font-semibold shrink-0" style={{ color: accent, fontVariantNumeric: "tabular-nums" }}>
+                    <span className="num text-[15px] font-semibold shrink-0" style={{ color: accent, fontVariantNumeric: "tabular-nums" }}>
                       {p.amount > 0 ? "+" : "−"}{formatRp(Math.abs(p.amount))}
                     </span>
                   </div>
@@ -395,7 +395,7 @@ export default function Kas() {
                 </label>
                 <div className="flex items-center bg-cream-bg border rounded-button px-4 h-[50px] gap-2 transition-colors"
                   style={{ borderColor: kasNominal ? (modalType === "masuk" ? "#3D7A5E" : "#C25E3D") : "#ECE7DD" }}>
-                  <span className="font-serif text-[16px] text-text-mute font-medium shrink-0">Rp</span>
+                  <span className="num text-[16px] text-text-mute font-medium shrink-0">Rp</span>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -403,7 +403,7 @@ export default function Kas() {
                     onChange={e => setKasNominal(formatIDRInput(e.target.value))}
                     placeholder="0"
                     autoFocus
-                    className="flex-1 bg-transparent border-0 outline-none font-serif text-[20px] text-navy"
+                    className="flex-1 bg-transparent border-0 outline-none num text-[20px] text-navy"
                     style={{ fontVariantNumeric: "tabular-nums" }}
                   />
                 </div>

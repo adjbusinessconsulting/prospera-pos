@@ -110,7 +110,7 @@ export default function TutupToko() {
   const reconRow = (label: string, value: string, sign?: "+" | "-", strong?: boolean) => (
     <div className="flex justify-between items-center py-[9px] border-b border-[#F2EDE3] last:border-0">
       <span className={`text-[12.5px] ${strong ? "font-semibold text-navy" : "text-text-mute"}`}>{label}</span>
-      <span className={`${strong ? "font-serif text-[15px] font-semibold text-navy" : "text-[13px] text-navy"}`} style={{ fontVariantNumeric: "tabular-nums" }}>
+      <span className={`${strong ? "num text-[15px] font-semibold text-navy" : "text-[13px] text-navy"}`} style={{ fontVariantNumeric: "tabular-nums" }}>
         {sign === "-" ? "− " : sign === "+" ? "+ " : ""}{value}
       </span>
     </div>
@@ -141,11 +141,11 @@ export default function TutupToko() {
           {/* Navy omzet card */}
           <div className="bg-navy rounded-card px-7 py-7">
             <p style={{ fontSize: 9.5, letterSpacing: "0.22em" }} className="font-sans uppercase text-gold/70 mb-3">TOTAL OMZET HARI INI</p>
-            <p className="font-serif text-[34px] lg:text-[52px] font-semibold text-cream-text leading-none mb-6" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(omzet)}</p>
+            <p className="num text-[34px] lg:text-[52px] font-bold text-cream-text leading-none mb-6" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(omzet)}</p>
             <div className="flex gap-8 pt-5 border-t border-white/10">
-              <div><p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">TRANSAKSI</p><p className="font-serif text-[24px] font-semibold text-cream-text" style={{ fontVariantNumeric: "tabular-nums" }}>{trx}</p></div>
-              <div><p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">SHIFT</p><p className="font-serif text-[24px] font-semibold text-cream-text">{shiftCount}</p></div>
-              <div><p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">RATA-RATA</p><p className="font-serif text-[24px] font-semibold text-cream-text" style={{ fontVariantNumeric: "tabular-nums" }}>Rp {Math.round(rataRata / 1000)}k</p></div>
+              <div><p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">TRANSAKSI</p><p className="num text-[24px] font-semibold text-cream-text" style={{ fontVariantNumeric: "tabular-nums" }}>{trx}</p></div>
+              <div><p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">SHIFT</p><p className="num text-[24px] font-semibold text-cream-text">{shiftCount}</p></div>
+              <div><p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">RATA-RATA</p><p className="num text-[24px] font-semibold text-cream-text" style={{ fontVariantNumeric: "tabular-nums" }}>Rp {Math.round(rataRata / 1000)}k</p></div>
             </div>
           </div>
 
@@ -153,7 +153,7 @@ export default function TutupToko() {
           <div className="bg-white border border-warm-border rounded-card px-6 py-5">
             <div className="flex justify-between items-center pb-3 border-b border-[#F2EDE3]">
               <span className="text-[12.5px] text-text-mute">Modal awal</span>
-              <span className="font-serif text-[15px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(modalAwal)}</span>
+              <span className="num text-[15px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(modalAwal)}</span>
             </div>
             <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mt-4 mb-1.5">PENJUALAN PER METODE</p>
             <div className="flex flex-col">
@@ -165,7 +165,7 @@ export default function TutupToko() {
               ))}
               <div className="flex justify-between items-center pt-3 mt-1 border-t border-dashed border-warm-dashed">
                 <span className="text-[13px] font-semibold text-navy">Total omset</span>
-                <span className="font-serif text-[17px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(omzet)}</span>
+                <span className="num text-[17px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(omzet)}</span>
               </div>
             </div>
             {piutangBaru > 0 && (
@@ -203,15 +203,15 @@ export default function TutupToko() {
                   <div className="mt-4">
                     <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">KAS DIHITUNG (UANG DI LACI)</span></label>
                     <div className="flex items-center bg-cream-bg border rounded-button px-4 h-[50px] gap-2" style={{ borderColor: counted ? "#0D1117" : "#ECE7DD" }}>
-                      <span className="font-serif text-[16px] text-text-mute font-medium">Rp</span>
+                      <span className="num text-[16px] text-text-mute font-medium">Rp</span>
                       <input type="text" inputMode="numeric" value={counted} onChange={e => setCounted(formatIDRInput(e.target.value))} placeholder="0"
-                        className="flex-1 bg-transparent border-0 outline-none font-serif text-[20px] text-navy" style={{ fontVariantNumeric: "tabular-nums" }} />
+                        className="flex-1 bg-transparent border-0 outline-none num text-[20px] text-navy" style={{ fontVariantNumeric: "tabular-nums" }} />
                     </div>
                   </div>
                   {counted && (
                     <div className="mt-3 flex items-center justify-between rounded-card px-4 py-3" style={{ background: sel.bg, border: `1px solid ${sel.color}44` }}>
                       <span className="text-[12px] font-semibold uppercase" style={{ letterSpacing: "0.06em", color: sel.color }}>Kas · {sel.label}</span>
-                      {selType !== "cocok" && <span className="font-serif text-[18px] font-bold" style={{ color: sel.color, fontVariantNumeric: "tabular-nums" }}>{selisih > 0 ? "+" : "−"}{formatRp(Math.abs(selisih))}</span>}
+                      {selType !== "cocok" && <span className="num text-[18px] font-bold" style={{ color: sel.color, fontVariantNumeric: "tabular-nums" }}>{selisih > 0 ? "+" : "−"}{formatRp(Math.abs(selisih))}</span>}
                     </div>
                   )}
                   <p className="text-[10.5px] text-text-mute mt-2">Selisih dicatat pada nota tutup &amp; tersimpan di data shift.</p>

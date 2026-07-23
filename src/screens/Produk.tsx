@@ -355,7 +355,7 @@ export default function Produk() {
                     <td className="px-4 py-3.5 text-[12.5px] text-text-mute">{p.unit}</td>
                     <td className="px-4 py-3.5 text-right">
                       <button onClick={() => { setPriceTarget(p); setPriceInput(formatIDRInput(String(p.price))); }} title="Ubah harga"
-                        className="font-serif text-[14px] font-semibold text-navy inline-flex items-center gap-1.5 border-0 bg-transparent cursor-pointer hover:text-gold transition-colors" style={{ fontVariantNumeric: "tabular-nums" }}>
+                        className="num text-[14px] font-semibold text-navy inline-flex items-center gap-1.5 border-0 bg-transparent cursor-pointer hover:text-gold transition-colors" style={{ fontVariantNumeric: "tabular-nums" }}>
                         {formatRp(p.price)}
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-mute"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>
                       </button>
@@ -407,7 +407,7 @@ export default function Produk() {
                   <div className="text-[11px] text-text-mute">{getCatLabel(p.category)} · {SKU_MAP[p.id]}</div>
                 </div>
                 <div className="text-right shrink-0">
-                  <button onClick={() => { setPriceTarget(p); setPriceInput(formatIDRInput(String(p.price))); }} className="font-serif text-[14px] font-semibold text-navy inline-flex items-center gap-1 border-0 bg-transparent cursor-pointer p-0" style={{ fontVariantNumeric: "tabular-nums" }}>
+                  <button onClick={() => { setPriceTarget(p); setPriceInput(formatIDRInput(String(p.price))); }} className="num text-[14px] font-semibold text-navy inline-flex items-center gap-1 border-0 bg-transparent cursor-pointer p-0" style={{ fontVariantNumeric: "tabular-nums" }}>
                     {formatRp(p.price)}
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-mute"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>
                   </button>
@@ -582,7 +582,7 @@ export default function Produk() {
                   {[{ l: "Awal", v: awal }, { l: "Tambahan", v: tambahan }, { l: "Terjual", v: terjual }, { l: "Sisa", v: p.stock ?? 0, accent: true }].map(c => (
                     <div key={c.l} className="rounded-card border border-warm-border px-2 py-2 text-center" style={{ background: c.accent ? "rgba(92,158,126,0.06)" : "#FAFAF7" }}>
                       <div style={{ fontSize: 8.5, letterSpacing: "0.12em" }} className="font-sans uppercase text-text-mute">{c.l}</div>
-                      <div className="font-serif text-[17px] font-semibold mt-0.5" style={{ fontVariantNumeric: "tabular-nums", color: c.accent ? "#4E8C6E" : "#1B2A4A" }}>{c.v}</div>
+                      <div className="num text-[17px] font-semibold mt-0.5" style={{ fontVariantNumeric: "tabular-nums", color: c.accent ? "#4E8C6E" : "#1B2A4A" }}>{c.v}</div>
                     </div>
                   ))}
                 </div>
@@ -671,14 +671,14 @@ export default function Produk() {
                 </label>
                 <div className="flex items-center bg-cream-bg border border-warm-border rounded-button px-4 h-[46px] gap-2 transition-colors"
                   style={{ borderColor: addPrice.trim() ? "#0D1117" : undefined }}>
-                  <span className="font-serif text-[15px] text-text-mute font-medium shrink-0">Rp</span>
+                  <span className="num text-[15px] text-text-mute font-medium shrink-0">Rp</span>
                   <input
                     type="text"
                     inputMode="numeric"
                     value={addPrice}
                     onChange={e => setAddPrice(formatIDRInput(e.target.value))}
                     placeholder="0"
-                    className="flex-1 bg-transparent border-0 outline-none font-serif text-[16px] text-navy"
+                    className="flex-1 bg-transparent border-0 outline-none num text-[16px] text-navy"
                     style={{ fontVariantNumeric: "tabular-nums" }}
                   />
                 </div>
@@ -728,7 +728,7 @@ export default function Produk() {
                     {queue.map(p => (
                       <div key={p.id} className="flex items-center gap-2.5 px-3.5 py-2">
                         <span className="flex-1 min-w-0 truncate text-[13px] text-navy font-medium">{p.name}</span>
-                        <span className="font-serif text-[13px] text-navy shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.price)}</span>
+                        <span className="num text-[13px] text-navy shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(p.price)}</span>
                         <button onClick={() => setQueue(q => q.filter(x => x.id !== p.id))} title="Hapus dari daftar"
                           className="w-6 h-6 rounded-[6px] flex items-center justify-center bg-transparent border-0 text-text-mute hover:text-[#C0392B] cursor-pointer shrink-0">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>

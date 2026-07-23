@@ -46,7 +46,7 @@ export default function BukaToko() {
         {/* Modal awal input */}
         <label style={{ fontSize: 10, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">Modal awal / uang di laci</label>
         <div className="bg-white border-[1.5px] border-navy rounded-button px-4 py-3 flex items-center gap-2 mt-2 mb-3">
-          <span className="font-serif text-[18px] text-text-mute font-medium leading-none shrink-0">Rp</span>
+          <span className="num text-[18px] text-text-mute font-medium leading-none shrink-0">Rp</span>
           <input
             inputMode="numeric"
             autoFocus
@@ -55,7 +55,7 @@ export default function BukaToko() {
             onFocus={e => e.target.select()}
             placeholder="0"
             style={{ fontVariantNumeric: "tabular-nums" }}
-            className="font-serif text-[24px] font-semibold text-navy leading-none flex-1 min-w-0 w-full bg-transparent border-0 outline-none placeholder:text-text-mute" />
+            className="num text-[24px] font-semibold text-navy leading-none flex-1 min-w-0 w-full bg-transparent border-0 outline-none placeholder:text-text-mute" />
           {modal > 0 && (
             <button onClick={() => setModal(0)} title="Kosongkan" className="shrink-0 text-text-mute hover:text-navy bg-transparent border-0 cursor-pointer p-0 flex">
               <XCircle size={18} />

@@ -61,7 +61,7 @@ export default function TutupShiftRiwayat() {
   const line = (label: string, value: string, opts?: { strong?: boolean; color?: string }) => (
     <div className="flex justify-between items-center py-[9px] border-b border-[#F2EDE3] last:border-0">
       <span className={`text-[12.5px] ${opts?.strong ? "font-semibold text-navy" : "text-text-mute"}`}>{label}</span>
-      <span className="font-serif text-[14.5px] font-semibold" style={{ fontVariantNumeric: "tabular-nums", color: opts?.color ?? "#0D1117" }}>{value}</span>
+      <span className={`num text-[14.5px] ${opts?.strong ? "font-bold" : "font-semibold"}`} style={{ fontVariantNumeric: "tabular-nums", color: opts?.color ?? "#0D1117" }}>{value}</span>
     </div>
   );
 
