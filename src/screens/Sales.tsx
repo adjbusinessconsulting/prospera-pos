@@ -1,8 +1,9 @@
 import { Search, User, ChevronUp, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore, getTotal, getItemCount, getTrxId, isAtLeast } from "../store";
 import { CATEGORIES, getCatLabel, formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
+import { hasOpenedToday } from "../lib/dayopen";
 
 function TierPill() {
   const storeId = useStore((s) => s.storeId);
@@ -27,10 +28,19 @@ export default function Sales() {
   const storeId = useStore((s) => s.storeId);
   const storeTier = useStore((s) => s.storeTier);
   const inventoryEnabled = useStore((s) => s.inventoryEnabled);
+  const isDemoMode = useStore((s) => s.isDemoMode);
   const inventoryOn = isAtLeast(storeId ? storeTier : "premium", "premium") && inventoryEnabled; // Basic Inventori: show stock on items
   const total = getTotal(cart);
   const itemCount = getItemCount(cart);
   const trxId = getTrxId(trxCounter);
+
+  // Daily "Buka Toko" gate — the first time Sales opens on a new calendar day,
+  // send the cashier to set the opening cash float (modal awal). Once opened,
+  // hasOpenedToday() is true and this no-ops for the rest of the day.
+  useEffect(() => {
+    if (!isDemoMode && storeId && !hasOpenedToday(storeId)) setScreen("buka-toko");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId]);
 
   const filtered = products.filter(p => {
     const matchCat = category === "Semua" || getCatLabel(p.category) === category;

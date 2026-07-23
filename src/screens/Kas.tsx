@@ -5,6 +5,7 @@ import { formatRp, formatIDRInput } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
+import { modalAwalToday, openedAtToday } from "../lib/dayopen";
 
 type KasIcon = "masuk" | "keluar" | "auto" | "hutang_settle";
 interface KasMove { time: string; label: string; desc: string; amount: number; icon: KasIcon; photo: boolean }
@@ -59,18 +60,15 @@ export default function Kas() {
     (async () => {
       const start = new Date(); start.setHours(0, 0, 0, 0);
       const startISO = start.toISOString();
-      const { data: shiftRow } = await supabase.from("shifts")
-        .select("modal_awal, opened_at").eq("store_id", storeId).is("closed_at", null)
-        .order("opened_at", { ascending: false }).limit(1).maybeSingle();
       const { data: salesRows } = await supabase.from("sales")
         .select("total, payment_method, created_at").eq("store_id", storeId).gte("created_at", startISO);
       const { data: kasRows } = await supabase.from("kas_entries")
         .select("*").eq("store_id", storeId).gte("created_at", startISO)
         .order("created_at", { ascending: false });
       if (cancelled) return;
-      const sr = shiftRow as { modal_awal?: number; opened_at?: string } | null;
-      setModalAwal(sr?.modal_awal ?? 0);
-      setBukaTime(sr?.opened_at ? new Date(sr.opened_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "");
+      setModalAwal(modalAwalToday(storeId));
+      const openedAt = openedAtToday(storeId);
+      setBukaTime(openedAt ? new Date(openedAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "");
       setAutoTunai((salesRows ?? [])
         .filter(s => (s as { payment_method: string }).payment_method === "tunai")
         .reduce((a, s) => a + ((s as { total: number }).total ?? 0), 0));

@@ -49,11 +49,17 @@ function seedDemo(): AuditEntry[] {
   const mk = (minsAgo: number, actor: string, type: string, detail: string, seq: number): AuditEntry =>
     ({ seq, time: new Date(now - minsAgo * 60000).toISOString(), actor, type, detail, prevHash: "DEMO", hash: `demo-${seq}` });
   return [
-    mk(320, "Rani",  "product.add",   "Produk baru: Es Kopi Susu — Rp 22.000", 1),
-    mk(260, "Rani",  "stock.add",     "Tambah stok Beras Pandan 5kg: +20 → sisa 62", 2),
-    mk(140, "Dimas", "product.price", "Ubah harga Indomie Goreng: Rp 3.500 → Rp 3.800", 3),
-    mk(75,  "Rani",  "product.price", "Ubah harga Gula Pasir 1kg: Rp 16.000 → Rp 15.500", 4),
-    mk(18,  "Dimas", "stock.add",     "Tambah stok Telur Ayam: +30 → sisa 44", 5),
+    mk(495, "Rani",  "login",         "Masuk / mulai shift", 1),
+    mk(492, "Rani",  "shift.open",    "Buka toko — modal awal Rp 500.000", 2),
+    mk(320, "Rani",  "product.add",   "Produk baru: Es Kopi Susu — Rp 22.000", 3),
+    mk(260, "Rani",  "stock.add",     "Tambah stok Beras Pandan 5kg: +20 → sisa 62", 4),
+    mk(210, "Rani",  "sale",          "Penjualan TRX-0007 — Rp 47.000 · Tunai · 3 item", 5),
+    mk(180, "Rani",  "kas.keluar",    "Kas keluar Rp 50.000 — beli galon", 6),
+    mk(140, "Dimas", "product.price", "Ubah harga Indomie Goreng: Rp 3.500 → Rp 3.800", 7),
+    mk(96,  "Dimas", "sale",          "Penjualan TRX-0012 — Rp 128.000 · QRIS · 6 item", 8),
+    mk(75,  "Rani",  "product.price", "Ubah harga Gula Pasir 1kg: Rp 16.000 → Rp 15.500", 9),
+    mk(40,  "Dimas", "hutang.add",    "Hutang baru Bu Sari Rp 85.000 (TRX-0015)", 10),
+    mk(18,  "Dimas", "stock.add",     "Tambah stok Telur Ayam: +30 → sisa 44", 11),
   ];
 }
 let demoLog: AuditEntry[] = seedDemo();
@@ -61,7 +67,11 @@ let demoLog: AuditEntry[] = seedDemo();
 export function getLog(): AuditEntry[] { return isDemo() ? demoLog : read(); }
 
 // Append an entry. Logging must never throw into the calling action.
-export async function logEvent(type: string, detail: string) {
+// `mirror` = also push to Backoffice's server log (Premium). Sales pass false:
+// they already live in the `sales` table + Backoffice analytics, so mirroring
+// every sale would just flood activity_logs — but they still appear in the
+// on-device log so the owner sees "everything" there.
+export async function logEvent(type: string, detail: string, mirror = true) {
   try {
     const s = useStore.getState();
     // Demo: append to the in-memory log only (ephemeral, never persisted).
@@ -85,7 +95,7 @@ export async function logEvent(type: string, detail: string) {
     write(list);
 
     // Premium: also mirror to Backoffice's activity_logs (offline-safe queue).
-    if (!s.isDemoMode && s.storeId && tierLevel(s.storeTier) >= 2) {
+    if (mirror && !s.isDemoMode && s.storeId && tierLevel(s.storeTier) >= 2) {
       const q = readServer();
       q.push({
         id: crypto.randomUUID(),

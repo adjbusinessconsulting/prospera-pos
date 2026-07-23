@@ -3,6 +3,7 @@ import { CASHIERS } from "../data";
 import { useState, useEffect } from "react";
 import ManageStaff from "../components/ManageStaff";
 import { supabase } from "../lib/supabase";
+import { logEvent } from "../lib/auditlog";
 import type { CashierDB } from "../types";
 
 function currentShiftLabel(): 1 | 2 | 3 {
@@ -125,24 +126,31 @@ export default function PinLogin() {
   const displayName = storeName || (isDemoMode ? "Toko Sembako Maju" : "Toko");
   const displayAddress = storeAddress || (isDemoMode ? "Jl. Diponegoro No. 24, Palu Timur" : "");
 
+  // On successful auth: record who logged in + when (the log entry's timestamp
+  // captures "jam berapa"), then route on. Skipped in demo.
+  function completeLogin() {
+    if (!isDemoMode && storeId) void logEvent("login", "Masuk / mulai shift");
+    setScreen(afterLogin);
+  }
+
   function handleLogin() {
     setPinError("");
     if (isDemoMode) { setScreen("sales"); return; }       // Demo: any PIN → straight to jualan
     // Shift check-in selfie is a staff-accountability feature — Standard+ only. A solo
     // Free owner (no PIN either) goes straight to jualan.
-    if (dbCashiers.length === 0) { setScreen(afterLogin); return; }
+    if (dbCashiers.length === 0) { completeLogin(); return; }
     // Resolve the picked cashier — fall back to the first if the selection is stale
     // (a leftover demo/owner id), so Masuk never silently does nothing.
     const cashier = dbCashiers.find(c => c.id === selectedCashier) ?? dbCashiers[0];
-    if (!requiresPin) { setScreen(afterLogin); return; }  // PIN off (Free, or Standard+ trusted team)
+    if (!requiresPin) { completeLogin(); return; }  // PIN off (Free, or Standard+ trusted team)
     // Compare as trimmed strings — the DB may return the PIN as a number or with
     // stray whitespace, which would make a strict === fail on a correct PIN.
     const storedPin = String(cashier.pin ?? "").trim();
     // No PIN configured for this cashier (e.g. owner created before PIN was
     // required, or a tier change). Can't gate on a PIN that doesn't exist — let
     // them in rather than locking the owner out; they can set one in Kelola.
-    if (storedPin === "") { setScreen(afterLogin); return; }
-    if (storedPin === pin.trim()) { setScreen(afterLogin); }
+    if (storedPin === "") { completeLogin(); return; }
+    if (storedPin === pin.trim()) { completeLogin(); }
     else { setPinError("PIN salah. Coba lagi."); clearPin(); }
   }
 

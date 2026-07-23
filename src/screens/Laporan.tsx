@@ -3,6 +3,7 @@ import { useStore, isAtLeast, tierLevel } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
+import { modalAwalToday } from "../lib/dayopen";
 
 // ── seeded ~6-month sales history (used for the DEMO only) ──
 interface DayRec { d: Date; rev: number; trx: number; items: number }
@@ -98,9 +99,6 @@ export default function Laporan() {
       const { data: sales } = await supabase.from("sales")
         .select("created_at,total,payment_method,sale_items(product_name,qty,subtotal)")
         .eq("store_id", storeId).gte("created_at", from.toISOString());
-      const { data: shiftRow } = await supabase.from("shifts")
-        .select("modal_awal").eq("store_id", storeId).is("closed_at", null)
-        .order("opened_at", { ascending: false }).limit(1).maybeSingle();
       const { data: hut } = await supabase.from("hutang")
         .select("amount,status,settled_method,created_at").eq("store_id", storeId).gte("created_at", from.toISOString());
       if (cancelled) return;
@@ -132,7 +130,7 @@ export default function Laporan() {
         const sm = h.settled_method ?? "tunai";
         if (ts === todayTs && (sm === "tunai" || sm === "transfer")) todayCash += h.amount ?? 0;
       });
-      setReal({ byDay, items, todayCash, modalAwal: (shiftRow as { modal_awal?: number } | null)?.modal_awal ?? 0 });
+      setReal({ byDay, items, todayCash, modalAwal: modalAwalToday(storeId) });
     })();
     return () => { cancelled = true; };
   }, [storeId, isDemoMode, cap, RTODAY]);

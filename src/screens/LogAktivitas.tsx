@@ -6,6 +6,16 @@ import { getLog, verifyLog, type AuditEntry } from "../lib/auditlog";
 import type { Screen } from "../types";
 
 const TYPE_LABEL: Record<string, string> = {
+  "login": "Masuk shift",
+  "sale": "Penjualan",
+  "void": "Void / batal",
+  "shift.open": "Buka toko",
+  "shift.close": "Tutup shift",
+  "shift.rekonsiliasi": "Rekonsiliasi kas",
+  "kas.masuk": "Kas masuk",
+  "kas.keluar": "Kas keluar",
+  "hutang.add": "Hutang baru",
+  "hutang.lunas": "Hutang lunas",
   "product.add": "Produk baru",
   "product.edit": "Ubah produk",
   "product.price": "Ubah harga",

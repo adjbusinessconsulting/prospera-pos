@@ -4,6 +4,7 @@ import { formatRp } from "../data";
 import { Printer, Check, ChevronLeft } from "lucide-react";
 import { AppSidebar } from "../components/AppSidebar";
 import { recordSale } from "../lib/sync";
+import { logEvent } from "../lib/auditlog";
 import { printReceipt as sendToPrinter, loadPrinterConfig } from "../lib/printer";
 
 function SterithWatermark({ tier }: { tier: string }) {
@@ -87,6 +88,11 @@ export default function Receipt() {
         })),
         stock: inventoryOn ? cart.map(i => ({ id: i.product.id, qty: i.qty })) : [],
       });
+      // Log the sale on-device (mirror=false — sales already live in the sales
+      // table + Backoffice analytics; mirroring each would flood the server log).
+      const mLabel: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", hutang: "Hutang/Bon" };
+      const itemCount = cart.reduce((n, i) => n + i.qty, 0);
+      void logEvent("sale", `Penjualan ${trxId} — ${formatRp(total)} · ${mLabel[paymentMethod] ?? paymentMethod} · ${itemCount} item`, false);
     }
     // Basic Inventori: reflect terjual/sisa locally right away (immediate UI).
     if (inventoryOn) {

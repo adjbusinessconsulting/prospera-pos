@@ -4,6 +4,7 @@ import { formatRp, formatIDRInput } from "../data";
 import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
 import { saveShiftClosing } from "../lib/shift";
+import { modalAwalToday } from "../lib/dayopen";
 
 const RETENTION: Record<string, number> = { free: 1, standard: 30, premium: 90, business: 1095, enterprise: 1825 };
 const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet" };
@@ -40,7 +41,6 @@ export default function TutupToko() {
     (async () => {
       const start = new Date(); start.setHours(0, 0, 0, 0); const startISO = start.toISOString();
       const { data: sales } = await supabase.from("sales").select("total,payment_method,shift,created_at").eq("store_id", storeId).gte("created_at", startISO);
-      const { data: shiftRow } = await supabase.from("shifts").select("id,modal_awal").eq("store_id", storeId).is("closed_at", null).order("opened_at", { ascending: false }).limit(1).maybeSingle();
       const { data: kas } = await supabase.from("kas_entries").select("type,amount,created_at").eq("store_id", storeId).gte("created_at", startISO);
       const { data: hut } = await supabase.from("hutang").select("amount,status,settled_method,created_at").eq("store_id", storeId).gte("created_at", startISO);
       if (cancelled) return;
@@ -60,8 +60,7 @@ export default function TutupToko() {
       // settlements come in via the separate hutang_settle kas type below — folding
       // them into bd is for omzet display, not the drawer, so we don't double-count.
       setCash(S.filter(s => s.payment_method === "tunai" || s.payment_method === "transfer").reduce((a, s) => a + (s.total ?? 0), 0));
-      const sr = shiftRow as { id?: string; modal_awal?: number } | null;
-      setModalAwal(sr?.modal_awal ?? 0); setShiftId(sr?.id ?? null);
+      setModalAwal(modalAwalToday(storeId)); setShiftId(null);
       const K = (kas ?? []) as { type: string; amount: number }[];
       setKasMasuk(K.filter(k => k.type === "masuk").reduce((a, k) => a + k.amount, 0));
       setKasKeluar(K.filter(k => k.type === "keluar").reduce((a, k) => a + k.amount, 0));
