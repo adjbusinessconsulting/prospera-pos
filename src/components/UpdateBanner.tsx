@@ -2,8 +2,25 @@ import { useEffect, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { BUILD } from "../version";
 
+// Guard so the recurring update check is wired up only once, even though this
+// component mounts/unmounts across screens.
+let _updateWatchStarted = false;
+
 export default function UpdateBanner() {
-  const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW();
+  const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW({
+    // By default the SW only checks for a new build on page load — so an installed
+    // PWA that stays open never sees updates. Re-check whenever the app regains
+    // focus and every 30 min, so a new deploy surfaces the prompt on its own.
+    onRegisteredSW(_swUrl, r) {
+      if (!r || _updateWatchStarted) return;
+      _updateWatchStarted = true;
+      const check = () => { r.update().catch(() => {}); };
+      check();
+      setInterval(check, 30 * 60 * 1000);
+      document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") check(); });
+      window.addEventListener("focus", check);
+    },
+  });
   const [visible, setVisible] = useState(false);
 
   useEffect(() => { if (needRefresh) setVisible(true); }, [needRefresh]);

@@ -152,6 +152,7 @@ export default function App() {
       {!isDemoMode && subscriptionExpired && <div className="shrink-0 flex justify-center py-1.5 bg-cream-deep"><RenewBanner /></div>}
       <div className="flex-1 min-h-0 relative">
         {screen === "login"        && <PinLogin />}
+        {screen === "buka-toko"    && <BukaToko />}
         {screen === "sales"        && <Sales />}
         {screen === "payment"      && <Payment />}
         {screen === "receipt"      && <Receipt />}
