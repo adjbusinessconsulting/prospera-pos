@@ -7,8 +7,28 @@ import { setRegistration } from "../lib/pwaUpdate";
 // component mounts/unmounts across screens.
 let _updateWatchStarted = false;
 
+// Force a clean update. updateServiceWorker(true) can deadlock when a waiting
+// worker never takes control (web + PWA sharing the registration, or a missing
+// precache asset) — it just re-shows the prompt. Unregistering every SW + clearing
+// the Cache-API caches then reloading fetches the newest build straight from the
+// network, with no worker to get stuck. localStorage (offline sale queue,
+// settings) is NOT touched.
+async function forceUpdate() {
+  try {
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    }
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+  } catch { /* fall through to reload regardless */ }
+  window.location.reload();
+}
+
 export default function UpdateBanner() {
-  const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW({
+  const { needRefresh: [needRefresh] } = useRegisterSW({
     // By default the SW only checks for a new build on page load — so an installed
     // PWA that stays open never sees updates. Re-check whenever the app regains
     // focus and every 30 min, so a new deploy surfaces the prompt on its own.
@@ -24,6 +44,7 @@ export default function UpdateBanner() {
     },
   });
   const [visible, setVisible] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => { if (needRefresh) setVisible(true); }, [needRefresh]);
 
@@ -64,13 +85,13 @@ export default function UpdateBanner() {
 
         {/* Buttons */}
         <div style={{ display: "flex", gap: 8, width: "100%" }}>
-          <button onClick={() => setVisible(false)}
-            style={{ flex: 1, height: 38, background: "rgba(242,237,227,0.07)", border: "1px solid rgba(242,237,227,0.1)", borderRadius: 10, fontSize: 12, fontWeight: 500, color: "rgba(242,237,227,0.45)", cursor: "pointer", fontFamily: "'Hanken Grotesk', sans-serif", letterSpacing: "0.04em" }}>
+          <button onClick={() => setVisible(false)} disabled={updating}
+            style={{ flex: 1, height: 38, background: "rgba(242,237,227,0.07)", border: "1px solid rgba(242,237,227,0.1)", borderRadius: 10, fontSize: 12, fontWeight: 500, color: "rgba(242,237,227,0.45)", cursor: updating ? "default" : "pointer", fontFamily: "'Hanken Grotesk', sans-serif", letterSpacing: "0.04em" }}>
             Nanti
           </button>
-          <button onClick={() => updateServiceWorker(true)}
-            style={{ flex: 1, height: 38, background: "linear-gradient(135deg, #C9A55F, #A6843F)", border: "none", borderRadius: 10, fontSize: 12, fontWeight: 700, color: "white", cursor: "pointer", fontFamily: "'Hanken Grotesk', sans-serif", letterSpacing: "0.06em" }}>
-            UPDATE →
+          <button onClick={() => { setUpdating(true); void forceUpdate(); }} disabled={updating}
+            style={{ flex: 1, height: 38, background: "linear-gradient(135deg, #C9A55F, #A6843F)", border: "none", borderRadius: 10, fontSize: 12, fontWeight: 700, color: "white", cursor: updating ? "default" : "pointer", fontFamily: "'Hanken Grotesk', sans-serif", letterSpacing: "0.06em", opacity: updating ? 0.75 : 1 }}>
+            {updating ? "Memperbarui…" : "UPDATE →"}
           </button>
         </div>
       </div>
