@@ -22,3 +22,5 @@
   50% { opacity: 0; }
 }
 .cursor-blink { animation: blink 1s step-end infinite; }
+
+@keyframes spin360 { to { transform: rotate(360deg); } }

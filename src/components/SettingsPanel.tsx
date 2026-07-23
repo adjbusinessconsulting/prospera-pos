@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
 import { DEFAULT_SETTINGS, type StoreSettings } from "../settings";
 import { OwnerConfirm } from "./OwnerConfirm";
+import CheckUpdateButton from "./CheckUpdateButton";
 
 // Only the boolean toggle keys (excludes non-boolean settings like quickCash).
 type Key = { [K in keyof StoreSettings]: StoreSettings[K] extends boolean ? K : never }[keyof StoreSettings];
@@ -216,6 +217,11 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
                 </button>
               )}
+
+              {/* App update */}
+              <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid #ECE7DD", display: "flex", justifyContent: "center" }}>
+                <CheckUpdateButton />
+              </div>
 
               <div style={{ height: 8 }} />
             </div>

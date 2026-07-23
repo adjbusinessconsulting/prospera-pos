@@ -8,6 +8,7 @@ import { pruneLog } from "../lib/auditlog";
 import type { CashierDB } from "../types";
 import { BUILD } from "../version";
 import { DemoChooser } from "../components/DemoChooser";
+import CheckUpdateButton from "../components/CheckUpdateButton";
 
 
 // New sign-ups go through the Sterith website form (portfolio + Sterith POS tab).
@@ -388,8 +389,13 @@ export default function OwnerLogin() {
         </div>
       </div>}
 
+      {/* Manual update check */}
+      <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
+        <CheckUpdateButton />
+      </div>
+
       {/* Security footer */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18, paddingTop: 14, borderTop: "1px solid #ddd9cc" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10, paddingTop: 14, borderTop: "1px solid #ddd9cc" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#b8a88a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <span style={{ fontSize: 10, color: "#b8a88a", fontFamily: "'Hanken Grotesk', sans-serif" }}>Terenkripsi · build {BUILD}</span>

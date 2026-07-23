@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { BUILD } from "../version";
+import { setRegistration } from "../lib/pwaUpdate";
 
 // Guard so the recurring update check is wired up only once, even though this
 // component mounts/unmounts across screens.
@@ -12,6 +13,7 @@ export default function UpdateBanner() {
     // PWA that stays open never sees updates. Re-check whenever the app regains
     // focus and every 30 min, so a new deploy surfaces the prompt on its own.
     onRegisteredSW(_swUrl, r) {
+      setRegistration(r);   // let the "Cek pembaruan" buttons force a check
       if (!r || _updateWatchStarted) return;
       _updateWatchStarted = true;
       const check = () => { r.update().catch(() => {}); };
