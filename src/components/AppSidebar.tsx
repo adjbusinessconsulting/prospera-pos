@@ -9,6 +9,7 @@ import { ReceiptSettings } from "./ReceiptSettings";
 import { SettingsPanel } from "./SettingsPanel";
 import { PrinterSettings } from "./PrinterSettings";
 import { pendingAuditCount } from "../lib/auditlog";
+import { releaseStore } from "../lib/deviceLock";
 
 const NAV = [
   { id: "sales"   as Screen, label: "Jual",    Icon: ShoppingCart },
@@ -129,7 +130,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
           )}
 
           {/* Logout */}
-          <button onClick={async () => { await supabase.auth.signOut(); signOut(); }} title="Keluar" style={{
+          <button onClick={async () => { const sid = useStore.getState().storeId; if (sid) await releaseStore(sid); await supabase.auth.signOut(); signOut(); }} title="Keluar" style={{
             background: "transparent", border: "none", cursor: "pointer",
             color: "#7A776F", display: "flex", alignItems: "center", justifyContent: "center",
             width: 30, height: 30, borderRadius: 8,

@@ -7,7 +7,7 @@ import UpdateBanner from "./components/UpdateBanner";
 import { DemoControls } from "./components/DemoControls";
 import { RenewBanner } from "./components/RenewBanner";
 import { initSync } from "./lib/sync";
-import { deviceId } from "./lib/deviceLock";
+import { deviceId, touchLock } from "./lib/deviceLock";
 import LogAktivitas from "./screens/LogAktivitas";
 import TutupShiftRiwayat from "./screens/TutupShiftRiwayat";
 import BukaToko from "./screens/BukaToko";
@@ -90,6 +90,8 @@ export default function App() {
         await supabase.auth.signOut();
         signOut();
         if (takenOver && !suspended) useStore.getState().setKickedOut(true);
+      } else {
+        void touchLock(storeId);   // I still hold the store — keep the lock fresh
       }
     };
     check();

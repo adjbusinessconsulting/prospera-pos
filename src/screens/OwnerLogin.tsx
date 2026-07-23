@@ -3,7 +3,7 @@ import { useStore, localDateISO } from "../store";
 import { supabase } from "../lib/supabase";
 import { appAuthLogin, AUTH_BASE } from "../lib/appAuth";
 import { autoCloseStaleShifts } from "../lib/shift";
-import { claimStore } from "../lib/deviceLock";
+import { claimStore, isLockedByOther } from "../lib/deviceLock";
 import { pruneLog } from "../lib/auditlog";
 import type { CashierDB } from "../types";
 import { BUILD } from "../version";
@@ -61,6 +61,8 @@ export default function OwnerLogin() {
   const [loading, setLoading] = useState(false);
   const [lang, setLang] = useState<"id" | "en">("id");
   const [showChooser, setShowChooser] = useState(false);
+  const [blockedStore, setBlockedStore] = useState<StoreRow | null>(null);
+  const [retrying, setRetrying] = useState(false);
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
@@ -140,7 +142,10 @@ export default function OwnerLogin() {
     setScreen("login");
   }
 
-  async function enterStore(store: StoreRow) {
+  async function enterStore(store: StoreRow, force = false) {
+    // Single-device: if another live device already holds this store, don't enter —
+    // show the "already logged in elsewhere" screen (unless the owner forces it).
+    if (!force && await isLockedByOther(store.id)) { setBlockedStore(store); setLoading(false); return; }
     const { data: cashierRows } = await supabase
       .from("cashiers").select("*").eq("store_id", store.id).eq("active", true);
     // Subscription expiry: if the paid period has passed, revert to Free features
@@ -406,6 +411,38 @@ export default function OwnerLogin() {
   );
 
   const fonts = <style>{`@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');`}</style>;
+
+  // ── Blocked: this account is already logged in on another live device ──
+  if (blockedStore) {
+    return (
+      <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
+        {fonts}
+        <img src="/horizontal-light.png" alt="Sterith" style={{ height: 56, width: "auto", marginBottom: 24 }} />
+        <div style={{ width: "100%", maxWidth: 420, textAlign: "center" }}>
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.4)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px" }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#A6843F" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <p style={{ fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "#C9A55F", fontWeight: 600, marginBottom: 8 }}>SUDAH MASUK</p>
+          <h1 style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 28, fontWeight: 500, color: "#0D1117", margin: "0 0 8px", lineHeight: 1.2 }}>Akun ini sedang dipakai</h1>
+          <p style={{ fontSize: 13, color: "#7A776F", margin: "0 0 24px", lineHeight: 1.6 }}>
+            Akun <b style={{ color: "#0D1117" }}>{blockedStore.name}</b> sedang login di perangkat lain. Satu akun hanya bisa aktif di satu perangkat. Keluar dulu dari perangkat itu, lalu tekan <b style={{ color: "#0D1117" }}>Coba lagi</b>.
+          </p>
+          <button onClick={async () => { setRetrying(true); const s = blockedStore; setBlockedStore(null); await enterStore(s); setRetrying(false); }} disabled={retrying}
+            style={{ width: "100%", height: 48, borderRadius: 11, border: "none", background: "#0D1117", color: "#FAFAF7", fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", cursor: retrying ? "default" : "pointer", opacity: retrying ? 0.6 : 1 }}>
+            {retrying ? "Mengecek…" : "Coba lagi"}
+          </button>
+          <button onClick={() => { const s = blockedStore; setBlockedStore(null); void enterStore(s, true); }} disabled={retrying}
+            style={{ width: "100%", marginTop: 10, height: 44, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0D1117", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
+            Paksa masuk di sini (keluarkan perangkat lain)
+          </button>
+          <button onClick={() => { setBlockedStore(null); setStoreChoices([]); setOwnerId(""); void supabase.auth.signOut(); }}
+            style={{ width: "100%", marginTop: 10, background: "transparent", border: "none", fontSize: 12, color: "#8f897a", cursor: "pointer", fontFamily: "'Hanken Grotesk', sans-serif" }}>
+            Batal
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ── First store (logged in, but the account has no store yet) ──
   if (ownerId && storeChoices.length === 0) {
