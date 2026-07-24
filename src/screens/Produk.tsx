@@ -400,7 +400,8 @@ export default function Produk() {
       {formOpen && (
         <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={closeForm} />
-          <div className="relative bg-white w-full lg:max-w-[480px] lg:mx-4 rounded-t-[20px] lg:rounded-card max-h-[92vh] flex flex-col shadow-xl">
+          <div className="relative flex items-stretch gap-3 w-full lg:w-auto justify-center max-h-[92vh]">
+          <div className="bg-white w-full lg:max-w-[480px] rounded-t-[20px] lg:rounded-card max-h-[92vh] flex flex-col shadow-xl overflow-hidden">
 
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-warm-border shrink-0">
@@ -487,9 +488,9 @@ export default function Produk() {
               {needsOwnerConfirm && <p className="text-[11px] text-text-mute -mt-1">Menyimpan perlu konfirmasi kata sandi pemilik.</p>}
             </div>
 
-            {/* Saved this session — pinned so it stays visible; tap a chip to fix it */}
+            {/* Saved this session — pinned strip on phones; desktop uses the side panel */}
             {added.length > 0 && (
-              <div className="px-6 py-2.5 border-t border-warm-border shrink-0 max-h-[112px] overflow-auto" style={{ background: "#FBFAF5" }}>
+              <div className="lg:hidden px-6 py-2.5 border-t border-warm-border shrink-0 max-h-[112px] overflow-auto" style={{ background: "#FBFAF5" }}>
                 <p style={{ fontSize: 9.5, letterSpacing: "0.16em" }} className="font-sans uppercase text-text-mute mb-2">Sudah ditambahkan · {added.length} — ketuk untuk ubah</p>
                 <div className="flex flex-wrap gap-2">
                   {added.map(a => {
@@ -535,6 +536,27 @@ export default function Produk() {
                 </div>
               )}
             </div>
+          </div>
+
+          {added.length > 0 && (
+            <aside className="hidden lg:flex flex-col w-[214px] max-h-[92vh] bg-white rounded-card shadow-xl overflow-hidden">
+              <div className="px-[18px] pt-4 pb-3 border-b border-warm-border">
+                <p style={{ fontSize: 9.5, letterSpacing: "0.16em" }} className="font-sans uppercase text-gold">Baru ditambahkan</p>
+                <p className="text-[16px] font-bold text-navy mt-0.5">{added.length} produk</p>
+              </div>
+              <div className="flex-1 overflow-auto p-2.5 flex flex-col gap-1.5">
+                {[...added].reverse().map(a => {
+                  const editing = editId === a.id;
+                  return (
+                    <button key={a.id} onClick={() => { const p = products.find(x => x.id === a.id); if (p) openEdit(p); }} title="Ketuk untuk ubah"
+                      className={`text-left px-2.5 py-2 rounded-[9px] text-[12.5px] font-medium border truncate cursor-pointer ${editing ? "bg-navy text-cream-text border-navy" : "bg-cream-bg text-navy border-warm-border"}`}>
+                      {a.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </aside>
+          )}
           </div>
         </div>
       )}
