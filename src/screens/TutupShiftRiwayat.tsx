@@ -3,6 +3,7 @@ import { ShieldCheck } from "lucide-react";
 import { useStore, isAtLeast, localDateISO } from "../store";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
+import { autoCloseStaleShifts } from "../lib/shift";
 import { formatRp } from "../data";
 import type { Screen } from "../types";
 
@@ -23,7 +24,7 @@ function prettyDate(iso: string) {
 }
 
 export default function TutupShiftRiwayat() {
-  const { setScreen, cashierInitials, signOut, storeId, storeTier } = useStore();
+  const { setScreen, cashierInitials, signOut, storeId, storeTier, isDemoMode } = useStore();
   const effectiveTier = storeId ? storeTier : "premium";
   const retentionDays = isAtLeast(effectiveTier, "premium") ? 90 : isAtLeast(effectiveTier, "standard") ? 30 : 1;
 
@@ -33,15 +34,26 @@ export default function TutupShiftRiwayat() {
   const [date, setDate] = useState(today);
   const [row, setRow] = useState<Closing | null>(null);
   const [loading, setLoading] = useState(true);
+  const [caughtUp, setCaughtUp] = useState(false);
+
+  // On open, catch up any past day that was never closed — the auto-close otherwise
+  // only runs on login, so a nota can be missing if the cashier stayed logged in.
+  useEffect(() => {
+    if (!storeId || isDemoMode) { setCaughtUp(true); return; }
+    let alive = true;
+    autoCloseStaleShifts(storeId).finally(() => { if (alive) setCaughtUp(true); });
+    return () => { alive = false; };
+  }, [storeId, isDemoMode]);
 
   useEffect(() => {
     if (!storeId) { setLoading(false); return; }
+    if (!caughtUp) return;   // wait for the catch-up so a freshly-closed day shows
     let alive = true;
     setLoading(true);
     supabase.from("shift_closings").select("*").eq("store_id", storeId).eq("business_date", date).maybeSingle()
       .then(({ data }) => { if (alive) { setRow((data as Closing) ?? null); setLoading(false); } });
     return () => { alive = false; };
-  }, [storeId, date]);
+  }, [storeId, date, caughtUp]);
 
   const canExtended = isAtLeast(effectiveTier, "standard");
   const bdRows = useMemo(() => METHOD_ORDER.filter(m => (row?.breakdown?.[m] ?? 0) > 0), [row]);
