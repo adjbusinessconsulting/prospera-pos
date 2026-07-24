@@ -9,6 +9,7 @@ export interface Product {
   unit: string;
   price: number;
   stock: number;          // live SISA (awal + tambahan − terjual)
+  sku?: string;           // catalog code (shared with Back Office)
   photo?: string;
   stockAwal?: number;     // starting stock for today
   stockTambahan?: number; // added today
