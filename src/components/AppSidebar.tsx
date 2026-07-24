@@ -32,6 +32,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [printerOpen, setPrinterOpen] = useState(false);
   const storeTier = useStore(s => (s.storeId ? s.storeTier : "free"));
+  const storeName = useStore(s => s.storeName);
   const isOnline = useStore(s => s.isOnline);
   const pendingSyncCount = useStore(s => s.pendingSyncCount);
   const auditPending = pendingAuditCount();
@@ -45,9 +46,16 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
         display: "flex", alignItems: "center", padding: "0 12px", gap: 8,
         flexShrink: 0, zIndex: 30, overflowX: "auto", overflowY: "hidden",
       }}>
-        {/* Logo mark */}
+        {/* Logo mark + current store name (so you always know which account) */}
         <img src="/mark-gold-512.png" alt="Sterith"
           style={{ width: 28, height: 28, objectFit: "contain", flexShrink: 0 }} />
+        {storeName && (
+          <span title={storeName} style={{
+            fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 12.5, fontWeight: 700,
+            color: "#0D1117", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+            maxWidth: 150, flexShrink: 1,
+          }}>{storeName}</span>
+        )}
 
         {/* Nav items — centred */}
         <div style={{ display: "flex", gap: 3, flex: 1, justifyContent: "center" }}>
