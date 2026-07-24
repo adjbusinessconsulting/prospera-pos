@@ -413,24 +413,6 @@ export default function Produk() {
 
             {/* Content */}
             <div className="flex-1 overflow-auto px-6 py-5 flex flex-col gap-4">
-              {/* Saved-this-session chips */}
-              {added.length > 0 && (
-                <div>
-                  <p style={{ fontSize: 9.5, letterSpacing: "0.16em" }} className="font-sans uppercase text-text-mute mb-2">Sudah ditambahkan · {added.length}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {added.map(a => {
-                      const editing = editId === a.id;
-                      return (
-                        <button key={a.id} onClick={() => { const p = products.find(x => x.id === a.id); if (p) openEdit(p); }} title="Klik untuk ubah"
-                          className={`inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full text-[12px] font-medium border cursor-pointer max-w-full ${editing ? "bg-navy text-cream-text border-navy" : "bg-gold-soft text-navy border-gold/40"}`}>
-                          <span className="truncate">{a.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
               {/* Photo */}
               <div>
                 <p style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-2.5">FOTO PRODUK <span style={{ fontSize: 8, color: "#B0A99A", textTransform: "none" as const, letterSpacing: 0 }}>(opsional)</span></p>
@@ -504,6 +486,24 @@ export default function Produk() {
               )}
               {needsOwnerConfirm && <p className="text-[11px] text-text-mute -mt-1">Menyimpan perlu konfirmasi kata sandi pemilik.</p>}
             </div>
+
+            {/* Saved this session — pinned so it stays visible; tap a chip to fix it */}
+            {added.length > 0 && (
+              <div className="px-6 py-2.5 border-t border-warm-border shrink-0 max-h-[112px] overflow-auto" style={{ background: "#FBFAF5" }}>
+                <p style={{ fontSize: 9.5, letterSpacing: "0.16em" }} className="font-sans uppercase text-text-mute mb-2">Sudah ditambahkan · {added.length} — ketuk untuk ubah</p>
+                <div className="flex flex-wrap gap-2">
+                  {added.map(a => {
+                    const editing = editId === a.id;
+                    return (
+                      <button key={a.id} onClick={() => { const p = products.find(x => x.id === a.id); if (p) openEdit(p); }} title="Ketuk untuk ubah"
+                        className={`inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full text-[12px] font-medium border cursor-pointer max-w-full ${editing ? "bg-navy text-cream-text border-navy" : "bg-gold-soft text-navy border-gold/40"}`}>
+                        <span className="truncate">{a.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Footer */}
             <div className="px-6 pb-7 pt-3 border-t border-warm-border shrink-0 flex items-center gap-2.5 flex-wrap">
