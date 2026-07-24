@@ -25,6 +25,8 @@ export default function Produk() {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [added, setAdded] = useState<{ id: string; name: string }[]>([]);   // saved this session
+  const [addingCat, setAddingCat] = useState(false);
+  const [newCat, setNewCat] = useState("");
   const [tambahTarget, setTambahTarget] = useState<Product | null>(null);
   const [tambahQty, setTambahQty] = useState("");
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
@@ -80,7 +82,12 @@ export default function Produk() {
     e.target.value = "";
   }
 
-  function openAdd() { setEditId(null); setForm({ ...EMPTY_FORM }); setAdded([]); setFormOpen(true); }
+  function openAdd() { setEditId(null); setForm({ ...EMPTY_FORM }); setAdded([]); setAddingCat(false); setNewCat(""); setFormOpen(true); }
+  function commitCat() {
+    const v = newCat.trim();
+    if (v) setForm(f => ({ ...f, category: v }));
+    setNewCat(""); setAddingCat(false);
+  }
   function openEdit(p: Product) {
     setEditId(p.id);
     setForm({ name: p.name, sku: p.sku ?? SKU_MAP[p.id] ?? "", unit: p.unit || "pcs", category: p.category, price: formatIDRInput(String(p.price)), stock: String(p.stock ?? 0), photo: p.photo ?? "" });
@@ -148,14 +155,32 @@ export default function Produk() {
     apply();
   }
 
+  // Category pills = the defaults + any custom categories already used by products
+  // (+ the current form value), so a custom category keeps showing up next time.
+  const knownIds = new Set(CATEGORY_OPTIONS.map(c => c.id));
+  const customCats = Array.from(new Set(products.map(p => p.category).filter((c): c is string => !!c && !knownIds.has(c))));
+  const catList = [...CATEGORY_OPTIONS.map(c => ({ id: c.id, label: c.label })), ...customCats.map(c => ({ id: c, label: getCatLabel(c) }))];
+  if (form.category && !catList.some(c => c.id === form.category)) catList.push({ id: form.category, label: getCatLabel(form.category) });
+
   const catPills = (
-    <div className="flex flex-wrap gap-2">
-      {CATEGORY_OPTIONS.map(c => (
+    <div className="flex flex-wrap gap-2 items-center">
+      {catList.map(c => (
         <button key={c.id} type="button" onClick={() => setForm(f => ({ ...f, category: c.id }))}
           className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors cursor-pointer ${form.category === c.id ? "bg-navy text-cream-text border-navy" : "bg-cream-bg text-navy border-warm-border hover:border-navy/40"}`}>
           {c.label}
         </button>
       ))}
+      {addingCat ? (
+        <input autoFocus value={newCat} onChange={e => setNewCat(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); commitCat(); } if (e.key === "Escape") { setAddingCat(false); setNewCat(""); } }}
+          onBlur={commitCat} placeholder="Kategori baru"
+          className="px-3 h-[30px] w-[130px] rounded-full text-[12px] text-navy border border-navy bg-white outline-none" />
+      ) : (
+        <button type="button" onClick={() => { setAddingCat(true); setNewCat(""); }}
+          className="px-3 py-1.5 rounded-full text-[12px] font-medium border border-dashed cursor-pointer" style={{ borderColor: "#d8cfae", color: "#b8934a" }}>
+          + Tambah
+        </button>
+      )}
     </div>
   );
 
