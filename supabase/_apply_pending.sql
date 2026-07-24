@@ -58,3 +58,11 @@ create policy sale_items_all on public.sale_items
   for all to authenticated
   using      (exists (select 1 from public.sales sa join public.stores s on s.id = sa.store_id where sa.id = sale_id and s.owner_id = auth.uid()))
   with check (exists (select 1 from public.sales sa join public.stores s on s.id = sa.store_id where sa.id = sale_id and s.owner_id = auth.uid()));
+
+
+-- ---------------------------------------------------------------------------
+-- 4) Back Office single-device columns (separate from the POS device lock).
+--    Back Office reads/writes these via Prisma, so no RLS policy is needed.
+-- ---------------------------------------------------------------------------
+alter table public.stores add column if not exists active_bo_device_id text;
+alter table public.stores add column if not exists active_bo_device_at timestamptz;

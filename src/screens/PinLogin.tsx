@@ -76,7 +76,12 @@ export default function PinLogin() {
   const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
   const shiftOptions: ShiftOption[] = hasConfiguredShifts
     ? dbShifts.map((s, i) => ({ pos: i + 1, name: s.name, time: `${s.start_time}–${s.end_time}`, isNow: shiftContainsNow(s.start_time, s.end_time, nowMinutes) }))
-    : ([1, 2, 3] as const).map(n => ({ pos: n, name: SHIFT_LABELS[n], time: "", isNow: currentShiftLabel() === n }));
+    // Only the demo fabricates sample shifts. A real store with no shifts shows a
+    // "buat shift" prompt instead of fake Pagi/Siang/Malam it never created.
+    : isDemoMode
+      ? ([1, 2, 3] as const).map(n => ({ pos: n, name: SHIFT_LABELS[n], time: "", isNow: currentShiftLabel() === n }))
+      : [];
+  const noShiftsReal = !hasConfiguredShifts && !isDemoMode && !!storeId;
 
   // Keep the selected cashier valid — if it points at a stale/demo id, snap it to
   // a real one so a card is highlighted and Masuk works.
@@ -268,6 +273,11 @@ export default function PinLogin() {
               );
             })}
           </div>
+          {noShiftsReal && (
+            <div style={{ marginTop: 4, padding: "10px 12px", borderRadius: 9, border: "1px dashed #D8CFAE", background: "#F7F4EE", fontSize: 11.5, color: "#7A776F", lineHeight: 1.5 }}>
+              Belum ada shift. Tambahkan di <b style={{ color: "#0D1117" }}>Back Office</b> → Manajemen · Staf. Bisa lanjut tanpa shift.
+            </div>
+          )}
         </div>
 
         {/* Cashier picker */}
@@ -403,6 +413,11 @@ export default function PinLogin() {
               );
             })}
           </div>
+          {noShiftsReal && (
+            <div className="mb-4 rounded-button border border-dashed px-3.5 py-3 text-[12px] leading-relaxed" style={{ borderColor: "#D8CFAE", background: "#F7F4EE", color: "#7A776F" }}>
+              Belum ada shift. Tambahkan di <b style={{ color: "#0D1117" }}>Back Office</b> → Manajemen · Staf. Bisa lanjut tanpa shift.
+            </div>
+          )}
 
           <div className="flex items-center justify-between mb-2">
             <p style={{ fontVariantNumeric: "tabular-nums" }} className="font-sans text-[10px] tracking-[0.18em] uppercase text-text-mute">PILIH KASIR · SELECT CASHIER</p>
