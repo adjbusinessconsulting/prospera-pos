@@ -279,7 +279,7 @@ export default function PinLogin() {
           </div>
           {noShiftsReal && (
             <div style={{ marginTop: 4, padding: "10px 12px", borderRadius: 9, border: "1px dashed #D8CFAE", background: "#F7F4EE", fontSize: 11.5, color: "#7A776F", lineHeight: 1.5 }}>
-              Belum ada shift. Tambahkan di <b style={{ color: "#0D1117" }}>Back Office</b> → Manajemen · Staf. Bisa lanjut tanpa shift.
+              {isPremium ? <>Belum ada shift. Tambahkan di <b style={{ color: "#0D1117" }}>Back Office</b> → Manajemen · Staf. Bisa lanjut tanpa shift.</> : "Belum ada shift — bisa lanjut tanpa shift."}
             </div>
           )}
         </div>
@@ -419,7 +419,7 @@ export default function PinLogin() {
           </div>
           {noShiftsReal && (
             <div className="mb-4 rounded-button border border-dashed px-3.5 py-3 text-[12px] leading-relaxed" style={{ borderColor: "#D8CFAE", background: "#F7F4EE", color: "#7A776F" }}>
-              Belum ada shift. Tambahkan di <b style={{ color: "#0D1117" }}>Back Office</b> → Manajemen · Staf. Bisa lanjut tanpa shift.
+              {isPremium ? <>Belum ada shift. Tambahkan di <b style={{ color: "#0D1117" }}>Back Office</b> → Manajemen · Staf. Bisa lanjut tanpa shift.</> : "Belum ada shift — bisa lanjut tanpa shift."}
             </div>
           )}
 

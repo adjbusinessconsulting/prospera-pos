@@ -38,6 +38,18 @@ function write(list: PendingSale[]) {
   localStorage.setItem(KEY, JSON.stringify(list));
 }
 export function pendingCount(): number { return read().length; }
+// Distinct store ids sitting in the queue — used to detect sales orphaned from a
+// different store/account (they can never satisfy the current owner's RLS).
+export function pendingStoreIds(): string[] { return [...new Set(read().map((s) => s.store_id))]; }
+// Discard the queued sales (e.g. orphaned ones that can never sync). Local-only data.
+export function clearQueue(): void { write([]); pushStatus(); }
+// Drop only sales that belong to a different store (orphaned), keep this store's. Returns how many were dropped.
+export function clearOrphaned(currentStoreId: string): number {
+  const list = read();
+  const kept = list.filter((s) => s.store_id === currentStoreId);
+  write(kept); pushStatus();
+  return list.length - kept.length;
+}
 
 function pushStatus(extra?: { synced?: boolean }) {
   const patch: { pendingSyncCount: number; lastSyncedAt?: string } = { pendingSyncCount: read().length };

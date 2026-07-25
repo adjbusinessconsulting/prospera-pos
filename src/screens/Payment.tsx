@@ -530,7 +530,7 @@ export default function Payment() {
                   <QrCode size={40} color="#c8c0b0" style={{ margin: "0 auto 12px" }} />
                   <p style={{ fontSize: 14, fontWeight: 600, color: "#0D1117", marginBottom: 6 }}>QRIS belum dikonfigurasi</p>
                   <p style={{ fontSize: 12.5, color: "#8f897a", lineHeight: 1.6 }}>
-                    Minta pemilik toko untuk mengatur QRIS di Backoffice → Pengaturan.
+                    Minta pemilik toko untuk mengatur gambar QRIS di menu Pengaturan.
                   </p>
                 </div>
               )}

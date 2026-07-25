@@ -11,7 +11,7 @@ import { PrinterSettings } from "./PrinterSettings";
 import { pendingAuditCount } from "../lib/auditlog";
 import { releaseStore } from "../lib/deviceLock";
 import { clearSession } from "../lib/session";
-import { flushQueue, getLastSyncError } from "../lib/sync";
+import { flushQueue, getLastSyncError, pendingStoreIds, clearOrphaned } from "../lib/sync";
 import { refreshStoreData } from "../lib/refreshData";
 
 const NAV = [
@@ -37,6 +37,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
   const [syncing, setSyncing] = useState(false);
   const storeTier = useStore(s => (s.storeId ? s.storeTier : "free"));
   const storeName = useStore(s => s.storeName);
+  const storeId = useStore(s => s.storeId);
   const isOnline = useStore(s => s.isOnline);
   const pendingSyncCount = useStore(s => s.pendingSyncCount);
   const auditPending = pendingAuditCount();
@@ -93,11 +94,21 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
               let res = { synced: 0, remaining: 0 };
               try { res = await flushQueue(); await refreshStoreData(); } catch { /* ignore */ }
               setSyncing(false);
-              if (res.remaining > 0) alert(`Belum semua transaksi tersinkron.\n\nAlasan: ${getLastSyncError() || "tidak ada koneksi / server tidak merespon"}`);
-              else if (before > 0) alert("Semua transaksi berhasil tersinkron.");
+              if (res.remaining > 0) {
+                const err = getLastSyncError() || "tidak ada koneksi / server tidak merespon";
+                const orphaned = pendingStoreIds().filter(id => id !== storeId);
+                if (orphaned.length > 0) {
+                  if (confirm(`Belum semua transaksi tersinkron.\n\nAlasan: ${err}\n\nSebagian transaksi ini dari toko/akun lain (nyangkut dari sesi sebelumnya) dan tidak bisa masuk ke toko ini. Kosongkan yang nyangkut? Transaksi baru di toko ini tetap aman.`)) {
+                    const dropped = clearOrphaned(storeId);
+                    alert(`${dropped} transaksi nyangkut dihapus. Buat transaksi baru di toko ini lalu ketuk Sinkron lagi.`);
+                  }
+                } else {
+                  alert(`Belum semua transaksi tersinkron.\n\nAlasan: ${err}\n\nTransaksi ini untuk toko ini tapi ditolak server — kemungkinan pemilik toko tidak cocok dengan akun yang login.`);
+                }
+              } else if (before > 0) alert("Semua transaksi berhasil tersinkron.");
             }}
             disabled={syncing}
-            title={!isOnline ? "Offline — transaksi disimpan, ketuk untuk coba sinkron" : (pendingSyncCount + auditPending) > 0 ? `${pendingSyncCount} transaksi menunggu — ketuk: kirim transaksi & tarik perubahan Back Office` : "Ketuk untuk sinkron: kirim transaksi & tarik perubahan Back Office"}
+            title={!isOnline ? "Offline — transaksi disimpan, ketuk untuk coba sinkron" : (pendingSyncCount + auditPending) > 0 ? `${pendingSyncCount} transaksi menunggu — ketuk: kirim transaksi & tarik data terbaru` : "Ketuk untuk sinkron: kirim transaksi & tarik data terbaru"}
             style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: "none", padding: "5px 7px", borderRadius: 8, cursor: syncing ? "default" : "pointer", fontFamily: "inherit" }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: syncColor, boxShadow: `0 0 0 3px ${syncColor}2E`, display: "inline-block", flexShrink: 0 }} />
             {(syncLabel || syncing) && <span style={{ fontSize: 9, fontWeight: 600, color: syncColor, letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{syncing ? "Sinkron…" : syncLabel}</span>}
