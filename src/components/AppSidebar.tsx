@@ -12,6 +12,7 @@ import { pendingAuditCount } from "../lib/auditlog";
 import { releaseStore } from "../lib/deviceLock";
 import { clearSession } from "../lib/session";
 import { flushQueue } from "../lib/sync";
+import { refreshStoreData } from "../lib/refreshData";
 
 const NAV = [
   { id: "sales"   as Screen, label: "Jual",    Icon: ShoppingCart },
@@ -85,9 +86,9 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           {/* Sync status */}
           <button
-            onClick={async () => { if (syncing) return; setSyncing(true); try { await flushQueue(); } catch { /* ignore */ } setSyncing(false); }}
+            onClick={async () => { if (syncing) return; setSyncing(true); try { await flushQueue(); await refreshStoreData(); } catch { /* ignore */ } setSyncing(false); }}
             disabled={syncing}
-            title={!isOnline ? "Offline — transaksi disimpan, ketuk untuk coba sinkron" : (pendingSyncCount + auditPending) > 0 ? `${pendingSyncCount} transaksi menunggu — ketuk untuk sinkron sekarang` : "Tersinkron — ketuk untuk sinkron ulang"}
+            title={!isOnline ? "Offline — transaksi disimpan, ketuk untuk coba sinkron" : (pendingSyncCount + auditPending) > 0 ? `${pendingSyncCount} transaksi menunggu — ketuk: kirim transaksi & tarik perubahan Back Office` : "Ketuk untuk sinkron: kirim transaksi & tarik perubahan Back Office"}
             style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: "none", padding: "5px 7px", borderRadius: 8, cursor: syncing ? "default" : "pointer", fontFamily: "inherit" }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: syncColor, boxShadow: `0 0 0 3px ${syncColor}2E`, display: "inline-block", flexShrink: 0 }} />
             {(syncLabel || syncing) && <span style={{ fontSize: 9, fontWeight: 600, color: syncColor, letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{syncing ? "Sinkron…" : syncLabel}</span>}

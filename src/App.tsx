@@ -9,6 +9,7 @@ import { RenewBanner } from "./components/RenewBanner";
 import { initSync } from "./lib/sync";
 import { deviceId, touchLock, releaseStore } from "./lib/deviceLock";
 import { touchSession, clearSession } from "./lib/session";
+import { refreshStoreData } from "./lib/refreshData";
 import LogAktivitas from "./screens/LogAktivitas";
 import TutupShiftRiwayat from "./screens/TutupShiftRiwayat";
 import BukaToko from "./screens/BukaToko";
@@ -99,7 +100,7 @@ export default function App() {
     };
     check();
     const t = setInterval(check, 20000);
-    const onVis = () => { if (document.visibilityState === "visible") check(); else touchSession(); };
+    const onVis = () => { if (document.visibilityState === "visible") { check(); void refreshStoreData(); } else touchSession(); };
     document.addEventListener("visibilitychange", onVis);
     // Best-effort: free the lock when the app is actually closed (not just tab-switch
     // or bfcache), so the next device isn't falsely blocked. The 2-min stale timeout
