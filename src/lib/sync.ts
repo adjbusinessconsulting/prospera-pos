@@ -52,7 +52,6 @@ export function enqueueSale(sale: PendingSale) {
 
 let flushing = false;
 let lastSyncError = "";
-let alertedSyncError = false;
 export function getLastSyncError(): string { return lastSyncError; }
 
 export async function flushQueue(): Promise<{ synced: number; remaining: number }> {
@@ -62,19 +61,9 @@ export async function flushQueue(): Promise<{ synced: number; remaining: number 
   try {
     for (const sale of [...read()]) {
       const ok = await syncOne(sale);
-      if (!ok) {
-        // Surface the real server reason once (RLS, foreign key, missing column…)
-        // instead of a silent "belum sync" that leaves the owner guessing.
-        if (lastSyncError && !alertedSyncError && navigator.onLine) {
-          alertedSyncError = true;
-          console.error("Sale sync failed:", lastSyncError);
-          try { alert(`Transaksi belum tersimpan ke server: ${lastSyncError}`); } catch { /* ignore */ }
-        }
-        break;                              // offline / server error → retry later
-      }
+      if (!ok) { console.error("Sale sync failed:", lastSyncError); break; }   // reason surfaced by the Sync button
       write(read().filter((s) => s.id !== sale.id));
       synced++;
-      alertedSyncError = false;   // a clean sync re-arms the one-time error alert
     }
   } catch { /* ignore — retry next tick */ }
   finally { flushing = false; }

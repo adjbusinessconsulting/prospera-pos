@@ -11,7 +11,7 @@ import { PrinterSettings } from "./PrinterSettings";
 import { pendingAuditCount } from "../lib/auditlog";
 import { releaseStore } from "../lib/deviceLock";
 import { clearSession } from "../lib/session";
-import { flushQueue } from "../lib/sync";
+import { flushQueue, getLastSyncError } from "../lib/sync";
 import { refreshStoreData } from "../lib/refreshData";
 
 const NAV = [
@@ -86,7 +86,16 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           {/* Sync status */}
           <button
-            onClick={async () => { if (syncing) return; setSyncing(true); try { await flushQueue(); await refreshStoreData(); } catch { /* ignore */ } setSyncing(false); }}
+            onClick={async () => {
+              if (syncing) return;
+              setSyncing(true);
+              const before = pendingSyncCount;
+              let res = { synced: 0, remaining: 0 };
+              try { res = await flushQueue(); await refreshStoreData(); } catch { /* ignore */ }
+              setSyncing(false);
+              if (res.remaining > 0) alert(`Belum semua transaksi tersinkron.\n\nAlasan: ${getLastSyncError() || "tidak ada koneksi / server tidak merespon"}`);
+              else if (before > 0) alert("Semua transaksi berhasil tersinkron.");
+            }}
             disabled={syncing}
             title={!isOnline ? "Offline — transaksi disimpan, ketuk untuk coba sinkron" : (pendingSyncCount + auditPending) > 0 ? `${pendingSyncCount} transaksi menunggu — ketuk: kirim transaksi & tarik perubahan Back Office` : "Ketuk untuk sinkron: kirim transaksi & tarik perubahan Back Office"}
             style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: "none", padding: "5px 7px", borderRadius: 8, cursor: syncing ? "default" : "pointer", fontFamily: "inherit" }}>
