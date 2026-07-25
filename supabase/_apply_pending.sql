@@ -94,3 +94,10 @@ create policy shifts_all on public.shifts
   for all to authenticated
   using      (exists (select 1 from public.stores s where s.id = store_id and s.owner_id = auth.uid()))
   with check (exists (select 1 from public.stores s where s.id = store_id and s.owner_id = auth.uid()));
+
+
+-- ---------------------------------------------------------------------------
+-- 6) cashiers.password — optional manager password for POS manager-override
+--    approvals (Phase 2). PIN approval ignores it.
+-- ---------------------------------------------------------------------------
+alter table public.cashiers add column if not exists password text;

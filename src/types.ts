@@ -37,6 +37,7 @@ export interface CashierDB {
   initials: string;
   role: string;
   pin: string;
+  password?: string | null;   // optional manager password for POS approvals
   active: boolean;
 }
 

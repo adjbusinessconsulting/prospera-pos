@@ -4,6 +4,7 @@ import { useStore, isAtLeast, localDateISO } from "../store";
 import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
 import { OwnerConfirm } from "../components/OwnerConfirm";
+import { ManagerApproval } from "../components/ManagerApproval";
 import { getCatLabel, formatRp, formatIDRInput, parseIDRInput, CATEGORY_OPTIONS } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import type { Product } from "../types";
@@ -33,7 +34,7 @@ export default function Produk() {
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
-  const { cashierInitials, setScreen, signOut, storeId, storeTier, isDemoMode, inventoryEnabled, lowStockThreshold, setInventoryEnabled, products, settings, addProduct, updateProduct, deleteProduct } = useStore();
+  const { cashierInitials, setScreen, signOut, storeId, storeTier, isDemoMode, inventoryEnabled, lowStockThreshold, setInventoryEnabled, products, settings, addProduct, updateProduct, deleteProduct, selectedCashier, dbCashiers } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
   const canStock = isAtLeast(effectiveTier, 'premium');
   const threshold = lowStockThreshold || LOW_STOCK_THRESHOLD;
@@ -72,6 +73,18 @@ export default function Produk() {
   // Free is trusted; Standard+ requires the owner's login password before product/price
   // edits (when the toggle is on). Shown in the demo too so prospects see the anti-cheat.
   const needsOwnerConfirm = isAtLeast(effectiveTier, "standard") && !!storeId && settings.passwordConfirmPrice;
+
+  // Phase 2 — manager-override gate. On Premium, a manager/cashier at the register
+  // must get owner-or-authorized-manager approval for a gated action; the owner
+  // (Pemilik) acts freely. Free/Standard keep the existing owner-password confirm.
+  const isPremium = isAtLeast(effectiveTier, "premium");
+  const currentRole = (dbCashiers.find(c => c.id === selectedCashier)?.role ?? "").toLowerCase();
+  const [mgrGate, setMgrGate] = useState<{ action: string; run: () => void } | null>(null);
+  function gate(action: string, fn: () => void) {
+    if (isPremium && !isDemoMode && (currentRole === "manajer" || currentRole === "kasir")) { setMgrGate({ action, run: fn }); return; }
+    if (!isPremium && needsOwnerConfirm) { setConfirmAction(() => fn); return; }
+    fn();
+  }
 
   function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -135,8 +148,7 @@ export default function Produk() {
 
   function requestSave(addAnother: boolean) {
     if (!canSave) return;
-    if (needsOwnerConfirm) { setConfirmAction(() => () => { void doSave(addAnother); }); return; }
-    void doSave(addAnother);
+    gate("products", () => { void doSave(addAnother); });
   }
 
   function requestDelete() {
@@ -151,8 +163,7 @@ export default function Produk() {
       if (inSessionEdit) { setAdded(list => list.filter(a => a.id !== id)); backToAdd(); }
       else closeForm();
     };
-    if (needsOwnerConfirm) { setConfirmAction(() => apply); return; }
-    apply();
+    gate("products", apply);
   }
 
   // Category pills = the defaults + any custom categories already used by products
@@ -350,6 +361,13 @@ export default function Produk() {
         message="Perubahan ini perlu izin pemilik. Masukkan kata sandi akun pemilik"
         onClose={() => setConfirmAction(null)}
         onConfirmed={() => { const a = confirmAction; setConfirmAction(null); a?.(); }}
+      />
+
+      <ManagerApproval
+        open={!!mgrGate}
+        action={mgrGate?.action ?? ""}
+        onClose={() => setMgrGate(null)}
+        onApproved={() => { const r = mgrGate?.run; setMgrGate(null); r?.(); }}
       />
 
       {/* Tambah Stok Modal (inventory) */}

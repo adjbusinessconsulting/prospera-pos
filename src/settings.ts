@@ -29,6 +29,10 @@ export interface StoreSettings {
   whatsappShare: boolean;
   quickCash: number[];   // customizable "uang diterima" quick-add denominations
   sessionGraceMinutes: number;   // keep the cashier logged in this long after leaving (0 = always ask PIN)
+  // Manager permissions (set in Back Office, Premium). Which gated actions a manager
+  // may approve at the register, and how they approve (PIN or password).
+  managerPerms: Record<string, boolean>;
+  approvalMethod: string;   // 'pin' | 'password'
 }
 
 export const DEFAULT_SETTINGS: StoreSettings = {
@@ -49,6 +53,8 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   whatsappShare: true,
   quickCash: [50000, 100000, 200000, 500000],
   sessionGraceMinutes: 15,   // come back within 15 min → no PIN re-entry
+  managerPerms: {},          // all off by default; owner enables in Back Office
+  approvalMethod: "pin",
 };
 
 // Merge whatever is stored (possibly partial / from an older schema) over the
