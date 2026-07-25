@@ -28,6 +28,7 @@ export interface StoreSettings {
   gantiShift: boolean;
   whatsappShare: boolean;
   quickCash: number[];   // customizable "uang diterima" quick-add denominations
+  sessionGraceMinutes: number;   // keep the cashier logged in this long after leaving (0 = always ask PIN)
 }
 
 export const DEFAULT_SETTINGS: StoreSettings = {
@@ -47,6 +48,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   gantiShift: true,
   whatsappShare: true,
   quickCash: [50000, 100000, 200000, 500000],
+  sessionGraceMinutes: 15,   // come back within 15 min → no PIN re-entry
 };
 
 // Merge whatever is stored (possibly partial / from an older schema) over the

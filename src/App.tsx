@@ -8,6 +8,7 @@ import { DemoControls } from "./components/DemoControls";
 import { RenewBanner } from "./components/RenewBanner";
 import { initSync } from "./lib/sync";
 import { deviceId, touchLock, releaseStore } from "./lib/deviceLock";
+import { touchSession, clearSession } from "./lib/session";
 import LogAktivitas from "./screens/LogAktivitas";
 import TutupShiftRiwayat from "./screens/TutupShiftRiwayat";
 import BukaToko from "./screens/BukaToko";
@@ -87,16 +88,18 @@ export default function App() {
       const suspended = data.status && data.status !== "active";
       const takenOver = data.active_device_id && data.active_device_id !== deviceId();
       if (suspended || takenOver) {
+        clearSession();            // don't silently restore a suspended / kicked session
         await supabase.auth.signOut();
         signOut();
         if (takenOver && !suspended) useStore.getState().setKickedOut(true);
       } else {
         void touchLock(storeId);   // I still hold the store — keep the lock fresh
+        touchSession();            // keep the grace window fresh while the app is in use
       }
     };
     check();
     const t = setInterval(check, 20000);
-    const onVis = () => { if (document.visibilityState === "visible") check(); };
+    const onVis = () => { if (document.visibilityState === "visible") check(); else touchSession(); };
     document.addEventListener("visibilitychange", onVis);
     // Best-effort: free the lock when the app is actually closed (not just tab-switch
     // or bfcache), so the next device isn't falsely blocked. The 2-min stale timeout

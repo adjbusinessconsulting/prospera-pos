@@ -9,6 +9,8 @@ import type { CashierDB } from "../types";
 import { BUILD } from "../version";
 import { DemoChooser } from "../components/DemoChooser";
 import CheckUpdateButton from "../components/CheckUpdateButton";
+import { readSession, sessionValid, touchSession } from "../lib/session";
+import { mergeSettings } from "../settings";
 
 
 // New sign-ups go through the Sterith website form (portfolio + Sterith POS tab).
@@ -44,7 +46,7 @@ interface StoreRow {
 }
 
 export default function OwnerLogin() {
-  const { setScreen, setStoreData, setProductsFromDB, setTrxCounter, setDbShifts, startDemo, setInventorySettings, setSubscription, setReceiptLogo, loadSettings, setKickedOut, kickedOut } = useStore();
+  const { setScreen, setStoreData, setProductsFromDB, setTrxCounter, setDbShifts, startDemo, setInventorySettings, setSubscription, setReceiptLogo, loadSettings, setKickedOut, kickedOut, selectCashier, setShift } = useStore();
   const [storeChoices, setStoreChoices] = useState<StoreRow[]>([]);
   const [ownerId, setOwnerId] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -201,7 +203,18 @@ export default function OwnerLogin() {
     void autoCloseStaleShifts(store.id);   // precaution: close any day left open
     void claimStore(store.id);             // single-device: this device now owns the store
     setKickedOut(false);                    // fresh login clears any "kicked out" banner
-    setScreen("login");
+    // Session grace: if the same cashier logged in recently (owner-set window), skip
+    // the PIN and resume selling instead of forcing a re-login.
+    const grace = mergeSettings(store.settings).sessionGraceMinutes;
+    const sess = readSession();
+    if (sessionValid(sess, store.id, grace) && (cashierRows ?? []).some(c => (c as CashierDB).id === sess.cashierId)) {
+      selectCashier(sess.cashierId);
+      setShift(sess.shift);
+      touchSession();
+      setScreen("sales");
+    } else {
+      setScreen("login");
+    }
   }
 
   async function createStore() {

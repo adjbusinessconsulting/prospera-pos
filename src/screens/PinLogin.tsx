@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import ManageStaff from "../components/ManageStaff";
 import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
+import { saveSession, clearSession } from "../lib/session";
 import type { CashierDB } from "../types";
 
 function currentShiftLabel(): 1 | 2 | 3 {
@@ -134,7 +135,10 @@ export default function PinLogin() {
   // On successful auth: record who logged in + when (the log entry's timestamp
   // captures "jam berapa"), then route on. Skipped in demo.
   function completeLogin() {
-    if (!isDemoMode && storeId) void logEvent("login", "Masuk / mulai shift");
+    if (!isDemoMode && storeId) {
+      void logEvent("login", "Masuk / mulai shift");
+      saveSession(storeId, selectedCashier, selectedShift);   // grace: skip PIN on a quick return
+    }
     setScreen(afterLogin);
   }
 
@@ -208,7 +212,7 @@ export default function PinLogin() {
               style={{ flex: 1, height: 44, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0D1117", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
               Muat ulang
             </button>
-            <button onClick={async () => { await supabase.auth.signOut(); signOut(); }}
+            <button onClick={async () => { clearSession(); await supabase.auth.signOut(); signOut(); }}
               style={{ flex: 1, height: 44, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#7A776F", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
               Keluar
             </button>

@@ -114,8 +114,22 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
              device shows printer setup only (physical per-device pairing). */
           <div style={{ padding: "6px 24px 22px", display: "flex", flexDirection: "column" }}>
             <p style={{ margin: "12px 0 2px", fontSize: 12.5, color: "#7A776F", lineHeight: 1.6 }}>
-              Pengaturan toko & fitur dikelola dari <b>Back Office</b>. Di perangkat ini hanya <b>setup printer</b>, karena printer dipasangkan langsung ke perangkat.
+              Pengaturan toko & fitur dikelola dari <b>Back Office</b>. Di perangkat ini: <b>setup printer</b> &amp; <b>sesi kasir</b>.
             </p>
+
+            <SectionHead title="Sesi Kasir" />
+            <p style={{ margin: "2px 0 8px", fontSize: 11.5, color: "#7A776F", lineHeight: 1.5 }}>Kalau kasir keluar sebentar lalu kembali dalam waktu ini, tidak perlu masukkan PIN lagi. Lewat dari itu, PIN diminta ulang.</p>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
+              {[{ v: 0, l: "Selalu" }, { v: 5, l: "5 mnt" }, { v: 15, l: "15 mnt" }, { v: 30, l: "30 mnt" }, { v: 60, l: "1 jam" }].map(o => {
+                const active = (draft.sessionGraceMinutes ?? 15) === o.v;
+                return (
+                  <button key={o.v} type="button" onClick={() => setDraft(d => ({ ...d, sessionGraceMinutes: o.v }))}
+                    style={{ height: 34, padding: "0 13px", borderRadius: 99, border: active ? "1.5px solid #0D1117" : "1px solid #ECE7DD", background: active ? "#0D1117" : "white", color: active ? "#FAFAF7" : "#0D1117", fontSize: 12, fontWeight: active ? 700 : 500, cursor: "pointer", fontFamily: "inherit" }}>
+                    {o.l}
+                  </button>
+                );
+              })}
+            </div>
             <button onClick={() => { onClose(); onOpenPrinter?.(); }}
               style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 14, padding: "14px 14px", borderRadius: 11, border: "1px solid #ECE7DD", background: "#FAFAF7", cursor: "pointer" }}>
               <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -129,7 +143,13 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
               </span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A776F" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
             </button>
-            <button onClick={onClose} style={{ marginTop: 16, height: 46, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0D1117", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Tutup</button>
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+              <button onClick={onClose} style={{ flex: 1, height: 46, borderRadius: 11, border: "1px solid #ECE7DD", background: "white", color: "#0D1117", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Tutup</button>
+              <button onClick={onSave} disabled={!dirty || saving}
+                style={{ flex: 2, height: 46, borderRadius: 11, border: "none", background: dirty ? "#0D1117" : "#D8D2C4", color: dirty ? "#F2EDE3" : "#8A857C", fontSize: 13, fontWeight: 700, cursor: dirty && !saving ? "pointer" : "default" }}>
+                {saving ? "Menyimpan…" : dirty ? "Simpan Perubahan" : "Tersimpan"}
+              </button>
+            </div>
           </div>
         ) : (
           <>
@@ -189,6 +209,20 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
                 </button>
               )}
               <Row k="passwordConfirmPrice" label="Konfirmasi kata sandi saat ubah harga" desc="Minta kata sandi pemilik sebelum harga/produk diubah." />
+
+              <SectionHead title="Sesi Kasir" />
+              <p style={{ margin: "2px 0 8px", fontSize: 11.5, color: "#7A776F", lineHeight: 1.5 }}>Kalau kasir keluar sebentar (mis. buka aplikasi lain) lalu kembali dalam waktu ini, tidak perlu masukkan PIN lagi. Lewat dari itu, PIN diminta ulang.</p>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {[{ v: 0, l: "Selalu" }, { v: 5, l: "5 mnt" }, { v: 15, l: "15 mnt" }, { v: 30, l: "30 mnt" }, { v: 60, l: "1 jam" }].map(o => {
+                  const active = (draft.sessionGraceMinutes ?? 15) === o.v;
+                  return (
+                    <button key={o.v} type="button" onClick={() => setDraft(d => ({ ...d, sessionGraceMinutes: o.v }))}
+                      style={{ height: 34, padding: "0 13px", borderRadius: 99, border: active ? "1.5px solid #0D1117" : "1px solid #ECE7DD", background: active ? "#0D1117" : "white", color: active ? "#FAFAF7" : "#0D1117", fontSize: 12, fontWeight: active ? 700 : 500, cursor: "pointer", fontFamily: "inherit" }}>
+                      {o.l}
+                    </button>
+                  );
+                })}
+              </div>
 
               {isStd && <>
                 <SectionHead title="Fitur Toko" badge="Standard" />

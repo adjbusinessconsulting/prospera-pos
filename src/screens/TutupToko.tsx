@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
 import { saveShiftClosing } from "../lib/shift";
 import { modalAwalToday } from "../lib/dayopen";
+import { clearSession } from "../lib/session";
 
 const RETENTION: Record<string, number> = { free: 1, standard: 30, premium: 90, business: 1095, enterprise: 1825 };
 const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet" };
@@ -98,6 +99,7 @@ export default function TutupToko() {
         else void logEvent("shift.close", "Tutup shift · tanpa hitung kas");
       } catch { /* still let them log out */ }
     }
+    clearSession();
     signOut();
   }
 
