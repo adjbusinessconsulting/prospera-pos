@@ -66,3 +66,31 @@ create policy sale_items_all on public.sale_items
 -- ---------------------------------------------------------------------------
 alter table public.stores add column if not exists active_bo_device_id text;
 alter table public.stores add column if not exists active_bo_device_at timestamptz;
+
+
+-- ---------------------------------------------------------------------------
+-- 5) products / cashiers / shifts RLS — owner-scoped. WITHOUT THIS, RLS is ON
+--    but no policy exists, so every INSERT is rejected ("new row violates
+--    row-level security policy"). Products never reach the DB, and sales that
+--    reference them then fail a foreign key → Riwayat stays empty.
+-- ---------------------------------------------------------------------------
+alter table public.products enable row level security;
+drop policy if exists products_all on public.products;
+create policy products_all on public.products
+  for all to authenticated
+  using      (exists (select 1 from public.stores s where s.id = store_id and s.owner_id = auth.uid()))
+  with check (exists (select 1 from public.stores s where s.id = store_id and s.owner_id = auth.uid()));
+
+alter table public.cashiers enable row level security;
+drop policy if exists cashiers_all on public.cashiers;
+create policy cashiers_all on public.cashiers
+  for all to authenticated
+  using      (exists (select 1 from public.stores s where s.id = store_id and s.owner_id = auth.uid()))
+  with check (exists (select 1 from public.stores s where s.id = store_id and s.owner_id = auth.uid()));
+
+alter table public.shifts enable row level security;
+drop policy if exists shifts_all on public.shifts;
+create policy shifts_all on public.shifts
+  for all to authenticated
+  using      (exists (select 1 from public.stores s where s.id = store_id and s.owner_id = auth.uid()))
+  with check (exists (select 1 from public.stores s where s.id = store_id and s.owner_id = auth.uid()));
