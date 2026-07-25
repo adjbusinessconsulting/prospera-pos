@@ -9,6 +9,7 @@ import { RenewBanner } from "./components/RenewBanner";
 import { initSync } from "./lib/sync";
 import { deviceId, touchLock, releaseStore } from "./lib/deviceLock";
 import { touchSession, clearSession } from "./lib/session";
+import { clearSnapshot } from "./lib/snapshot";
 import { refreshStoreData } from "./lib/refreshData";
 import LogAktivitas from "./screens/LogAktivitas";
 import TutupShiftRiwayat from "./screens/TutupShiftRiwayat";
@@ -90,6 +91,7 @@ export default function App() {
       const takenOver = data.active_device_id && data.active_device_id !== deviceId();
       if (suspended || takenOver) {
         clearSession();            // don't silently restore a suspended / kicked session
+        clearSnapshot();           // and drop the cached catalog so it can't reappear
         await supabase.auth.signOut();
         signOut();
         if (takenOver && !suspended) useStore.getState().setKickedOut(true);

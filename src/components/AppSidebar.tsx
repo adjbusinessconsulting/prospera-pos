@@ -11,6 +11,7 @@ import { PrinterSettings } from "./PrinterSettings";
 import { pendingAuditCount } from "../lib/auditlog";
 import { releaseStore } from "../lib/deviceLock";
 import { clearSession } from "../lib/session";
+import { clearSnapshot } from "../lib/snapshot";
 import { flushQueue, getLastSyncError, pendingStoreIds, clearOrphaned } from "../lib/sync";
 import { refreshStoreData } from "../lib/refreshData";
 
@@ -167,7 +168,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
           )}
 
           {/* Logout */}
-          <button onClick={async () => { const sid = useStore.getState().storeId; if (sid) await releaseStore(sid); clearSession(); await supabase.auth.signOut(); signOut(); }} title="Keluar" style={{
+          <button onClick={async () => { const sid = useStore.getState().storeId; if (sid) await releaseStore(sid); clearSession(); clearSnapshot(); await supabase.auth.signOut(); signOut(); }} title="Keluar" style={{
             background: "transparent", border: "none", cursor: "pointer",
             color: "#7A776F", display: "flex", alignItems: "center", justifyContent: "center",
             width: 30, height: 30, borderRadius: 8,

@@ -10,6 +10,7 @@ import { BUILD } from "../version";
 import { DemoChooser } from "../components/DemoChooser";
 import CheckUpdateButton from "../components/CheckUpdateButton";
 import { readSession, sessionValid, touchSession } from "../lib/session";
+import { hydrateSnapshot, saveSnapshot } from "../lib/snapshot";
 import { mergeSettings } from "../settings";
 
 
@@ -170,6 +171,9 @@ export default function OwnerLogin() {
     setReceiptLogo(store.receipt_logo ?? "");
     loadSettings(store.settings);
     void pruneLog(effectiveTier);   // trim on-device audit log to the tier window
+    // Paint the last-known catalog/shifts instantly so a post-update reload never
+    // shows a blank screen while the fetch below is in flight. The fetch overwrites.
+    hydrateSnapshot(store.id);
     const [{ data: productRows }, { count: saleCount }, { data: shiftRows }] = await Promise.all([
       supabase.from("products").select("*").eq("store_id", store.id).eq("active", true).order("name"),
       supabase.from("sales").select("*", { count: "exact", head: true }).eq("store_id", store.id),
@@ -200,6 +204,7 @@ export default function OwnerLogin() {
     setProductsFromDB(mapped as unknown as import("../types").Product[]);
     setDbShifts((shiftRows ?? []) as import("../types").ShiftDef[]);
     setTrxCounter((saleCount ?? 0) + 1);
+    saveSnapshot();   // cache the fresh slices so the next reload paints instantly
     void autoCloseStaleShifts(store.id);   // precaution: close any day left open
     void claimStore(store.id);             // single-device: this device now owns the store
     setKickedOut(false);                    // fresh login clears any "kicked out" banner

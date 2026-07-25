@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { useStore, localDateISO } from "../store";
+import { saveSnapshot } from "./snapshot";
 import type { Product, ShiftDef, CashierDB } from "../types";
 
 // Re-pull catalog / cashiers / shifts / settings from the server WITHOUT a re-login,
@@ -43,6 +44,7 @@ export async function refreshStoreData(): Promise<boolean> {
     st.setInventorySettings(store.inventory_enabled ?? true, store.low_stock_threshold ?? 5);
     st.setReceiptLogo(store.receipt_logo ?? "");
     st.setStoreInfo(store.name ?? st.storeName, store.address ?? "", store.phone ?? "");
+    saveSnapshot();   // keep the on-device cache in sync with the latest server data
     return true;
   } catch { return false; }
 }
