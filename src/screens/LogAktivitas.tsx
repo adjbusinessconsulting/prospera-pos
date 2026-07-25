@@ -90,9 +90,9 @@ export default function LogAktivitas() {
         {/* Header + tabs */}
         <div className="px-5 lg:px-10 pt-5 lg:pt-7 pb-0 shrink-0">
           <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute mb-0.5">LAPORAN</p>
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
             <h1 className="font-serif text-[24px] lg:text-display-l font-medium text-navy leading-tight">Performa toko</h1>
-            <div className="flex gap-0.5 bg-cream-bg border border-warm-border rounded-[10px] p-0.5 shrink-0 mt-0.5 flex-wrap">
+            <div className="flex gap-0.5 bg-cream-bg border border-warm-border rounded-[10px] p-0.5 mt-0.5 self-start max-w-full overflow-x-auto flex-nowrap lg:max-w-none">
               {tab("Riwayat", "riwayat")}
               {tab("Kas", "kas")}
               {tab("Hutang", "hutang")}

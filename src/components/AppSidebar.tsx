@@ -56,7 +56,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
         <img src="/mark-gold-512.png" alt="Sterith"
           style={{ width: 28, height: 28, objectFit: "contain", flexShrink: 0 }} />
         {storeName && (
-          <span title={storeName} style={{
+          <span className="pos-store-name" title={storeName} style={{
             fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 12.5, fontWeight: 700,
             color: "#0D1117", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
             maxWidth: 150, flexShrink: 1,
@@ -64,7 +64,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
         )}
 
         {/* Nav items — centred */}
-        <div style={{ display: "flex", gap: 3, flex: 1, justifyContent: "center" }}>
+        <div className="pos-topnav" style={{ display: "flex", gap: 3, flex: 1, justifyContent: "center" }}>
           {NAV.map(({ id, label, Icon }) => {
             const isActive = active === id;
             return (
@@ -85,7 +85,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
         </div>
 
         {/* Right: sync · feedback · cashier · demo back · logout */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+        <div className="pos-topright" style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           {/* Sync status */}
           <button
             onClick={async () => {
@@ -123,7 +123,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
             cursor: "pointer",
           }}>
             <Sparkles size={12} color="#A6843F" strokeWidth={2} />
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "#A6843F" }}>{storeTier}</span>
+            <span className="pos-tier-text" style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "#A6843F" }}>{storeTier}</span>
           </button>
 
           {/* Pengaturan */}

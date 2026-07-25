@@ -24,3 +24,18 @@
 .cursor-blink { animation: blink 1s step-end infinite; }
 
 @keyframes spin360 { to { transform: rotate(360deg); } }
+
+/* ── Mobile top bar (AppSidebar header) ──────────────────────────────
+   On a phone the bar packs logo + store name + 3 nav icons + sync + tier
+   badge + settings + help + avatar + logout into one row, which is wider
+   than a ~360px screen and clips the right end (avatar / logout). Below
+   520px we drop the always-scrolling store name and the tier word, and
+   tighten spacing so every control fits without horizontal scroll. */
+@media (max-width: 520px) {
+  .pos-topbar { gap: 4px !important; padding: 0 8px !important; }
+  .pos-store-name { display: none !important; }
+  .pos-tier-text { display: none !important; }
+  .pos-topnav { gap: 2px !important; }
+  .pos-topnav button { padding: 7px 9px !important; }
+  .pos-topright { gap: 3px !important; }
+}
