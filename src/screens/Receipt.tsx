@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useStore, getTotal, getTrxId, isAtLeast, localDateISO } from "../store";
 import { formatRp } from "../data";
-import { Printer, Check, ChevronLeft } from "lucide-react";
+import { Printer, Check } from "lucide-react";
 import { AppSidebar } from "../components/AppSidebar";
 import { recordSale } from "../lib/sync";
 import { logEvent } from "../lib/auditlog";
@@ -199,11 +199,8 @@ export default function Receipt() {
         {/* Left: receipt */}
         <div className="flex-1 flex flex-col min-w-0 px-6 lg:px-10 py-5 lg:py-7 overflow-auto">
 
-          <button onClick={() => setScreen("payment")}
-            className="flex items-center gap-1.5 text-[12px] text-text-mute bg-transparent border-0 p-0 hover:text-navy transition-colors mb-5 self-start cursor-pointer">
-            <ChevronLeft size={14} strokeWidth={1.8} />
-            Kembali ke pembayaran
-          </button>
+          {/* No "back to payment": the sale is finalized. Only path forward is a new
+              transaction, so a completed sale can't be re-opened or double-charged. */}
 
           {/* Success header */}
           <div className="flex items-center gap-4 mb-6">
