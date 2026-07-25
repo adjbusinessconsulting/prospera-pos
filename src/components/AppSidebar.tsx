@@ -1,4 +1,4 @@
-import { ShoppingCart, Package, BarChart2, ChevronLeft, LogOut, MessageCircle, Sparkles, Settings } from "lucide-react";
+import { ShoppingCart, Package, BarChart2, ChevronLeft, LogOut, MessageCircle, Sparkles, Settings, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useStore } from "../store";
@@ -11,6 +11,7 @@ import { PrinterSettings } from "./PrinterSettings";
 import { pendingAuditCount } from "../lib/auditlog";
 import { releaseStore } from "../lib/deviceLock";
 import { clearSession } from "../lib/session";
+import { flushQueue } from "../lib/sync";
 
 const NAV = [
   { id: "sales"   as Screen, label: "Jual",    Icon: ShoppingCart },
@@ -32,6 +33,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [printerOpen, setPrinterOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const storeTier = useStore(s => (s.storeId ? s.storeTier : "free"));
   const storeName = useStore(s => s.storeName);
   const isOnline = useStore(s => s.isOnline);
@@ -82,10 +84,15 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
         {/* Right: sync · feedback · cashier · demo back · logout */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           {/* Sync status */}
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }} title={!isOnline ? "Offline — transaksi disimpan & disinkron saat online" : (pendingSyncCount + auditPending) > 0 ? `${pendingSyncCount} transaksi${auditPending ? ` · ${auditPending} log audit` : ""} menunggu sinkron` : "Tersinkron"}>
+          <button
+            onClick={async () => { if (syncing) return; setSyncing(true); try { await flushQueue(); } catch { /* ignore */ } setSyncing(false); }}
+            disabled={syncing}
+            title={!isOnline ? "Offline — transaksi disimpan, ketuk untuk coba sinkron" : (pendingSyncCount + auditPending) > 0 ? `${pendingSyncCount} transaksi menunggu — ketuk untuk sinkron sekarang` : "Tersinkron — ketuk untuk sinkron ulang"}
+            style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: "none", padding: "5px 7px", borderRadius: 8, cursor: syncing ? "default" : "pointer", fontFamily: "inherit" }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: syncColor, boxShadow: `0 0 0 3px ${syncColor}2E`, display: "inline-block", flexShrink: 0 }} />
-            {syncLabel && <span style={{ fontSize: 9, fontWeight: 600, color: syncColor, letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{syncLabel}</span>}
-          </div>
+            {(syncLabel || syncing) && <span style={{ fontSize: 9, fontWeight: 600, color: syncColor, letterSpacing: "0.02em", whiteSpace: "nowrap" }}>{syncing ? "Sinkron…" : syncLabel}</span>}
+            <RefreshCw size={11} color={syncColor} strokeWidth={2} style={{ flexShrink: 0 }} />
+          </button>
 
           {/* Tier badge → upgrade */}
           <button onClick={() => setUpgradeOpen(true)} title="Lihat paket / upgrade" style={{

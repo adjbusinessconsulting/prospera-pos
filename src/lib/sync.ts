@@ -51,6 +51,10 @@ export function enqueueSale(sale: PendingSale) {
 }
 
 let flushing = false;
+let lastSyncError = "";
+let alertedSyncError = false;
+export function getLastSyncError(): string { return lastSyncError; }
+
 export async function flushQueue(): Promise<{ synced: number; remaining: number }> {
   if (flushing || !navigator.onLine) return { synced: 0, remaining: read().length };
   flushing = true;
@@ -58,9 +62,19 @@ export async function flushQueue(): Promise<{ synced: number; remaining: number 
   try {
     for (const sale of [...read()]) {
       const ok = await syncOne(sale);
-      if (!ok) break;                       // offline / server error → retry later
+      if (!ok) {
+        // Surface the real server reason once (RLS, foreign key, missing column…)
+        // instead of a silent "belum sync" that leaves the owner guessing.
+        if (lastSyncError && !alertedSyncError && navigator.onLine) {
+          alertedSyncError = true;
+          console.error("Sale sync failed:", lastSyncError);
+          try { alert(`Transaksi belum tersimpan ke server: ${lastSyncError}`); } catch { /* ignore */ }
+        }
+        break;                              // offline / server error → retry later
+      }
       write(read().filter((s) => s.id !== sale.id));
       synced++;
+      alertedSyncError = false;   // a clean sync re-arms the one-time error alert
     }
   } catch { /* ignore — retry next tick */ }
   finally { flushing = false; }
@@ -78,13 +92,14 @@ async function syncOne(sale: PendingSale): Promise<boolean> {
   });
   const fresh = !saleErr;
   // 23505 = already inserted (a prior partial sync) → treat as done, don't re-apply stock.
-  if (saleErr && (saleErr as { code?: string }).code !== "23505") return false;
+  if (saleErr && (saleErr as { code?: string }).code !== "23505") { lastSyncError = `sales — ${saleErr.message}`; return false; }
 
   if (sale.items.length) {
     const { error: itErr } = await supabase.from("sale_items")
       .upsert(sale.items.map((i) => ({ ...i, sale_id: sale.id })), { onConflict: "id" });
-    if (itErr) return false;
+    if (itErr) { lastSyncError = `sale_items — ${itErr.message}`; return false; }
   }
+  lastSyncError = "";   // this sale synced cleanly
 
   if (fresh && sale.stock.length) {
     for (const d of sale.stock) {
