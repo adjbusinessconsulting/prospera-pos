@@ -180,6 +180,9 @@ export default function Payment() {
   const total = getTotal(cart);
   const itemCount = getItemCount(cart);
   const change = cashReceived - total;
+  // Cash must cover the total. QRIS/hutang settle the exact amount, so this only
+  // gates "tunai": you cannot finish a cash sale with less money than the total.
+  const cashShort = paymentMethod === "tunai" && cashReceived < total;
   const trxId = getTrxId(trxCounter);
 
   const now = new Date();
@@ -250,6 +253,8 @@ export default function Payment() {
       setShowHutangModal(true);   // capture who owes before finishing
       return;
     }
+    // Guard: a cash sale can't be completed with insufficient money.
+    if (cashShort) return;
     if (paymentMethod !== "qris") {
       setScreen("receipt");
       return;
@@ -453,11 +458,14 @@ export default function Payment() {
                 ))}
               </div>
               <div className="flex justify-between items-center">
-                <p style={{ fontSize: 10, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">KEMBALIAN</p>
+                <p style={{ fontSize: 10, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">{cashShort ? "KURANG" : "KEMBALIAN"}</p>
                 <span className={`num text-[20px] font-semibold leading-none ${change >= 0 ? "text-success" : "text-warning"}`}>
                   {change >= 0 ? formatRp(change) : `−${formatRp(-change)}`}
                 </span>
               </div>
+              {cashShort && (
+                <p className="text-warning text-[12px] font-medium mt-1.5">Uang diterima kurang dari total — tambahkan uang untuk melanjutkan.</p>
+              )}
             </div>
           )}
 
@@ -468,10 +476,12 @@ export default function Payment() {
             </div>
             <button
               onClick={handleSelesaikan}
-              disabled={qrisState === "loading"}
-              className="flex-1 bg-navy rounded-card h-[50px] flex items-center justify-center gap-3 text-cream-text text-[14px] font-semibold tracking-[0.02em] hover:opacity-90 transition-opacity disabled:opacity-60">
+              disabled={qrisState === "loading" || cashShort}
+              className="flex-1 bg-navy rounded-card h-[50px] flex items-center justify-center gap-3 text-cream-text text-[14px] font-semibold tracking-[0.02em] hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed">
               {qrisState === "loading" ? (
                 <><Loader2 size={16} className="animate-spin" /> Membuat QR…</>
+              ) : cashShort ? (
+                <span>UANG KURANG</span>
               ) : (
                 <><span>SELESAIKAN · {formatRp(total)}</span>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
