@@ -95,8 +95,12 @@ export default function Riwayat() {
     // the network catches up (esp. on a cold open after the app was closed a while).
     const cached = readRiwayatCache(storeId);
     if (cached && cached.length) { setSales(cached as SaleRecord[]); setLoadingData(false); }
+    // Tier-bounded window: Standard+ keep 30 days; Free only pulls/caches its
+    // allowed window (today + kemarin) so the on-device cache never holds more
+    // history than the Free tier is entitled to see.
+    const historyDays = canExtendedHistory ? 30 : 2;
     const from = new Date();
-    from.setDate(from.getDate() - 30);
+    from.setDate(from.getDate() - historyDays);
     from.setHours(0, 0, 0, 0);
     // Retry the fetch so a slow/dropped first attempt self-heals instead of
     // leaving an empty list that the cashier has to refresh by hand.
@@ -125,7 +129,7 @@ export default function Riwayat() {
         });
         setHutangByTrx(m);
       });
-  }, [storeId, isDemoMode]);
+  }, [storeId, isDemoMode, canExtendedHistory]);
 
   // Cash-basis: a credit (hutang) sale only counts once its bon is settled (lunas);
   // the money lands on the bon's own date (this row's date), never on payment day.
