@@ -105,7 +105,7 @@ export default function Riwayat() {
     // Retry the fetch so a slow/dropped first attempt self-heals instead of
     // leaving an empty list that the cashier has to refresh by hand.
     withRetry(
-      () => supabase
+      async () => await supabase
         .from("sales")
         .select("*, sale_items(*)")
         .eq("store_id", storeId)
