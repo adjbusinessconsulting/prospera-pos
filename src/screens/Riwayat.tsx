@@ -3,6 +3,8 @@ import { useStore, isAtLeast } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
+import { withRetry } from "../lib/retry";
+import { readRiwayatCache, saveRiwayatCache } from "../lib/snapshot";
 import type { SaleRecord } from "../types";
 
 const FILTER_LABELS = [
@@ -89,20 +91,28 @@ export default function Riwayat() {
   useEffect(() => {
     if (isDemoMode) { setSales(seedDemoSales()); setLoadingData(false); return; }
     if (!storeId) { setLoadingData(false); return; }
+    // Paint the last-cached history instantly so the screen is never blank while
+    // the network catches up (esp. on a cold open after the app was closed a while).
+    const cached = readRiwayatCache(storeId);
+    if (cached && cached.length) { setSales(cached as SaleRecord[]); setLoadingData(false); }
     const from = new Date();
     from.setDate(from.getDate() - 30);
     from.setHours(0, 0, 0, 0);
-    supabase
-      .from("sales")
-      .select("*, sale_items(*)")
-      .eq("store_id", storeId)
-      .gte("created_at", from.toISOString())
-      .order("created_at", { ascending: false })
-      .limit(500)
-      .then(({ data }) => {
-        setSales((data as SaleRecord[]) ?? []);
-        setLoadingData(false);
-      });
+    // Retry the fetch so a slow/dropped first attempt self-heals instead of
+    // leaving an empty list that the cashier has to refresh by hand.
+    withRetry(
+      () => supabase
+        .from("sales")
+        .select("*, sale_items(*)")
+        .eq("store_id", storeId)
+        .gte("created_at", from.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(500),
+      ({ error, data }) => !error && !!data,
+    ).then(({ data }) => {
+      if (data) { setSales(data as SaleRecord[]); saveRiwayatCache(storeId, data); }
+      setLoadingData(false);
+    });
     supabase
       .from("hutang")
       .select("trx_id,status,settled_method")

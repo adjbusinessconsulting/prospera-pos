@@ -55,6 +55,30 @@ export function hydrateSnapshot(storeId: string): boolean {
   } catch { return false; }
 }
 
+// ── Riwayat (sales history) cache ───────────────────────────────────
+// Riwayat is fetched fresh from the server every time the screen opens, with
+// nothing kept locally — so on a slow/cold connection it shows empty until the
+// network responds. Cache the last-loaded rows per store and paint them
+// instantly, then let the screen's own fetch refresh them.
+const RIWAYAT_KEY = "sterith_riwayat_v1";
+
+export function saveRiwayatCache(storeId: string, sales: unknown[]) {
+  try {
+    if (!storeId || !Array.isArray(sales)) return;
+    // Cap so a busy store can't blow the localStorage quota.
+    localStorage.setItem(RIWAYAT_KEY, JSON.stringify({ storeId, sales: sales.slice(0, 500) }));
+  } catch { /* quota — ignore, it's only a cache */ }
+}
+
+export function readRiwayatCache(storeId: string): unknown[] | null {
+  try {
+    const raw = localStorage.getItem(RIWAYAT_KEY);
+    if (!raw) return null;
+    const c = JSON.parse(raw) as { storeId: string; sales: unknown[] };
+    return c.storeId === storeId && Array.isArray(c.sales) ? c.sales : null;
+  } catch { return null; }
+}
+
 export function clearSnapshot() {
-  try { localStorage.removeItem(KEY); } catch { /* ignore */ }
+  try { localStorage.removeItem(KEY); localStorage.removeItem(RIWAYAT_KEY); } catch { /* ignore */ }
 }

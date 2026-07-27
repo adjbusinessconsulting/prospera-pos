@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 import { useStore, localDateISO } from "../store";
 import { saveSnapshot } from "./snapshot";
+import { withRetry } from "./retry";
 import type { Product, ShiftDef, CashierDB } from "../types";
 
 // Re-pull catalog / cashiers / shifts / settings from the server WITHOUT a re-login,
@@ -11,12 +12,18 @@ export async function refreshStoreData(): Promise<boolean> {
   const storeId = st.storeId;
   if (!storeId || st.isDemoMode) return false;
   try {
-    const [sRes, cRes, pRes, shRes] = await Promise.all([
-      supabase.from("stores").select("*").eq("id", storeId).maybeSingle(),
-      supabase.from("cashiers").select("*").eq("store_id", storeId).eq("active", true),
-      supabase.from("products").select("*").eq("store_id", storeId).eq("active", true).order("name"),
-      supabase.from("shifts").select("id, name, start_time, end_time").eq("store_id", storeId).order("start_time"),
-    ]);
+    // Retry the whole pull a few times: a freshly-woken phone often fails the
+    // first attempt while its connection / auth token comes back. Success = the
+    // store row actually came through (the others are guarded individually below).
+    const [sRes, cRes, pRes, shRes] = await withRetry(
+      () => Promise.all([
+        supabase.from("stores").select("*").eq("id", storeId).maybeSingle(),
+        supabase.from("cashiers").select("*").eq("store_id", storeId).eq("active", true),
+        supabase.from("products").select("*").eq("store_id", storeId).eq("active", true).order("name"),
+        supabase.from("shifts").select("id, name, start_time, end_time").eq("store_id", storeId).order("start_time"),
+      ]),
+      ([s]) => !s.error && !!s.data,
+    );
     // If we can't even read the store (offline / transient / RLS), don't wipe any
     // local data — just skip this refresh.
     if (sRes.error || !sRes.data) return false;
