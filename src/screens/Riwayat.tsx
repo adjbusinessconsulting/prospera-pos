@@ -192,10 +192,6 @@ export default function Riwayat() {
 
   const uniqueCashiers = [...new Set(sales.map(s => s.cashier_name).filter(Boolean))];
 
-  const now = new Date();
-  const hoursLeft = 23 - now.getHours();
-  const minsLeft = 59 - now.getMinutes();
-
   function exportCSV() {
     const period = FILTER_LABELS[activeFilter].label;
     const header = ["No", "TRX ID", "Tanggal", "Jam", "Kasir", "Item", "Total (Rp)", "Metode", "Shift"];
@@ -374,8 +370,8 @@ export default function Riwayat() {
             <div className="flex items-center gap-2.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
               <p className="text-[12px] text-navy">
-                <span className="font-semibold">Free tier</span> — riwayat 1 hari.
-                <span className="text-text-mute"> Transaksi hilang setelah {hoursLeft}j {minsLeft}m. Upgrade Standard untuk simpan 1 bulan.</span>
+                <span className="font-semibold">Free tier</span> — riwayat tampil 1 hari.
+                <span className="text-text-mute"> Data lama tetap tersimpan aman; upgrade Standard untuk lihat riwayat 7/30 hari.</span>
               </p>
             </div>
             <span style={{ background: "rgba(201,165,95,0.12)", border: "1px solid rgba(201,165,95,0.35)", color: "#A6843F", fontSize: 7.5, letterSpacing: "0.14em", fontWeight: 600, padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>
