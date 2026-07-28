@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore, localDateISO } from "../store";
 import { supabase } from "../lib/supabase";
 import { appAuthLogin, AUTH_BASE } from "../lib/appAuth";
@@ -66,6 +66,54 @@ export default function OwnerLogin() {
   const [showChooser, setShowChooser] = useState(false);
   const [blockedStore, setBlockedStore] = useState<StoreRow | null>(null);
   const [retrying, setRetrying] = useState(false);
+  // Auto-resume: if a session is already saved on this device, we skip the login
+  // form and go straight into the store. Starts true so we show a brief "Memuat…"
+  // instead of flashing the login form on every cold open.
+  const [resuming, setResuming] = useState(true);
+
+  // Post-login work: find the owner's store(s) and enter, show the multi-store
+  // picker, or the create-store prompt. Returns false when there's no valid
+  // signed-in user (so the caller can fall back to the login form / PIN).
+  async function enterFromSession(): Promise<boolean> {
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+    if (!userId) return false;
+    const { data: storeRows } = await supabase
+      .from("stores")
+      .select("id, name, address, phone, tier, qris_image_url, midtrans_client_key, inventory_enabled, low_stock_threshold, tier_expires_at, receipt_logo, settings")
+      .eq("owner_id", userId)
+      .order("created_at");
+    if (storeRows && storeRows.length >= 1) {
+      const cap = storeCap(storeRows[0].tier);
+      if (storeRows.length > 1 || cap > storeRows.length) {
+        setOwnerId(userId);
+        setStoreChoices(storeRows as StoreRow[]);
+        return true;
+      }
+      await enterStore(storeRows[0] as StoreRow);
+      return true;
+    }
+    setProductsFromDB([]);
+    setOwnerId(userId);
+    setShowCreate(true);
+    return true;
+  }
+
+  // On boot, reuse the saved session instead of making the owner log in again.
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      if (useStore.getState().isDemoMode) { setResuming(false); return; }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (cancel) return;
+        if (session) await enterFromSession();
+      } catch { /* no/invalid session — fall through to the login form */ }
+      if (!cancel) setResuming(false);
+    })();
+    return () => { cancel = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
@@ -111,38 +159,11 @@ export default function OwnerLogin() {
       const msg = (err as Error)?.message;
       setError(msg && /percobaan/i.test(msg) ? msg : "Email atau kata sandi salah."); setLoading(false); return;
     }
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id;
-    if (userId) {
-      const { data: storeRows } = await supabase
-        .from("stores")
-        .select("id, name, address, phone, tier, qris_image_url, midtrans_client_key, inventory_enabled, low_stock_threshold, tier_expires_at, receipt_logo, settings")
-        .eq("owner_id", userId)
-        .order("created_at");
-      // Multi-store: show the picker when there's >1 store, OR when the tier can
-      // still add more (so single-store paid owners can create a 2nd). Free (cap 1
-      // with 1 store) auto-enters — no friction.
-      if (storeRows && storeRows.length >= 1) {
-        const cap = storeCap(storeRows[0].tier);
-        if (storeRows.length > 1 || cap > storeRows.length) {
-          setOwnerId(userId);
-          setStoreChoices(storeRows as StoreRow[]);
-          setLoading(false);
-          return;
-        }
-        await enterStore(storeRows[0] as StoreRow);
-        return;
-      }
-      // Logged in but the account has no store yet (provisioning didn't stick).
-      // Never fall into the built-in seed catalog — clear it and let the owner
-      // name their store, then enter a clean slate.
-      setProductsFromDB([]);
-      setOwnerId(userId);
-      setShowCreate(true);
-      setLoading(false);
-      return;
-    }
-    setScreen("login");
+    // Multi-store owners see the picker; single-store auto-enters; no store yet →
+    // create prompt. Free (cap 1, 1 store) auto-enters with no friction.
+    const ok = await enterFromSession();
+    setLoading(false);
+    if (!ok) setScreen("login");
   }
 
   async function enterStore(store: StoreRow, force = false) {
@@ -429,6 +450,17 @@ export default function OwnerLogin() {
   );
 
   const fonts = <style>{`@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');`}</style>;
+
+  // ── Resuming a saved session: don't flash the login form ──
+  if (resuming) {
+    return (
+      <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, background: "#FAFAF7" }}>
+        {fonts}
+        <img src="/mark-gold-512.png" alt="Sterith" style={{ width: 44, height: 44, objectFit: "contain", opacity: 0.9 }} />
+        <p style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 12.5, letterSpacing: "0.02em", color: "#8f897a" }}>Memuat toko…</p>
+      </div>
+    );
+  }
 
   // ── Blocked: this account is already logged in on another live device ──
   if (blockedStore) {
