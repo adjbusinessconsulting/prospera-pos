@@ -65,8 +65,9 @@ const RIWAYAT_KEY = "sterith_riwayat_v1";
 export function saveRiwayatCache(storeId: string, sales: unknown[]) {
   try {
     if (!storeId || !Array.isArray(sales)) return;
-    // Cap so a busy store can't blow the localStorage quota.
-    localStorage.setItem(RIWAYAT_KEY, JSON.stringify({ storeId, sales: sales.slice(0, 500) }));
+    // Cap tightly so a busy store's cache can't fill the localStorage quota and
+    // starve small-but-critical writes (e.g. the day-open modal-awal record).
+    localStorage.setItem(RIWAYAT_KEY, JSON.stringify({ storeId, sales: sales.slice(0, 150) }));
   } catch { /* quota — ignore, it's only a cache */ }
 }
 

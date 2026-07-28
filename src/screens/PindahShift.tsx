@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useStore, shiftNameFor } from "../store";
 import { formatRp } from "../data";
 import { supabase } from "../lib/supabase";
-import { modalAwalToday } from "../lib/dayopen";
+import { modalAwalToday, fetchModalAwalToday } from "../lib/dayopen";
 import { logEvent } from "../lib/auditlog";
 
 function initialsOf(name: string) {
@@ -37,7 +37,9 @@ export default function PindahShift() {
       const keluar = (kas ?? []).filter(k => (k as { type?: string }).type === "keluar");
       setKasKeluar(keluar.reduce((a, k) => a + ((k as { amount?: number }).amount ?? 0), 0));
       setKasKeluarTrx(keluar.length);
-      setModalAwal(modalAwalToday(storeId));
+      setModalAwal(modalAwalToday(storeId));                     // instant local value
+      const serverModal = await fetchModalAwalToday(storeId);    // authoritative — survives device/cache
+      if (!cancelled) setModalAwal(serverModal);
     })();
     return () => { cancelled = true; };
   }, [storeId, isDemoMode]);

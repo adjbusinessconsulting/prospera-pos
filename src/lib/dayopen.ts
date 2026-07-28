@@ -24,6 +24,24 @@ export function hasOpenedToday(storeId: string): boolean { return !!readToday(st
 export function modalAwalToday(storeId: string): number { return readToday(storeId)?.modal ?? 0; }
 export function openedAtToday(storeId: string): string | null { return readToday(storeId)?.openedAt ?? null; }
 
+// Authoritative modal-awal for today: the durable `day_opens` record wins, with
+// this device's localStorage as an instant fallback. Needed because the opening
+// float can be entered on one device (or a since-cleared cache) yet the shift is
+// closed elsewhere — a localStorage-only read would wrongly show 0.
+export async function fetchModalAwalToday(storeId: string): Promise<number> {
+  const local = modalAwalToday(storeId);
+  try {
+    const { data, error } = await supabase
+      .from("day_opens")
+      .select("modal_awal")
+      .eq("store_id", storeId)
+      .eq("business_date", localDateISO())
+      .maybeSingle();
+    if (!error && data && typeof data.modal_awal === "number") return data.modal_awal;
+  } catch { /* table missing / offline — fall back to local */ }
+  return local;
+}
+
 // Record the day's opening. Writes localStorage first (authoritative for the day),
 // logs a shift.open entry, then mirrors to the server (non-blocking).
 export async function saveDayOpen(storeId: string, modal: number, cashierName: string): Promise<void> {

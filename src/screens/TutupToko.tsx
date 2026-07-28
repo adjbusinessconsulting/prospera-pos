@@ -4,7 +4,7 @@ import { formatRp, formatIDRInput } from "../data";
 import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
 import { saveShiftClosing } from "../lib/shift";
-import { modalAwalToday } from "../lib/dayopen";
+import { modalAwalToday, fetchModalAwalToday } from "../lib/dayopen";
 import { clearSession } from "../lib/session";
 
 const RETENTION: Record<string, number> = { free: 1, standard: 30, premium: 90, business: 1095, enterprise: 1825 };
@@ -61,11 +61,13 @@ export default function TutupToko() {
       // settlements come in via the separate hutang_settle kas type below — folding
       // them into bd is for omzet display, not the drawer, so we don't double-count.
       setCash(S.filter(s => s.payment_method === "tunai" || s.payment_method === "transfer").reduce((a, s) => a + (s.total ?? 0), 0));
-      setModalAwal(modalAwalToday(storeId)); setShiftId(null);
+      setModalAwal(modalAwalToday(storeId)); setShiftId(null);   // instant local value
       const K = (kas ?? []) as { type: string; amount: number }[];
       setKasMasuk(K.filter(k => k.type === "masuk").reduce((a, k) => a + k.amount, 0));
       setKasKeluar(K.filter(k => k.type === "keluar").reduce((a, k) => a + k.amount, 0));
       setHutangSettle(K.filter(k => k.type === "hutang_settle").reduce((a, k) => a + k.amount, 0));
+      const serverModal = await fetchModalAwalToday(storeId);   // authoritative — survives device/cache
+      if (!cancelled) setModalAwal(serverModal);
     })();
     return () => { cancelled = true; };
   }, [storeId, isDemoMode]);
