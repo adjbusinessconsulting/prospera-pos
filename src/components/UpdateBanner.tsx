@@ -79,8 +79,10 @@ export default function UpdateBanner() {
 
         {/* Update info */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-          <p style={{ margin: 0, fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 12, fontWeight: 600, color: "#F2EDE3", letterSpacing: "0.04em" }}>Update Tersedia</p>
-          <p style={{ margin: 0, fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 10, color: "rgba(242,237,227,0.45)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Build {BUILD}</p>
+          <p style={{ margin: 0, fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 12, fontWeight: 600, color: "#F2EDE3", letterSpacing: "0.04em" }}>Versi baru tersedia</p>
+          {/* BUILD is the version currently running on this device — updating moves
+              it forward. Labelled "sekarang" so it's not misread as the new one. */}
+          <p style={{ margin: 0, fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 10, color: "rgba(242,237,227,0.45)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Sekarang Build {BUILD} · ketuk Perbarui</p>
         </div>
 
         {/* Buttons */}
