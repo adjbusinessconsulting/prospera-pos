@@ -62,17 +62,24 @@ export async function autoCloseStaleShifts(storeId: string): Promise<void> {
   try {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const windowStart = new Date(todayStart); windowStart.setDate(windowStart.getDate() - 95);
-    const { data: sales } = await supabase.from("sales").select("created_at").eq("store_id", storeId)
-      .gte("created_at", windowStart.toISOString()).lt("created_at", todayStart.toISOString());
-    if (!sales?.length) return;
-    const dates = [...new Set((sales as { created_at: string }[]).map(s => localDay(s.created_at)))];
-    const [{ data: existing }, { data: opens }] = await Promise.all([
-      supabase.from("shift_closings").select("business_date").eq("store_id", storeId).in("business_date", dates),
-      // Pull each day's real opening float so the auto-close doesn't zero it out.
-      supabase.from("day_opens").select("business_date, modal_awal").eq("store_id", storeId).in("business_date", dates),
+    const todayLocal = localDateISO();
+    const windowStartLocal = localDay(windowStart.toISOString());
+    // A past day needs a closing nota if it had sales OR a Buka Toko (modal awal) —
+    // so a day that opened with a float but made no transactions still gets one.
+    const [{ data: sales }, { data: opens }] = await Promise.all([
+      supabase.from("sales").select("created_at").eq("store_id", storeId)
+        .gte("created_at", windowStart.toISOString()).lt("created_at", todayStart.toISOString()),
+      supabase.from("day_opens").select("business_date, modal_awal").eq("store_id", storeId)
+        .gte("business_date", windowStartLocal).lt("business_date", todayLocal),
     ]);
-    const done = new Set((existing ?? []).map((r: { business_date: string }) => r.business_date));
     const modalByDate = new Map((opens ?? []).map((r: { business_date: string; modal_awal: number }) => [r.business_date, r.modal_awal ?? 0]));
+    const dates = [...new Set([
+      ...((sales ?? []) as { created_at: string }[]).map(s => localDay(s.created_at)),
+      ...((opens ?? []) as { business_date: string }[]).map(o => o.business_date),
+    ])];
+    if (!dates.length) return;
+    const { data: existing } = await supabase.from("shift_closings").select("business_date").eq("store_id", storeId).in("business_date", dates);
+    const done = new Set((existing ?? []).map((r: { business_date: string }) => r.business_date));
     for (const date of dates) {
       if (done.has(date)) continue;
       const dayStart = new Date(`${date}T00:00:00`); const dayEnd = new Date(dayStart); dayEnd.setDate(dayEnd.getDate() + 1);
