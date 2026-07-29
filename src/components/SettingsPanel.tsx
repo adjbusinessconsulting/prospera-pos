@@ -130,9 +130,6 @@ export function SettingsPanel({ open, onClose, onOpenReceipt, onOpenPrinter }: {
                 );
               })}
             </div>
-            <SectionHead title="Inventori" />
-            <Row k="sellWhenHabis" label="Izinkan jual barang stok habis" desc="Kasir tetap bisa menjual barang yang stoknya 0 (Habis). Matikan untuk mencegah stok minus." />
-
             <button onClick={() => { onClose(); onOpenPrinter?.(); }}
               style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 14, padding: "14px 14px", borderRadius: 11, border: "1px solid #ECE7DD", background: "#FAFAF7", cursor: "pointer" }}>
               <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
