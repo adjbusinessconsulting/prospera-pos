@@ -29,7 +29,20 @@ export default function Sales() {
   const storeTier = useStore((s) => s.storeTier);
   const inventoryEnabled = useStore((s) => s.inventoryEnabled);
   const isDemoMode = useStore((s) => s.isDemoMode);
+  const settings = useStore((s) => s.settings);
   const inventoryOn = isAtLeast(storeId ? storeTier : "premium", "premium") && inventoryEnabled; // Basic Inventori: show stock on items
+  const [oversellMsg, setOversellMsg] = useState("");
+
+  // Owner setting: block selling a "Habis" (stock 0) item unless overselling is allowed.
+  function handleAdd(p: typeof products[number]) {
+    if (inventoryOn && !settings.sellWhenHabis && (p.stock ?? 0) <= 0) {
+      setOversellMsg(`${p.name} stoknya habis`);
+      window.clearTimeout((handleAdd as unknown as { _t?: number })._t);
+      (handleAdd as unknown as { _t?: number })._t = window.setTimeout(() => setOversellMsg(""), 1800);
+      return;
+    }
+    addToCart(p);
+  }
   const total = getTotal(cart);
   const itemCount = getItemCount(cart);
   const trxId = getTrxId(trxCounter);
@@ -132,7 +145,7 @@ export default function Sales() {
               {filtered.map(p => {
                 const qty = cartQty(p.id);
                 return (
-                  <button key={p.id} onClick={() => addToCart(p)}
+                  <button key={p.id} onClick={() => handleAdd(p)}
                     className="bg-white border border-warm-border rounded-card p-2.5 text-left hover:border-navy/30 active:scale-[0.98] transition-all">
                     <div className="relative aspect-square rounded-[9px] overflow-hidden flex items-center justify-center mb-2.5"
                       style={{ background: "linear-gradient(135deg, #F2EDE3 0%, #E8DFC9 100%)" }}>
@@ -294,6 +307,13 @@ export default function Sales() {
           </div>
         )}
       </div>
+
+      {/* Oversell toast — shown when a "Habis" item is blocked by the owner setting */}
+      {oversellMsg && (
+        <div style={{ position: "fixed", left: "50%", bottom: 90, transform: "translateX(-50%)", zIndex: 400, background: "#0D1117", color: "#F2EDE3", padding: "10px 18px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, boxShadow: "0 8px 30px rgba(11,17,41,0.35)", whiteSpace: "nowrap" }}>
+          {oversellMsg}
+        </div>
+      )}
     </div>
   );
 }
