@@ -29,7 +29,12 @@ export interface PendingSale {
   created_at: string;    // real sale time (ISO) — preserved even if synced later
   items: PendingItem[];
   stock: { id: string; qty: number }[]; // stock deltas to apply on first sync
+  stockApplied?: string[];   // product ids whose stock delta is already applied (idempotent retry)
+  attempts?: number;         // failed sync attempts (poison-message guard)
+  failed?: boolean;          // gave up after MAX_ATTEMPTS — skipped so it can't block the queue
 }
+
+const MAX_ATTEMPTS = 5;
 
 function read(): PendingSale[] {
   try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; }
@@ -37,7 +42,20 @@ function read(): PendingSale[] {
 function write(list: PendingSale[]) {
   localStorage.setItem(KEY, JSON.stringify(list));
 }
+// Merge a patch into one queued sale (progress tracking: stockApplied / attempts).
+function updateSale(id: string, patch: Partial<PendingSale>) {
+  const list = read();
+  const i = list.findIndex((s) => s.id === id);
+  if (i >= 0) { list[i] = { ...list[i], ...patch }; write(list); }
+}
 export function pendingCount(): number { return read().length; }
+// Sales that gave up after MAX_ATTEMPTS (kept, skipped). Surfaced so the UI can warn.
+export function failedCount(): number { return read().filter((s) => s.failed).length; }
+// Clear the failed flag so the next flush re-attempts them (e.g. after fixing the cause).
+export function retryFailed(): void {
+  write(read().map((s) => s.failed ? { ...s, failed: false, attempts: 0 } : s));
+  pushStatus();
+}
 // Distinct store ids sitting in the queue — used to detect sales orphaned from a
 // different store/account (they can never satisfy the current owner's RLS).
 export function pendingStoreIds(): string[] { return [...new Set(read().map((s) => s.store_id))]; }
@@ -72,10 +90,16 @@ export async function flushQueue(): Promise<{ synced: number; remaining: number 
   let synced = 0;
   try {
     for (const sale of [...read()]) {
+      if (sale.failed) continue;   // gave up earlier — skip so it never blocks newer sales
       const ok = await syncOne(sale);
-      if (!ok) { console.error("Sale sync failed:", lastSyncError); break; }   // reason surfaced by the Sync button
-      write(read().filter((s) => s.id !== sale.id));
-      synced++;
+      if (ok) { write(read().filter((s) => s.id !== sale.id)); synced++; continue; }
+      // Failed this attempt. After MAX_ATTEMPTS treat it as poison: flag it and move
+      // on (don't block the rest). Otherwise stop this cycle and retry all next tick
+      // (transient network errors — preserves order without hammering).
+      const attempts = (sale.attempts ?? 0) + 1;
+      if (attempts >= MAX_ATTEMPTS) { updateSale(sale.id, { attempts, failed: true }); console.error("Sale permanently failed:", sale.id, lastSyncError); continue; }
+      updateSale(sale.id, { attempts });
+      break;
     }
   } catch { /* ignore — retry next tick */ }
   finally { flushing = false; }
@@ -91,8 +115,7 @@ async function syncOne(sale: PendingSale): Promise<boolean> {
     cash_received: sale.cash_received, change_amount: sale.change_amount,
     created_at: sale.created_at,
   });
-  const fresh = !saleErr;
-  // 23505 = already inserted (a prior partial sync) → treat as done, don't re-apply stock.
+  // 23505 = already inserted (a prior partial sync) → fine, carry on to items/stock.
   if (saleErr && (saleErr as { code?: string }).code !== "23505") { lastSyncError = `sales — ${saleErr.message}`; return false; }
 
   if (sale.items.length) {
@@ -100,19 +123,28 @@ async function syncOne(sale: PendingSale): Promise<boolean> {
       .upsert(sale.items.map((i) => ({ ...i, sale_id: sale.id })), { onConflict: "id" });
     if (itErr) { lastSyncError = `sale_items — ${itErr.message}`; return false; }
   }
-  lastSyncError = "";   // this sale synced cleanly
 
-  if (fresh && sale.stock.length) {
+  // Apply stock deltas idempotently: track which product ids are done and persist
+  // after EACH one, so a mid-way failure (or an app kill) retries only the
+  // unfinished deltas — never double-decrements, and never silently skips.
+  if (sale.stock.length) {
+    const applied = new Set(sale.stockApplied ?? []);
     for (const d of sale.stock) {
-      const { data } = await supabase.from("products").select("stock, stock_terjual").eq("id", d.id).maybeSingle();
+      if (applied.has(d.id)) continue;
+      const { data, error: readErr } = await supabase.from("products").select("stock, stock_terjual").eq("id", d.id).maybeSingle();
+      if (readErr) { lastSyncError = `stok — ${readErr.message}`; updateSale(sale.id, { stockApplied: [...applied] }); return false; }
       if (data) {
-        await supabase.from("products").update({
+        const { error: updErr } = await supabase.from("products").update({
           stock: ((data as { stock: number }).stock ?? 0) - d.qty,
           stock_terjual: ((data as { stock_terjual: number }).stock_terjual ?? 0) + d.qty,
         }).eq("id", d.id);
+        if (updErr) { lastSyncError = `stok — ${updErr.message}`; updateSale(sale.id, { stockApplied: [...applied] }); return false; }
       }
+      applied.add(d.id);
+      updateSale(sale.id, { stockApplied: [...applied] });   // persist progress
     }
   }
+  lastSyncError = "";   // this sale synced cleanly
   return true;
 }
 

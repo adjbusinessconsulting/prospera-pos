@@ -12,7 +12,7 @@ import { pendingAuditCount } from "../lib/auditlog";
 import { releaseStore } from "../lib/deviceLock";
 import { clearSession } from "../lib/session";
 import { clearSnapshot } from "../lib/snapshot";
-import { flushQueue, getLastSyncError, pendingStoreIds, clearOrphaned } from "../lib/sync";
+import { flushQueue, getLastSyncError, pendingStoreIds, clearOrphaned, retryFailed } from "../lib/sync";
 import { refreshStoreData } from "../lib/refreshData";
 
 const NAV = [
@@ -93,6 +93,8 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
               setSyncing(true);
               const before = pendingSyncCount;
               let res = { synced: 0, remaining: 0 };
+              // A manual tap re-attempts even sales that auto-sync gave up on.
+              retryFailed();
               try { res = await flushQueue(); await refreshStoreData(); } catch { /* ignore */ }
               setSyncing(false);
               if (res.remaining > 0) {
