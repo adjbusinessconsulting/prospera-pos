@@ -155,7 +155,7 @@ export const useStore = create<POSState>((set) => ({
   category: 'Semua',
   search: '',
   paymentMethod: 'tunai',
-  cashReceived: 200000,
+  cashReceived: 0,
   hutangCustomer: null,
   demoHutang: [],
   trxCounter: 42,
@@ -265,7 +265,7 @@ export const useStore = create<POSState>((set) => ({
     cart: [],
     pin: '',
     paymentMethod: 'tunai',
-    cashReceived: 200000,
+    cashReceived: 0,   // next sale starts empty; cashier enters the actual cash (guard enforces ≥ total)
     trxCounter: s.trxCounter + 1,
   })),
 
@@ -274,7 +274,7 @@ export const useStore = create<POSState>((set) => ({
     cart: [],
     pin: '',
     paymentMethod: 'tunai',
-    cashReceived: 200000,
+    cashReceived: 0,
     selectedCashier: 'ae',
     cashierName: 'Aerith',
     cashierInitials: 'AE',

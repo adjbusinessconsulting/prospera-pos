@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useStore, getTotal, getTrxId, isAtLeast, localDateISO } from "../store";
 import { formatRp } from "../data";
 import { Printer, Check } from "lucide-react";
@@ -62,9 +62,15 @@ export default function Receipt() {
   const dateStr = now.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
   const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
 
-  function handleNewTrx() {
-    // Queue the sale — works offline; the sync engine replays it (sales, sale_items,
-    // and stock deltas) to Supabase on reconnect. Demo doesn't persist.
+  // Persist the sale the MOMENT the receipt appears — the payment is already done
+  // and the receipt is final (no re-open). Recording here instead of on "Transaksi
+  // Baru" means a paid sale is never lost if the app is closed on this screen. The
+  // ref guards against React re-invoking the effect (dev StrictMode).
+  const recordedRef = useRef(false);
+  useEffect(() => {
+    if (recordedRef.current) return;
+    recordedRef.current = true;
+    const isCash = paymentMethod === "tunai";
     if (storeId && !isDemoMode) {
       recordSale({
         id: crypto.randomUUID(),
@@ -75,8 +81,9 @@ export default function Receipt() {
         shift: selectedShift,
         total,
         payment_method: paymentMethod,
-        cash_received: cashReceived,
-        change_amount: change,
+        // Cash fields only make sense for tunai; null for QRIS / transfer / hutang.
+        cash_received: isCash ? cashReceived : null,
+        change_amount: isCash ? change : null,
         created_at: new Date().toISOString(),
         items: cart.map(i => ({
           id: crypto.randomUUID(),
@@ -88,8 +95,6 @@ export default function Receipt() {
         })),
         stock: inventoryOn ? cart.map(i => ({ id: i.product.id, qty: i.qty })) : [],
       });
-      // Log the sale on-device (mirror=false — sales already live in the sales
-      // table + Backoffice analytics; mirroring each would flood the server log).
       const mLabel: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", hutang: "Hutang/Bon" };
       const itemCount = cart.reduce((n, i) => n + i.qty, 0);
       void logEvent("sale", `Penjualan ${trxId} — ${formatRp(total)} · ${mLabel[paymentMethod] ?? paymentMethod} · ${itemCount} item`, false);
@@ -103,6 +108,11 @@ export default function Receipt() {
         updateProduct(i.product.id, { stock: (p.stock ?? 0) - i.qty, stockTerjual: (p.stockTerjual ?? 0) + i.qty, stockDate: today });
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleNewTrx() {
+    // Sale already recorded on mount — just clear and start the next transaction.
     // (Hutang is recorded at checkout confirm in Payment.tsx, not here.)
     setHutangCustomer(null);
     restart();
