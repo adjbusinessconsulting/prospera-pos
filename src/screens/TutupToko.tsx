@@ -57,10 +57,10 @@ export default function TutupToko() {
       setPiutangBaru(H.filter(h => h.status !== "lunas").reduce((a, h) => a + h.amount, 0));
       setTrx(S.length);
       setShiftCount(Math.max(1, new Set(S.map(s => s.shift)).size));
-      // DRAWER (physical cash today): direct tunai+transfer SALES only. Hutang
-      // settlements come in via the separate hutang_settle kas type below — folding
-      // them into bd is for omzet display, not the drawer, so we don't double-count.
-      setCash(S.filter(s => s.payment_method === "tunai" || s.payment_method === "transfer").reduce((a, s) => a + (s.total ?? 0), 0));
+      // DRAWER (physical cash today): tunai SALES only. Transfer / QRIS / e-wallet
+      // are in omzet + the breakdown but never land in the laci. Hutang settlements
+      // come in via the separate hutang_settle kas type below.
+      setCash(S.filter(s => s.payment_method === "tunai").reduce((a, s) => a + (s.total ?? 0), 0));
       setModalAwal(modalAwalToday(storeId)); setShiftId(null);   // instant local value
       const K = (kas ?? []) as { type: string; amount: number }[];
       setKasMasuk(K.filter(k => k.type === "masuk").reduce((a, k) => a + k.amount, 0));
@@ -198,7 +198,7 @@ export default function TutupToko() {
                 <div className="mt-4">
                   <div className="flex flex-col">
                     {reconRow("Modal awal", formatRp(modalAwal))}
-                    {reconRow("Penjualan tunai + transfer", formatRp(cash), "+")}
+                    {reconRow("Penjualan tunai", formatRp(cash), "+")}
                     {hutangSettle > 0 && reconRow("Pelunasan hutang (tunai)", formatRp(hutangSettle), "+")}
                     {kasMasuk > 0 && reconRow("Kas masuk", formatRp(kasMasuk), "+")}
                     {kasKeluar > 0 && reconRow("Kas keluar", formatRp(kasKeluar), "-")}

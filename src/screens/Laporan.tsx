@@ -105,7 +105,7 @@ export default function Laporan() {
       const byDay = new Map<number, DayRec>();
       const items: RealItem[] = [];
       const todayTs = RTODAY.getTime();
-      let todayCash = 0;  // drawer = tunai + transfer only (QRIS excluded)
+      let todayCash = 0;  // drawer = physical cash (tunai only); transfer/QRIS/e-wallet excluded
       (sales ?? []).forEach(row => {
         const s = row as { created_at: string; total: number; payment_method?: string; sale_items?: { product_name: string; qty: number; subtotal: number }[] };
         const d = new Date(s.created_at); d.setHours(0, 0, 0, 0); const ts = d.getTime();
@@ -116,7 +116,7 @@ export default function Laporan() {
         cur.trx += 1;
         (s.sale_items ?? []).forEach(it => { cur.items += it.qty ?? 0; items.push({ ts, name: it.product_name, qty: it.qty ?? 0, subtotal: it.subtotal ?? 0 }); });
         byDay.set(ts, cur);
-        if (ts === todayTs && (m === "tunai" || m === "transfer")) todayCash += s.total ?? 0;
+        if (ts === todayTs && m === "tunai") todayCash += s.total ?? 0;
       });
       // A settled hutang lifts the omzet of the day its bon was made (created_at),
       // never the day it was paid — so paying an old debt never moves "today".
@@ -128,7 +128,7 @@ export default function Laporan() {
         cur.rev += h.amount ?? 0;
         byDay.set(ts, cur);
         const sm = h.settled_method ?? "tunai";
-        if (ts === todayTs && (sm === "tunai" || sm === "transfer")) todayCash += h.amount ?? 0;
+        if (ts === todayTs && sm === "tunai") todayCash += h.amount ?? 0;
       });
       setReal({ byDay, items, todayCash, modalAwal: modalAwalToday(storeId) });
     })();
@@ -204,8 +204,8 @@ export default function Laporan() {
     return agg(recs.map(r => r.rev), days.map((d, i) => i % step === 0 ? String(d.getDate()) : ""), recs, "Penjualan harian", "Total rentang");
   }, [gran, off, rMode, rStart, rEnd, openHour, closeHour, dayRec, RTODAY]);
 
-  // Free today card. Omset = all methods; "Perkiraan di Laci" = modal + CASH
-  // (tunai + transfer) only — QRIS is in omset but not in the drawer.
+  // Free today card. Omset = all methods; "Perkiraan di Laci" = modal + physical
+  // CASH (tunai only) — transfer / QRIS / e-wallet are in omset, not the drawer.
   const freeToday = useMemo(() => {
     const rec = dayRec(RTODAY);
     const nowH = new Date().getHours();

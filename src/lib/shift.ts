@@ -29,7 +29,9 @@ export async function computeClosing(storeId: string, dayStartISO: string, dayEn
   const bd: Record<string, number> = {};
   S.filter(s => s.payment_method !== "hutang").forEach(s => { bd[s.payment_method] = (bd[s.payment_method] ?? 0) + (s.total ?? 0); });
   H.filter(h => h.status === "lunas").forEach(h => { const m = h.settled_method ?? "tunai"; bd[m] = (bd[m] ?? 0) + h.amount; });
-  const cash = S.filter(s => s.payment_method === "tunai" || s.payment_method === "transfer").reduce((a, s) => a + (s.total ?? 0), 0);
+  // Physical drawer cash = tunai only. Transfer / QRIS / e-wallet / debit are in
+  // omzet + the per-method breakdown, but that money never lands in the laci.
+  const cash = S.filter(s => s.payment_method === "tunai").reduce((a, s) => a + (s.total ?? 0), 0);
   const kasMasuk = K.filter(k => k.type === "masuk").reduce((a, k) => a + k.amount, 0);
   const kasKeluar = K.filter(k => k.type === "keluar").reduce((a, k) => a + k.amount, 0);
   const hutangSettle = K.filter(k => k.type === "hutang_settle").reduce((a, k) => a + k.amount, 0);
