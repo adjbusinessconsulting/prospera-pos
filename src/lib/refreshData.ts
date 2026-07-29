@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 import { useStore, localDateISO } from "../store";
 import { saveSnapshot } from "./snapshot";
+import { mirrorDayOpenToday } from "./dayopen";
 import { withRetry } from "./retry";
 import type { Product, ShiftDef, CashierDB } from "../types";
 
@@ -52,6 +53,7 @@ export async function refreshStoreData(): Promise<boolean> {
     st.setReceiptLogo(store.receipt_logo ?? "");
     st.setStoreInfo(store.name ?? st.storeName, store.address ?? "", store.phone ?? "");
     saveSnapshot();   // keep the on-device cache in sync with the latest server data
+    void mirrorDayOpenToday(storeId);   // push today's modal awal to the server if missing
     return true;
   } catch { return false; }
 }

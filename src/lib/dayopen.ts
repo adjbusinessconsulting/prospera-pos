@@ -42,6 +42,21 @@ export async function fetchModalAwalToday(storeId: string): Promise<number> {
   return local;
 }
 
+// Self-heal: push today's locally-stored modal awal up to day_opens if it isn't
+// there yet. Covers the case where the original buka-toko mirror silently failed
+// (table missing / offline) — once the table exists, the next refresh carries the
+// value to the server so Back Office and other devices can see it.
+export async function mirrorDayOpenToday(storeId: string): Promise<void> {
+  const rec = readToday(storeId);
+  if (!rec) return;
+  try {
+    await supabase.from("day_opens").upsert(
+      { store_id: storeId, business_date: rec.date, modal_awal: rec.modal, opened_at: rec.openedAt },
+      { onConflict: "store_id,business_date" },
+    );
+  } catch { /* table missing / offline — nothing to do */ }
+}
+
 // Record the day's opening. Writes localStorage first (authoritative for the day),
 // logs a shift.open entry, then mirrors to the server (non-blocking).
 export async function saveDayOpen(storeId: string, modal: number, cashierName: string): Promise<void> {
