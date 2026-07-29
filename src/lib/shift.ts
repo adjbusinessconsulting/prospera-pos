@@ -66,16 +66,22 @@ export async function autoCloseStaleShifts(storeId: string): Promise<void> {
       .gte("created_at", windowStart.toISOString()).lt("created_at", todayStart.toISOString());
     if (!sales?.length) return;
     const dates = [...new Set((sales as { created_at: string }[]).map(s => localDay(s.created_at)))];
-    const { data: existing } = await supabase.from("shift_closings").select("business_date").eq("store_id", storeId).in("business_date", dates);
+    const [{ data: existing }, { data: opens }] = await Promise.all([
+      supabase.from("shift_closings").select("business_date").eq("store_id", storeId).in("business_date", dates),
+      // Pull each day's real opening float so the auto-close doesn't zero it out.
+      supabase.from("day_opens").select("business_date, modal_awal").eq("store_id", storeId).in("business_date", dates),
+    ]);
     const done = new Set((existing ?? []).map((r: { business_date: string }) => r.business_date));
+    const modalByDate = new Map((opens ?? []).map((r: { business_date: string; modal_awal: number }) => [r.business_date, r.modal_awal ?? 0]));
     for (const date of dates) {
       if (done.has(date)) continue;
       const dayStart = new Date(`${date}T00:00:00`); const dayEnd = new Date(dayStart); dayEnd.setDate(dayEnd.getDate() + 1);
       const c = await computeClosing(storeId, dayStart.toISOString(), dayEnd.toISOString());
+      const modalAwal = modalByDate.get(date) ?? 0;
       await supabase.from("shift_closings").insert({
         store_id: storeId, business_date: date, closed_at: dayEnd.toISOString(),
         cashier_name: c.cashierName, omzet: c.omzet, trx: c.trx, shift_count: c.shiftCount,
-        modal_awal: 0, expected: c.expected, counted: null, selisih: null,
+        modal_awal: modalAwal, expected: c.expected + modalAwal, counted: null, selisih: null,
         reconciled: false, auto_closed: true, breakdown: c.breakdown,
       });
     }
