@@ -243,9 +243,9 @@ export default function Receipt() {
               <div><div>{trxId}</div><div className="mt-0.5">{dateStr} · {timeStr}</div></div>
               <div className="text-right"><div>Kasir: {cashierName}</div><div className="mt-0.5">{selectedShiftName}</div></div>
             </div>
-            {customerName && (
+            {!hutangCustomer && orderCustomer?.name && (
               <div className="font-sans text-[10.5px] text-navy py-2 border-b border-dashed border-warm-dashed">
-                Pelanggan: <span className="font-semibold">{customerName}</span>{orderCustomer?.phone ? ` · ${orderCustomer.phone}` : ""}
+                Pelanggan: <span className="font-semibold">{orderCustomer.name}</span>{orderCustomer.phone ? ` · ${orderCustomer.phone}` : ""}
               </div>
             )}
 

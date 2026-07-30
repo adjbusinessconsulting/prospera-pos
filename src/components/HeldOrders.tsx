@@ -13,8 +13,8 @@ interface Props {
   cart: CartItem[];
   total: number;
   onClose: () => void;
-  onHeld: () => void;                    // after saving — parent clears the cart
-  onRecall: (items: CartItem[]) => void; // load a held order back into the cart
+  onHeld: () => void;                 // after saving — parent clears the cart
+  onRecall: (order: HeldOrder) => void; // load a held order back into the cart
 }
 
 const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
@@ -41,7 +41,7 @@ export function HeldOrders({ mode, storeId, cashierName, cart, total, onClose, o
   function recall(o: HeldOrder) {
     if (cart.length > 0 && !window.confirm("Keranjang aktif akan diganti dengan pesanan ini. Lanjut?")) return;
     removeHeld(storeId, o.id);
-    onRecall(o.items);
+    onRecall(o);
   }
 
   function del(id: string) {

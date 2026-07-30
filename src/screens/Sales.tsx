@@ -1,5 +1,5 @@
 import { Search, User, ChevronUp, X, PauseCircle, ClipboardList } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useStore, getTotal, getItemCount, getTrxId, isAtLeast } from "../store";
 import { CATEGORIES, getCatLabel, formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
@@ -30,6 +30,7 @@ export default function Sales() {
   const { cart, category, search, cashierName, cashierInitials, selectedShiftName, trxCounter, products, setCategory, setSearch, addToCart, updateQty, clearCart, setCart, setScreen, signOut } = useStore();
   const storeId = useStore((s) => s.storeId);
   const orderCustomer = useStore((s) => s.orderCustomer);
+  const setOrderCustomer = useStore((s) => s.setOrderCustomer);
   const [customerOpen, setCustomerOpen] = useState(false);
   const [heldMode, setHeldMode] = useState<"hold" | "list" | null>(null);
   const [, setHeldTick] = useState(0);   // bump to force a re-render after hold/recall/delete
@@ -42,12 +43,13 @@ export default function Sales() {
   const inventoryOn = isAtLeast(storeId ? storeTier : "premium", "premium") && inventoryEnabled; // Basic Inventori: show stock on items
   const [oversellMsg, setOversellMsg] = useState("");
 
+  const oversellTimer = useRef<number | undefined>(undefined);
   // Owner setting: block selling a "Habis" (stock 0) item unless overselling is allowed.
   function handleAdd(p: typeof products[number]) {
     if (inventoryOn && !settings.sellWhenHabis && (p.stock ?? 0) <= 0) {
       setOversellMsg(`${p.name} stoknya habis`);
-      window.clearTimeout((handleAdd as unknown as { _t?: number })._t);
-      (handleAdd as unknown as { _t?: number })._t = window.setTimeout(() => setOversellMsg(""), 1800);
+      window.clearTimeout(oversellTimer.current);
+      oversellTimer.current = window.setTimeout(() => setOversellMsg(""), 1800);
       return;
     }
     addToCart(p);
@@ -367,7 +369,12 @@ export default function Sales() {
         total={total}
         onClose={() => setHeldMode(null)}
         onHeld={() => { clearCart(); setCartOpen(false); setHeldMode(null); setHeldTick(t => t + 1); }}
-        onRecall={(items) => { setCart(items); setCartOpen(false); setHeldMode(null); setHeldTick(t => t + 1); }}
+        onRecall={(o) => {
+          setCart(o.items);
+          // Carry the held order's "atas nama" onto the order (skip auto "Pesanan N" labels).
+          if (o.label && !/^Pesanan \d+$/.test(o.label)) setOrderCustomer({ name: o.label, phone: "" });
+          setCartOpen(false); setHeldMode(null); setHeldTick(t => t + 1);
+        }}
       />
 
       {/* Oversell toast — shown when a "Habis" item is blocked by the owner setting */}
