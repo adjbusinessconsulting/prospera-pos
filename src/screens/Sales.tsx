@@ -30,8 +30,9 @@ export default function Sales() {
   const storeId = useStore((s) => s.storeId);
   const [heldMode, setHeldMode] = useState<"hold" | "list" | null>(null);
   const [, setHeldTick] = useState(0);   // bump to force a re-render after hold/recall/delete
-  const heldN = heldCount(storeId);      // cheap localStorage read, recomputed each render
   const storeTier = useStore((s) => s.storeTier);
+  const canHold = isAtLeast(storeId ? storeTier : "premium", "standard");   // Tahan Pesanan = Standard+
+  const heldN = canHold ? heldCount(storeId) : 0;   // cheap localStorage read, recomputed each render
   const inventoryEnabled = useStore((s) => s.inventoryEnabled);
   const isDemoMode = useStore((s) => s.isDemoMode);
   const settings = useStore((s) => s.settings);
@@ -180,9 +181,11 @@ export default function Sales() {
                 <h2 className="num text-display-s font-medium text-navy mt-0.5">{itemCount} item</h2>
               </div>
               <div className="flex items-center gap-3 mt-1">
-                <button onClick={() => setHeldMode("list")} className="flex items-center gap-1.5 text-[12px] text-navy font-medium">
-                  <ClipboardList size={13} /> Ditahan{heldN > 0 ? ` (${heldN})` : ""}
-                </button>
+                {canHold && (
+                  <button onClick={() => setHeldMode("list")} className="flex items-center gap-1.5 text-[12px] text-navy font-medium">
+                    <ClipboardList size={13} /> Ditahan{heldN > 0 ? ` (${heldN})` : ""}
+                  </button>
+                )}
                 {cart.length > 0 && <button onClick={clearCart} className="text-[12px] text-text-mute underline underline-offset-[3px]">Kosongkan</button>}
               </div>
             </div>
@@ -240,7 +243,7 @@ export default function Sales() {
               <span className="num text-amount-l font-bold text-navy leading-none">Rp {total.toLocaleString("id-ID")}</span>
             </div>
             <div className="flex gap-2.5">
-              {cart.length > 0 && (
+              {canHold && cart.length > 0 && (
                 <button onClick={() => setHeldMode("hold")}
                   className="rounded-button h-[50px] px-4 flex items-center justify-center gap-2 text-[13px] font-semibold text-navy bg-cream-bg border border-warm-border shrink-0">
                   <PauseCircle size={16} /> Tahan
@@ -280,9 +283,11 @@ export default function Sales() {
                   <h2 className="num text-[22px] font-medium text-navy mt-0.5">{itemCount} item</h2>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setHeldMode("list")} className="h-[34px] px-3 rounded-full bg-cream-pill flex items-center gap-1.5 text-text-mute text-[12px] font-medium">
-                    <ClipboardList size={13} /> Ditahan{heldN > 0 ? ` (${heldN})` : ""}
-                  </button>
+                  {canHold && (
+                    <button onClick={() => setHeldMode("list")} className="h-[34px] px-3 rounded-full bg-cream-pill flex items-center gap-1.5 text-text-mute text-[12px] font-medium">
+                      <ClipboardList size={13} /> Ditahan{heldN > 0 ? ` (${heldN})` : ""}
+                    </button>
+                  )}
                   <button onClick={() => setCartOpen(false)} className="w-[34px] h-[34px] rounded-full bg-cream-pill flex items-center justify-center text-text-mute">
                     <X size={16} />
                   </button>
@@ -322,7 +327,7 @@ export default function Sales() {
                   <span className="num text-[22px] font-bold text-navy">Rp {total.toLocaleString("id-ID")}</span>
                 </div>
                 <div className="flex gap-2.5">
-                  {cart.length > 0 && (
+                  {canHold && cart.length > 0 && (
                     <button onClick={() => setHeldMode("hold")}
                       className="rounded-button h-[50px] px-4 flex items-center justify-center gap-2 text-[13px] font-semibold text-navy bg-cream-bg border border-warm-border shrink-0">
                       <PauseCircle size={16} /> Tahan
