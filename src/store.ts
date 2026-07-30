@@ -66,6 +66,7 @@ interface POSState {
   addToCart: (product: Product) => void;
   updateQty: (id: string, delta: number) => void;
   clearCart: () => void;
+  setCart: (cart: CartItem[]) => void;   // load a held order back into the cart
   setCategory: (c: string) => void;
   setSearch: (s: string) => void;
   setPaymentMethod: (m: string) => void;
@@ -251,6 +252,7 @@ export const useStore = create<POSState>((set) => ({
   }),
 
   clearCart: () => set({ cart: [] }),
+  setCart: (cart) => set({ cart }),
   setCategory: (category) => set({ category }),
   setSearch: (search) => set({ search }),
   setPaymentMethod: (paymentMethod) => set({ paymentMethod }),

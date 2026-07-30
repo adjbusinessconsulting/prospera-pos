@@ -1,9 +1,11 @@
-import { Search, User, ChevronUp, X } from "lucide-react";
+import { Search, User, ChevronUp, X, PauseCircle, ClipboardList } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useStore, getTotal, getItemCount, getTrxId, isAtLeast } from "../store";
 import { CATEGORIES, getCatLabel, formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import { hasOpenedToday } from "../lib/dayopen";
+import { HeldOrders } from "../components/HeldOrders";
+import { heldCount } from "../lib/heldOrders";
 
 function TierPill() {
   const storeId = useStore((s) => s.storeId);
@@ -24,8 +26,11 @@ function TierPill() {
 
 export default function Sales() {
   const [cartOpen, setCartOpen] = useState(false);
-  const { cart, category, search, cashierName, cashierInitials, selectedShiftName, trxCounter, products, setCategory, setSearch, addToCart, updateQty, clearCart, setScreen, signOut } = useStore();
+  const { cart, category, search, cashierName, cashierInitials, selectedShiftName, trxCounter, products, setCategory, setSearch, addToCart, updateQty, clearCart, setCart, setScreen, signOut } = useStore();
   const storeId = useStore((s) => s.storeId);
+  const [heldMode, setHeldMode] = useState<"hold" | "list" | null>(null);
+  const [, setHeldTick] = useState(0);   // bump to force a re-render after hold/recall/delete
+  const heldN = heldCount(storeId);      // cheap localStorage read, recomputed each render
   const storeTier = useStore((s) => s.storeTier);
   const inventoryEnabled = useStore((s) => s.inventoryEnabled);
   const isDemoMode = useStore((s) => s.isDemoMode);
@@ -174,7 +179,12 @@ export default function Sales() {
                 <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute">KERANJANG · CART</p>
                 <h2 className="num text-display-s font-medium text-navy mt-0.5">{itemCount} item</h2>
               </div>
-              <button onClick={clearCart} className="text-[12px] text-text-mute underline underline-offset-[3px] mt-1">Kosongkan</button>
+              <div className="flex items-center gap-3 mt-1">
+                <button onClick={() => setHeldMode("list")} className="flex items-center gap-1.5 text-[12px] text-navy font-medium">
+                  <ClipboardList size={13} /> Ditahan{heldN > 0 ? ` (${heldN})` : ""}
+                </button>
+                {cart.length > 0 && <button onClick={clearCart} className="text-[12px] text-text-mute underline underline-offset-[3px]">Kosongkan</button>}
+              </div>
             </div>
             <button className="w-full bg-cream-bg border border-dashed border-warm-dashed rounded-[10px] px-3.5 py-2.5 flex items-center gap-2.5">
               <div className="w-[28px] h-[28px] rounded-full bg-cream-pill flex items-center justify-center text-text-mute shrink-0">
@@ -229,11 +239,19 @@ export default function Sales() {
               </div>
               <span className="num text-amount-l font-bold text-navy leading-none">Rp {total.toLocaleString("id-ID")}</span>
             </div>
-            <button onClick={() => cart.length > 0 && setScreen("payment")}
-              className={`w-full rounded-button h-[50px] flex items-center justify-center gap-2.5 text-[14px] font-semibold tracking-[0.02em] transition-colors ${cart.length > 0 ? "bg-navy text-cream-text" : "bg-warm-border text-text-mute"}`}>
-              <span>BAYAR — {formatRp(total)}</span>
-              {cart.length > 0 && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
-            </button>
+            <div className="flex gap-2.5">
+              {cart.length > 0 && (
+                <button onClick={() => setHeldMode("hold")}
+                  className="rounded-button h-[50px] px-4 flex items-center justify-center gap-2 text-[13px] font-semibold text-navy bg-cream-bg border border-warm-border shrink-0">
+                  <PauseCircle size={16} /> Tahan
+                </button>
+              )}
+              <button onClick={() => cart.length > 0 && setScreen("payment")}
+                className={`flex-1 rounded-button h-[50px] flex items-center justify-center gap-2.5 text-[14px] font-semibold tracking-[0.02em] transition-colors ${cart.length > 0 ? "bg-navy text-cream-text" : "bg-warm-border text-text-mute"}`}>
+                <span>BAYAR — {formatRp(total)}</span>
+                {cart.length > 0 && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
+              </button>
+            </div>
           </div>
         </aside>
 
@@ -261,9 +279,14 @@ export default function Sales() {
                   <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute">KERANJANG</p>
                   <h2 className="num text-[22px] font-medium text-navy mt-0.5">{itemCount} item</h2>
                 </div>
-                <button onClick={() => setCartOpen(false)} className="w-[34px] h-[34px] rounded-full bg-cream-pill flex items-center justify-center text-text-mute">
-                  <X size={16} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setHeldMode("list")} className="h-[34px] px-3 rounded-full bg-cream-pill flex items-center gap-1.5 text-text-mute text-[12px] font-medium">
+                    <ClipboardList size={13} /> Ditahan{heldN > 0 ? ` (${heldN})` : ""}
+                  </button>
+                  <button onClick={() => setCartOpen(false)} className="w-[34px] h-[34px] rounded-full bg-cream-pill flex items-center justify-center text-text-mute">
+                    <X size={16} />
+                  </button>
+                </div>
               </div>
               <div className="flex-1 overflow-auto px-6 py-3">
                 {cart.length === 0 && <p className="text-center text-text-mute text-[13px] py-8">Keranjang kosong</p>}
@@ -298,15 +321,35 @@ export default function Sales() {
                   <span style={{ fontSize: 9.5, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute">TOTAL</span>
                   <span className="num text-[22px] font-bold text-navy">Rp {total.toLocaleString("id-ID")}</span>
                 </div>
-                <button onClick={() => { setCartOpen(false); cart.length > 0 && setScreen("payment"); }}
-                  className={`w-full rounded-button h-[50px] flex items-center justify-center gap-2.5 text-[14px] font-semibold ${cart.length > 0 ? "bg-navy text-cream-text" : "bg-warm-border text-text-mute"}`}>
-                  BAYAR — {formatRp(total)}
-                </button>
+                <div className="flex gap-2.5">
+                  {cart.length > 0 && (
+                    <button onClick={() => setHeldMode("hold")}
+                      className="rounded-button h-[50px] px-4 flex items-center justify-center gap-2 text-[13px] font-semibold text-navy bg-cream-bg border border-warm-border shrink-0">
+                      <PauseCircle size={16} /> Tahan
+                    </button>
+                  )}
+                  <button onClick={() => { setCartOpen(false); cart.length > 0 && setScreen("payment"); }}
+                    className={`flex-1 rounded-button h-[50px] flex items-center justify-center gap-2.5 text-[14px] font-semibold ${cart.length > 0 ? "bg-navy text-cream-text" : "bg-warm-border text-text-mute"}`}>
+                    BAYAR — {formatRp(total)}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Tahan / recall held orders */}
+      <HeldOrders
+        mode={heldMode}
+        storeId={storeId}
+        cashierName={cashierName}
+        cart={cart}
+        total={total}
+        onClose={() => setHeldMode(null)}
+        onHeld={() => { clearCart(); setCartOpen(false); setHeldMode(null); setHeldTick(t => t + 1); }}
+        onRecall={(items) => { setCart(items); setCartOpen(false); setHeldMode(null); setHeldTick(t => t + 1); }}
+      />
 
       {/* Oversell toast — shown when a "Habis" item is blocked by the owner setting */}
       {oversellMsg && (
