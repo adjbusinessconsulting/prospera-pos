@@ -6,6 +6,7 @@ import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
 import { modalAwalToday, openedAtToday } from "../lib/dayopen";
+import { useManagerGate } from "../lib/useManagerGate";
 
 type KasIcon = "masuk" | "keluar" | "auto" | "hutang_settle";
 interface KasMove { time: string; label: string; desc: string; amount: number; icon: KasIcon; photo: boolean }
@@ -35,6 +36,7 @@ function PhotoThumb({ size = "sm" }: { size?: "sm" | "md" }) {
 
 export default function Kas() {
   const { cashierInitials, cashierName, selectedShift, selectedShiftName, storeId, storeTier, isDemoMode, settings, setScreen, signOut } = useStore();
+  const { gate, gateModal } = useManagerGate();
   const effectiveTier = storeId ? storeTier : 'free';
   const canKas = isAtLeast(effectiveTier, 'standard');       // tier gate (banner/upsell)
   const newKasOn = canKas && settings.kas;                    // owner can hide new-entry buttons
@@ -350,13 +352,13 @@ export default function Kas() {
         {/* Bottom: Pindah Shift + Tutup Toko */}
         <div className="flex gap-2.5 px-5 lg:px-10 py-4 shrink-0 border-t border-warm-border bg-cream-bg">
           {settings.gantiShift && (
-          <button onClick={() => setScreen("pindah-shift")}
+          <button onClick={() => gate("shifts", () => setScreen("pindah-shift"))}
             className="flex-1 bg-cream-bg border border-warm-border rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-navy hover:border-navy/40 transition-colors cursor-pointer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6" /></svg>
             Pindah Shift
           </button>
           )}
-          <button onClick={() => setScreen("tutup-toko")}
+          <button onClick={() => gate("shifts", () => setScreen("tutup-toko"))}
             className="flex-1 bg-navy border-0 rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-cream-text hover:opacity-90 transition-opacity cursor-pointer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C9A55F" strokeWidth="2"><path d="M18.36 6.64A9 9 0 115.64 19.36M2 12h2M20 12h2M12 2v2M12 20v2" /></svg>
             Tutup Toko
@@ -466,7 +468,7 @@ export default function Kas() {
               </button>
               <button
                 disabled={!kasNominal || (requiresPhoto && !kasPhoto)}
-                onClick={handleKasConfirm}
+                onClick={() => gate("cashDrawer", handleKasConfirm)}
                 className={`flex-1 rounded-card h-[46px] text-[13px] font-semibold border-0 transition-opacity ${kasNominal && !(requiresPhoto && !kasPhoto)
                   ? `${modalType === "masuk" ? "bg-[#3D7A5E]" : "bg-[#C25E3D]"} text-white hover:opacity-90 cursor-pointer`
                   : "bg-navy/20 text-navy/40 cursor-not-allowed"}`}>
@@ -476,6 +478,7 @@ export default function Kas() {
           </div>
         </div>
       )}
+      {gateModal}
     </div>
   );
 }

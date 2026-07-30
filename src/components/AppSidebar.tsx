@@ -14,6 +14,7 @@ import { clearSession } from "../lib/session";
 import { clearSnapshot } from "../lib/snapshot";
 import { flushQueue, getLastSyncError, pendingStoreIds, clearOrphaned, retryFailed } from "../lib/sync";
 import { refreshStoreData } from "../lib/refreshData";
+import { useManagerGate } from "../lib/useManagerGate";
 
 const NAV = [
   { id: "sales"   as Screen, label: "Jual",    Icon: ShoppingCart },
@@ -36,6 +37,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [printerOpen, setPrinterOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const { gate, gateModal } = useManagerGate();
   const storeTier = useStore(s => (s.storeId ? s.storeTier : "free"));
   const storeName = useStore(s => s.storeName);
   const storeId = useStore(s => s.storeId);
@@ -67,8 +69,11 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
         <div className="pos-topnav" style={{ display: "flex", gap: 3, flex: 1, justifyContent: "center" }}>
           {NAV.map(({ id, label, Icon }) => {
             const isActive = active === id;
+            // "reports" gate: viewing Laporan (riwayat) needs approval for a
+            // manager/cashier on Premium unless the owner granted the perm.
+            const go = () => (id === "riwayat" ? gate("reports", () => setScreen(id)) : setScreen(id));
             return (
-              <button key={id} onClick={() => setScreen(id)} style={{
+              <button key={id} onClick={go} style={{
                 display: "flex", alignItems: "center", gap: 6,
                 padding: "7px 13px", borderRadius: 9, border: "none",
                 background: isActive ? "#0D1117" : "transparent",
@@ -191,6 +196,7 @@ export function AppSidebar({ active, cashierInitials, setScreen, signOut, showDe
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} onOpenReceipt={() => setReceiptOpen(true)} onOpenPrinter={() => setPrinterOpen(true)} />
       <ReceiptSettings open={receiptOpen} onClose={() => setReceiptOpen(false)} />
       <PrinterSettings open={printerOpen} onClose={() => setPrinterOpen(false)} />
+      {gateModal}
     </>
   );
 }

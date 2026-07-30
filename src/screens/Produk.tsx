@@ -399,7 +399,7 @@ export default function Produk() {
                 </div>
                 <label style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute block mb-2">Tambah berapa?</label>
                 <input autoFocus type="number" inputMode="numeric" min={1} value={tambahQty}
-                  onChange={e => setTambahQty(e.target.value)} onKeyDown={e => e.key === "Enter" && handleAddStock()}
+                  onChange={e => setTambahQty(e.target.value)} onKeyDown={e => e.key === "Enter" && gate("stock", () => void handleAddStock())}
                   placeholder="mis. 24"
                   className="w-full bg-white border rounded-button h-[46px] px-4 text-[15px] text-navy outline-none"
                   style={{ borderColor: n > 0 ? "#5C9E7E" : "#ECE7DD", fontVariantNumeric: "tabular-nums" }} />
@@ -407,7 +407,7 @@ export default function Produk() {
               </div>
               <div className="px-5 py-4 flex gap-2">
                 <button onClick={() => setTambahTarget(null)} className="flex-1 h-[46px] rounded-button border border-warm-border bg-white text-navy text-[13px] font-medium cursor-pointer">Batal</button>
-                <button onClick={handleAddStock} disabled={n <= 0} className="flex-[2] h-[46px] rounded-button border-0 bg-navy text-cream-text text-[13px] font-semibold cursor-pointer disabled:opacity-50">Tambah Stok</button>
+                <button onClick={() => gate("stock", () => void handleAddStock())} disabled={n <= 0} className="flex-[2] h-[46px] rounded-button border-0 bg-navy text-cream-text text-[13px] font-semibold cursor-pointer disabled:opacity-50">Tambah Stok</button>
               </div>
             </div>
           </div>
