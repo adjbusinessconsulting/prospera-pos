@@ -217,6 +217,8 @@ export default function Riwayat() {
 
   // Voided sales stay visible (with a badge) but never count toward money.
   const settled = filtered.filter(t => !t.voided);
+  const voidedRows = filtered.filter(t => t.voided);
+  const voidedTotal = voidedRows.reduce((s, t) => s + t.total, 0);
   // Omzet = money actually received (cash-basis). Credit sales count only once lunas.
   const total = settled.reduce((s, t) => s + receivedTotal(t), 0);
   const paidCount = settled.filter(t => receivedTotal(t) > 0).length;
@@ -263,7 +265,7 @@ export default function Riwayat() {
       `Sterith POS`,
       ``,
       `Total Omzet: ${formatRp(total)}`,
-      `Transaksi: ${filtered.length}  |  Rata-rata: ${formatRp(avg)}`,
+      `Transaksi: ${settled.length}  |  Rata-rata: ${formatRp(avg)}`,
       ``,
       `*Detail Transaksi:*`,
       ...filtered.map(t => `• ${t.trx_id}  ${fmtTime(t.created_at)}  ${t.cashier_name}  ${methodLabel(t.payment_method)}  ${formatRp(t.total)}`),
@@ -432,12 +434,18 @@ export default function Riwayat() {
           </div>
           <div>
             <p style={{ fontSize: 8.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">TRANSAKSI</p>
-            <p className="num text-[18px] lg:text-[20px] font-semibold text-cream-text">{filtered.length}</p>
+            <p className="num text-[18px] lg:text-[20px] font-semibold text-cream-text">{settled.length}</p>
           </div>
           <div className="hidden lg:block">
             <p style={{ fontSize: 8.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">RATA-RATA</p>
             <p className="num text-[18px] lg:text-[20px] font-semibold text-cream-text" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(avg)}</p>
           </div>
+          {voidedRows.length > 0 && (
+            <div>
+              <p className="font-sans uppercase mb-1" style={{ color: "rgba(217,138,106,0.75)", fontSize: 8.5, letterSpacing: "0.18em" }}>DIBATALKAN</p>
+              <p className="num text-[18px] lg:text-[20px] font-semibold" style={{ color: "#d98a6a", fontVariantNumeric: "tabular-nums" }}>{voidedRows.length} · {formatRp(voidedTotal)}</p>
+            </div>
+          )}
           <div className="hidden lg:block">
             <p style={{ fontSize: 8.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">SHIFT AKTIF</p>
             <p className="font-serif text-[18px] lg:text-[20px] font-semibold text-cream-text">{selectedShiftName}</p>

@@ -33,6 +33,8 @@ export default function TutupToko() {
   const [showRecon, setShowRecon] = useState(false);
   const [counted, setCounted] = useState("");
   const [piutangBaru, setPiutangBaru] = useState(isDemoMode ? 217_000 : 0); // hutang baru hari ini, belum lunas
+  const [voidedTotal, setVoidedTotal] = useState(0);
+  const [voidedCount, setVoidedCount] = useState(0);
   const [breakdown, setBreakdown] = useState<Record<string, number>>(isDemoMode
     ? { tunai: 5_120_000, qris: 1_830_000, transfer: 1_000_000 } : {});
 
@@ -45,7 +47,11 @@ export default function TutupToko() {
       const { data: kas } = await supabase.from("kas_entries").select("type,amount,created_at").eq("store_id", storeId).gte("created_at", startISO);
       const { data: hut } = await supabase.from("hutang").select("amount,status,settled_method,created_at").eq("store_id", storeId).gte("created_at", startISO);
       if (cancelled) return;
-      const S = ((sales ?? []) as { total: number; payment_method: string; shift: number; voided?: boolean }[]).filter(s => !s.voided);
+      const allS = (sales ?? []) as { total: number; payment_method: string; shift: number; voided?: boolean }[];
+      const S = allS.filter(s => !s.voided);
+      const voidedRows = allS.filter(s => s.voided);
+      setVoidedTotal(voidedRows.reduce((a, s) => a + (s.total ?? 0), 0));
+      setVoidedCount(voidedRows.length);
       const H = (hut ?? []) as { amount: number; status: string; settled_method?: string | null }[];
       // OMZET (income, cash-basis): non-credit sales today by method…
       const bd: Record<string, number> = {};
@@ -167,6 +173,12 @@ export default function TutupToko() {
               <div className="flex justify-between items-center mt-3 pt-3 border-t border-[#F2EDE3]">
                 <span className="text-[12px] text-[#C25E3D]">Hutang baru hari ini · belum diterima</span>
                 <span className="font-medium text-[#C25E3D] text-[13px]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(piutangBaru)}</span>
+              </div>
+            )}
+            {voidedCount > 0 && (
+              <div className="flex justify-between items-center mt-2 pt-2 border-t border-[#F2EDE3]">
+                <span className="text-[12px] text-text-mute">Dibatalkan · {voidedCount} transaksi <span className="text-[10.5px]">(tidak dihitung)</span></span>
+                <span className="font-medium text-text-mute text-[13px]" style={{ fontVariantNumeric: "tabular-nums", textDecoration: "line-through" }}>{formatRp(voidedTotal)}</span>
               </div>
             )}
           </div>
