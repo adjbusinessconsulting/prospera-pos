@@ -45,14 +45,14 @@ export default function TutupToko() {
       const start = new Date(); start.setHours(0, 0, 0, 0); const startISO = start.toISOString();
       const { data: sales } = await supabase.from("sales").select("total,payment_method,shift,created_at,voided").eq("store_id", storeId).gte("created_at", startISO);
       const { data: kas } = await supabase.from("kas_entries").select("type,amount,created_at").eq("store_id", storeId).gte("created_at", startISO);
-      const { data: hut } = await supabase.from("hutang").select("amount,status,settled_method,created_at").eq("store_id", storeId).gte("created_at", startISO);
+      const { data: hut } = await supabase.from("hutang").select("amount,status,settled_method,created_at,voided").eq("store_id", storeId).gte("created_at", startISO);
       if (cancelled) return;
       const allS = (sales ?? []) as { total: number; payment_method: string; shift: number; voided?: boolean }[];
       const S = allS.filter(s => !s.voided);
       const voidedRows = allS.filter(s => s.voided);
       setVoidedTotal(voidedRows.reduce((a, s) => a + (s.total ?? 0), 0));
       setVoidedCount(voidedRows.length);
-      const H = (hut ?? []) as { amount: number; status: string; settled_method?: string | null }[];
+      const H = ((hut ?? []) as { amount: number; status: string; settled_method?: string | null; voided?: boolean }[]).filter(h => !h.voided);
       // OMZET (income, cash-basis): non-credit sales today by method…
       const bd: Record<string, number> = {};
       S.filter(s => s.payment_method !== "hutang").forEach(s => { bd[s.payment_method] = (bd[s.payment_method] ?? 0) + (s.total ?? 0); });

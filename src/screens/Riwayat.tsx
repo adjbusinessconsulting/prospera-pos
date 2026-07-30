@@ -104,6 +104,10 @@ export default function Riwayat() {
     if (!sale || !storeId || isDemoMode) { if (isDemoMode && sale) setSales(prev => prev.map(s => s.id === sale.id ? { ...s, voided: true } : s)); return; }
     try {
       await supabase.from("sales").update({ voided: true, voided_at: new Date().toISOString() }).eq("id", sale.id);
+      // A credit sale's debt is cancelled with it — otherwise the bon lingers in Buku Hutang.
+      if (sale.payment_method === "hutang" && sale.trx_id) {
+        try { await supabase.from("hutang").update({ voided: true }).eq("store_id", storeId).eq("trx_id", sale.trx_id); } catch { /* column not migrated yet */ }
+      }
       // Return stock (best-effort) — the goods weren't sold after all.
       if (inventoryOn) {
         for (const it of sale.sale_items ?? []) {
@@ -161,12 +165,12 @@ export default function Riwayat() {
     });
     supabase
       .from("hutang")
-      .select("trx_id,status,settled_method")
+      .select("trx_id,status,settled_method,voided")
       .eq("store_id", storeId)
       .gte("created_at", from.toISOString())
       .then(({ data }) => {
         const m: Record<string, { status: string; settled_method: string | null }> = {};
-        (data as { trx_id?: string | null; status: string; settled_method?: string | null }[] ?? []).forEach(h => {
+        (data as { trx_id?: string | null; status: string; settled_method?: string | null; voided?: boolean }[] ?? []).filter(h => !h.voided).forEach(h => {
           if (h.trx_id) m[h.trx_id] = { status: h.status, settled_method: h.settled_method ?? null };
         });
         setHutangByTrx(m);

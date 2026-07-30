@@ -11,6 +11,7 @@ interface HutangRow {
   amount: number; paid_amount: number; status: "open" | "partial" | "lunas";
   cashier_name?: string | null; created_at: string;
   settled_at?: string | null; settled_method?: string | null;
+  voided?: boolean;
 }
 
 const DEMO_HUTANG: HutangRow[] = [
@@ -66,8 +67,9 @@ export default function Hutang() {
   }
   useEffect(() => { if (canHutang) void load(); /* eslint-disable-next-line */ }, [storeId, isDemoMode]);
 
-  const belum = rows.filter(r => r.status !== "lunas");
-  const lunas = rows.filter(r => r.status === "lunas");
+  const active = rows.filter(r => !r.voided);   // voided bons are cancelled (via sale void)
+  const belum = active.filter(r => r.status !== "lunas");
+  const lunas = active.filter(r => r.status === "lunas");
   const outstanding = belum.reduce((s, r) => s + (r.amount - r.paid_amount), 0);
   const shown = view === "belum" ? belum : lunas;
 

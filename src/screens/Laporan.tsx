@@ -100,7 +100,7 @@ export default function Laporan() {
         .select("created_at,total,payment_method,voided,sale_items(product_name,qty,subtotal)")
         .eq("store_id", storeId).gte("created_at", from.toISOString());
       const { data: hut } = await supabase.from("hutang")
-        .select("amount,status,settled_method,created_at").eq("store_id", storeId).gte("created_at", from.toISOString());
+        .select("amount,status,settled_method,created_at,voided").eq("store_id", storeId).gte("created_at", from.toISOString());
       if (cancelled) return;
       const byDay = new Map<number, DayRec>();
       const items: RealItem[] = [];
@@ -122,8 +122,8 @@ export default function Laporan() {
       // A settled hutang lifts the omzet of the day its bon was made (created_at),
       // never the day it was paid — so paying an old debt never moves "today".
       (hut ?? []).forEach(row => {
-        const h = row as { amount: number; status: string; settled_method?: string | null; created_at: string };
-        if (h.status !== "lunas") return;
+        const h = row as { amount: number; status: string; settled_method?: string | null; created_at: string; voided?: boolean };
+        if (h.voided || h.status !== "lunas") return;
         const d = new Date(h.created_at); d.setHours(0, 0, 0, 0); const ts = d.getTime();
         const cur = byDay.get(ts) ?? { d, rev: 0, trx: 0, items: 0 };
         cur.rev += h.amount ?? 0;
