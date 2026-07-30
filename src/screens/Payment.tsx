@@ -41,7 +41,7 @@ export default function Payment() {
   const {
     cart, paymentMethod, cashReceived, cashierName, cashierInitials,
     trxCounter, storeId, storeTier, isDemoMode, qrisImageUrl, midtransClientKey, settings,
-    setPaymentMethod, setCashReceived, setScreen, signOut, setHutangCustomer, addDemoHutang,
+    orderCustomer, setPaymentMethod, setCashReceived, setScreen, signOut, setHutangCustomer, addDemoHutang,
   } = useStore();
 
   // Owner can hide payment methods they don't accept (Pengaturan).
@@ -72,6 +72,15 @@ export default function Payment() {
   const [hutangAddress, setHutangAddress] = useState("");        // optional
   const [hutangPhoto, setHutangPhoto] = useState<string | null>(null);  // optional (data URL)
   const custPhotoRef = useRef<HTMLInputElement>(null);
+  // Pre-fill the hutang form with the customer tagged at the cart, so a cashier
+  // who already named the order doesn't retype it.
+  useEffect(() => {
+    if (showHutangModal && orderCustomer && !hutangName.trim()) {
+      setHutangName(orderCustomer.name);
+      if (orderCustomer.phone) setHutangPhone(orderCustomer.phone);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showHutangModal]);
   type Cust = { name: string; phone: string | null; address: string | null; photo: string | null };
   const [recentCustomers, setRecentCustomers] = useState<Cust[]>([]);
   useEffect(() => {

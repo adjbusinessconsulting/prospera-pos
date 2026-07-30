@@ -46,7 +46,9 @@ export default function Receipt() {
         trxId, dateStr, timeStr, cashierName,
         items: cart.map(i => ({ name: i.product.name, qty: i.qty, price: i.product.price })),
         total, method: paymentMethod, cashReceived, change,
-        hutangName: hutangCustomer?.name, footer: "Terima kasih, sampai jumpa lagi",
+        hutangName: hutangCustomer?.name,
+        customerName: !hutangCustomer && orderCustomer?.name ? orderCustomer.name : undefined,
+        footer: "Terima kasih, sampai jumpa lagi",
       }, paper);
       setPrintMsg({ ok: true, text: "Struk tercetak." });
     } catch {

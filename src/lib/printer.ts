@@ -127,7 +127,7 @@ export interface ReceiptData {
   trxId: string; dateStr: string; timeStr: string; cashierName: string;
   items: PrintLine[]; total: number; method: string;
   cashReceived?: number; change?: number;
-  hutangName?: string; footer?: string;
+  hutangName?: string; customerName?: string; footer?: string;
 }
 
 const rp = (n: number) => "Rp" + Math.round(n).toLocaleString("id-ID");
@@ -173,6 +173,7 @@ export function buildReceipt(d: ReceiptData, paper: 58 | 80): Uint8Array {
   parts.push("\n");
   parts.push(line(d.trxId, d.dateStr + " " + d.timeStr));
   parts.push("Kasir: " + clean(d.cashierName) + "\n");
+  if (d.customerName) parts.push("Pelanggan: " + clean(d.customerName) + "\n");
   parts.push(rule);
   for (const it of d.items) {
     parts.push(clean(it.name) + "\n");
