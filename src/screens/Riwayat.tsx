@@ -562,7 +562,10 @@ export default function Riwayat() {
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2">
                             <span className="w-6 h-6 rounded-full bg-cream-pill border border-warm-border flex items-center justify-center text-[9px] font-semibold text-navy">{initials}</span>
-                            <span className="text-[12.5px] text-navy">{t.cashier_name}</span>
+                            <div className="min-w-0">
+                              <div className="text-[12.5px] text-navy truncate">{t.cashier_name}</div>
+                              {t.customer_name && <div className="text-[10px] text-[#A6843F] truncate">a.n. {t.customer_name}</div>}
+                            </div>
                           </div>
                         </td>
                         <td className="px-4 py-3.5 text-[12px] text-text-mute">{t.sale_items?.length ?? 0} item</td>
@@ -605,6 +608,7 @@ export default function Riwayat() {
                         <span className="font-sans text-[13px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{t.trx_id}</span>
                         <p className="text-[11px] text-text-mute mt-0.5">
                           {activeFilter > 0 && <span>{fmtDate(t.created_at)} · </span>}{fmtTime(t.created_at)} · {t.cashier_name} · {t.sale_items?.length ?? 0} item
+                          {t.customer_name ? <span className="text-[#A6843F]"> · a.n. {t.customer_name}</span> : null}
                         </p>
                       </div>
                       <div className="text-right">

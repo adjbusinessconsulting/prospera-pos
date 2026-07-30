@@ -26,7 +26,8 @@ function SterithWatermark({ tier }: { tier: string }) {
 }
 
 export default function Receipt() {
-  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, selectedShiftName, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, inventoryEnabled, receiptLogo, products, hutangCustomer, settings, updateProduct, setHutangCustomer, restart, setScreen, signOut } = useStore();
+  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, selectedShiftName, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, inventoryEnabled, receiptLogo, products, hutangCustomer, orderCustomer, settings, updateProduct, setHutangCustomer, restart, setScreen, signOut } = useStore();
+  const customerName = hutangCustomer?.name || orderCustomer?.name || null;
   const effectiveTier = storeId ? storeTier : 'free';
   const inventoryOn = isAtLeast(effectiveTier, 'premium') && inventoryEnabled;
   const waTierOk = isAtLeast(effectiveTier, 'standard');
@@ -84,6 +85,7 @@ export default function Receipt() {
         // Cash fields only make sense for tunai; null for QRIS / transfer / hutang.
         cash_received: isCash ? cashReceived : null,
         change_amount: isCash ? change : null,
+        customer_name: customerName,
         created_at: new Date().toISOString(),
         items: cart.map(i => ({
           id: crypto.randomUUID(),
@@ -125,7 +127,7 @@ export default function Receipt() {
   const displayPhone = storePhone || (isDemoMode ? "0812-3456-7890" : "");
 
   const waMessage =
-    `*Struk dari ${displayName}*\nNo: ${trxId}\nTanggal: ${dateStr} ${timeStr}\n\n` +
+    `*Struk dari ${displayName}*\nNo: ${trxId}\nTanggal: ${dateStr} ${timeStr}${customerName ? `\nPelanggan: ${customerName}` : ""}\n\n` +
     cart.map(i => `${i.product.name} x${i.qty}  ${formatRp(i.product.price * i.qty)}`).join("\n") +
     `\n\nTotal: ${formatRp(total)}\nTerima kasih!`;
   const waText = encodeURIComponent(waMessage);
@@ -239,6 +241,11 @@ export default function Receipt() {
               <div><div>{trxId}</div><div className="mt-0.5">{dateStr} · {timeStr}</div></div>
               <div className="text-right"><div>Kasir: {cashierName}</div><div className="mt-0.5">{selectedShiftName}</div></div>
             </div>
+            {customerName && (
+              <div className="font-sans text-[10.5px] text-navy py-2 border-b border-dashed border-warm-dashed">
+                Pelanggan: <span className="font-semibold">{customerName}</span>{orderCustomer?.phone ? ` · ${orderCustomer.phone}` : ""}
+              </div>
+            )}
 
             <div className="py-3 border-b border-dashed border-warm-dashed">
               {cart.map(item => (

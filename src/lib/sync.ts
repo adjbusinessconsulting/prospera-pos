@@ -26,6 +26,7 @@ export interface PendingSale {
   payment_method: string;
   cash_received: number | null;
   change_amount: number | null;
+  customer_name?: string | null;   // name tagged to the order (receipt + Riwayat)
   created_at: string;    // real sale time (ISO) — preserved even if synced later
   items: PendingItem[];
   stock: { id: string; qty: number }[]; // stock deltas to apply on first sync
@@ -113,6 +114,7 @@ async function syncOne(sale: PendingSale): Promise<boolean> {
     cashier_id: sale.cashier_id, cashier_name: sale.cashier_name, shift: sale.shift,
     total: sale.total, payment_method: sale.payment_method,
     cash_received: sale.cash_received, change_amount: sale.change_amount,
+    customer_name: sale.customer_name ?? null,
     created_at: sale.created_at,
   });
   // 23505 = already inserted (a prior partial sync) → fine, carry on to items/stock.

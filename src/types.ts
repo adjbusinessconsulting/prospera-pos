@@ -75,5 +75,6 @@ export interface SaleRecord {
   created_at: string;
   voided?: boolean;
   voided_at?: string | null;
+  customer_name?: string | null;
   sale_items: SaleItem[];
 }

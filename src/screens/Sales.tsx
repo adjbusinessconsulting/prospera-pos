@@ -6,6 +6,7 @@ import { AppSidebar } from "../components/AppSidebar";
 import { hasOpenedToday } from "../lib/dayopen";
 import { HeldOrders } from "../components/HeldOrders";
 import { heldCount } from "../lib/heldOrders";
+import { CustomerEntry } from "../components/CustomerEntry";
 
 function TierPill() {
   const storeId = useStore((s) => s.storeId);
@@ -28,6 +29,8 @@ export default function Sales() {
   const [cartOpen, setCartOpen] = useState(false);
   const { cart, category, search, cashierName, cashierInitials, selectedShiftName, trxCounter, products, setCategory, setSearch, addToCart, updateQty, clearCart, setCart, setScreen, signOut } = useStore();
   const storeId = useStore((s) => s.storeId);
+  const orderCustomer = useStore((s) => s.orderCustomer);
+  const [customerOpen, setCustomerOpen] = useState(false);
   const [heldMode, setHeldMode] = useState<"hold" | "list" | null>(null);
   const [, setHeldTick] = useState(0);   // bump to force a re-render after hold/recall/delete
   const storeTier = useStore((s) => s.storeTier);
@@ -189,15 +192,15 @@ export default function Sales() {
                 {cart.length > 0 && <button onClick={clearCart} className="text-[12px] text-text-mute underline underline-offset-[3px]">Kosongkan</button>}
               </div>
             </div>
-            <button className="w-full bg-cream-bg border border-dashed border-warm-dashed rounded-[10px] px-3.5 py-2.5 flex items-center gap-2.5">
+            <button onClick={() => setCustomerOpen(true)} className="w-full bg-cream-bg border border-dashed border-warm-dashed rounded-[10px] px-3.5 py-2.5 flex items-center gap-2.5 cursor-pointer">
               <div className="w-[28px] h-[28px] rounded-full bg-cream-pill flex items-center justify-center text-text-mute shrink-0">
                 <User size={13} strokeWidth={1.8} />
               </div>
-              <div className="flex-1 text-left">
-                <div className="text-[12px] font-medium text-navy">Pelanggan umum</div>
-                <div className="text-[10px] text-text-mute">Tambah nama / WhatsApp untuk hutang</div>
+              <div className="flex-1 text-left min-w-0">
+                <div className="text-[12px] font-medium text-navy truncate">{orderCustomer?.name || "Pelanggan umum"}</div>
+                <div className="text-[10px] text-text-mute truncate">{orderCustomer ? (orderCustomer.phone || "Ketuk untuk ubah / hapus") : "Tambah nama / WhatsApp"}</div>
               </div>
-              <span className="text-[18px] text-gold font-light leading-none">+</span>
+              <span className="text-[18px] text-gold font-light leading-none">{orderCustomer ? "✎" : "+"}</span>
             </button>
           </div>
 
@@ -294,6 +297,14 @@ export default function Sales() {
                 </div>
               </div>
               <div className="flex-1 overflow-auto px-6 py-3">
+                <button onClick={() => setCustomerOpen(true)} className="w-full bg-cream-bg border border-dashed border-warm-dashed rounded-[10px] px-3.5 py-2.5 flex items-center gap-2.5 mb-2 cursor-pointer">
+                  <div className="w-[28px] h-[28px] rounded-full bg-cream-pill flex items-center justify-center text-text-mute shrink-0"><User size={13} strokeWidth={1.8} /></div>
+                  <div className="flex-1 text-left min-w-0">
+                    <div className="text-[12px] font-medium text-navy truncate">{orderCustomer?.name || "Pelanggan umum"}</div>
+                    <div className="text-[10px] text-text-mute truncate">{orderCustomer ? (orderCustomer.phone || "Ketuk untuk ubah / hapus") : "Tambah nama / WhatsApp"}</div>
+                  </div>
+                  <span className="text-[18px] text-gold font-light leading-none">{orderCustomer ? "✎" : "+"}</span>
+                </button>
                 {cart.length === 0 && <p className="text-center text-text-mute text-[13px] py-8">Keranjang kosong</p>}
                 {cart.map(item => (
                   <div key={item.product.id} className="flex gap-3 py-3 border-b border-[#F2EDE3]">
@@ -343,6 +354,9 @@ export default function Sales() {
           </div>
         )}
       </div>
+
+      {/* Tag a customer name to the order */}
+      <CustomerEntry open={customerOpen} onClose={() => setCustomerOpen(false)} />
 
       {/* Tahan / recall held orders */}
       <HeldOrders

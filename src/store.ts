@@ -18,6 +18,7 @@ interface POSState {
   paymentMethod: string;
   cashReceived: number;
   hutangCustomer: { name: string; phone: string; paidNow: number } | null;
+  orderCustomer: { name: string; phone: string } | null;   // name tagged to the current order (any payment method)
   demoHutang: { id: string; customer_name: string; phone: string | null; amount: number; paid_amount: number; status: "open" | "partial" | "lunas"; cashier_name: string; created_at: string; trx_id?: string; settled_at?: string | null; settled_method?: string | null }[];
   trxCounter: number;
 
@@ -72,6 +73,7 @@ interface POSState {
   setPaymentMethod: (m: string) => void;
   setCashReceived: (n: number) => void;
   setHutangCustomer: (c: { name: string; phone: string; paidNow: number } | null) => void;
+  setOrderCustomer: (c: { name: string; phone: string } | null) => void;
   addDemoHutang: (h: POSState["demoHutang"][number]) => void;
   setDemoHutang: (h: POSState["demoHutang"]) => void;
   addCash: (n: number) => void;
@@ -158,6 +160,7 @@ export const useStore = create<POSState>((set) => ({
   paymentMethod: 'tunai',
   cashReceived: 0,
   hutangCustomer: null,
+  orderCustomer: null,
   demoHutang: [],
   trxCounter: 42,
 
@@ -258,6 +261,7 @@ export const useStore = create<POSState>((set) => ({
   setPaymentMethod: (paymentMethod) => set({ paymentMethod }),
   setCashReceived: (cashReceived) => set({ cashReceived }),
   setHutangCustomer: (hutangCustomer) => set({ hutangCustomer }),
+  setOrderCustomer: (orderCustomer) => set({ orderCustomer }),
   addDemoHutang: (h) => set((s) => ({ demoHutang: [h, ...s.demoHutang] })),
   setDemoHutang: (demoHutang) => set({ demoHutang }),
   addCash: (n) => set(s => ({ cashReceived: s.cashReceived + n })),
@@ -268,6 +272,7 @@ export const useStore = create<POSState>((set) => ({
     pin: '',
     paymentMethod: 'tunai',
     cashReceived: 0,   // next sale starts empty; cashier enters the actual cash (guard enforces ≥ total)
+    orderCustomer: null,
     trxCounter: s.trxCounter + 1,
   })),
 
