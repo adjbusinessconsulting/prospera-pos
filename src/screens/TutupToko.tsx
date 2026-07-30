@@ -111,15 +111,6 @@ export default function TutupToko() {
     ? { label: "Lebih", color: "#A6843F", bg: "rgba(201,165,95,0.12)" }
     : { label: "Kurang", color: "#C25E3D", bg: "rgba(194,94,61,0.10)" };
 
-  const reconRow = (label: string, value: string, sign?: "+" | "-", strong?: boolean) => (
-    <div className="flex justify-between items-center py-[9px] border-b border-[#F2EDE3] last:border-0">
-      <span className={`text-[12.5px] ${strong ? "font-semibold text-navy" : "text-text-mute"}`}>{label}</span>
-      <span className={`${strong ? "num text-[15px] font-semibold text-navy" : "text-[13px] text-navy"}`} style={{ fontVariantNumeric: "tabular-nums" }}>
-        {sign === "-" ? "− " : sign === "+" ? "+ " : ""}{value}
-      </span>
-    </div>
-  );
-
   return (
     <div className="w-full h-full flex flex-col bg-cream-bg animate-screen-in overflow-hidden">
       {/* Top bar */}
@@ -180,6 +171,43 @@ export default function TutupToko() {
             )}
           </div>
 
+          {/* Kas / Laci — physical cash that should be in the drawer (all tiers) */}
+          <div className="bg-white border border-warm-border rounded-card px-6 py-5">
+            <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-2">KAS / LACI</p>
+            <div className="flex flex-col">
+              <div className="flex justify-between items-center py-[7px] border-b border-[#F2EDE3] text-[12.5px]">
+                <span className="text-navy">Modal awal</span>
+                <span className="num font-medium text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(modalAwal)}</span>
+              </div>
+              <div className="flex justify-between items-center py-[7px] border-b border-[#F2EDE3] text-[12.5px]">
+                <span className="text-navy">Tunai</span>
+                <span className="num font-medium text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>+ {formatRp(cash)}</span>
+              </div>
+              {hutangSettle > 0 && (
+                <div className="flex justify-between items-center py-[7px] border-b border-[#F2EDE3] text-[12.5px]">
+                  <span className="text-navy">Pelunasan hutang (tunai)</span>
+                  <span className="num font-medium text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>+ {formatRp(hutangSettle)}</span>
+                </div>
+              )}
+              {kasMasuk > 0 && (
+                <div className="flex justify-between items-center py-[7px] border-b border-[#F2EDE3] text-[12.5px]">
+                  <span className="text-navy">Kas masuk</span>
+                  <span className="num font-medium text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>+ {formatRp(kasMasuk)}</span>
+                </div>
+              )}
+              {kasKeluar > 0 && (
+                <div className="flex justify-between items-center py-[7px] border-b border-[#F2EDE3] text-[12.5px]">
+                  <span className="text-[#C25E3D]">Kas keluar</span>
+                  <span className="num font-medium text-[#C25E3D]" style={{ fontVariantNumeric: "tabular-nums" }}>− {formatRp(kasKeluar)}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center pt-3 mt-1 border-t border-dashed border-warm-dashed">
+                <span className="text-[13px] font-semibold text-navy">Total Cash Laci</span>
+                <span className="num text-[17px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(expected)}</span>
+              </div>
+            </div>
+          </div>
+
           {/* Reconciliation — Standard+ only, optional, owner-toggleable */}
           {recOn && (
             <div className="bg-white border border-warm-border rounded-card px-6 py-5">
@@ -196,15 +224,8 @@ export default function TutupToko() {
 
               {showRecon && (
                 <div className="mt-4">
-                  <div className="flex flex-col">
-                    {reconRow("Modal awal", formatRp(modalAwal))}
-                    {reconRow("Penjualan tunai", formatRp(cash), "+")}
-                    {hutangSettle > 0 && reconRow("Pelunasan hutang (tunai)", formatRp(hutangSettle), "+")}
-                    {kasMasuk > 0 && reconRow("Kas masuk", formatRp(kasMasuk), "+")}
-                    {kasKeluar > 0 && reconRow("Kas keluar", formatRp(kasKeluar), "-")}
-                    {reconRow("Kas seharusnya", formatRp(expected), undefined, true)}
-                  </div>
-                  <div className="mt-4">
+                  <p className="text-[11.5px] text-text-mute mb-3">Hitung uang fisik di laci, lalu bandingkan dengan <b className="text-navy">Total Cash Laci</b> ({formatRp(expected)}) di atas.</p>
+                  <div>
                     <label className="block mb-2"><span style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">KAS DIHITUNG (UANG DI LACI)</span></label>
                     <div className="flex items-center bg-cream-bg border rounded-button px-4 h-[50px] gap-2" style={{ borderColor: counted ? "#0D1117" : "#ECE7DD" }}>
                       <span className="num text-[16px] text-text-mute font-medium">Rp</span>
