@@ -5,6 +5,9 @@ import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
 import { withRetry } from "../lib/retry";
 import { readRiwayatCache, saveRiwayatCache } from "../lib/snapshot";
+import { logEvent } from "../lib/auditlog";
+import { ManagerApproval } from "../components/ManagerApproval";
+import { OwnerConfirm } from "../components/OwnerConfirm";
 import type { SaleRecord } from "../types";
 
 const FILTER_LABELS = [
@@ -75,10 +78,49 @@ function seedDemoSales(): SaleRecord[] {
 }
 
 export default function Riwayat() {
-  const { cashierInitials, selectedShiftName, storeId, storePhone, storeTier, isDemoMode, settings, setScreen, signOut } = useStore();
+  const { cashierInitials, selectedShiftName, storeId, storePhone, storeTier, isDemoMode, settings, inventoryEnabled, updateProduct, products, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
   const canExport = isAtLeast(effectiveTier, 'standard');
   const canExtendedHistory = isAtLeast(effectiveTier, 'standard');
+  const isPremium = isAtLeast(effectiveTier, 'premium');
+  const inventoryOn = isPremium && inventoryEnabled;
+
+  // ── Void (batalkan transaksi) — always needs the owner's password; on Premium the
+  // owner may also let a manager void (the "void" permission). Voided sales keep the
+  // record with a DIBATALKAN badge and drop out of every total. ──
+  const [voidSale, setVoidSale] = useState<SaleRecord | null>(null);
+  const [voidGate, setVoidGate] = useState<null | "owner" | "manager">(null);
+  const managerCanVoid = isPremium && !isDemoMode && !!(settings.managerPerms ?? {}).void;
+
+  function requestVoid(sale: SaleRecord) {
+    if (sale.voided) return;
+    setVoidSale(sale);
+    setVoidGate(managerCanVoid ? "manager" : "owner");
+  }
+
+  async function doVoid() {
+    const sale = voidSale;
+    setVoidGate(null); setVoidSale(null);
+    if (!sale || !storeId || isDemoMode) { if (isDemoMode && sale) setSales(prev => prev.map(s => s.id === sale.id ? { ...s, voided: true } : s)); return; }
+    try {
+      await supabase.from("sales").update({ voided: true, voided_at: new Date().toISOString() }).eq("id", sale.id);
+      // Return stock (best-effort) — the goods weren't sold after all.
+      if (inventoryOn) {
+        for (const it of sale.sale_items ?? []) {
+          const p = products.find(x => x.id === it.product_id);
+          if (p) updateProduct(it.product_id, { stock: (p.stock ?? 0) + it.qty, stockTerjual: Math.max(0, (p.stockTerjual ?? 0) - it.qty) });
+          const { data } = await supabase.from("products").select("stock, stock_terjual").eq("id", it.product_id).maybeSingle();
+          if (data) await supabase.from("products").update({ stock: ((data as { stock: number }).stock ?? 0) + it.qty, stock_terjual: Math.max(0, ((data as { stock_terjual: number }).stock_terjual ?? 0) - it.qty) }).eq("id", it.product_id);
+        }
+      }
+      void logEvent("sale.void", `Batalkan ${sale.trx_id} — ${formatRp(sale.total)}`);
+    } catch { /* still reflect locally */ }
+    setSales(prev => {
+      const next = prev.map(s => s.id === sale.id ? { ...s, voided: true } : s);
+      saveRiwayatCache(storeId, next);
+      return next;
+    });
+  }
   const [sales, setSales]           = useState<SaleRecord[]>([]);
   const [hutangByTrx, setHutangByTrx] = useState<Record<string, { status: string; settled_method: string | null }>>({});
   const [loadingData, setLoadingData] = useState(true);
@@ -173,15 +215,17 @@ export default function Riwayat() {
     return matchMethod && matchShift && matchKasir;
   });
 
+  // Voided sales stay visible (with a badge) but never count toward money.
+  const settled = filtered.filter(t => !t.voided);
   // Omzet = money actually received (cash-basis). Credit sales count only once lunas.
-  const total = filtered.reduce((s, t) => s + receivedTotal(t), 0);
-  const paidCount = filtered.filter(t => receivedTotal(t) > 0).length;
+  const total = settled.reduce((s, t) => s + receivedTotal(t), 0);
+  const paidCount = settled.filter(t => receivedTotal(t) > 0).length;
   const avg = paidCount > 0 ? Math.round(total / paidCount) : 0;
   // Outstanding credit in this period (piutang) — shown separately, not in omzet.
-  const piutang = filtered.reduce((s, t) => { const h = hutangStatusOf(t); return s + (h && !h.paid ? t.total : 0); }, 0);
+  const piutang = settled.reduce((s, t) => { const h = hutangStatusOf(t); return s + (h && !h.paid ? t.total : 0); }, 0);
 
   // Per-method received money: non-credit by method; settled credit by settle method.
-  const methodTotals = filtered.reduce<Record<string, number>>((acc, t) => {
+  const methodTotals = settled.reduce<Record<string, number>>((acc, t) => {
     const h = hutangStatusOf(t);
     if (!h) { const m = t.payment_method.toLowerCase(); acc[m] = (acc[m] ?? 0) + t.total; }
     else if (h.paid) { const m = (h.method ?? "tunai").toLowerCase(); acc[m] = (acc[m] ?? 0) + t.total; }
@@ -499,6 +543,7 @@ export default function Riwayat() {
                     <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Item</th>
                     <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Metode</th>
                     <th className="text-right px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Total</th>
+                    <th className="text-right px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-mute">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -506,7 +551,7 @@ export default function Riwayat() {
                     const m = methodLabel(t.payment_method);
                     const initials = (t.cashier_name || "?").split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
                     return (
-                      <tr key={t.id} className={`border-b border-[#F2EDE3] hover:bg-cream-bg transition-colors cursor-pointer ${i === 0 ? "bg-gold-soft" : ""}`}>
+                      <tr key={t.id} className={`border-b border-[#F2EDE3] hover:bg-cream-bg transition-colors ${i === 0 && !t.voided ? "bg-gold-soft" : ""} ${t.voided ? "opacity-55" : ""}`}>
                         <td className="px-5 py-3.5">
                           <span className="font-sans text-[12.5px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{t.trx_id}</span>
                         </td>
@@ -531,8 +576,13 @@ export default function Riwayat() {
                         </td>
                         <td className="px-5 py-3.5 text-right">
                           {(() => { const h = hutangStatusOf(t); return (
-                            <span className="num text-[14px] font-semibold" style={{ color: h && !h.paid ? "#C25E3D" : "#0D1117", fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</span>
+                            <span className="num text-[14px] font-semibold" style={{ color: h && !h.paid ? "#C25E3D" : "#0D1117", fontVariantNumeric: "tabular-nums", textDecoration: t.voided ? "line-through" : "none" }}>{formatRp(t.total)}</span>
                           ); })()}
+                        </td>
+                        <td className="px-4 py-3.5 text-right">
+                          {t.voided
+                            ? <span className="text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: "rgba(194,94,61,0.10)", color: "#C25E3D" }}>Dibatalkan</span>
+                            : <button onClick={() => requestVoid(t)} className="text-[11.5px] font-semibold text-[#C25E3D] hover:underline">Batalkan</button>}
                         </td>
                       </tr>
                     );
@@ -549,7 +599,7 @@ export default function Riwayat() {
                 const m = methodLabel(t.payment_method);
                 const h = hutangStatusOf(t);
                 return (
-                  <div key={t.id} className="bg-white border rounded-card px-4 py-3.5" style={{ borderColor: h && !h.paid ? "rgba(194,94,61,0.30)" : "#ECE7DD" }}>
+                  <div key={t.id} className={`bg-white border rounded-card px-4 py-3.5 ${t.voided ? "opacity-55" : ""}`} style={{ borderColor: h && !h.paid ? "rgba(194,94,61,0.30)" : "#ECE7DD" }}>
                     <div className="flex justify-between items-start">
                       <div>
                         <span className="font-sans text-[13px] font-semibold text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{t.trx_id}</span>
@@ -558,12 +608,17 @@ export default function Riwayat() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="num text-[16px] font-semibold" style={{ color: h && !h.paid ? "#C25E3D" : "#0D1117", fontVariantNumeric: "tabular-nums" }}>{formatRp(t.total)}</p>
+                        <p className="num text-[16px] font-semibold" style={{ color: h && !h.paid ? "#C25E3D" : "#0D1117", fontVariantNumeric: "tabular-nums", textDecoration: t.voided ? "line-through" : "none" }}>{formatRp(t.total)}</p>
                         <div className="flex items-center gap-1 justify-end mt-0.5">
                           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: `${METHOD_COLOR[m] || "#7A776F"}14`, color: METHOD_COLOR[m] || "#7A776F" }}>{m}</span>
                           {h && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: h.paid ? "rgba(61,122,94,0.10)" : "rgba(194,94,61,0.10)", color: h.paid ? "#3D7A5E" : "#C25E3D" }}>{h.paid ? "Lunas" : "Belum"}</span>}
                         </div>
                       </div>
+                    </div>
+                    <div className="flex justify-end mt-2 pt-2 border-t border-[#F2EDE3]">
+                      {t.voided
+                        ? <span className="text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: "rgba(194,94,61,0.10)", color: "#C25E3D" }}>Dibatalkan</span>
+                        : <button onClick={() => requestVoid(t)} className="text-[11.5px] font-semibold text-[#C25E3D]">Batalkan transaksi</button>}
                     </div>
                   </div>
                 );
@@ -572,6 +627,21 @@ export default function Riwayat() {
           )}
         </div>
       </div>
+
+      {/* Void approval — owner password (all tiers) or manager (Premium, if allowed) */}
+      <OwnerConfirm
+        open={voidGate === "owner"}
+        title="Batalkan transaksi"
+        message={voidSale ? `Masukkan kata sandi pemilik untuk membatalkan ${voidSale.trx_id} (${formatRp(voidSale.total)}).` : undefined}
+        onClose={() => { setVoidGate(null); setVoidSale(null); }}
+        onConfirmed={() => void doVoid()}
+      />
+      <ManagerApproval
+        open={voidGate === "manager"}
+        action="void"
+        onClose={() => { setVoidGate(null); setVoidSale(null); }}
+        onApproved={() => void doVoid()}
+      />
     </div>
   );
 }

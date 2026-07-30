@@ -19,11 +19,11 @@ export interface ClosingSnapshot {
 // Compute a day's closing figures from server data for [dayStartISO, dayEndISO).
 export async function computeClosing(storeId: string, dayStartISO: string, dayEndISO: string): Promise<ClosingSnapshot> {
   const [{ data: sales }, { data: kas }, { data: hut }] = await Promise.all([
-    supabase.from("sales").select("total,payment_method,shift,cashier_name,created_at").eq("store_id", storeId).gte("created_at", dayStartISO).lt("created_at", dayEndISO),
+    supabase.from("sales").select("total,payment_method,shift,cashier_name,created_at,voided").eq("store_id", storeId).gte("created_at", dayStartISO).lt("created_at", dayEndISO),
     supabase.from("kas_entries").select("type,amount").eq("store_id", storeId).gte("created_at", dayStartISO).lt("created_at", dayEndISO),
     supabase.from("hutang").select("amount,status,settled_method,created_at").eq("store_id", storeId).gte("created_at", dayStartISO).lt("created_at", dayEndISO),
   ]);
-  const S = (sales ?? []) as { total: number; payment_method: string; shift: number; cashier_name?: string }[];
+  const S = ((sales ?? []) as { total: number; payment_method: string; shift: number; cashier_name?: string; voided?: boolean }[]).filter(s => !s.voided);
   const H = (hut ?? []) as { amount: number; status: string; settled_method?: string | null }[];
   const K = (kas ?? []) as { type: string; amount: number }[];
   const bd: Record<string, number> = {};

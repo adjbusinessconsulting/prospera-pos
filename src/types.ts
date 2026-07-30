@@ -73,5 +73,7 @@ export interface SaleRecord {
   cash_received: number;
   change_amount: number;
   created_at: string;
+  voided?: boolean;
+  voided_at?: string | null;
   sale_items: SaleItem[];
 }

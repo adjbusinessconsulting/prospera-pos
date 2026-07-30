@@ -61,7 +61,7 @@ export default function Kas() {
       const start = new Date(); start.setHours(0, 0, 0, 0);
       const startISO = start.toISOString();
       const { data: salesRows } = await supabase.from("sales")
-        .select("total, payment_method, created_at").eq("store_id", storeId).gte("created_at", startISO);
+        .select("total, payment_method, created_at, voided").eq("store_id", storeId).gte("created_at", startISO);
       const { data: kasRows } = await supabase.from("kas_entries")
         .select("*").eq("store_id", storeId).gte("created_at", startISO)
         .order("created_at", { ascending: false });
@@ -70,7 +70,7 @@ export default function Kas() {
       const openedAt = openedAtToday(storeId);
       setBukaTime(openedAt ? new Date(openedAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "");
       setAutoTunai((salesRows ?? [])
-        .filter(s => (s as { payment_method: string }).payment_method === "tunai")
+        .filter(s => (s as { payment_method: string; voided?: boolean }).payment_method === "tunai" && !(s as { voided?: boolean }).voided)
         .reduce((a, s) => a + ((s as { total: number }).total ?? 0), 0));
       setManual((kasRows ?? []).map(k => {
         const kk = k as { type: KasIcon; amount: number; label: string; cashier_name?: string; photo_url?: string; created_at: string };

@@ -97,7 +97,7 @@ export default function Laporan() {
     (async () => {
       const from = new Date(RTODAY); from.setDate(from.getDate() - cap);
       const { data: sales } = await supabase.from("sales")
-        .select("created_at,total,payment_method,sale_items(product_name,qty,subtotal)")
+        .select("created_at,total,payment_method,voided,sale_items(product_name,qty,subtotal)")
         .eq("store_id", storeId).gte("created_at", from.toISOString());
       const { data: hut } = await supabase.from("hutang")
         .select("amount,status,settled_method,created_at").eq("store_id", storeId).gte("created_at", from.toISOString());
@@ -107,7 +107,8 @@ export default function Laporan() {
       const todayTs = RTODAY.getTime();
       let todayCash = 0;  // drawer = physical cash (tunai only); transfer/QRIS/e-wallet excluded
       (sales ?? []).forEach(row => {
-        const s = row as { created_at: string; total: number; payment_method?: string; sale_items?: { product_name: string; qty: number; subtotal: number }[] };
+        const s = row as { created_at: string; total: number; payment_method?: string; voided?: boolean; sale_items?: { product_name: string; qty: number; subtotal: number }[] };
+        if (s.voided) return;   // cancelled sales don't count toward omzet / cash / items
         const d = new Date(s.created_at); d.setHours(0, 0, 0, 0); const ts = d.getTime();
         const cur = byDay.get(ts) ?? { d, rev: 0, trx: 0, items: 0 };
         const m = s.payment_method ?? "";

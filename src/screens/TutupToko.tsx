@@ -41,11 +41,11 @@ export default function TutupToko() {
     let cancelled = false;
     (async () => {
       const start = new Date(); start.setHours(0, 0, 0, 0); const startISO = start.toISOString();
-      const { data: sales } = await supabase.from("sales").select("total,payment_method,shift,created_at").eq("store_id", storeId).gte("created_at", startISO);
+      const { data: sales } = await supabase.from("sales").select("total,payment_method,shift,created_at,voided").eq("store_id", storeId).gte("created_at", startISO);
       const { data: kas } = await supabase.from("kas_entries").select("type,amount,created_at").eq("store_id", storeId).gte("created_at", startISO);
       const { data: hut } = await supabase.from("hutang").select("amount,status,settled_method,created_at").eq("store_id", storeId).gte("created_at", startISO);
       if (cancelled) return;
-      const S = (sales ?? []) as { total: number; payment_method: string; shift: number }[];
+      const S = ((sales ?? []) as { total: number; payment_method: string; shift: number; voided?: boolean }[]).filter(s => !s.voided);
       const H = (hut ?? []) as { amount: number; status: string; settled_method?: string | null }[];
       // OMZET (income, cash-basis): non-credit sales today by method…
       const bd: Record<string, number> = {};
