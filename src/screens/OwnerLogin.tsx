@@ -120,7 +120,7 @@ export default function OwnerLogin() {
     setLoading(true); setError(""); setSuccess("");
     try {
       // Issue a fresh POS setup link (resets the POS password specifically).
-      await fetch("https://masteroffice.sterith.com/api/app-auth/forgot", {
+      await fetch(`${AUTH_BASE}/api/app-auth/forgot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, app: "pos" }),

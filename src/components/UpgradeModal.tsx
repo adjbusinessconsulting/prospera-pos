@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useStore, tierLevel } from "../store";
 import { supabase } from "../lib/supabase";
+import { AUTH_BASE } from "../lib/appAuth";
 
 interface Props { open: boolean; onClose: () => void; }
 
@@ -24,7 +25,7 @@ const ADDONS: { key: string; name: string; price: number; desc: string }[] = [
 
 const rp = (n: number) => n === 0 ? "Gratis" : "Rp " + n.toLocaleString("id-ID");
 
-const REGISTER_URL = "https://masteroffice.sterith.com/api/clients/register";
+const REGISTER_URL = `${AUTH_BASE}/api/clients/register`;
 
 export default function UpgradeModal({ open, onClose }: Props) {
   const storeTier = useStore(s => s.storeId ? s.storeTier : "free");
