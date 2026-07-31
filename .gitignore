@@ -1,5 +1,6 @@
-.env
-.env.local
+# env files — NEVER commit secrets (covers .env.dev, .env.production, …)
+.env*
+!.env.example
 
 # Logs
 logs
