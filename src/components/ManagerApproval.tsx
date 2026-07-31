@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../store";
+import { supabase } from "../lib/supabase";
+import { appAuthVerify } from "../lib/appAuth";
 import { verifyApproval, PERM_LABELS } from "../lib/managerAuth";
 
 interface Props {
@@ -24,11 +26,18 @@ export function ManagerApproval({ open, action, onClose, onApproved }: Props) {
   useEffect(() => { if (open) { setCred(""); setError(""); } }, [open]);
   if (!open) return null;
 
-  function confirm() {
+  async function confirm() {
     if (!cred.trim()) return;
     if (isDemoMode) { onApproved(); return; }   // demo: any input approves (show the flow)
-    if (verifyApproval(action, cred, method, dbCashiers, managerPerms)) onApproved();
-    else setError(method === "password" ? "Kata sandi tidak berwenang." : "PIN tidak berwenang untuk tindakan ini.");
+    if (verifyApproval(action, cred, method, dbCashiers, managerPerms)) { onApproved(); return; }
+    // Owner fallback (password method): the owner can always approve with their
+    // account login password — no separate "approval password" to set up.
+    if (method === "password") {
+      const { data } = await supabase.auth.getUser();
+      const email = data.user?.email;
+      if (email && await appAuthVerify(email, cred, "pos")) { onApproved(); return; }
+    }
+    setError(method === "password" ? "Kata sandi tidak berwenang." : "PIN tidak berwenang untuk tindakan ini.");
   }
 
   const label = PERM_LABELS[action] ?? "tindakan ini";

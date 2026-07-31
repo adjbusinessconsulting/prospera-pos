@@ -287,7 +287,7 @@ export default function ManageStaff({ onClose }: { onClose: () => void }) {
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
                         <select value={kRole} onChange={(e) => setKRole(e.target.value)} style={{ ...input, flex: 1, appearance: "none", cursor: "pointer" }}>
-                          <option>Kasir</option><option>Supervisor</option><option>Pemilik</option>
+                          <option>Kasir</option><option>Manajer</option>
                         </select>
                         <input type="password" value={kPin} onChange={(e) => setKPin(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="PIN 6 digit" inputMode="numeric" autoComplete="new-password" style={{ ...input, width: 140, letterSpacing: "0.3em" }} />
                       </div>
