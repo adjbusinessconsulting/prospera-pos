@@ -52,7 +52,18 @@ export default function App() {
   const storeId = useStore(s => s.storeId);
   const signOut = useStore(s => s.signOut);
   const [isMobile, setIsMobile] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
+  // Splash timing: no fixed delay. It stays up while the app is still restoring
+  // the session, so a warm start flashes it briefly and a cold start keeps it
+  // until there's real content. MIN avoids a jarring flicker; CAP guarantees the
+  // user is never stuck behind it if boot stalls.
+  const bootDone = useStore(s => s.bootDone);
+  const [minElapsed, setMinElapsed] = useState(false);
+  const [capReached, setCapReached] = useState(false);
+  useEffect(() => {
+    const min = setTimeout(() => setMinElapsed(true), 300);
+    const cap = setTimeout(() => setCapReached(true), 4000);
+    return () => { clearTimeout(min); clearTimeout(cap); };
+  }, []);
 
   useEffect(() => {
     const calc = () => setIsMobile(window.innerWidth < 768);
@@ -126,7 +137,10 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (showSplash) return <SplashScreen onDone={() => setShowSplash(false)} />;
+  // The reset-password flow renders immediately — it has its own boot path and
+  // never sets bootDone, so it must not sit behind the splash.
+  const ready = bootDone || screen === "reset-password";
+  if (!capReached && (!ready || !minElapsed)) return <SplashScreen />;
   if (screen === "reset-password") return <ResetPassword />;
   if (screen === "owner-login") return <><OwnerLogin /><UpdateBanner /></>;
   if (screen === "checkin")     return <CheckIn />;

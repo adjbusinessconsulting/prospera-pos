@@ -1,23 +1,15 @@
-import { useEffect, useState } from "react";
-
-export default function SplashScreen({ onDone }: { onDone: () => void }) {
-  const [fading, setFading] = useState(false);
-
-  useEffect(() => {
-    const fadeTimer = setTimeout(() => setFading(true), 1500);
-    const doneTimer = setTimeout(() => onDone(), 2000);
-    return () => { clearTimeout(fadeTimer); clearTimeout(doneTimer); };
-  }, [onDone]);
-
+// Branded launch screen. It is NOT on a timer — App.tsx keeps it up only while
+// the app is genuinely still booting (restoring the session), so a fast open
+// shows it for a moment and a slow one keeps it until there's something to see.
+export default function SplashScreen() {
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 99999,
       background: "#0D1117",
       display: "flex", alignItems: "center", justifyContent: "center",
-      opacity: fading ? 0 : 1,
-      transition: "opacity 0.5s ease",
-      pointerEvents: fading ? "none" : "all",
+      animation: "splashIn 0.25s ease",
     }}>
+      <style>{`@keyframes splashIn { from { opacity: 0 } to { opacity: 1 } }`}</style>
       <img
         src="/splash-logo.png"
         alt="Sterith POS"
