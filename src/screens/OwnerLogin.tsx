@@ -579,7 +579,9 @@ export default function OwnerLogin() {
             );
           })()}
 
-          <button onClick={() => { setStoreChoices([]); setShowCreate(false); setError(""); supabase.auth.signOut(); }}
+          {/* Clear ownerId too: leaving it set with an empty store list falls through
+              to the "create your store" screen instead of logging out. */}
+          <button onClick={() => { setStoreChoices([]); setOwnerId(""); setShowCreate(false); setError(""); void supabase.auth.signOut(); }}
             style={{ display: "block", margin: "20px auto 0", background: "none", border: "none", fontSize: 12.5, color: "#7A776F", cursor: "pointer", textDecoration: "underline" }}>
             ← Keluar
           </button>
