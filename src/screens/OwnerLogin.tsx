@@ -103,14 +103,14 @@ export default function OwnerLogin() {
   useEffect(() => {
     let cancel = false;
     (async () => {
-      if (useStore.getState().isDemoMode) { setResuming(false); useStore.getState().setBootDone(); return; }
+      if (useStore.getState().isDemoMode) { setResuming(false); return; }
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (cancel) return;
         if (session) await enterFromSession();
       } catch { /* no/invalid session — fall through to the login form */ }
       if (!cancel) setResuming(false);
-      useStore.getState().setBootDone();   // splash can drop now — boot is decided
+        // splash can drop now — boot is decided
     })();
     return () => { cancel = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps

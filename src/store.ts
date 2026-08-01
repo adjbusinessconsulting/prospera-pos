@@ -19,7 +19,6 @@ interface POSState {
   cashReceived: number;
   hutangCustomer: { name: string; phone: string; paidNow: number } | null;
   orderCustomer: { name: string; phone: string } | null;   // name tagged to the current order (any payment method)
-  bootDone: boolean;   // initial session restore finished — the splash waits on this, not a timer
   demoHutang: { id: string; customer_name: string; phone: string | null; amount: number; paid_amount: number; status: "open" | "partial" | "lunas"; cashier_name: string; created_at: string; trx_id?: string; settled_at?: string | null; settled_method?: string | null }[];
   trxCounter: number;
 
@@ -75,7 +74,6 @@ interface POSState {
   setCashReceived: (n: number) => void;
   setHutangCustomer: (c: { name: string; phone: string; paidNow: number } | null) => void;
   setOrderCustomer: (c: { name: string; phone: string } | null) => void;
-  setBootDone: () => void;
   addDemoHutang: (h: POSState["demoHutang"][number]) => void;
   setDemoHutang: (h: POSState["demoHutang"]) => void;
   addCash: (n: number) => void;
@@ -163,7 +161,6 @@ export const useStore = create<POSState>((set) => ({
   cashReceived: 0,
   hutangCustomer: null,
   orderCustomer: null,
-  bootDone: false,
   demoHutang: [],
   trxCounter: 42,
 
@@ -265,7 +262,6 @@ export const useStore = create<POSState>((set) => ({
   setCashReceived: (cashReceived) => set({ cashReceived }),
   setHutangCustomer: (hutangCustomer) => set({ hutangCustomer }),
   setOrderCustomer: (orderCustomer) => set({ orderCustomer }),
-  setBootDone: () => set({ bootDone: true }),
   addDemoHutang: (h) => set((s) => ({ demoHutang: [h, ...s.demoHutang] })),
   setDemoHutang: (demoHutang) => set({ demoHutang }),
   addCash: (n) => set(s => ({ cashReceived: s.cashReceived + n })),
