@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useStore, isAtLeast } from "../store";
+import { useStore, isAtLeast, localDateISO } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
@@ -42,6 +42,14 @@ function methodLabel(m: string) {
 }
 
 // Demo-only seeded transaction history (real stores load from Supabase).
+
+// Device-local YYYY-MM-DD for a stored timestamp — same basis as localDateISO(),
+// so "is this sale from today?" compares like with like.
+function dateKey(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function seedDemoSales(): SaleRecord[] {
   const cashiers = ["Aerith", "Stevany"];
   const methods = ["tunai", "tunai", "tunai", "qris", "qris", "transfer", "debit", "hutang"];
@@ -92,8 +100,34 @@ export default function Riwayat() {
   const [voidGate, setVoidGate] = useState<null | "owner" | "manager">(null);
   const managerCanVoid = isPremium && !isDemoMode && !!(settings.managerPerms ?? {}).void;
 
+  // A closed shift has been counted and reconciled, and a past day has already
+  // been reported. Voiding into either would silently rewrite figures the owner
+  // has signed off on, so a sale can only be cancelled on the day it was rung
+  // up and before that day is closed. Fix it with kas/retur after that.
+  const [dayClosed, setDayClosed] = useState(false);
+  useEffect(() => {
+    if (!storeId || isDemoMode) { setDayClosed(false); return; }
+    let cancel = false;
+    (async () => {
+      const { data } = await supabase.from("shift_closings")
+        .select("id").eq("store_id", storeId).eq("business_date", localDateISO()).limit(1);
+      if (!cancel) setDayClosed(!!data?.length);
+    })();
+    return () => { cancel = true; };
+  }, [storeId, isDemoMode]);
+
+  function voidBlockReason(sale: SaleRecord): string | null {
+    if (sale.voided) return null;                                   // already cancelled
+    if (dateKey(sale.created_at) !== localDateISO()) return "Transaksi hari sebelumnya tidak bisa dibatalkan.";
+    if (dayClosed) return "Shift sudah ditutup — transaksi tidak bisa dibatalkan lagi.";
+    return null;
+  }
+  const canVoid = (sale: SaleRecord) => !sale.voided && !voidBlockReason(sale);
+
   function requestVoid(sale: SaleRecord) {
     if (sale.voided) return;
+    const blocked = voidBlockReason(sale);
+    if (blocked) { alert(blocked); return; }
     setVoidSale(sale);
     setVoidGate(managerCanVoid ? "manager" : "owner");
   }
@@ -597,7 +631,8 @@ export default function Riwayat() {
                         <td className="px-4 py-3.5 text-right">
                           {t.voided
                             ? <span className="text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: "rgba(194,94,61,0.10)", color: "#C25E3D" }}>Dibatalkan</span>
-                            : <button onClick={() => requestVoid(t)} className="text-[11.5px] font-semibold text-[#C25E3D] hover:underline">Batalkan</button>}
+                            : <button onClick={() => requestVoid(t)} title={voidBlockReason(t) ?? "Batalkan transaksi ini"}
+                                className={canVoid(t) ? "text-[11.5px] font-semibold text-[#C25E3D] hover:underline" : "text-[11.5px] font-semibold text-[#B3ADA0] cursor-default"}>Batalkan</button>}
                         </td>
                       </tr>
                     );
@@ -634,7 +669,8 @@ export default function Riwayat() {
                     <div className="flex justify-end mt-2 pt-2 border-t border-[#F2EDE3]">
                       {t.voided
                         ? <span className="text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: "rgba(194,94,61,0.10)", color: "#C25E3D" }}>Dibatalkan</span>
-                        : <button onClick={() => requestVoid(t)} className="text-[11.5px] font-semibold text-[#C25E3D]">Batalkan transaksi</button>}
+                        : <button onClick={() => requestVoid(t)} title={voidBlockReason(t) ?? "Batalkan transaksi ini"}
+                            className={canVoid(t) ? "text-[11.5px] font-semibold text-[#C25E3D]" : "text-[11.5px] font-semibold text-[#B3ADA0]"}>Batalkan transaksi</button>}
                     </div>
                   </div>
                 );
