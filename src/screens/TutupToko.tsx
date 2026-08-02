@@ -192,7 +192,10 @@ export default function TutupToko() {
                 <span className="num font-medium text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(modalAwal)}</span>
               </div>
               <div className="flex justify-between items-center py-[7px] border-b border-[#F2EDE3] text-[12.5px]">
-                <span className="text-navy">Tunai</span>
+                {/* NOT "Tunai": the breakdown above already has a Tunai line, and it
+                    also contains any bon settled in cash today. Two different figures
+                    under one word made the nota look wrong when it wasn't. */}
+                <span className="text-navy">Penjualan tunai</span>
                 <span className="num font-medium text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>+ {formatRp(cash)}</span>
               </div>
               {hutangSettle > 0 && (

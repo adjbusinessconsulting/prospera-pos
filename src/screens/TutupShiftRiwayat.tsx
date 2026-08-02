@@ -149,7 +149,9 @@ export default function TutupShiftRiwayat() {
                     which also handles notas closed before these columns existed: the
                     migration backfilled them to 0, so a null check would have printed
                     "Tunai + Rp 0" against a real drawer total on every old day. */}
-                {(row.cash ?? 0) > 0 && line("Tunai", `+ ${formatRp(row.cash ?? 0)}`)}
+                {/* "Penjualan tunai", not "Tunai" — the per-metode block above has its
+                    own Tunai line which also includes bons settled in cash today. */}
+                {(row.cash ?? 0) > 0 && line("Penjualan tunai", `+ ${formatRp(row.cash ?? 0)}`)}
                 {(row.hutang_settle ?? 0) > 0 && line("Pelunasan hutang (tunai)", `+ ${formatRp(row.hutang_settle ?? 0)}`)}
                 {(row.kas_masuk ?? 0) > 0 && line("Kas masuk", `+ ${formatRp(row.kas_masuk ?? 0)}`)}
                 {(row.kas_keluar ?? 0) > 0 && line("Kas keluar", `− ${formatRp(row.kas_keluar ?? 0)}`, { color: "#C25E3D" })}
