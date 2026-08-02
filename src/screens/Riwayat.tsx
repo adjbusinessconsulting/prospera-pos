@@ -287,11 +287,11 @@ export default function Riwayat() {
     const h = s.trx_id ? hutangByTrx[s.trx_id] : undefined;
     return { paid: h?.status === "lunas", method: h?.settled_method ?? null };
   }, [hutangByTrx, isDemoMode]);
-  const receivedTotal = (s: SaleRecord) => {
-    const h = hutangStatusOf(s);
-    if (!h) return s.total;         // non-credit sale
-    return h.paid ? s.total : 0;    // credit: only if settled
-  };
+  // Accrual, matching Tutup Shift and Laporan: a sale counts in full on the day it
+  // was rung up, bon included. This used to return 0 for an unsettled bon, which
+  // left Riwayat reporting a smaller omzet than the other two screens for the very
+  // same day. What is still owed is shown separately as `piutang` below.
+  const receivedTotal = (s: SaleRecord) => s.total;
 
   function filterByDays(list: SaleRecord[], days: number) {
     if (days === 0) {
@@ -321,22 +321,22 @@ export default function Riwayat() {
   const settled = filtered.filter(t => !t.voided);
   const voidedRows = filtered.filter(t => t.voided);
   const voidedTotal = voidedRows.reduce((s, t) => s + t.total, 0);
-  // Omzet = money actually received (cash-basis). Credit sales count only once lunas.
+  // Omzet = every sale made in the period, however it was paid.
   const total = settled.reduce((s, t) => s + receivedTotal(t), 0);
-  const paidCount = settled.filter(t => receivedTotal(t) > 0).length;
-  const avg = paidCount > 0 ? Math.round(total / paidCount) : 0;
-  // Outstanding credit in this period (piutang) — shown separately, not in omzet.
+  const avg = settled.length > 0 ? Math.round(total / settled.length) : 0;
+  // Outstanding credit in this period (piutang) — inside omzet, shown separately so
+  // you can see how much of it has yet to arrive.
   const piutang = settled.reduce((s, t) => { const h = hutangStatusOf(t); return s + (h && !h.paid ? t.total : 0); }, 0);
 
-  // Per-method received money: non-credit by method; settled credit by settle method.
+  // Per-method, by how the sale was rung up. A bon stays under "hutang" whether or
+  // not it has been collected — settling it moves cash, not revenue.
   const methodTotals = settled.reduce<Record<string, number>>((acc, t) => {
-    const h = hutangStatusOf(t);
-    if (!h) { const m = t.payment_method.toLowerCase(); acc[m] = (acc[m] ?? 0) + t.total; }
-    else if (h.paid) { const m = (h.method ?? "tunai").toLowerCase(); acc[m] = (acc[m] ?? 0) + t.total; }
+    const m = t.payment_method.toLowerCase();
+    acc[m] = (acc[m] ?? 0) + t.total;
     return acc;
   }, {});
-  const BREAKDOWN_ORDER = ["tunai", "qris", "transfer", "debit"];
-  const BREAKDOWN_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit" };
+  const BREAKDOWN_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet", "hutang"];
+  const BREAKDOWN_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet", hutang: "Hutang / Bon" };
 
   const uniqueCashiers = [...new Set(sales.map(s => s.cashier_name).filter(Boolean))];
 
