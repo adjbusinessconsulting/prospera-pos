@@ -172,7 +172,7 @@ export default function Payment() {
   // Demo mode shows all features (no storeId = demo)
   const effectiveTier = storeId ? storeTier : 'free';
 
-  function methodLock(id: string): { locked: boolean; badge?: string; tierLabel?: string } {
+  function methodLock(id: string): { locked: boolean; badge?: string; tierLabel?: string; note?: string } {
     if (id === 'debit' || id === 'ewallet') {
       return isAtLeast(effectiveTier, 'premium')
         ? { locked: false }
@@ -182,6 +182,13 @@ export default function Payment() {
       return isAtLeast(effectiveTier, 'standard')
         ? { locked: false }
         : { locked: true, badge: 'STD', tierLabel: 'Standard' };
+    }
+    // QRIS with nothing behind it. It used to look identical to Tunai right up to
+    // the point the cashier had built the cart and picked it, then dead-ended on
+    // "belum dikonfigurasi" — the sale was lost or rung up as cash. Say so upfront,
+    // the same way Debit and E-Wallet declare they are out of reach.
+    if (id === 'qris' && !isDemoMode && !hasMidtrans && !hasStatic) {
+      return { locked: true, note: 'Belum diatur di Pengaturan' };
     }
     return { locked: false };
   }
@@ -405,7 +412,7 @@ export default function Payment() {
           <p style={{ fontSize: 10, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-3">METODE PEMBAYARAN</p>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {visibleMethods.map(m => {
-              const { locked, badge, tierLabel } = methodLock(m.id);
+              const { locked, badge, tierLabel, note } = methodLock(m.id);
               const active = !locked && paymentMethod === m.id;
               return (
                 <div key={m.id}
@@ -425,7 +432,7 @@ export default function Payment() {
                     </div>
                   </div>
                   <div className="text-[13.5px] font-semibold text-navy mb-0.5">{m.label}</div>
-                  <div className="text-[11px] text-text-mute">{locked && tierLabel ? `Upgrade ke ${tierLabel}` : m.sub}</div>
+                  <div className="text-[11px] text-text-mute">{locked ? (note ?? (tierLabel ? `Upgrade ke ${tierLabel}` : m.sub)) : m.sub}</div>
                 </div>
               );
             })}
