@@ -8,7 +8,12 @@ import type { Screen } from "../types";
 const TYPE_LABEL: Record<string, string> = {
   "login": "Masuk shift",
   "sale": "Penjualan",
+  // "void" is the old key, kept so entries written before the rename still read
+  // properly; the app emits "sale.void", which had no label and was showing the
+  // raw key in the log.
   "void": "Void / batal",
+  "sale.void": "Batalkan transaksi",
+  "sale.method": "Ubah metode bayar",
   "shift.open": "Buka toko",
   "shift.pindah": "Pindah shift",
   "shift.close": "Tutup shift",

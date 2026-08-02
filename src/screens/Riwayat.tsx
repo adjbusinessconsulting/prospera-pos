@@ -100,6 +100,12 @@ export default function Riwayat() {
   const [voidGate, setVoidGate] = useState<null | "owner" | "manager">(null);
   const managerCanVoid = isPremium && !isDemoMode && !!(settings.managerPerms ?? {}).void;
 
+  // Correcting a mis-keyed payment method. Owner password only — this moves money
+  // between the omzet breakdown and the drawer, so it is never delegated.
+  const [methodSale, setMethodSale] = useState<SaleRecord | null>(null);
+  const [pickedMethod, setPickedMethod] = useState("");
+  const [methodGate, setMethodGate] = useState(false);
+
   // A closed shift has been counted and reconciled, and a past day has already
   // been reported. Voiding into either would silently rewrite figures the owner
   // has signed off on, so a sale can only be cancelled on the day it was rung
@@ -116,13 +122,30 @@ export default function Riwayat() {
     return () => { cancel = true; };
   }, [storeId, isDemoMode]);
 
-  function voidBlockReason(sale: SaleRecord): string | null {
-    if (sale.voided) return null;                                   // already cancelled
-    if (dateKey(sale.created_at) !== localDateISO()) return "Transaksi hari sebelumnya tidak bisa dibatalkan.";
-    if (dayClosed) return "Shift sudah ditutup — transaksi tidak bisa dibatalkan lagi.";
+  // One window for every correction, so cancelling and re-labelling can never drift
+  // apart: today only, and only until the day is closed.
+  function editWindowReason(sale: SaleRecord, verb: string): string | null {
+    if (dateKey(sale.created_at) !== localDateISO()) return `Transaksi hari sebelumnya tidak bisa ${verb}.`;
+    if (dayClosed) return `Shift sudah ditutup — transaksi tidak bisa ${verb} lagi.`;
     return null;
   }
+
+  function voidBlockReason(sale: SaleRecord): string | null {
+    if (sale.voided) return null;                                   // already cancelled
+    return editWindowReason(sale, "dibatalkan");
+  }
   const canVoid = (sale: SaleRecord) => !sale.voided && !voidBlockReason(sale);
+
+  function methodBlockReason(sale: SaleRecord): string | null {
+    if (sale.voided) return "Transaksi sudah dibatalkan.";
+    // A settled bon has already written a kas entry and counted toward the laci.
+    // Re-labelling it would leave that entry describing a payment that no longer
+    // exists, so the way back is Batalkan, not an edit.
+    const h = hutangStatusOf(sale);
+    if (h?.paid) return "Bon sudah lunas — batalkan transaksinya jika keliru.";
+    return editWindowReason(sale, "diubah");
+  }
+  const canChangeMethod = (sale: SaleRecord) => !methodBlockReason(sale);
 
   function requestVoid(sale: SaleRecord) {
     if (sale.voided) return;
@@ -159,6 +182,47 @@ export default function Riwayat() {
       return next;
     });
   }
+  // Methods a correction may point at. Hutang is deliberately absent: turning a
+  // paid sale into a bon needs a customer on record, which is a different job —
+  // cancel and re-ring it instead.
+  const methodChoices = useMemo(() => {
+    const enabled: Record<string, boolean> = {
+      tunai: settings.pay_tunai, qris: settings.pay_qris, transfer: settings.pay_transfer,
+      debit: settings.pay_debit && isPremium, ewallet: settings.pay_ewallet && isPremium,
+    };
+    return ["tunai", "qris", "transfer", "debit", "ewallet"].filter(m => enabled[m]);
+  }, [settings, isPremium]);
+
+  function requestMethodChange(sale: SaleRecord) {
+    const blocked = methodBlockReason(sale);
+    if (blocked) { alert(blocked); return; }
+    setMethodSale(sale);
+    setPickedMethod("");
+  }
+
+  async function doChangeMethod() {
+    const sale = methodSale; const next = pickedMethod;
+    setMethodGate(false); setMethodSale(null); setPickedMethod("");
+    if (!sale || !next || next === sale.payment_method) return;
+    const from = sale.payment_method;
+    if (!isDemoMode && storeId) {
+      try {
+        await supabase.from("sales").update({ payment_method: next }).eq("id", sale.id);
+        // Was a bon, now paid for outright: the debt never existed, so retire it.
+        if (from === "hutang" && sale.trx_id) {
+          await supabase.from("hutang").update({ voided: true }).eq("store_id", storeId).eq("trx_id", sale.trx_id);
+          setHutangByTrx(prev => { const c = { ...prev }; delete c[sale.trx_id!]; return c; });
+        }
+        void logEvent("sale.method", `Ubah metode ${sale.trx_id} — ${methodLabel(from)} → ${methodLabel(next)} (${formatRp(sale.total)})`);
+      } catch { /* still reflect locally */ }
+    }
+    setSales(prev => {
+      const rows = prev.map(s => s.id === sale.id ? { ...s, payment_method: next } : s);
+      if (storeId) saveRiwayatCache(storeId, rows);
+      return rows;
+    });
+  }
+
   const [sales, setSales]           = useState<SaleRecord[]>([]);
   const [hutangByTrx, setHutangByTrx] = useState<Record<string, { status: string; settled_method: string | null }>>({});
   const [loadingData, setLoadingData] = useState(true);
@@ -631,8 +695,12 @@ export default function Riwayat() {
                         <td className="px-4 py-3.5 text-right">
                           {t.voided
                             ? <span className="text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: "rgba(194,94,61,0.10)", color: "#C25E3D" }}>Dibatalkan</span>
-                            : <button onClick={() => requestVoid(t)} title={voidBlockReason(t) ?? "Batalkan transaksi ini"}
-                                className={canVoid(t) ? "text-[11.5px] font-semibold text-[#C25E3D] hover:underline" : "text-[11.5px] font-semibold text-[#B3ADA0] cursor-default"}>Batalkan</button>}
+                            : <div className="flex items-center gap-3 justify-end">
+                                <button onClick={() => requestMethodChange(t)} title={methodBlockReason(t) ?? "Ubah metode pembayaran"}
+                                  className={canChangeMethod(t) ? "text-[11.5px] font-semibold text-navy hover:underline" : "text-[11.5px] font-semibold text-[#B3ADA0] cursor-default"}>Ubah metode</button>
+                                <button onClick={() => requestVoid(t)} title={voidBlockReason(t) ?? "Batalkan transaksi ini"}
+                                  className={canVoid(t) ? "text-[11.5px] font-semibold text-[#C25E3D] hover:underline" : "text-[11.5px] font-semibold text-[#B3ADA0] cursor-default"}>Batalkan</button>
+                              </div>}
                         </td>
                       </tr>
                     );
@@ -666,11 +734,15 @@ export default function Riwayat() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex justify-end mt-2 pt-2 border-t border-[#F2EDE3]">
+                    <div className="flex justify-end items-center gap-4 mt-2 pt-2 border-t border-[#F2EDE3]">
                       {t.voided
                         ? <span className="text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: "rgba(194,94,61,0.10)", color: "#C25E3D" }}>Dibatalkan</span>
-                        : <button onClick={() => requestVoid(t)} title={voidBlockReason(t) ?? "Batalkan transaksi ini"}
-                            className={canVoid(t) ? "text-[11.5px] font-semibold text-[#C25E3D]" : "text-[11.5px] font-semibold text-[#B3ADA0]"}>Batalkan transaksi</button>}
+                        : <>
+                            <button onClick={() => requestMethodChange(t)}
+                              className={canChangeMethod(t) ? "text-[11.5px] font-semibold text-navy" : "text-[11.5px] font-semibold text-[#B3ADA0]"}>Ubah metode</button>
+                            <button onClick={() => requestVoid(t)}
+                              className={canVoid(t) ? "text-[11.5px] font-semibold text-[#C25E3D]" : "text-[11.5px] font-semibold text-[#B3ADA0]"}>Batalkan transaksi</button>
+                          </>}
                     </div>
                   </div>
                 );
@@ -693,6 +765,46 @@ export default function Riwayat() {
         action="void"
         onClose={() => { setVoidGate(null); setVoidSale(null); }}
         onApproved={() => void doVoid()}
+      />
+
+      {/* Pick the correct method, then confirm with the owner password. */}
+      {methodSale && !methodGate && (
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/40 px-4 pb-4 lg:pb-0"
+          onClick={() => { setMethodSale(null); setPickedMethod(""); }}>
+          <div className="bg-white rounded-card w-full max-w-[380px] p-5" onClick={e => e.stopPropagation()}>
+            <p className="font-serif text-[19px] font-medium text-navy">Ubah metode pembayaran</p>
+            <p className="text-[12px] text-text-mute mt-1 mb-4">
+              {methodSale.trx_id} · {formatRp(methodSale.total)} · sekarang <b className="text-navy">{methodLabel(methodSale.payment_method)}</b>
+            </p>
+            <div className="flex flex-col gap-1.5">
+              {methodChoices.filter(m => m !== methodSale.payment_method).map(m => (
+                <button key={m} onClick={() => setPickedMethod(m)}
+                  className={`flex justify-between items-center px-4 py-3 rounded-[10px] border text-[13px] font-medium cursor-pointer transition-colors ${pickedMethod === m ? "border-navy border-[1.5px] bg-cream-pill text-navy" : "border-warm-border bg-white text-navy hover:border-navy/30"}`}>
+                  {methodLabel(m)}
+                  {pickedMethod === m && <span className="text-gold font-bold">✓</span>}
+                </button>
+              ))}
+            </div>
+            {methodSale.payment_method === "hutang" && (
+              <p className="text-[11px] text-[#A6843F] mt-3 leading-relaxed">
+                Bon akan dibatalkan — pelanggan dianggap sudah membayar langsung.
+              </p>
+            )}
+            <div className="flex gap-2 mt-5">
+              <button onClick={() => { setMethodSale(null); setPickedMethod(""); }}
+                className="flex-1 py-3 rounded-[10px] border border-warm-border bg-white text-navy text-[13px] font-semibold cursor-pointer">Batal</button>
+              <button disabled={!pickedMethod} onClick={() => setMethodGate(true)}
+                className={`flex-1 py-3 rounded-[10px] text-[13px] font-semibold border-0 ${pickedMethod ? "bg-navy text-cream-text cursor-pointer" : "bg-[#E8E4DA] text-[#B3ADA0] cursor-not-allowed"}`}>Lanjut</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <OwnerConfirm
+        open={methodGate}
+        title="Ubah metode pembayaran"
+        message={methodSale ? `Masukkan kata sandi pemilik untuk mengubah ${methodSale.trx_id} dari ${methodLabel(methodSale.payment_method)} ke ${methodLabel(pickedMethod)}.` : undefined}
+        onClose={() => { setMethodGate(false); setMethodSale(null); setPickedMethod(""); }}
+        onConfirmed={() => void doChangeMethod()}
       />
     </div>
   );
