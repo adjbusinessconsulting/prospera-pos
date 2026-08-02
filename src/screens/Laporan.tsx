@@ -100,7 +100,7 @@ export default function Laporan() {
         .select("created_at,total,payment_method,voided,sale_items(product_name,qty,subtotal)")
         .eq("store_id", storeId).gte("created_at", from.toISOString());
       const { data: hut } = await supabase.from("hutang")
-        .select("amount,status,settled_method,created_at,voided").eq("store_id", storeId).gte("created_at", from.toISOString());
+        .select("amount,status,settled_method,settled_at,created_at,voided").eq("store_id", storeId).gte("created_at", from.toISOString());
       if (cancelled) return;
       const byDay = new Map<number, DayRec>();
       const items: RealItem[] = [];
@@ -112,24 +112,26 @@ export default function Laporan() {
         const d = new Date(s.created_at); d.setHours(0, 0, 0, 0); const ts = d.getTime();
         const cur = byDay.get(ts) ?? { d, rev: 0, trx: 0, items: 0 };
         const m = s.payment_method ?? "";
-        // Cash-basis: credit (hutang) sales don't count as revenue until settled.
-        if (m !== "hutang") cur.rev += s.total ?? 0;
+        // Accrual: a sale is revenue on the day it happens, bon included.
+        cur.rev += s.total ?? 0;
         cur.trx += 1;
         (s.sale_items ?? []).forEach(it => { cur.items += it.qty ?? 0; items.push({ ts, name: it.product_name, qty: it.qty ?? 0, subtotal: it.subtotal ?? 0 }); });
         byDay.set(ts, cur);
         if (ts === todayTs && m === "tunai") todayCash += s.total ?? 0;
       });
-      // A settled hutang lifts the omzet of the day its bon was made (created_at),
-      // never the day it was paid — so paying an old debt never moves "today".
+      // Settling a bon moves CASH only — the sale was already booked as revenue on
+      // the day it was made, so nothing here touches `rev`. Previously a payment
+      // retroactively lifted the omzet of a day that had long since been closed.
+      //
+      // The drawer credit follows settled_at, not created_at: paying yesterday's bon
+      // in cash today puts money in TODAY's laci. Keying it to the bon's date meant
+      // any settlement of an older debt never reached the drawer figure at all.
       (hut ?? []).forEach(row => {
-        const h = row as { amount: number; status: string; settled_method?: string | null; created_at: string; voided?: boolean };
+        const h = row as { amount: number; status: string; settled_method?: string | null; settled_at?: string | null; voided?: boolean };
         if (h.voided || h.status !== "lunas") return;
-        const d = new Date(h.created_at); d.setHours(0, 0, 0, 0); const ts = d.getTime();
-        const cur = byDay.get(ts) ?? { d, rev: 0, trx: 0, items: 0 };
-        cur.rev += h.amount ?? 0;
-        byDay.set(ts, cur);
-        const sm = h.settled_method ?? "tunai";
-        if (ts === todayTs && sm === "tunai") todayCash += h.amount ?? 0;
+        if ((h.settled_method ?? "tunai") !== "tunai" || !h.settled_at) return;
+        const d = new Date(h.settled_at); d.setHours(0, 0, 0, 0);
+        if (d.getTime() === todayTs) todayCash += h.amount ?? 0;
       });
       setReal({ byDay, items, todayCash, modalAwal: modalAwalToday(storeId) });
     })();

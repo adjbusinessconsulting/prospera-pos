@@ -31,7 +31,13 @@ export async function computeClosing(storeId: string, dayStartISO: string, dayEn
   const K = (kas ?? []) as { type: string; amount: number }[];
   const bd: Record<string, number> = {};
   S.filter(s => s.payment_method !== "hutang").forEach(s => { bd[s.payment_method] = (bd[s.payment_method] ?? 0) + (s.total ?? 0); });
-  H.filter(h => h.status === "lunas").forEach(h => { const m = h.settled_method ?? "tunai"; bd[m] = (bd[m] ?? 0) + h.amount; });
+  // ACCRUAL: a sale is revenue on the day it happens, however it was paid — so a bon
+  // counts today, in full, whether or not it has been collected. Settling it later
+  // moves cash, never omzet, which is why there is no fold-by-settle-method here.
+  // (Was cash-basis; that made a closed day's omzet change weeks later when an old
+  // bon was paid, and disagreed with Back Office, which always counted accrual.)
+  const hutangBaru = H.reduce((a, h) => a + h.amount, 0);
+  if (hutangBaru > 0) bd.hutang = hutangBaru;
   // Physical drawer cash = tunai only. Transfer / QRIS / e-wallet / debit are in
   // omzet + the per-method breakdown, but that money never lands in the laci.
   const cash = S.filter(s => s.payment_method === "tunai").reduce((a, s) => a + (s.total ?? 0), 0);

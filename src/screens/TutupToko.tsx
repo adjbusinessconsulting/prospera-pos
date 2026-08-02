@@ -8,8 +8,9 @@ import { modalAwalToday, fetchModalAwalToday } from "../lib/dayopen";
 import { clearSession } from "../lib/session";
 
 const RETENTION: Record<string, number> = { free: 1, standard: 30, premium: 90, business: 1095, enterprise: 1825 };
-const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet" };
-const METHOD_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet"];
+const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet", hutang: "Hutang / Bon" };
+// "hutang" sits last: it is revenue like the rest, but the only one not yet collected.
+const METHOD_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet", "hutang"];
 
 export default function TutupToko() {
   const { signOut, setScreen, storeId, storeTier, isDemoMode, settings, cashierName } = useStore();
@@ -53,11 +54,13 @@ export default function TutupToko() {
       setVoidedTotal(voidedRows.reduce((a, s) => a + (s.total ?? 0), 0));
       setVoidedCount(voidedRows.length);
       const H = ((hut ?? []) as { amount: number; status: string; settled_method?: string | null; voided?: boolean }[]).filter(h => !h.voided);
-      // OMZET (income, cash-basis): non-credit sales today by method…
+      // OMZET (accrual): every sale made today, by how it was paid…
       const bd: Record<string, number> = {};
       S.filter(s => s.payment_method !== "hutang").forEach(s => { bd[s.payment_method] = (bd[s.payment_method] ?? 0) + (s.total ?? 0); });
-      // …plus any hutang whose bon is TODAY and already lunas (folded by settle method).
-      H.filter(h => h.status === "lunas").forEach(h => { const m = h.settled_method ?? "tunai"; bd[m] = (bd[m] ?? 0) + h.amount; });
+      // …including bons opened today, in full. The sale happened; the money merely
+      // hasn't arrived. Collecting it later adds cash to the laci, never omzet.
+      const hutangBaru = H.reduce((a, h) => a + h.amount, 0);
+      if (hutangBaru > 0) bd.hutang = hutangBaru;
       setBreakdown(bd);
       setOmzet(Object.values(bd).reduce((a, v) => a + v, 0));
       setPiutangBaru(H.filter(h => h.status !== "lunas").reduce((a, h) => a + h.amount, 0));
@@ -160,8 +163,11 @@ export default function TutupToko() {
             <div className="flex flex-col">
               {METHOD_ORDER.filter(m => (breakdown[m] ?? 0) > 0).map(m => (
                 <div key={m} className="flex justify-between items-center py-[7px] border-b border-[#F2EDE3] text-[12.5px]">
-                  <span className={m === "hutang" ? "text-[#C25E3D]" : "text-navy"}>{METHOD_LABEL[m] ?? m}{m === "hutang" ? " · belum diterima" : ""}</span>
-                  <span className="font-medium text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(breakdown[m] ?? 0)}</span>
+                  {/* No "belum diterima" suffix: this figure is every bon opened today,
+                      including ones already collected. The outstanding part is its own
+                      line under the total. */}
+                  <span className={m === "hutang" ? "text-[#C25E3D]" : "text-navy"}>{METHOD_LABEL[m] ?? m}</span>
+                  <span className={`font-medium ${m === "hutang" ? "text-[#C25E3D]" : "text-navy"}`} style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(breakdown[m] ?? 0)}</span>
                 </div>
               ))}
               <div className="flex justify-between items-center pt-3 mt-1 border-t border-dashed border-warm-dashed">
@@ -192,10 +198,9 @@ export default function TutupToko() {
                 <span className="num font-medium text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(modalAwal)}</span>
               </div>
               <div className="flex justify-between items-center py-[7px] border-b border-[#F2EDE3] text-[12.5px]">
-                {/* NOT "Tunai": the breakdown above already has a Tunai line, and it
-                    also contains any bon settled in cash today. Two different figures
-                    under one word made the nota look wrong when it wasn't. */}
-                <span className="text-navy">Penjualan tunai</span>
+                {/* Matches the breakdown's Tunai line exactly, now that settled bons are
+                    no longer folded into it. Pelunasan hutang is the separate line below. */}
+                <span className="text-navy">Tunai</span>
                 <span className="num font-medium text-navy" style={{ fontVariantNumeric: "tabular-nums" }}>+ {formatRp(cash)}</span>
               </div>
               {hutangSettle > 0 && (

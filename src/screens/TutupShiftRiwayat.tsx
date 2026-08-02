@@ -7,8 +7,8 @@ import { autoCloseStaleShifts } from "../lib/shift";
 import { formatRp } from "../data";
 import type { Screen } from "../types";
 
-const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet" };
-const METHOD_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet"];
+const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet", hutang: "Hutang / Bon" };
+const METHOD_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet", "hutang"];
 
 interface Closing {
   business_date: string; closed_at: string; cashier_name: string | null;
@@ -137,7 +137,7 @@ export default function TutupShiftRiwayat() {
                 {line("Omzet", formatRp(row.omzet))}
                 {line("Transaksi", `${row.trx}`)}
                 {bdRows.length > 0 && <div className="mt-2 mb-1"><p style={{ fontSize: 9, letterSpacing: "0.16em" }} className="font-sans uppercase text-text-mute">Per metode</p></div>}
-                {bdRows.map(m => line(METHOD_LABEL[m] ?? m, formatRp(row.breakdown[m])))}
+                {bdRows.map(m => line(METHOD_LABEL[m] ?? m, formatRp(row.breakdown[m]), m === "hutang" ? { color: "#C25E3D" } : undefined))}
                 {/* Bon opened today and still unpaid. Deliberately outside the total:
                     it is income you have not received, and it never touches the laci. */}
                 {(row.piutang_baru ?? 0) > 0 &&
@@ -149,9 +149,7 @@ export default function TutupShiftRiwayat() {
                     which also handles notas closed before these columns existed: the
                     migration backfilled them to 0, so a null check would have printed
                     "Tunai + Rp 0" against a real drawer total on every old day. */}
-                {/* "Penjualan tunai", not "Tunai" — the per-metode block above has its
-                    own Tunai line which also includes bons settled in cash today. */}
-                {(row.cash ?? 0) > 0 && line("Penjualan tunai", `+ ${formatRp(row.cash ?? 0)}`)}
+                {(row.cash ?? 0) > 0 && line("Tunai", `+ ${formatRp(row.cash ?? 0)}`)}
                 {(row.hutang_settle ?? 0) > 0 && line("Pelunasan hutang (tunai)", `+ ${formatRp(row.hutang_settle ?? 0)}`)}
                 {(row.kas_masuk ?? 0) > 0 && line("Kas masuk", `+ ${formatRp(row.kas_masuk ?? 0)}`)}
                 {(row.kas_keluar ?? 0) > 0 && line("Kas keluar", `− ${formatRp(row.kas_keluar ?? 0)}`, { color: "#C25E3D" })}
