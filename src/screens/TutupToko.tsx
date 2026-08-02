@@ -177,7 +177,7 @@ export default function TutupToko() {
             </div>
             {piutangBaru > 0 && (
               <div className="flex justify-between items-center mt-3 pt-3 border-t border-[#F2EDE3]">
-                <span className="text-[12px] text-[#C25E3D]">Hutang baru hari ini · belum diterima</span>
+                <span className="text-[12px] text-[#C25E3D]">Belum diterima · sudah termasuk di omset</span>
                 <span className="font-medium text-[#C25E3D] text-[13px]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(piutangBaru)}</span>
               </div>
             )}

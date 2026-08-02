@@ -138,10 +138,15 @@ export default function TutupShiftRiwayat() {
                 {line("Transaksi", `${row.trx}`)}
                 {bdRows.length > 0 && <div className="mt-2 mb-1"><p style={{ fontSize: 9, letterSpacing: "0.16em" }} className="font-sans uppercase text-text-mute">Per metode</p></div>}
                 {bdRows.map(m => line(METHOD_LABEL[m] ?? m, formatRp(row.breakdown[m]), m === "hutang" ? { color: "#C25E3D" } : undefined))}
-                {/* Bon opened today and still unpaid. Deliberately outside the total:
-                    it is income you have not received, and it never touches the laci. */}
-                {(row.piutang_baru ?? 0) > 0 &&
-                  line("Hutang baru · belum diterima", formatRp(row.piutang_baru ?? 0), { color: "#C25E3D" })}
+                {/* A SUBSET of the Hutang / Bon line above, not another method — so it
+                    is set apart from the method run and says so. Sitting flush in the
+                    list, it read as a fourth method and made the column appear not to
+                    add up (30 + 35 + 75 + 30 ≠ omzet). */}
+                {(row.piutang_baru ?? 0) > 0 && (
+                  <div className="mt-2 pt-2 border-t border-dashed border-warm-dashed">
+                    {line("Belum diterima · sudah termasuk di atas", formatRp(row.piutang_baru ?? 0), { color: "#C25E3D" })}
+                  </div>
+                )}
 
                 <div className="mt-2 mb-1"><p style={{ fontSize: 9, letterSpacing: "0.16em" }} className="font-sans uppercase text-text-mute">Kas / Laci</p></div>
                 {line("Modal awal", formatRp(row.modal_awal))}
