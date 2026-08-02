@@ -10,6 +10,9 @@ const appName = isDev ? 'POS' : 'Sterith POS'
 const appIcon = isDev ? 'icon-dev-512.png' : 'icon-512.png'
 
 export default defineConfig({
+  // Lets the app itself know it's a dev build — used to expose the store
+  // switcher, which must never appear in a customer's POS.
+  define: { __STERITH_DEV__: JSON.stringify(isDev) },
   plugins: [
     react(),
     VitePWA({

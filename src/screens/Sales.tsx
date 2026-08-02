@@ -1,4 +1,4 @@
-import { Search, User, ChevronUp, X, PauseCircle, ClipboardList } from "lucide-react";
+import { Search, User, ChevronUp, X, PauseCircle, ClipboardList, ChevronsUpDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useStore, getTotal, getItemCount, getTrxId, isAtLeast } from "../store";
 import { CATEGORIES, getCatLabel, formatRp } from "../data";
@@ -6,11 +6,13 @@ import { AppSidebar } from "../components/AppSidebar";
 import { hasOpenedToday } from "../lib/dayopen";
 import { HeldOrders } from "../components/HeldOrders";
 import { heldCount } from "../lib/heldOrders";
+import { IS_DEV_BUILD, switchStore } from "../lib/devStoreSwitch";
 import { CustomerEntry } from "../components/CustomerEntry";
 
 function TierPill() {
   const storeId = useStore((s) => s.storeId);
   const storeTier = useStore((s) => s.storeTier);
+  const isDemoMode = useStore((s) => s.isDemoMode);
   const tier = storeId ? storeTier : "premium";
   const style: Record<string, { bg: string; border: string; color: string; label: string }> = {
     free:     { bg: "rgba(122,119,111,0.10)", border: "rgba(122,119,111,0.28)", color: "#7A776F", label: "FREE" },
@@ -18,11 +20,30 @@ function TierPill() {
     premium:  { bg: "rgba(27,42,74,0.10)",     border: "rgba(27,42,74,0.30)",    color: "#1B2A4A", label: "PREMIUM" },
   };
   const s = style[tier] ?? style.free;
-  return (
-    <span style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color, fontSize: 9.5, letterSpacing: "0.18em", fontWeight: 600, padding: "3px 9px", borderRadius: 9999, textTransform: "uppercase" as const, lineHeight: 1 }}>
-      {s.label}
-    </span>
-  );
+  const base = { background: s.bg, border: `1px solid ${s.border}`, color: s.color, fontSize: 9.5, letterSpacing: "0.18em", fontWeight: 600, padding: "3px 9px", borderRadius: 9999, textTransform: "uppercase" as const, lineHeight: 1 };
+
+  // On dev the pill becomes the tier switcher: it already names the thing you're
+  // changing, so there's no second control to hunt for. Compiled out in production.
+  if (IS_DEV_BUILD && storeId && !isDemoMode) {
+    return (
+      <button
+        type="button"
+        title="Ganti toko / tier (khusus dev)"
+        aria-label={`Tier ${s.label}. Ketuk untuk ganti toko.`}
+        onClick={() => {
+          const n = useStore.getState().cart.length;
+          if (n > 0 && !confirm(`Keranjang berisi ${n} item dan akan dikosongkan. Ganti toko?`)) return;
+          void switchStore();
+        }}
+        style={{ ...base, display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer", font: "inherit", fontSize: 9.5, letterSpacing: "0.18em", fontWeight: 600 }}
+      >
+        {s.label}
+        <ChevronsUpDown size={10} strokeWidth={2.5} />
+      </button>
+    );
+  }
+
+  return <span style={base}>{s.label}</span>;
 }
 
 export default function Sales() {
