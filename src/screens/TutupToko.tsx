@@ -24,7 +24,7 @@ export default function TutupToko() {
   const [omzet, setOmzet] = useState(isDemoMode ? 7_950_000 : 0);
   const [trx, setTrx] = useState(isDemoMode ? 54 : 0);
   const [shiftCount, setShiftCount] = useState(isDemoMode ? 3 : 1);
-  const [cash, setCash] = useState(isDemoMode ? 6_120_000 : 0);   // tunai + transfer (drawer)
+  const [cash, setCash] = useState(isDemoMode ? 6_120_000 : 0);   // TUNAI sales only — see the drawer note below
   const [modalAwal, setModalAwal] = useState(isDemoMode ? 500_000 : 0);
   const [kasMasuk, setKasMasuk] = useState(0);
   const [kasKeluar, setKasKeluar] = useState(isDemoMode ? 115_000 : 0);
