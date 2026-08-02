@@ -12,6 +12,7 @@ export interface ClosingSnapshot {
   cashierName: string | null;
   omzet: number; trx: number; shiftCount: number;
   cash: number; kasMasuk: number; kasKeluar: number; hutangSettle: number;
+  piutangBaru: number;              // bon opened today, still unpaid — NOT drawer cash
   expected: number;                 // drawer seharusnya (excl. modal awal)
   breakdown: Record<string, number>;
 }
@@ -21,10 +22,12 @@ export async function computeClosing(storeId: string, dayStartISO: string, dayEn
   const [{ data: sales }, { data: kas }, { data: hut }] = await Promise.all([
     supabase.from("sales").select("total,payment_method,shift,cashier_name,created_at,voided").eq("store_id", storeId).gte("created_at", dayStartISO).lt("created_at", dayEndISO),
     supabase.from("kas_entries").select("type,amount").eq("store_id", storeId).gte("created_at", dayStartISO).lt("created_at", dayEndISO),
-    supabase.from("hutang").select("amount,status,settled_method,created_at").eq("store_id", storeId).gte("created_at", dayStartISO).lt("created_at", dayEndISO),
+    supabase.from("hutang").select("amount,status,settled_method,created_at,voided").eq("store_id", storeId).gte("created_at", dayStartISO).lt("created_at", dayEndISO),
   ]);
   const S = ((sales ?? []) as { total: number; payment_method: string; shift: number; cashier_name?: string; voided?: boolean }[]).filter(s => !s.voided);
-  const H = (hut ?? []) as { amount: number; status: string; settled_method?: string | null }[];
+  // A cancelled bon is not a debt. Tutup Toko already excluded these; the auto-close
+  // path did not, so a voided bon inflated the figures on any day closed for you.
+  const H = ((hut ?? []) as { amount: number; status: string; settled_method?: string | null; voided?: boolean }[]).filter(h => !h.voided);
   const K = (kas ?? []) as { type: string; amount: number }[];
   const bd: Record<string, number> = {};
   S.filter(s => s.payment_method !== "hutang").forEach(s => { bd[s.payment_method] = (bd[s.payment_method] ?? 0) + (s.total ?? 0); });
@@ -41,6 +44,7 @@ export async function computeClosing(storeId: string, dayStartISO: string, dayEn
     trx: S.length,
     shiftCount: Math.max(1, new Set(S.map(s => s.shift)).size),
     cash, kasMasuk, kasKeluar, hutangSettle,
+    piutangBaru: H.filter(h => h.status !== "lunas").reduce((a, h) => a + h.amount, 0),
     expected: cash + kasMasuk + hutangSettle - kasKeluar,
     breakdown: bd,
   };
@@ -53,6 +57,10 @@ export async function saveShiftClosing(storeId: string, snap: ClosingSnapshot & 
       store_id: storeId, business_date: localDateISO(), closed_at: new Date().toISOString(),
       cashier_name: snap.cashierName, omzet: snap.omzet, trx: snap.trx, shift_count: snap.shiftCount,
       modal_awal: snap.modalAwal, expected: snap.expected + snap.modalAwal,
+      // The parts behind `expected`. Without these the nota states a drawer total
+      // it cannot justify — you could see the answer but never check the sum.
+      cash: snap.cash, kas_masuk: snap.kasMasuk, kas_keluar: snap.kasKeluar,
+      hutang_settle: snap.hutangSettle, piutang_baru: snap.piutangBaru,
       counted: snap.counted, selisih: snap.selisih, reconciled: snap.reconciled, auto_closed: false, breakdown: snap.breakdown,
     }, { onConflict: "store_id,business_date" });
   } catch { /* non-fatal */ }
@@ -91,6 +99,8 @@ export async function autoCloseStaleShifts(storeId: string): Promise<void> {
         store_id: storeId, business_date: date, closed_at: dayEnd.toISOString(),
         cashier_name: c.cashierName, omzet: c.omzet, trx: c.trx, shift_count: c.shiftCount,
         modal_awal: modalAwal, expected: c.expected + modalAwal, counted: null, selisih: null,
+        cash: c.cash, kas_masuk: c.kasMasuk, kas_keluar: c.kasKeluar,
+        hutang_settle: c.hutangSettle, piutang_baru: c.piutangBaru,
         reconciled: false, auto_closed: true, breakdown: c.breakdown,
       });
     }

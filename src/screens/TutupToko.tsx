@@ -99,7 +99,7 @@ export default function TutupToko() {
         // Save the closing nota (viewable later in Laporan → Tutup Shift).
         await saveShiftClosing(storeId, {
           cashierName: cashierName || null, omzet, trx, shiftCount,
-          cash, kasMasuk, kasKeluar, hutangSettle,
+          cash, kasMasuk, kasKeluar, hutangSettle, piutangBaru,
           expected: cash + kasMasuk + hutangSettle - kasKeluar, breakdown,
           modalAwal, counted: reconciled ? countedNum : null, selisih: reconciled ? selisih : null, reconciled,
         });

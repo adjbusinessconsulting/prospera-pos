@@ -15,6 +15,10 @@ interface Closing {
   omzet: number; trx: number; shift_count: number; modal_awal: number;
   expected: number; counted: number | null; selisih: number | null;
   reconciled: boolean; auto_closed: boolean; breakdown: Record<string, number>;
+  // Added later — notas closed before this shipped have them null, so every
+  // read below falls back rather than rendering "Rp NaN" on an old day.
+  cash: number | null; kas_masuk: number | null; kas_keluar: number | null;
+  hutang_settle: number | null; piutang_baru: number | null;
 }
 
 function ymd(d: Date) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
@@ -134,8 +138,19 @@ export default function TutupShiftRiwayat() {
                 {line("Transaksi", `${row.trx}`)}
                 {bdRows.length > 0 && <div className="mt-2 mb-1"><p style={{ fontSize: 9, letterSpacing: "0.16em" }} className="font-sans uppercase text-text-mute">Per metode</p></div>}
                 {bdRows.map(m => line(METHOD_LABEL[m] ?? m, formatRp(row.breakdown[m])))}
+                {/* Bon opened today and still unpaid. Deliberately outside the total:
+                    it is income you have not received, and it never touches the laci. */}
+                {(row.piutang_baru ?? 0) > 0 &&
+                  line("Hutang baru · belum diterima", formatRp(row.piutang_baru ?? 0), { color: "#C25E3D" })}
+
                 <div className="mt-2 mb-1"><p style={{ fontSize: 9, letterSpacing: "0.16em" }} className="font-sans uppercase text-text-mute">Kas / Laci</p></div>
                 {line("Modal awal", formatRp(row.modal_awal))}
+                {/* The working behind "seharusnya di laci". Older notas stored only the
+                    total, so each part appears only when it was actually saved. */}
+                {row.cash !== null && row.cash !== undefined && line("Tunai", `+ ${formatRp(row.cash)}`)}
+                {(row.hutang_settle ?? 0) > 0 && line("Pelunasan hutang (tunai)", `+ ${formatRp(row.hutang_settle ?? 0)}`)}
+                {(row.kas_masuk ?? 0) > 0 && line("Kas masuk", `+ ${formatRp(row.kas_masuk ?? 0)}`)}
+                {(row.kas_keluar ?? 0) > 0 && line("Kas keluar", `− ${formatRp(row.kas_keluar ?? 0)}`, { color: "#C25E3D" })}
                 {line("Seharusnya di laci", formatRp(row.expected), { strong: true })}
                 {row.reconciled ? (
                   <>
