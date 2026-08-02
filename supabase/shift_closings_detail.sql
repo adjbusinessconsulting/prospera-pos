@@ -4,8 +4,11 @@
 -- then wrote only their net result, so the nota stated a drawer total it could not
 -- justify. New hutang was never carried at all.
 --
--- Additive and idempotent: existing rows keep NULL (the UI hides a line it has no
--- value for), and an older POS build writing without these columns still works.
+-- Additive and idempotent. Postgres backfills existing rows with the DEFAULT, so
+-- notas closed before this run hold 0, not NULL — the UI gates every one of these
+-- lines on > 0 so an old nota omits the working rather than claiming "Tunai Rp 0"
+-- beside a real drawer total. An older POS build that omits these columns on write
+-- still succeeds.
 
 alter table public.shift_closings
   add column if not exists cash          numeric default 0,
