@@ -7,11 +7,13 @@ import { VitePWA } from 'vite-plugin-pwa'
 // sitting next to it. Vercel sets VERCEL_ENV to 'preview' for branch deploys.
 const isDev = process.env.VERCEL_ENV === 'preview'
 const appName = isDev ? 'POS' : 'Sterith POS'
-const appIcon = isDev ? 'icon-dev-512.png' : 'icon-v2-512.png'
+// Same 2.0 mark either way — the dev build wears it in slate rather than gold, so
+// which app it is and which environment it is are both readable at a glance.
+const appIcon = isDev ? 'icon-dev-v2-512.png' : 'icon-v2-512.png'
 // Maskable needs a FULL-BLEED square: the OS applies its own mask and assumes the
 // art reaches the edges. Feeding it the rounded badge crops inside its own corners
-// and leaves transparent slivers, so production points at a purpose-built file.
-const maskIcon = isDev ? 'icon-dev-512.png' : 'icon-v2-maskable-512.png'
+// and leaves transparent slivers, so both point at purpose-built files.
+const maskIcon = isDev ? 'icon-dev-v2-maskable-512.png' : 'icon-v2-maskable-512.png'
 
 export default defineConfig({
   // Lets the app itself know it's a dev build — used to expose the store
@@ -21,7 +23,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.svg', 'icon-512.png', 'icon-dev-512.png', 'icon-v2-512.png', 'icon-v2-maskable-512.png', 'splash-logo.png'],
+      includeAssets: ['favicon.svg', 'icon-512.png', 'icon-dev-512.png', 'icon-v2-512.png', 'icon-v2-maskable-512.png', 'icon-dev-v2-512.png', 'icon-dev-v2-maskable-512.png', 'splash-logo.png'],
       manifest: {
         name: appName,
         short_name: appName,
