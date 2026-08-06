@@ -4,6 +4,7 @@ import { useStore, isAtLeast, localDateISO } from "../store";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
 import { autoCloseStaleShifts } from "../lib/shift";
+import { isConnected as printerReady, printShiftClosing, loadPrinterConfig } from "../lib/printer";
 import { formatRp } from "../data";
 import type { Screen } from "../types";
 
@@ -29,6 +30,8 @@ function prettyDate(iso: string) {
 
 export default function TutupShiftRiwayat() {
   const { setScreen, cashierInitials, signOut, storeId, storeTier, isDemoMode } = useStore();
+  const storeName = useStore((st) => st.storeName);
+  const [printMsg, setPrintMsg] = useState("");
   const effectiveTier = storeId ? storeTier : "premium";
   const retentionDays = isAtLeast(effectiveTier, "premium") ? 90 : isAtLeast(effectiveTier, "standard") ? 30 : 1;
 
@@ -61,6 +64,32 @@ export default function TutupShiftRiwayat() {
 
   const canExtended = isAtLeast(effectiveTier, "standard");
   const bdRows = useMemo(() => METHOD_ORDER.filter(m => (row?.breakdown?.[m] ?? 0) > 0), [row]);
+
+  // The nota is what an owner files and signs, so paper matters more here than on
+  // a sale receipt. Failure is non-fatal: the screen copy is always the fallback.
+  async function printNota() {
+    if (!row) return;
+    setPrintMsg("");
+    if (!printerReady()) { setPrintMsg("Printer belum terhubung. Atur di Pengaturan."); return; }
+    try {
+      await printShiftClosing({
+        storeName: storeName || "STERITH POS",
+        dateStr: prettyDate(row.business_date),
+        closedTime: new Date(row.closed_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+        cashierName: row.cashier_name || "-",
+        shiftCount: row.shift_count,
+        omzet: row.omzet, trx: row.trx, breakdown: row.breakdown ?? {},
+        piutangBaru: row.piutang_baru ?? 0,
+        modalAwal: row.modal_awal, cash: row.cash ?? 0,
+        hutangSettle: row.hutang_settle ?? 0, kasMasuk: row.kas_masuk ?? 0, kasKeluar: row.kas_keluar ?? 0,
+        expected: row.expected, counted: row.counted, selisih: row.selisih,
+        reconciled: row.reconciled, autoClosed: row.auto_closed,
+      }, loadPrinterConfig()?.paper ?? 58);
+      setPrintMsg("Nota terkirim ke printer.");
+    } catch {
+      setPrintMsg("Gagal mencetak. Periksa printer & sambungannya.");
+    }
+  }
 
   const tab = (label: string, screen: Screen, active = false) => (
     <button onClick={active ? undefined : () => setScreen(screen)}
@@ -130,6 +159,10 @@ export default function TutupShiftRiwayat() {
                     <p style={{ fontSize: 9.5, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute">Nota Tutup Shift</p>
                     <p className="text-[12px] text-text-mute mt-0.5">Kasir {row.cashier_name || "—"} · {row.shift_count} shift · ditutup {new Date(row.closed_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</p>
                   </div>
+                  <button onClick={() => void printNota()}
+                    className="text-[11.5px] font-semibold text-navy hover:underline bg-transparent border-0 cursor-pointer px-0 mr-3">
+                    Cetak
+                  </button>
                   {row.auto_closed
                     ? <span style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: "0.08em", color: "#A6843F", background: "rgba(201,165,95,0.14)", border: "1px solid rgba(201,165,95,0.3)", borderRadius: 5, padding: "3px 7px", textTransform: "uppercase" }}>Otomatis</span>
                     : <ShieldCheck size={16} color="#4E8C6E" />}
@@ -166,6 +199,9 @@ export default function TutupShiftRiwayat() {
                   </>
                 ) : (
                   <p className="text-[11.5px] text-text-mute mt-2">{row.auto_closed ? "Ditutup otomatis — kas tidak dihitung." : "Ditutup tanpa hitung kas."}</p>
+                )}
+                {printMsg && (
+                  <p className="text-[11.5px] mt-2" style={{ color: printMsg.startsWith("Nota terkirim") ? "#3D7A5E" : "#C25E3D" }}>{printMsg}</p>
                 )}
               </div>
             )}

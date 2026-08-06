@@ -332,6 +332,95 @@ export async function printReceipt(d: ReceiptData, paper: 58 | 80): Promise<void
   await writeChunks(buildReceipt(d, paper, loadPrinterConfig()?.density ?? "normal"));
 }
 
+// ── Nota Tutup Shift ──
+export interface ShiftClosingPrint {
+  storeName: string; dateStr: string; closedTime: string;
+  cashierName: string; shiftCount: number;
+  omzet: number; trx: number; breakdown: Record<string, number>; piutangBaru: number;
+  modalAwal: number; cash: number; hutangSettle: number; kasMasuk: number; kasKeluar: number;
+  expected: number; counted: number | null; selisih: number | null; reconciled: boolean;
+  autoClosed: boolean;
+}
+
+const CLOSING_METHOD: Record<string, string> = {
+  tunai: "Tunai", qris: "QRIS", transfer: "Transfer",
+  debit: "Debit", ewallet: "E-Wallet", hutang: "Hutang/Bon",
+};
+
+/**
+ * The closing nota on paper. Deliberately mirrors the on-screen version line for
+ * line, including the drawer working — the whole point is that the owner can
+ * check the arithmetic without the app, sign it, and file it.
+ */
+export function buildShiftClosing(d: ShiftClosingPrint, paper: 58 | 80, density: Density = "normal"): Uint8Array {
+  const W = paper === 80 ? 48 : 32;
+  const ESC = 0x1b, GS = 0x1d;
+  const cmd = (...b: number[]) => new Uint8Array(b);
+  const line = (l: string, r: string) => {
+    l = clean(l); r = clean(r);
+    if (l.length + r.length + 1 > W) l = l.slice(0, W - r.length - 1);
+    return l + " ".repeat(Math.max(1, W - l.length - r.length)) + r + "\n";
+  };
+  const center = (s: string) => { s = clean(s); return " ".repeat(Math.max(0, Math.floor((W - s.length) / 2))) + s + "\n"; };
+  const rule = "-".repeat(W) + "\n";
+
+  const p: (Uint8Array | string)[] = [];
+  p.push(cmd(ESC, 0x40));
+  p.push(new Uint8Array(DENSITY_BYTES[density] ?? DENSITY_BYTES.normal));
+  p.push(cmd(ESC, 0x61, 0x01));                    // centre
+  p.push(cmd(ESC, 0x21, 0x10));                    // double height
+  p.push(center(d.storeName));
+  p.push(cmd(ESC, 0x21, 0x00));
+  p.push(center("NOTA TUTUP SHIFT"));
+  p.push(center(d.dateStr));
+  p.push(cmd(ESC, 0x61, 0x00));                    // left
+  p.push(rule);
+  p.push(line("Kasir", d.cashierName || "-"));
+  p.push(line("Shift", String(d.shiftCount)));
+  p.push(line("Ditutup", d.closedTime + (d.autoClosed ? " (otomatis)" : "")));
+  p.push(rule);
+  p.push("PENJUALAN PER METODE\n");
+  for (const m of ["tunai", "qris", "transfer", "debit", "ewallet", "hutang"]) {
+    if ((d.breakdown[m] ?? 0) > 0) p.push(line(CLOSING_METHOD[m] ?? m, rp(d.breakdown[m])));
+  }
+  p.push(line("Transaksi", String(d.trx)));
+  p.push(rule);
+  p.push(cmd(ESC, 0x45, 1));
+  p.push(line("TOTAL OMSET", rp(d.omzet)));
+  p.push(cmd(ESC, 0x45, 0));
+  if (d.piutangBaru > 0) p.push(line("Belum diterima*", rp(d.piutangBaru)));
+  p.push(rule);
+  p.push("KAS / LACI\n");
+  p.push(line("Modal awal", rp(d.modalAwal)));
+  if (d.cash > 0) p.push(line("Tunai", "+" + rp(d.cash)));
+  if (d.hutangSettle > 0) p.push(line("Pelunasan hutang", "+" + rp(d.hutangSettle)));
+  if (d.kasMasuk > 0) p.push(line("Kas masuk", "+" + rp(d.kasMasuk)));
+  if (d.kasKeluar > 0) p.push(line("Kas keluar", "-" + rp(d.kasKeluar)));
+  p.push(cmd(ESC, 0x45, 1));
+  p.push(line("SEHARUSNYA DI LACI", rp(d.expected)));
+  p.push(cmd(ESC, 0x45, 0));
+  if (d.reconciled) {
+    p.push(line("Dihitung", rp(d.counted ?? 0)));
+    const s = d.selisih ?? 0;
+    p.push(line("Selisih", (s > 0 ? "+" : s < 0 ? "-" : "") + rp(Math.abs(s))));
+  } else {
+    p.push("Ditutup tanpa hitung kas.\n");
+  }
+  if (d.piutangBaru > 0) { p.push(rule); p.push("*sudah termasuk di omset\n"); }
+  p.push(rule);
+  // Space for a signature: this is the document an owner files, and a shift
+  // handover is worth having signed by whoever counted the drawer.
+  p.push("\nDihitung oleh,\n\n\n");
+  p.push("(............................)\n");
+  p.push("\n\n\n");
+  p.push(cmd(GS, 0x56, 0x42, 0x00));
+  return encode(p);
+}
+
+export async function printShiftClosing(d: ShiftClosingPrint, paper: 58 | 80): Promise<void> {
+  await writeChunks(buildShiftClosing(d, paper, loadPrinterConfig()?.density ?? "normal"));
+}
+
 // Small sample so owners can confirm the printer works before going live.
 export async function testPrint(paper: 58 | 80): Promise<void> {
   await printReceipt({
