@@ -53,6 +53,7 @@ const PRINTER_SERVICES = [
 // Live connection handles (module-scoped; one printer per till device).
 type AnyChar = { writeValueWithoutResponse?: (b: BufferSource) => Promise<void>; writeValue: (b: BufferSource) => Promise<void> };
 let btChar: AnyChar | null = null;
+let btCharUuid = "";                 // which pipe we picked — surfaced on dev builds
 let btName = "";
 let usbDev: { transferOut: (ep: number, data: BufferSource) => Promise<unknown>; opened?: boolean } | null = null;
 let usbEndpoint = 1;
@@ -60,17 +61,54 @@ let usbName = "";
 
 export function isConnected(): boolean { return !!btChar || !!usbDev; }
 export function connectedName(): string { return btName || usbName || ""; }
+// Which characteristic we chose to print through. Shown on dev builds only —
+// when a printer connects but no paper moves, this is the first thing to check.
+export function connectedCharUuid(): string { return btCharUuid; }
 
-async function findWritableChar(server: { getPrimaryServices: () => Promise<Array<{ getCharacteristics: () => Promise<Array<{ properties: { write: boolean; writeWithoutResponse: boolean } } & AnyChar>> }>> }): Promise<AnyChar | null> {
+// Characteristics that are actually the print pipe on common ESC/POS printers.
+// 2af1 belongs to the standard 18f0 printer service; the rest are vendor serial
+// bridges (ff02 on the MPT/POS58 family, ffe1 on HM-10 style modules).
+const WRITE_CHARS = ["2af1", "ff02", "ff01", "ffe1", "fff1", "fff2"];
+const ISSC_WRITE = "49535343-8841-43f4-a8d4-ecbe34729bb3";
+
+// "0000ff02-0000-1000-8000-00805f9b34fb" -> "ff02"; leaves custom UUIDs alone.
+const shortUuid = (u: string) =>
+  /^0000[0-9a-f]{4}-0000-1000-8000-00805f9b34fb$/i.test(u) ? u.slice(4, 8).toLowerCase() : u.toLowerCase();
+
+type Candidate = { ch: AnyChar; score: number };
+
+/**
+ * Pick the characteristic that actually drives the paper.
+ *
+ * This used to return the FIRST writable characteristic in the first service the
+ * browser happened to list. Printers commonly expose several — config, status,
+ * data — and writing ESC/POS to the wrong one succeeds silently: the app reports
+ * "struk terkirim" and nothing comes out. So candidates are scored instead, by
+ * how strongly the UUIDs say "this is the printer's data pipe".
+ */
+async function findWritableChar(server: { getPrimaryServices: () => Promise<Array<{ uuid?: string; getCharacteristics: () => Promise<Array<{ uuid?: string; properties: { write: boolean; writeWithoutResponse: boolean } } & AnyChar>> }>> }): Promise<AnyChar | null> {
   const services = await server.getPrimaryServices();
+  const found: Candidate[] = [];
+
   for (const svc of services) {
     let chars;
     try { chars = await svc.getCharacteristics(); } catch { continue; }
+    const svcShort = shortUuid(svc.uuid ?? "");
     for (const ch of chars) {
-      if (ch.properties?.write || ch.properties?.writeWithoutResponse) return ch;
+      if (!ch.properties?.write && !ch.properties?.writeWithoutResponse) continue;
+      const chShort = shortUuid(ch.uuid ?? "");
+      let score = 0;
+      if (WRITE_CHARS.includes(chShort)) score += 4;          // known data pipe
+      if (chShort === ISSC_WRITE) score += 4;
+      if (["18f0", "ff00", "ffe0", "fff0", "ff10"].includes(svcShort)) score += 2;
+      if (ch.properties?.writeWithoutResponse) score += 1;    // what printers expect
+      found.push({ ch, score });
     }
   }
-  return null;
+  if (!found.length) return null;
+  found.sort((a, b) => b.score - a.score);
+  btCharUuid = (found[0].ch as unknown as { uuid?: string }).uuid ?? "";
+  return found[0].ch;
 }
 
 export async function connectBluetooth(): Promise<string> {
@@ -103,15 +141,20 @@ export async function connectUsb(): Promise<string> {
 }
 
 async function writeChunks(bytes: Uint8Array) {
-  const CHUNK = 128;
   if (btChar) {
+    // BLE's default MTU is 23 bytes, leaving 20 for payload. Chrome will not
+    // fragment for you, and a cheap printer given 128 bytes usually drops the
+    // write without complaining — the app then reports success and no paper
+    // moves. 20 is the size every BLE peripheral is required to accept.
+    const CHUNK = 20;
     for (let i = 0; i < bytes.length; i += CHUNK) {
       const slice = bytes.slice(i, i + CHUNK);
       if (btChar.writeValueWithoutResponse) await btChar.writeValueWithoutResponse(slice);
       else await btChar.writeValue(slice);
-      await new Promise(r => setTimeout(r, 18));
+      await new Promise(r => setTimeout(r, 20));   // give the buffer time to drain
     }
   } else if (usbDev) {
+    const CHUNK = 128;                              // bulk transfer handles this fine
     for (let i = 0; i < bytes.length; i += CHUNK) {
       await usbDev.transferOut(usbEndpoint, bytes.slice(i, i + CHUNK));
     }

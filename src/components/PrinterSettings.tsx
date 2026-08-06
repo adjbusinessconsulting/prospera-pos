@@ -1,8 +1,9 @@
 import { useState } from "react";
 import {
-  isIOS, bluetoothSupported, usbSupported, isDesktop, isConnected, connectedName,
+  isIOS, bluetoothSupported, usbSupported, isDesktop, isConnected, connectedName, connectedCharUuid,
   connectBluetooth, connectUsb, testPrint, loadPrinterConfig, savePrinterConfig, clearPrinterConfig,
 } from "../lib/printer";
+import { IS_DEV_BUILD } from "../lib/devStoreSwitch";
 
 export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () => void }) {
   const saved = loadPrinterConfig();
@@ -124,6 +125,14 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
                 {connected ? `Terhubung: ${connectedName()}` : "Tidak terhubung"}
               </span>
             </div>
+            {/* Dev only: which characteristic we chose to print through. When a
+                printer connects but no paper moves, this is the first thing to
+                check — the wrong pipe accepts the bytes and stays silent. */}
+            {IS_DEV_BUILD && connected && connectedCharUuid() && (
+              <p style={{ margin: "6px 0 0", fontSize: 10, color: "#7A776F", fontFamily: "monospace", wordBreak: "break-all" }}>
+                pipe: {connectedCharUuid()}
+              </p>
+            )}
             {!connected && saved && (
               <p style={{ margin: "8px 0 0", fontSize: 11, color: "#7A776F" }}>Printer terakhir: <b>{saved.name}</b>. Sambungkan ulang tiap buka aplikasi.</p>
             )}
