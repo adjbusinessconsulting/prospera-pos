@@ -52,7 +52,9 @@ const PRINTER_SERVICES = [
 
 // Live connection handles (module-scoped; one printer per till device).
 type AnyChar = { writeValueWithoutResponse?: (b: BufferSource) => Promise<void>; writeValue: (b: BufferSource) => Promise<void> };
+type GattServer = { getPrimaryServices: () => Promise<Array<{ uuid?: string; getCharacteristics: () => Promise<Array<{ uuid?: string; properties?: Record<string, boolean> }>> }>> };
 let btChar: AnyChar | null = null;
+let btServer: GattServer | null = null;   // kept for the dev service dump
 let btCharUuid = "";                 // which pipe we picked — surfaced on dev builds
 let btName = "";
 let usbDev: { transferOut: (ep: number, data: BufferSource) => Promise<unknown>; opened?: boolean } | null = null;
@@ -120,9 +122,39 @@ export async function connectBluetooth(): Promise<string> {
   const ch = await findWritableChar(server as any);
   if (!ch) throw new Error("Karakteristik cetak tidak ditemukan di printer ini.");
   btChar = ch;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  btServer = server as any;
   btName = device.name || "Printer Bluetooth";
   usbDev = null;
   return btName;
+}
+
+/**
+ * Dev-only: list every service and characteristic the printer exposes.
+ *
+ * When a printer pairs, accepts the bytes and prints nothing, the question is
+ * always "did we write to the right pipe, or does this device even have one over
+ * BLE?" — dual-mode printers often expose GATT for configuration while printing
+ * lives on Bluetooth Classic, which the web platform cannot reach at all. This
+ * answers that in one screenshot instead of a round trip per guess.
+ */
+export async function dumpServices(): Promise<string[]> {
+  if (!btServer) return ["(belum terhubung)"];
+  const out: string[] = [];
+  const services = await btServer.getPrimaryServices();
+  for (const svc of services) {
+    out.push(`SVC ${shortUuid(svc.uuid ?? "?")}`);
+    let chars;
+    try { chars = await svc.getCharacteristics(); } catch { out.push("   (tidak bisa dibaca)"); continue; }
+    for (const ch of chars) {
+      const p = ch.properties ?? ({} as Record<string, boolean>);
+      const flags = [p.write && "write", p.writeWithoutResponse && "wnr", p.read && "read", p.notify && "notify"]
+        .filter(Boolean).join(",") || "none";
+      const chosen = (ch as unknown as { uuid?: string }).uuid === btCharUuid ? "  <-- DIPAKAI" : "";
+      out.push(`   ${shortUuid((ch as unknown as { uuid?: string }).uuid ?? "?")} [${flags}]${chosen}`);
+    }
+  }
+  return out.length ? out : ["(tidak ada service)"];
 }
 
 export async function connectUsb(): Promise<string> {
