@@ -55,6 +55,7 @@ type AnyChar = { writeValueWithoutResponse?: (b: BufferSource) => Promise<void>;
 type GattServer = { getPrimaryServices: () => Promise<Array<{ uuid?: string; getCharacteristics: () => Promise<Array<{ uuid?: string; properties?: Record<string, boolean> }>> }>> };
 let btChar: AnyChar | null = null;
 let btServer: GattServer | null = null;   // kept for the dev service dump
+let btCandidates: AnyChar[] = [];         // every writable char, best guess first
 let btCharUuid = "";                 // which pipe we picked — surfaced on dev builds
 let btName = "";
 let usbDev: { transferOut: (ep: number, data: BufferSource) => Promise<unknown>; opened?: boolean } | null = null;
@@ -100,8 +101,13 @@ async function findWritableChar(server: { getPrimaryServices: () => Promise<Arra
       if (!ch.properties?.write && !ch.properties?.writeWithoutResponse) continue;
       const chShort = shortUuid(ch.uuid ?? "");
       let score = 0;
+      // The ISSC transparent UART outranks everything. It is a dedicated
+      // serial-over-BLE bridge, so when a printer exposes it that IS the data
+      // path — the short vendor UUIDs beside it (ff00/ff02) are usually a
+      // control channel that swallows ESC/POS without printing. Learned from an
+      // MPT-III-BQ that paired, accepted every byte, and produced no paper.
+      if (chShort === ISSC_WRITE) score += 8;
       if (WRITE_CHARS.includes(chShort)) score += 4;          // known data pipe
-      if (chShort === ISSC_WRITE) score += 4;
       if (["18f0", "ff00", "ffe0", "fff0", "ff10"].includes(svcShort)) score += 2;
       if (ch.properties?.writeWithoutResponse) score += 1;    // what printers expect
       found.push({ ch, score });
@@ -109,8 +115,20 @@ async function findWritableChar(server: { getPrimaryServices: () => Promise<Arra
   }
   if (!found.length) return null;
   found.sort((a, b) => b.score - a.score);
+  btCandidates = found.map(f => f.ch);
   btCharUuid = (found[0].ch as unknown as { uuid?: string }).uuid ?? "";
   return found[0].ch;
+}
+
+/** Every writable characteristic, best guess first. Dev builds let you try each. */
+export function listPipes(): string[] {
+  return btCandidates.map(c => (c as unknown as { uuid?: string }).uuid ?? "?");
+}
+
+/** Point printing at a specific characteristic — used to find the real pipe. */
+export function setPipe(uuid: string): void {
+  const hit = btCandidates.find(c => (c as unknown as { uuid?: string }).uuid === uuid);
+  if (hit) { btChar = hit; btCharUuid = uuid; }
 }
 
 export async function connectBluetooth(): Promise<string> {

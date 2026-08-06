@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   isIOS, bluetoothSupported, usbSupported, isDesktop, isConnected, connectedName, connectedCharUuid,
-  connectBluetooth, connectUsb, testPrint, loadPrinterConfig, savePrinterConfig, clearPrinterConfig, dumpServices,
+  connectBluetooth, connectUsb, testPrint, loadPrinterConfig, savePrinterConfig, clearPrinterConfig, dumpServices, listPipes, setPipe,
 } from "../lib/printer";
 import { IS_DEV_BUILD } from "../lib/devStoreSwitch";
 
@@ -12,6 +12,7 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
   const [err, setErr] = useState("");
   const [okMsg, setOkMsg] = useState("");
   const [dump, setDump] = useState<string[]>([]);   // dev-only BLE service listing
+  const [pipes, setPipes] = useState<string[]>([]);  // dev-only pipe picker
   const [, force] = useState(0);
 
   if (!open) return null;
@@ -134,11 +135,29 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
                 <p style={{ margin: "6px 0 0", fontSize: 10, color: "#7A776F", fontFamily: "monospace", wordBreak: "break-all" }}>
                   pipe: {connectedCharUuid()}
                 </p>
-                <button type="button"
-                  onClick={() => { void dumpServices().then(setDump); }}
-                  style={{ marginTop: 6, background: "none", border: "1px solid #ECE7DD", borderRadius: 8, padding: "5px 10px", fontSize: 10.5, color: "#7A776F", cursor: "pointer" }}>
-                  Diagnostik BLE
-                </button>
+                <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                  <button type="button"
+                    onClick={() => { void dumpServices().then(setDump); }}
+                    style={{ background: "none", border: "1px solid #ECE7DD", borderRadius: 8, padding: "5px 10px", fontSize: 10.5, color: "#7A776F", cursor: "pointer" }}>
+                    Diagnostik BLE
+                  </button>
+                  <button type="button"
+                    onClick={() => setPipes(listPipes())}
+                    style={{ background: "none", border: "1px solid #ECE7DD", borderRadius: 8, padding: "5px 10px", fontSize: 10.5, color: "#7A776F", cursor: "pointer" }}>
+                    Coba pipe lain
+                  </button>
+                </div>
+                {/* Tap a pipe, then Test Print. Whichever one moves paper is the
+                    printer's real data path — faster than another round of guessing. */}
+                {pipes.map(u => (
+                  <button key={u} type="button"
+                    onClick={() => { setPipe(u); setOkMsg(""); setErr(""); force(x => x + 1); }}
+                    style={{ display: "block", width: "100%", textAlign: "left", marginTop: 4, fontFamily: "monospace", fontSize: 9.5,
+                      background: u === connectedCharUuid() ? "#0D1117" : "white", color: u === connectedCharUuid() ? "#F2EDE3" : "#0D1117",
+                      border: "1px solid #ECE7DD", borderRadius: 8, padding: "6px 8px", cursor: "pointer", wordBreak: "break-all" }}>
+                    {u === connectedCharUuid() ? "● " : "○ "}{u}
+                  </button>
+                ))}
                 {dump.length > 0 && (
                   <pre style={{ margin: "8px 0 0", fontSize: 10, lineHeight: 1.5, color: "#0D1117", background: "#F7F4EE", border: "1px solid #ECE7DD", borderRadius: 8, padding: 10, overflowX: "auto", whiteSpace: "pre" }}>
 {dump.join("\n")}
