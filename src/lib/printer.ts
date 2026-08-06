@@ -254,7 +254,7 @@ export interface ReceiptData {
   trxId: string; dateStr: string; timeStr: string; cashierName: string;
   items: PrintLine[]; total: number; method: string;
   cashReceived?: number; change?: number;
-  hutangName?: string; customerName?: string; footer?: string;
+  hutangName?: string; hutangPhone?: string; customerName?: string; footer?: string;
 }
 
 const rp = (n: number) => "Rp" + Math.round(n).toLocaleString("id-ID");
@@ -317,14 +317,22 @@ function formatters(W: number) {
     return out.join("\n") + "\n";
   };
 
-  return { fit, line, center, wrap, rule: "-".repeat(W) + "\n" };
+  // Label + value, but a value too long to sit beside its label drops onto its own
+  // wrapped line rather than being cut. Names on a bon must be complete — half a
+  // name on a debt record is worse than an extra line of paper.
+  const field = (label: string, value: string) => {
+    const v = clean(value);
+    return (label.length + v.length + 1 <= W) ? line(label, v) : label + ":\n" + wrap("  " + v);
+  };
+
+  return { fit, line, center, wrap, field, rule: "-".repeat(W) + "\n" };
 }
 
 export function buildReceipt(d: ReceiptData, paper: 58 | 80, density: Density = "normal"): Uint8Array {
   const W = paper === 80 ? 48 : 32;
   const ESC = 0x1b, GS = 0x1d;
   const cmd = (...b: number[]) => new Uint8Array(b);
-  const { fit, line, center, wrap, rule } = formatters(W);
+  const { fit, line, center, wrap, field, rule } = formatters(W);
 
   const parts: (Uint8Array | string)[] = [];
   parts.push(cmd(ESC, 0x40));                 // init
@@ -353,8 +361,20 @@ export function buildReceipt(d: ReceiptData, paper: 58 | 80, density: Density = 
   parts.push(line("TOTAL", rp(d.total)));
   parts.push(cmd(ESC, 0x21, 0x00));
   if (d.method === "hutang") {
-    parts.push(line("HUTANG / BON", "BELUM DIBAYAR"));
-    if (d.hutangName) parts.push("a.n. " + clean(d.hutangName) + "\n");
+    // A bon is the customer's own record of a debt, so it carries who owes it,
+    // how much, and how to reach them — and a line to sign. It used to print
+    // only a name, which is not something you can act on weeks later.
+    parts.push(rule);
+    parts.push(cmd(ESC, 0x61, 0x01));
+    parts.push(cmd(ESC, 0x21, 0x08));
+    parts.push("BELUM DIBAYAR\n");
+    parts.push(cmd(ESC, 0x21, 0x00));
+    parts.push(cmd(ESC, 0x61, 0x00));
+    if (d.hutangName) parts.push(field("Nama", d.hutangName));
+    if (d.hutangPhone) parts.push(field("WhatsApp", d.hutangPhone));
+    parts.push(line("Jumlah hutang", rp(d.total)));
+    parts.push("\nTanda tangan,\n\n\n");
+    parts.push("(............................)\n");
   } else if (d.method === "tunai") {
     parts.push(line("Tunai", rp(d.cashReceived ?? d.total)));
     parts.push(line("Kembalian", rp(d.change ?? 0)));
@@ -456,6 +476,70 @@ export function buildShiftClosing(d: ShiftClosingPrint, paper: 58 | 80, density:
 
 export async function printShiftClosing(d: ShiftClosingPrint, paper: 58 | 80): Promise<void> {
   await writeChunks(buildShiftClosing(d, paper, loadPrinterConfig()?.density ?? "normal"));
+}
+
+// ── Tanda Lunas ──
+export interface LunasPrint {
+  storeName: string; storePhone?: string;
+  customerName: string; customerPhone?: string;
+  amount: number; method: string;
+  trxId?: string | null;          // the sale the bon came from
+  bonDateStr?: string;            // when the debt was incurred
+  settledDateStr: string; settledTimeStr: string;
+  cashierName?: string;
+}
+
+/**
+ * Proof a debt was cleared. This is the customer's protection more than the
+ * shop's: without it, the only record that a bon was paid lives in the shop's
+ * app, and a warung's bon book is exactly where disputes start.
+ */
+export function buildLunas(d: LunasPrint, paper: 58 | 80, density: Density = "normal"): Uint8Array {
+  const W = paper === 80 ? 48 : 32;
+  const ESC = 0x1b, GS = 0x1d;
+  const cmd = (...b: number[]) => new Uint8Array(b);
+  const { fit, center, field, line, rule } = formatters(W);
+
+  const p: (Uint8Array | string)[] = [];
+  p.push(cmd(ESC, 0x40));
+  p.push(new Uint8Array(DENSITY_BYTES[density] ?? DENSITY_BYTES.normal));
+  p.push(cmd(ESC, 0x61, 0x01));
+  const wide = clean(d.storeName).length <= Math.floor(W / 2);
+  p.push(cmd(ESC, 0x21, wide ? 0x30 : 0x10));
+  p.push(fit(d.storeName, wide ? Math.floor(W / 2) : W) + "\n");
+  p.push(cmd(ESC, 0x21, 0x00));
+  if (d.storePhone) p.push(center(d.storePhone));
+  p.push("\n");
+  p.push(cmd(ESC, 0x21, 0x08));
+  p.push(center("TANDA LUNAS"));
+  p.push(cmd(ESC, 0x21, 0x00));
+  p.push(cmd(ESC, 0x61, 0x00));
+  p.push(rule);
+  p.push(field("Nama", d.customerName));
+  if (d.customerPhone) p.push(field("WhatsApp", d.customerPhone));
+  if (d.trxId) p.push(field("No. transaksi", d.trxId));
+  if (d.bonDateStr) p.push(field("Tanggal bon", d.bonDateStr));
+  p.push(rule);
+  p.push(cmd(ESC, 0x21, 0x08));
+  p.push(line("DIBAYAR", rp(d.amount)));
+  p.push(cmd(ESC, 0x21, 0x00));
+  p.push(line("Metode", d.method.toUpperCase()));
+  p.push(line("Tanggal lunas", d.settledDateStr));
+  p.push(line("Jam", d.settledTimeStr));
+  if (d.cashierName) p.push(field("Diterima oleh", d.cashierName));
+  p.push(rule);
+  p.push(cmd(ESC, 0x61, 0x01));
+  p.push(center("Hutang LUNAS. Terima kasih."));
+  p.push(cmd(ESC, 0x61, 0x00));
+  p.push("\nTanda tangan,\n\n\n");
+  p.push("(............................)\n");
+  p.push("\n\n\n");
+  p.push(cmd(GS, 0x56, 0x42, 0x00));
+  return encode(p);
+}
+
+export async function printLunas(d: LunasPrint, paper: 58 | 80): Promise<void> {
+  await writeChunks(buildLunas(d, paper, loadPrinterConfig()?.density ?? "normal"));
 }
 
 // Small sample so owners can confirm the printer works before going live.

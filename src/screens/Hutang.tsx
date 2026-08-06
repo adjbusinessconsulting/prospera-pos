@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useStore, isAtLeast } from "../store";
 import { formatRp } from "../data";
+import { isConnected as printerReady, printLunas, loadPrinterConfig } from "../lib/printer";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
@@ -34,7 +35,7 @@ function fmtDate(iso?: string | null) {
 }
 
 export default function Hutang() {
-  const { cashierInitials, cashierName, selectedShift, storeId, storeName, storeTier, isDemoMode, demoHutang, settings, setDemoHutang, setScreen, signOut } = useStore();
+  const { cashierInitials, cashierName, selectedShift, storeId, storeName, storePhone, storeTier, isDemoMode, demoHutang, settings, setDemoHutang, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : "free";
   const canHutang = isAtLeast(effectiveTier, "standard");
 
@@ -47,6 +48,7 @@ export default function Hutang() {
   const [method, setMethod] = useState("tunai");
   const [saving, setSaving] = useState(false);
   const [lunasReceipt, setLunasReceipt] = useState<HutangRow | null>(null);
+  const [printMsg, setPrintMsg] = useState("");
   // Customer book (name → photo/address) so debts show the debtor's face + address.
   const [custMap, setCustMap] = useState<Record<string, { photo: string | null; address: string | null }>>({});
 
@@ -111,6 +113,25 @@ export default function Hutang() {
     setSaving(false);
     setTarget(null);
     setLunasReceipt(settled);   // show tanda lunas
+  }
+
+  // Paper proof the debt was cleared. Matters more to the customer than the shop:
+  // without it the only record lives in the shop's app.
+  async function printLunasNota(r: HutangRow) {
+    setPrintMsg("");
+    if (!printerReady()) { setPrintMsg("Printer belum terhubung."); return; }
+    try {
+      await printLunas({
+        storeName: storeName || "STERITH POS", storePhone: storePhone || undefined,
+        customerName: r.customer_name, customerPhone: r.phone || undefined,
+        amount: r.amount, method: METHOD_LABEL[r.settled_method ?? "tunai"] ?? "Tunai",
+        trxId: r.trx_id, bonDateStr: fmtDate(r.created_at),
+        settledDateStr: fmtDate(r.settled_at ?? new Date().toISOString()),
+        settledTimeStr: new Date(r.settled_at ?? Date.now()).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+        cashierName: r.cashier_name || undefined,
+      }, loadPrinterConfig()?.paper ?? 58);
+      setPrintMsg("Tanda lunas terkirim ke printer.");
+    } catch { setPrintMsg("Gagal mencetak. Periksa printer."); }
   }
 
   function shareLunasWA(r: HutangRow) {
@@ -307,6 +328,9 @@ export default function Hutang() {
                 <span className="num text-[22px] font-bold text-[#3D7A5E]" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(lunasReceipt.amount)}</span>
               </div>
             </div>
+            {printMsg && (
+              <p className="px-6 pt-1 text-[11.5px]" style={{ color: printMsg.startsWith("Tanda lunas") ? "#3D7A5E" : "#C25E3D" }}>{printMsg}</p>
+            )}
             <div className="px-6 pb-7 pt-1 flex gap-2.5">
               {settings.whatsappShare && (
               <button onClick={() => shareLunasWA(lunasReceipt)} className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] text-white rounded-card h-[46px] text-[13px] font-semibold border-0 hover:opacity-90 cursor-pointer">
@@ -314,7 +338,8 @@ export default function Hutang() {
                 Kirim
               </button>
               )}
-              <button onClick={() => setLunasReceipt(null)} className="flex-1 bg-navy text-cream-text rounded-card h-[46px] text-[13px] font-semibold border-0 hover:opacity-90 cursor-pointer">Selesai</button>
+              <button onClick={() => void printLunasNota(lunasReceipt)} className="flex-1 bg-white border border-warm-border text-navy rounded-card h-[46px] text-[13px] font-semibold hover:border-navy/40 cursor-pointer">Cetak</button>
+              <button onClick={() => { setLunasReceipt(null); setPrintMsg(""); }} className="flex-1 bg-navy text-cream-text rounded-card h-[46px] text-[13px] font-semibold border-0 hover:opacity-90 cursor-pointer">Selesai</button>
             </div>
           </div>
         </div>

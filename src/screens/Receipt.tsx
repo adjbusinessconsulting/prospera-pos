@@ -47,6 +47,7 @@ export default function Receipt() {
         items: cart.map(i => ({ name: i.product.name, qty: i.qty, price: i.product.price })),
         total, method: paymentMethod, cashReceived, change,
         hutangName: hutangCustomer?.name,
+        hutangPhone: hutangCustomer?.phone,
         customerName: !hutangCustomer && orderCustomer?.name ? orderCustomer.name : undefined,
         footer: "Terima kasih, sampai jumpa lagi",
       }, paper);
