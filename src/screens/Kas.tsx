@@ -91,8 +91,10 @@ export default function Kas() {
 
   const kasKeluar  = manual.filter(p => p.amount < 0).reduce((s, p) => s + Math.abs(p.amount), 0);
   const kasMasuk   = manual.filter(p => p.amount > 0).reduce((s, p) => s + p.amount, 0);
-  const totalMasuk = modalAwal + autoTunai + kasMasuk;
-  const saldo      = totalMasuk - kasKeluar;
+  // Everything that entered the drawer, used only to derive the saldo. It is
+  // deliberately NOT displayed: the MASUK figure on the card means kas masuk
+  // entries, matching the button beneath it.
+  const saldo = modalAwal + autoTunai + kasMasuk - kasKeluar;
 
   // Display: manual entries first, then synthetic auto cash-in + modal awal rows.
   const pergerakan: KasMove[] = [
@@ -213,8 +215,12 @@ export default function Kas() {
               <p className="text-[11px] text-white/40 mt-1.5">Modal awal {formatRp(modalAwal)} + omzet tunai</p>
               <div className="flex gap-5 mt-4 pt-4 border-t border-white/10">
                 <div>
-                  <p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-0.5">TOTAL MASUK</p>
-                  <p className="text-[13px] font-medium text-white/70" style={{ fontVariantNumeric: "tabular-nums" }}>+ {formatRp(totalMasuk)}</p>
+                  <p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-0.5">MASUK</p>
+                  {/* Kas masuk ENTRIES only — it sits above the Kas Masuk button and
+                      beside KELUAR, which is kas keluar entries. Showing modal awal
+                      and tunai sales here made it read as a wrong number; the saldo
+                      above already accounts for those and says so on its own line. */}
+                  <p className="text-[13px] font-medium text-white/70" style={{ fontVariantNumeric: "tabular-nums" }}>+ {formatRp(kasMasuk)}</p>
                 </div>
                 <div>
                   <p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-0.5">KELUAR</p>
