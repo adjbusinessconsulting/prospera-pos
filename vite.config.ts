@@ -21,6 +21,19 @@ export default defineConfig({
   define: { __STERITH_DEV__: JSON.stringify(isDev) },
   plugins: [
     react(),
+    // iOS ignores the manifest icons for "Add to Home Screen" and uses
+    // apple-touch-icon instead — so an iPhone kept installing the OLD icon no
+    // matter what the manifest said. index.html is static and cannot branch on
+    // VERCEL_ENV, so the tag is rewritten at build time to match the manifest.
+    {
+      name: 'sterith-apple-touch-icon',
+      transformIndexHtml(html: string) {
+        return html.replace(
+          /<link rel="apple-touch-icon"[^>]*>/,
+          `<link rel="apple-touch-icon" href="/${appIcon}" />`,
+        )
+      },
+    },
     VitePWA({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'icon-512.png', 'icon-dev-512.png', 'icon-v2-512.png', 'icon-v2-maskable-512.png', 'icon-dev-v2-512.png', 'icon-dev-v2-maskable-512.png', 'splash-logo.png'],
