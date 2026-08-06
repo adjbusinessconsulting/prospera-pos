@@ -4,13 +4,14 @@ import { formatRp } from "../data";
 import { supabase } from "../lib/supabase";
 import { modalAwalToday, fetchModalAwalToday } from "../lib/dayopen";
 import { logEvent } from "../lib/auditlog";
+import { isConnected as printerReady, printHandover, loadPrinterConfig } from "../lib/printer";
 
 function initialsOf(name: string) {
   return name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase() || "–";
 }
 
 export default function PindahShift() {
-  const { cashierName, selectedShift, selectedShiftName, dbShifts, dbCashiers, storeId, storeTier, isDemoMode, setScreen, setShift, selectCashier } = useStore();
+  const { cashierName, selectedShift, selectedShiftName, dbShifts, dbCashiers, storeId, storeName, storeTier, isDemoMode, setScreen, setShift, selectCashier } = useStore();
   const shiftCount = dbShifts.length > 0 ? dbShifts.length : 3;
   const effectiveTier = storeId ? storeTier : "premium";
 
@@ -55,6 +56,12 @@ export default function PindahShift() {
   const [touched, setTouched] = useState(false);
   const [nextCashierId, setNextCashierId] = useState("");
   const [catatan, setCatatan] = useState("");
+  // What the incoming shift starts with. Defaults to whatever was counted, since
+  // that is physically in the drawer — but the owner often lifts the takings and
+  // leaves a float, so it is asked rather than assumed.
+  const [modalNext, setModalNext] = useState("");
+  const [modalNextTouched, setModalNextTouched] = useState(false);
+  const [printMsg, setPrintMsg] = useState("");
 
   // Default the next cashier to the first one who isn't the current cashier.
   useEffect(() => {
@@ -64,6 +71,9 @@ export default function PindahShift() {
 
   // Pre-fill the physical count with the expected drawer until the cashier edits it.
   useEffect(() => { if (!touched) setHitungFisik(String(seharusnya)); }, [seharusnya, touched]);
+
+  // Follow the counted drawer until the cashier sets a float of their own.
+  useEffect(() => { if (!modalNextTouched) setModalNext(hitungFisik); }, [hitungFisik, modalNextTouched]);
 
   const next = (selectedShift % shiftCount) + 1;
   const nextName = shiftNameFor(dbShifts, next);
@@ -78,9 +88,47 @@ export default function PindahShift() {
   const nextCashier = cashiers.find(c => c.id === nextCashierId);
   const nextCashierName = nextCashier?.name ?? "Kasir";
 
+  const modalNextNum = parseInt(modalNext.replace(/\D/g, "") || String(fisikNum));
+  // Cash the owner lifts (or adds) at handover. Recorded as a kas entry so the
+  // day's drawer arithmetic still balances at Tutup Shift — otherwise the money
+  // simply vanishes from "seharusnya di laci" with nothing to explain it.
+  const setoran = fisikNum - modalNextNum;
+
+  function handoverData() {
+    return {
+      storeName: storeName || "STERITH POS",
+      dateStr, timeStr,
+      fromShift: selectedShiftName, toShift: nextName,
+      fromCashier: cashierName, toCashier: nextCashierName,
+      modalAwal, penjualanTunai, kasKeluar,
+      seharusnya, dihitung: fisikNum, selisih,
+      modalAwalNext: modalNextNum, catatan: catatan.trim() || undefined,
+    };
+  }
+
+  async function printSlip() {
+    setPrintMsg("");
+    if (!printerReady()) { setPrintMsg("Printer belum terhubung."); return; }
+    try {
+      await printHandover(handoverData(), loadPrinterConfig()?.paper ?? 58);
+      setPrintMsg("Serah terima terkirim ke printer.");
+    } catch { setPrintMsg("Gagal mencetak. Periksa printer."); }
+  }
+
   function handleConfirm() {
     if (!isDemoMode && storeId) {
-      void logEvent("shift.pindah", `Pindah shift ${selectedShiftName} → ${nextName} · ke ${nextCashierName} · dihitung ${formatRp(fisikNum)} (selisih ${selisih >= 0 ? "+" : "−"}${formatRp(Math.abs(selisih))})${catatan.trim() ? " · " + catatan.trim() : ""}`);
+      void logEvent("shift.pindah", `Pindah shift ${selectedShiftName} → ${nextName} · ke ${nextCashierName} · dihitung ${formatRp(fisikNum)} (selisih ${selisih >= 0 ? "+" : "−"}${formatRp(Math.abs(selisih))}) · modal shift berikut ${formatRp(modalNextNum)}${catatan.trim() ? " · " + catatan.trim() : ""}`);
+      if (setoran !== 0) {
+        const masuk = setoran < 0;
+        void supabase.from("kas_entries").insert({
+          store_id: storeId, cashier_name: cashierName, shift: selectedShift,
+          type: masuk ? "masuk" : "keluar", amount: Math.abs(setoran),
+          label: masuk ? "Tambahan modal pergantian shift" : "Setoran pergantian shift",
+          description: `${selectedShiftName} → ${nextName}`, photo_url: null,
+        });
+        void logEvent(masuk ? "kas.masuk" : "kas.keluar",
+          `${masuk ? "Tambahan modal" : "Setoran"} pergantian shift ${formatRp(Math.abs(setoran))}`);
+      }
     }
     setShift(next);
     if (nextCashierId) selectCashier(nextCashierId);
@@ -205,6 +253,32 @@ export default function PindahShift() {
             )}
           </div>
 
+          {/* Float handed to the incoming shift */}
+          <div className="bg-white border border-warm-border rounded-card px-6 py-5">
+            <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-3">MODAL AWAL SHIFT BERIKUTNYA</p>
+            <div className="flex items-center gap-2 bg-cream-bg border border-warm-border rounded-[10px] px-4 h-[48px]">
+              <span className="text-[13px] text-text-mute">Rp</span>
+              <input
+                inputMode="numeric"
+                value={modalNext ? Number(modalNext.replace(/\D/g, "") || 0).toLocaleString("id-ID") : ""}
+                onChange={e => { setModalNextTouched(true); setModalNext(e.target.value.replace(/\D/g, "")); }}
+                placeholder="0"
+                className="num flex-1 bg-transparent border-0 outline-none text-[17px] font-semibold text-navy"
+                style={{ fontVariantNumeric: "tabular-nums" }}
+              />
+            </div>
+            {setoran !== 0 && (
+              <p className="text-[11.5px] mt-2.5 leading-relaxed" style={{ color: setoran > 0 ? "#A6843F" : "#3D7A5E" }}>
+                {setoran > 0
+                  ? <>Sisa <b>{formatRp(setoran)}</b> dicatat sebagai <b>setoran</b> (kas keluar), supaya hitungan laci tetap cocok saat tutup shift.</>
+                  : <>Tambahan <b>{formatRp(Math.abs(setoran))}</b> dicatat sebagai <b>kas masuk</b>.</>}
+              </p>
+            )}
+            {setoran === 0 && (
+              <p className="text-[11.5px] text-text-mute mt-2.5">Seluruh uang di laci diteruskan ke shift berikutnya.</p>
+            )}
+          </div>
+
           {/* Handover note */}
           <div className="bg-white border border-warm-border rounded-card px-6 py-5 flex flex-col">
             <p style={{ fontSize: 9.5, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-3">CATATAN SERAH-TERIMA (OPSIONAL)</p>
@@ -216,7 +290,14 @@ export default function PindahShift() {
             />
           </div>
 
-          {/* Confirm */}
+          {/* Print + confirm */}
+          {printMsg && (
+            <p className="text-[11.5px] text-center" style={{ color: printMsg.startsWith("Serah terima") ? "#3D7A5E" : "#C25E3D" }}>{printMsg}</p>
+          )}
+          <button onClick={() => void printSlip()}
+            className="w-full bg-white border border-warm-border rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-navy hover:border-navy/40 transition-colors cursor-pointer">
+            Cetak Serah Terima
+          </button>
           <button onClick={handleConfirm}
             className="w-full bg-navy rounded-card h-[52px] flex items-center justify-center gap-3 text-[13.5px] font-semibold text-cream-text hover:opacity-90 transition-opacity cursor-pointer border-0">
             KONFIRMASI & KEMBALI KE PIN

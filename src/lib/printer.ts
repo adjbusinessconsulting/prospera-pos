@@ -542,6 +542,73 @@ export async function printLunas(d: LunasPrint, paper: 58 | 80): Promise<void> {
   await writeChunks(buildLunas(d, paper, loadPrinterConfig()?.density ?? "normal"));
 }
 
+// ── Serah Terima Shift ──
+export interface HandoverPrint {
+  storeName: string; dateStr: string; timeStr: string;
+  fromShift: string; toShift: string;
+  fromCashier: string; toCashier: string;
+  modalAwal: number; penjualanTunai: number; kasKeluar: number;
+  seharusnya: number; dihitung: number; selisih: number;
+  modalAwalNext: number; catatan?: string;
+}
+
+/**
+ * The handover slip. Two cashiers are swapping responsibility for a drawer of
+ * cash, so both sign: one for what was left, one for what was received. Without
+ * paper, a shortage found at closing has no way to be attributed to a shift.
+ */
+export function buildHandover(d: HandoverPrint, paper: 58 | 80, density: Density = "normal"): Uint8Array {
+  const W = paper === 80 ? 48 : 32;
+  const ESC = 0x1b, GS = 0x1d;
+  const cmd = (...b: number[]) => new Uint8Array(b);
+  const { fit, line, center, wrap, field, rule } = formatters(W);
+
+  const p: (Uint8Array | string)[] = [];
+  p.push(cmd(ESC, 0x40));
+  p.push(new Uint8Array(DENSITY_BYTES[density] ?? DENSITY_BYTES.normal));
+  p.push(cmd(ESC, 0x61, 0x01));
+  const wide = clean(d.storeName).length <= Math.floor(W / 2);
+  p.push(cmd(ESC, 0x21, wide ? 0x30 : 0x10));
+  p.push(fit(d.storeName, wide ? Math.floor(W / 2) : W) + "\n");
+  p.push(cmd(ESC, 0x21, 0x08));
+  p.push(center("SERAH TERIMA SHIFT"));
+  p.push(cmd(ESC, 0x21, 0x00));
+  p.push(center(d.dateStr + " " + d.timeStr));
+  p.push(cmd(ESC, 0x61, 0x00));
+  p.push(rule);
+  p.push(field("Dari", d.fromShift + " - " + d.fromCashier));
+  p.push(field("Ke", d.toShift + " - " + d.toCashier));
+  p.push(rule);
+  p.push("KAS SHIFT INI\n");
+  p.push(line("Modal awal", rp(d.modalAwal)));
+  p.push(line("Penjualan tunai", "+" + rp(d.penjualanTunai)));
+  if (d.kasKeluar > 0) p.push(line("Kas keluar", "-" + rp(d.kasKeluar)));
+  p.push(cmd(ESC, 0x45, 1));
+  p.push(line("SEHARUSNYA", rp(d.seharusnya)));
+  p.push(cmd(ESC, 0x45, 0));
+  p.push(line("Dihitung", rp(d.dihitung)));
+  p.push(cmd(ESC, 0x45, 1));
+  p.push(line("SELISIH", (d.selisih > 0 ? "+" : d.selisih < 0 ? "-" : "") + rp(Math.abs(d.selisih))));
+  p.push(cmd(ESC, 0x45, 0));
+  p.push(rule);
+  p.push(cmd(ESC, 0x45, 1));
+  p.push(line("MODAL SHIFT BERIKUT", rp(d.modalAwalNext)));
+  p.push(cmd(ESC, 0x45, 0));
+  if (d.catatan?.trim()) { p.push(rule); p.push(wrap("Catatan: " + d.catatan.trim())); }
+  p.push(rule);
+  // Both sides sign. A shortage found at closing is otherwise unattributable.
+  p.push("\nDiserahkan,        Diterima,\n\n\n");
+  p.push("(...........)      (...........)\n");
+  p.push(fit(d.fromCashier, 17).padEnd(19) + fit(d.toCashier, 13) + "\n");
+  p.push("\n\n\n");
+  p.push(cmd(GS, 0x56, 0x42, 0x00));
+  return encode(p);
+}
+
+export async function printHandover(d: HandoverPrint, paper: 58 | 80): Promise<void> {
+  await writeChunks(buildHandover(d, paper, loadPrinterConfig()?.density ?? "normal"));
+}
+
 // Small sample so owners can confirm the printer works before going live.
 export async function testPrint(paper: 58 | 80): Promise<void> {
   await printReceipt({
