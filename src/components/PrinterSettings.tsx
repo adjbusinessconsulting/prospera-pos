@@ -19,6 +19,32 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
   const usb = usbSupported() && isDesktop();
   const connected = isConnected();
 
+  // Browser failures arrive as raw English strings from the Web Bluetooth/USB APIs
+  // ("Web Bluetooth API globally disabled.", "User denied the browser permission…").
+  // Shown as-is they read as a broken app to a cashier who cannot act on them, so
+  // each known class is translated and paired with the way out — which on a desktop
+  // is nearly always the USB cable sitting right below the button they just pressed.
+  function friendlyPairError(raw: string, kind: "bt" | "usb"): string {
+    const m = raw || "";
+    if (/cancel|user gesture|chooser|no devices? (chosen|selected)/i.test(m)) {
+      return "Pemilihan printer dibatalkan.";
+    }
+    if (/globally disabled|not supported|undefined is not|no such/i.test(m)) {
+      if (kind === "usb") return "Browser ini tidak mendukung printer USB. Gunakan Google Chrome di komputer.";
+      // On a desktop the cable is the fastest way out, and the button is already
+      // on screen — point at it before suggesting they change browser.
+      if (usb) return "Bluetooth dimatikan di browser ini. Sambungkan printer lewat kabel USB, atau buka Sterith di Google Chrome.";
+      return "Bluetooth dimatikan di browser ini. Buka Sterith di Google Chrome di Android.";
+    }
+    if (/denied|permission|NotAllowed/i.test(m)) {
+      return "Izin printer ditolak. Izinkan akses perangkat di pengaturan browser, lalu coba lagi.";
+    }
+    if (/no devices? found|NotFound/i.test(m)) {
+      return "Printer tidak ditemukan. Pastikan printer menyala dan dalam mode pairing.";
+    }
+    return "Gagal menghubungkan printer. Pastikan printer menyala, lalu coba lagi.";
+  }
+
   async function pair(kind: "bt" | "usb") {
     setErr(""); setOkMsg(""); setBusy(kind);
     try {
@@ -26,15 +52,14 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
       savePrinterConfig({ type: kind === "bt" ? "bluetooth" : "usb", paper, name });
       setOkMsg(`Terhubung: ${name}`);
     } catch (e) {
-      const m = (e as Error)?.message || "";
-      setErr(/cancel|user gesture|chooser/i.test(m) ? "Pemilihan printer dibatalkan." : (m || "Gagal menghubungkan printer."));
+      setErr(friendlyPairError((e as Error)?.message || "", kind));
     } finally { setBusy(""); force(x => x + 1); }
   }
 
   async function runTest() {
     setErr(""); setOkMsg(""); setBusy("test");
     try { await testPrint(paper); setOkMsg("Struk tes terkirim ke printer."); }
-    catch (e) { setErr((e as Error)?.message || "Gagal mencetak. Cek printer & sambungan."); }
+    catch { setErr("Gagal mencetak. Periksa printer, kertas, dan sambungannya."); }
     finally { setBusy(""); }
   }
 
