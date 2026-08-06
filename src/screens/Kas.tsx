@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Camera, Image as ImageIcon } from "lucide-react";
 import { useStore, isAtLeast } from "../store";
-import { formatRp, formatIDRInput } from "../data";
+import { formatRp, rpSize, formatIDRInput } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
@@ -206,13 +206,14 @@ export default function Kas() {
             {/* Saldo card */}
             <div className="bg-navy rounded-card px-6 py-6">
               <p style={{ fontSize: 9.5, letterSpacing: "0.22em" }} className="font-sans uppercase text-gold/70 mb-2">SALDO LACI KAS</p>
-              <p className="num text-[38px] font-bold text-cream-text leading-none" style={{ fontVariantNumeric: "tabular-nums" }}>
+              <p className="num font-bold text-cream-text leading-none"
+                style={{ fontVariantNumeric: "tabular-nums", fontSize: rpSize(formatRp(saldo), 38), whiteSpace: "nowrap" }}>
                 {formatRp(saldo)}
               </p>
               <p className="text-[11px] text-white/40 mt-1.5">Modal awal {formatRp(modalAwal)} + omzet tunai</p>
               <div className="flex gap-5 mt-4 pt-4 border-t border-white/10">
                 <div>
-                  <p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-0.5">MASUK</p>
+                  <p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-0.5">TOTAL MASUK</p>
                   <p className="text-[13px] font-medium text-white/70" style={{ fontVariantNumeric: "tabular-nums" }}>+ {formatRp(totalMasuk)}</p>
                 </div>
                 <div>

@@ -38,6 +38,22 @@ export const CATEGORY_OPTIONS = [
 export const formatRp = (n: number) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
+/**
+ * Font size for a headline rupiah figure, stepped down as the number gets longer.
+ *
+ * These figures sit in fixed-width cards with a fixed type size, which is fine
+ * until a shop deals in tens of millions — "Rp 60.680.000" overflowed the Saldo
+ * Laci Kas card and the last digits were simply cut off. A clipped balance is
+ * worse than a smaller one: the owner cannot tell 6 juta from 60 juta.
+ */
+export function rpSize(text: string, max: number): number {
+  const n = text.length;
+  if (n <= 11) return max;                        // up to Rp 9.999.999
+  if (n <= 13) return Math.round(max * 0.82);     // tens of millions
+  if (n <= 15) return Math.round(max * 0.68);     // hundreds of millions
+  return Math.round(max * 0.56);                  // miliaran
+}
+
 export function formatIDRInput(raw: string): string {
   const digits = raw.replace(/\D/g, '');
   if (!digits) return '';

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useStore, isAtLeast } from "../store";
-import { formatRp, formatIDRInput } from "../data";
+import { formatRp, rpSize, formatIDRInput } from "../data";
 import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
 import { saveShiftClosing } from "../lib/shift";
@@ -145,7 +145,7 @@ export default function TutupToko() {
           {/* Navy omzet card */}
           <div className="bg-navy rounded-card px-7 py-7">
             <p style={{ fontSize: 9.5, letterSpacing: "0.22em" }} className="font-sans uppercase text-gold/70 mb-3">TOTAL OMZET HARI INI</p>
-            <p className="num text-[34px] lg:text-[52px] font-bold text-cream-text leading-none mb-6" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(omzet)}</p>
+            <p className="num font-bold text-cream-text leading-none mb-6" style={{ fontVariantNumeric: "tabular-nums", fontSize: rpSize(formatRp(omzet), 34), whiteSpace: "nowrap" }}>{formatRp(omzet)}</p>
             <div className="flex gap-8 pt-5 border-t border-white/10">
               <div><p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">TRANSAKSI</p><p className="num text-[24px] font-semibold text-cream-text" style={{ fontVariantNumeric: "tabular-nums" }}>{trx}</p></div>
               <div><p style={{ fontSize: 9, letterSpacing: "0.18em" }} className="font-sans uppercase text-white/40 mb-1">SHIFT</p><p className="num text-[24px] font-semibold text-cream-text">{shiftCount}</p></div>

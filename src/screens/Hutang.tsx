@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useStore, isAtLeast } from "../store";
-import { formatRp } from "../data";
+import { formatRp, rpSize } from "../data";
 import { isConnected as printerReady, printLunas, loadPrinterConfig } from "../lib/printer";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
@@ -181,7 +181,7 @@ export default function Hutang() {
               {/* Outstanding summary */}
               <div className="bg-navy rounded-card px-6 py-5 mb-4 max-w-[460px]">
                 <p style={{ fontSize: 9.5, letterSpacing: "0.22em" }} className="font-sans uppercase text-gold/70 mb-1.5">TOTAL PIUTANG (BELUM LUNAS)</p>
-                <p className="num text-[32px] font-bold text-cream-text leading-none" style={{ fontVariantNumeric: "tabular-nums" }}>{formatRp(outstanding)}</p>
+                <p className="num font-bold text-cream-text leading-none" style={{ fontVariantNumeric: "tabular-nums", fontSize: rpSize(formatRp(outstanding), 32), whiteSpace: "nowrap" }}>{formatRp(outstanding)}</p>
                 <p className="text-[11px] text-white/40 mt-1.5">{belum.length} pelanggan berhutang</p>
               </div>
 
