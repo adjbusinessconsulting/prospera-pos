@@ -17,10 +17,23 @@ export interface PrinterConfig { type: PrinterConn; paper: 58 | 80; name: string
 // Capped at 180 deliberately; pushing heating time far higher cooks the head.
 // Default is TEBAL: these printers ship faint, and an unreadable struk is a worse
 // failure than a slightly slower print.
+// Three commands, because no single one is reliable across these printers:
+//
+//   ESC 7 n1 n2 n3  heating time — the real density control, but plenty of
+//                   firmware silently ignores it (an RPP02N did).
+//   DC2 # n         vendor density on the Zjiang/POS58 family.
+//   ESC E 1         emphasized.
+//   ESC G 1         DOUBLE-STRIKE — prints every line twice. Core ESC/POS,
+//                   supported essentially everywhere, and the one that actually
+//                   makes a faint printer legible. Costs print speed, which is a
+//                   fair trade for a struk that can still be read next year.
 const DENSITY_BYTES: Record<Density, number[]> = {
-  ringan: [0x1b, 0x37, 7, 60, 2],
-  normal: [0x1b, 0x37, 7, 110, 2],
-  tebal:  [0x1b, 0x37, 7, 180, 2],
+  ringan: [0x1b, 0x37, 7, 60, 2,
+           0x1b, 0x45, 0, 0x1b, 0x47, 0],                  // no emphasis
+  normal: [0x1b, 0x37, 7, 110, 2, 0x12, 0x23, 8,
+           0x1b, 0x45, 1, 0x1b, 0x47, 0],                  // emphasized only
+  tebal:  [0x1b, 0x37, 7, 180, 2, 0x12, 0x23, 15,
+           0x1b, 0x45, 1, 0x1b, 0x47, 1],                  // + double-strike
 };
 
 const LS_KEY = "sterith_printer";
