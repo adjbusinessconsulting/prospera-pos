@@ -7,7 +7,21 @@
 // false there and the UI shows a warning instead of a dead scan button.
 
 export type PrinterConn = "bluetooth" | "usb";
-export interface PrinterConfig { type: PrinterConn; paper: 58 | 80; name: string }
+export type Density = "ringan" | "normal" | "tebal";
+export interface PrinterConfig { type: PrinterConn; paper: 58 | 80; name: string; density?: Density }
+
+// ESC 7 n1 n2 n3 — max printing dots, heating TIME, heating interval. Heating time
+// is what darkens the print: the head stays hot longer per dot, so more of the
+// thermal paper reacts. Cheap printers ship faint, and faint receipts fade to
+// blank in a few months, which matters when a bon is the only record of a debt.
+// Capped at 180 deliberately; pushing heating time far higher cooks the head.
+// Default is TEBAL: these printers ship faint, and an unreadable struk is a worse
+// failure than a slightly slower print.
+const DENSITY_BYTES: Record<Density, number[]> = {
+  ringan: [0x1b, 0x37, 7, 60, 2],
+  normal: [0x1b, 0x37, 7, 110, 2],
+  tebal:  [0x1b, 0x37, 7, 180, 2],
+};
 
 const LS_KEY = "sterith_printer";
 
@@ -248,7 +262,7 @@ function encode(parts: (Uint8Array | string)[]): Uint8Array {
   return out;
 }
 
-export function buildReceipt(d: ReceiptData, paper: 58 | 80): Uint8Array {
+export function buildReceipt(d: ReceiptData, paper: 58 | 80, density: Density = "tebal"): Uint8Array {
   const W = paper === 80 ? 48 : 32;
   const ESC = 0x1b, GS = 0x1d;
   const cmd = (...b: number[]) => new Uint8Array(b);
@@ -263,6 +277,7 @@ export function buildReceipt(d: ReceiptData, paper: 58 | 80): Uint8Array {
 
   const parts: (Uint8Array | string)[] = [];
   parts.push(cmd(ESC, 0x40));                 // init
+  parts.push(new Uint8Array(DENSITY_BYTES[density] ?? DENSITY_BYTES.normal));   // darkness
   parts.push(cmd(ESC, 0x61, 0x01));           // center
   parts.push(cmd(ESC, 0x21, 0x30));           // double width+height
   parts.push(clean(d.storeName) + "\n");
@@ -301,7 +316,7 @@ export function buildReceipt(d: ReceiptData, paper: 58 | 80): Uint8Array {
 }
 
 export async function printReceipt(d: ReceiptData, paper: 58 | 80): Promise<void> {
-  await writeChunks(buildReceipt(d, paper));
+  await writeChunks(buildReceipt(d, paper, loadPrinterConfig()?.density ?? "tebal"));
 }
 
 // Small sample so owners can confirm the printer works before going live.

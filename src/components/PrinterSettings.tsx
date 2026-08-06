@@ -1,10 +1,9 @@
 import { useState } from "react";
 import {
   isIOS, bluetoothSupported, usbSupported, isDesktop, isConnected, connectedName, connectedCharUuid,
-  connectBluetooth, connectUsb, testPrint, loadPrinterConfig, savePrinterConfig, clearPrinterConfig, dumpServices, listPipes, setPipe,
+  connectBluetooth, connectUsb, testPrint, loadPrinterConfig, savePrinterConfig, clearPrinterConfig, dumpServices,
 } from "../lib/printer";
-import type { DumpSvc } from "../lib/printer";
-import { IS_DEV_BUILD } from "../lib/devStoreSwitch";
+import type { DumpSvc, Density } from "../lib/printer";
 
 export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () => void }) {
   const saved = loadPrinterConfig();
@@ -12,8 +11,8 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
   const [busy, setBusy] = useState<"" | "bt" | "usb" | "test">("");
   const [err, setErr] = useState("");
   const [okMsg, setOkMsg] = useState("");
-  const [dump, setDump] = useState<DumpSvc[]>([]);   // dev-only BLE service listing
-  const [pipes, setPipes] = useState<string[]>([]);  // dev-only pipe picker
+  const [dump, setDump] = useState<DumpSvc[]>([]);   // support diagnostic
+  const [density, setDensity] = useState<Density>(saved?.density ?? "tebal");
   const [, force] = useState(0);
 
   if (!open) return null;
@@ -73,6 +72,14 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
     if (c) savePrinterConfig({ ...c, paper: p });
   }
 
+  // Darkness. Cheap printers ship faint and a struk that fades is worthless when
+  // it is the only record of a bon, so this defaults to Tebal.
+  function changeDensity(d: Density) {
+    setDensity(d);
+    const c = loadPrinterConfig();
+    if (c) savePrinterConfig({ ...c, density: d });
+  }
+
   function forget() {
     clearPrinterConfig(); setOkMsg(""); setErr(""); force(x => x + 1);
   }
@@ -121,6 +128,22 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
               ))}
             </div>
 
+            {/* Darkness */}
+            <p style={{ ...label, margin: "16px 0 8px" }}>Ketebalan Cetak</p>
+            <div style={{ display: "flex", gap: 8 }}>
+              {([["ringan", "Ringan"], ["normal", "Normal"], ["tebal", "Tebal"]] as const).map(([k, l]) => (
+                <button key={k} onClick={() => changeDensity(k)}
+                  style={{ flex: 1, height: 38, borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer",
+                    border: density === k ? "1.5px solid #0D1117" : "1px solid #ECE7DD",
+                    background: density === k ? "#0D1117" : "white", color: density === k ? "#F2EDE3" : "#0D1117" }}>
+                  {l}
+                </button>
+              ))}
+            </div>
+            <p style={{ margin: "6px 0 0", fontSize: 10.5, color: "#7A776F", lineHeight: 1.5 }}>
+              Struk terlalu pudar? Pilih <b>Tebal</b>. Kertas thermal murah biasanya perlu ini.
+            </p>
+
             {/* Status */}
             <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 10, background: connected ? "rgba(61,122,94,0.08)" : "#F7F4EE", border: `1px solid ${connected ? "rgba(61,122,94,0.3)" : "#ECE7DD"}` }}>
               <span style={{ width: 8, height: 8, borderRadius: 999, background: connected ? "#3D7A5E" : "#C25E3D", flexShrink: 0 }} />
@@ -131,45 +154,43 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
             {/* Dev only: which characteristic we chose to print through. When a
                 printer connects but no paper moves, this is the first thing to
                 check — the wrong pipe accepts the bytes and stays silent. */}
-            {IS_DEV_BUILD && connected && connectedCharUuid() && (
-              <>
-                <p style={{ margin: "6px 0 0", fontSize: 10, color: "#7A776F", fontFamily: "monospace", wordBreak: "break-all" }}>
-                  pipe: {connectedCharUuid()}
-                </p>
-                <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-                  <button type="button"
-                    onClick={() => { dumpServices().then(d => { setDump(d); setPipes(listPipes()); }).catch(e => setErr((e as Error)?.message || "Gagal membaca service BLE.")); }}
-                    style={{ background: "none", border: "1px solid #ECE7DD", borderRadius: 8, padding: "5px 10px", fontSize: 10.5, color: "#7A776F", cursor: "pointer" }}>
-                    Diagnostik BLE
-                  </button>
-                </div>
-                {/* Tap a pipe, then Test Print. Whichever moves paper is the real
-                    data path. The marker is computed at render, never baked into
-                    the dump — a stale marker sent me chasing the wrong pipe once. */}
-                {pipes.map(u => (
-                  <button key={u} type="button"
-                    onClick={() => { setPipe(u); setOkMsg(""); setErr(""); force(x => x + 1); }}
-                    style={{ display: "block", width: "100%", textAlign: "left", marginTop: 4, fontFamily: "monospace", fontSize: 9.5,
-                      background: u === connectedCharUuid() ? "#0D1117" : "white", color: u === connectedCharUuid() ? "#F2EDE3" : "#0D1117",
-                      border: "1px solid #ECE7DD", borderRadius: 8, padding: "6px 8px", cursor: "pointer", wordBreak: "break-all" }}>
-                    {u === connectedCharUuid() ? "● " : "○ "}{u}
-                  </button>
-                ))}
+            {/* Support tool, not a dev toy: when a customer says "tidak bisa
+                cetak", this is what they send back. Salin puts it on the clipboard
+                so it can go straight into WhatsApp. */}
+            {connected && (
+              <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <button type="button"
+                  onClick={() => { dumpServices().then(setDump).catch(e => setErr((e as Error)?.message || "Gagal membaca printer.")); }}
+                  style={{ background: "none", border: "1px solid #ECE7DD", borderRadius: 8, padding: "5px 10px", fontSize: 10.5, color: "#7A776F", cursor: "pointer" }}>
+                  Diagnostik printer
+                </button>
                 {dump.length > 0 && (
-                  <div style={{ margin: "8px 0 0", fontSize: 10, lineHeight: 1.6, color: "#0D1117", background: "#F7F4EE", border: "1px solid #ECE7DD", borderRadius: 8, padding: 10, overflowX: "auto", fontFamily: "monospace" }}>
-                    {dump.map(sv => (
-                      <div key={sv.short}>
-                        <div>SVC {sv.short}</div>
-                        {sv.chars.map(c => (
-                          <div key={c.uuid} style={{ paddingLeft: 12, color: c.uuid === connectedCharUuid() ? "#3D7A5E" : "#0D1117", fontWeight: c.uuid === connectedCharUuid() ? 700 : 400 }}>
-                            {c.short} [{c.flags}]{c.uuid === connectedCharUuid() ? "  ← DIPAKAI" : ""}
-                          </div>
-                        ))}
+                  <button type="button"
+                    onClick={() => {
+                      const text = [`Printer: ${connectedName()}`, `Pipe: ${connectedCharUuid()}`,
+                        ...dump.flatMap(sv => [`SVC ${sv.short}`, ...sv.chars.map(c => `  ${c.short} [${c.flags}]${c.uuid === connectedCharUuid() ? " *" : ""}`)])].join("\n");
+                      void navigator.clipboard?.writeText(text).then(() => setOkMsg("Diagnostik disalin — kirim ke Sterith."));
+                    }}
+                    style={{ background: "none", border: "1px solid #ECE7DD", borderRadius: 8, padding: "5px 10px", fontSize: 10.5, color: "#7A776F", cursor: "pointer" }}>
+                    Salin
+                  </button>
+                )}
+              </div>
+            )}
+            {dump.length > 0 && (
+              <div style={{ margin: "8px 0 0", fontSize: 10, lineHeight: 1.6, color: "#0D1117", background: "#F7F4EE", border: "1px solid #ECE7DD", borderRadius: 8, padding: 10, overflowX: "auto", fontFamily: "monospace" }}>
+                <div style={{ color: "#7A776F" }}>pipe: {connectedCharUuid()}</div>
+                {dump.map(sv => (
+                  <div key={sv.short}>
+                    <div>SVC {sv.short}</div>
+                    {sv.chars.map(c => (
+                      <div key={c.uuid} style={{ paddingLeft: 12, color: c.uuid === connectedCharUuid() ? "#3D7A5E" : "#0D1117", fontWeight: c.uuid === connectedCharUuid() ? 700 : 400 }}>
+                        {c.short} [{c.flags}]{c.uuid === connectedCharUuid() ? "  ← DIPAKAI" : ""}
                       </div>
                     ))}
                   </div>
-                )}
-              </>
+                ))}
+              </div>
             )}
             {!connected && saved && (
               <p style={{ margin: "8px 0 0", fontSize: 11, color: "#7A776F" }}>Printer terakhir: <b>{saved.name}</b>. Sambungkan ulang tiap buka aplikasi.</p>
