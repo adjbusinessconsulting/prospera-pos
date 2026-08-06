@@ -59,6 +59,7 @@ export default function LogAktivitas() {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [tamperAt, setTamperAt] = useState<number | null>(null);
   const [activeFilter, setActiveFilter] = useState(0);
+  const [grouped, setGrouped] = useState(false);   // timeline by default
 
   useEffect(() => {
     setEntries(getLog().slice().reverse()); // newest first
@@ -67,6 +68,22 @@ export default function LogAktivitas() {
 
   const intact = tamperAt === -1;
   const shown = useMemo(() => filterByDays(entries, PERIODS[activeFilter].days), [entries, activeFilter]);
+
+  // Grouped view: same entries, bucketed by what happened rather than when.
+  // "Berapa kali pindah shift hari ini?" is a different question from "what
+  // happened at 14:30", and the timeline cannot answer the first one at a glance.
+  const groups = useMemo(() => {
+    const by = new Map<string, typeof shown>();
+    for (const e of shown) {
+      const k = e.type;
+      if (!by.has(k)) by.set(k, []);
+      by.get(k)!.push(e);
+    }
+    return [...by.entries()]
+      .map(([type, items]) => ({ type, items }))
+      .sort((a, b) => b.items.length - a.items.length || a.type.localeCompare(b.type));
+  }, [shown]);
+
 
   function exportCSV() {
     if (!canExport) return;
@@ -125,7 +142,17 @@ export default function LogAktivitas() {
               </div>
             );
           })}
-          <div className="relative ml-auto shrink-0">
+          {/* Timeline vs grouped. Two different questions: "what happened at 14:30"
+              and "how many times did X happen today". */}
+          <div className="flex gap-0.5 bg-white border border-warm-border rounded-full p-0.5 ml-auto shrink-0">
+            {([[false, "Waktu"], [true, "Kelompok"]] as const).map(([g, l]) => (
+              <button key={l} onClick={() => setGrouped(g)}
+                className={`px-3 py-[4px] rounded-full text-[11.5px] font-semibold border-0 cursor-pointer transition-colors ${grouped === g ? "bg-navy text-cream-text" : "bg-transparent text-text-mute hover:text-navy"}`}>
+                {l}
+              </button>
+            ))}
+          </div>
+          <div className="relative shrink-0">
             <button onClick={exportCSV} disabled={!canExport} title={canExport ? "Export CSV" : "Export tersedia mulai Standard"}
               className={`flex items-center gap-1.5 h-[30px] px-3 rounded-full text-[12px] font-semibold border transition-colors ${canExport ? "bg-white text-[#A6843F] border-[#e2d4ad] hover:bg-cream-bg cursor-pointer" : "bg-cream-bg text-text-mute/50 border-warm-border cursor-not-allowed"}`}>
               <Download size={13} /> Export
@@ -147,10 +174,37 @@ export default function LogAktivitas() {
               </div>
             </div>
 
-            <p style={{ fontSize: 11.5, color: "#7A776F", margin: "0 0 12px" }}>{shown.length} aktivitas · {PERIODS[activeFilter].label}</p>
+            <p style={{ fontSize: 11.5, color: "#7A776F", margin: "0 0 12px" }}>
+              {shown.length} aktivitas{grouped && groups.length > 0 ? ` · ${groups.length} jenis` : ""} · {PERIODS[activeFilter].label}
+            </p>
 
             {shown.length === 0 ? (
               <p style={{ textAlign: "center", color: "#B8B0A8", fontSize: 13, paddingTop: 32 }}>Belum ada aktivitas di periode ini.</p>
+            ) : grouped ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                {groups.map(g => (
+                  <div key={g.type}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 7 }}>
+                      <span style={{ fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", fontWeight: 700, color: "#0D1117" }}>
+                        {TYPE_LABEL[g.type] ?? g.type}
+                      </span>
+                      <span style={{ fontSize: 11, color: "#7A776F", fontVariantNumeric: "tabular-nums" }}>{g.items.length}x</span>
+                      <span style={{ flex: 1, height: 1, background: "#ECE7DD" }} />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {g.items.map(e => (
+                        <div key={e.hash} style={{ background: "white", border: "1px solid #ECE7DD", borderRadius: 10, padding: "9px 12px", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 12.5, color: "#0D1117", lineHeight: 1.4 }}>{e.detail}</div>
+                            <div style={{ fontSize: 10.5, color: "#7A776F", marginTop: 2 }}>{fmt(e.time)} · oleh <b style={{ color: "#0D1117" }}>{e.actor}</b></div>
+                          </div>
+                          <span style={{ fontSize: 10, color: "#C4C0B8", fontFamily: "monospace", flexShrink: 0 }}>#{e.seq}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {shown.map((e) => (
