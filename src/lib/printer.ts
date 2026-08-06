@@ -264,7 +264,12 @@ const clean = (s: string) => s.replace(/[×✕]/g, "x").replace(/[–—]/g, "-"
 function encode(parts: (Uint8Array | string)[]): Uint8Array {
   const chunks: Uint8Array[] = parts.map(p => {
     if (typeof p !== "string") return p;
-    const s = clean(p);
+    // clean() strips everything outside \x20-\x7E so cheap printers don't garble,
+    // but LF is \x0A — running it over an assembled block deleted every line
+    // break, so the whole receipt arrived as one run of text and only looked
+    // like lines because the printer wrapped it at 32 columns. Clean each line,
+    // keep the breaks between them.
+    const s = p.split("\n").map(clean).join("\n");
     const b = new Uint8Array(s.length);
     for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i) & 0xff;
     return b;
@@ -275,36 +280,72 @@ function encode(parts: (Uint8Array | string)[]): Uint8Array {
   return out;
 }
 
+/**
+ * Text helpers for a fixed-width roll. 58mm paper is 32 characters at Font A and
+ * 80mm is 48; anything longer does not clip, it WRAPS — so an untrimmed line
+ * silently pushes the rest of the receipt out of alignment. Everything here
+ * guarantees its output fits.
+ */
+function formatters(W: number) {
+  const fit = (s: string, n = W) => { s = clean(s); return s.length > n ? s.slice(0, n) : s; };
+
+  const line = (l: string, r: string) => {
+    r = fit(r);                                  // the number always wins
+    const room = Math.max(1, W - r.length - 1);  // at least one char of label
+    l = fit(l, room);
+    return l + " ".repeat(Math.max(1, W - l.length - r.length)) + r + "\n";
+  };
+
+  const center = (s: string) => {
+    s = fit(s);
+    return " ".repeat(Math.max(0, Math.floor((W - s.length) / 2))) + s + "\n";
+  };
+
+  // Long product names get folded rather than truncated — the cashier needs to
+  // read what was sold, and a receipt has all the vertical space in the world.
+  const wrap = (s: string): string => {
+    s = clean(s);
+    if (s.length <= W) return s + "\n";
+    const out: string[] = [];
+    let cur = "";
+    for (const word of s.split(" ")) {
+      if (!cur.length) cur = word.slice(0, W);
+      else if (cur.length + 1 + word.length <= W) cur += " " + word;
+      else { out.push(cur); cur = word.slice(0, W); }
+    }
+    if (cur) out.push(cur);
+    return out.join("\n") + "\n";
+  };
+
+  return { fit, line, center, wrap, rule: "-".repeat(W) + "\n" };
+}
+
 export function buildReceipt(d: ReceiptData, paper: 58 | 80, density: Density = "normal"): Uint8Array {
   const W = paper === 80 ? 48 : 32;
   const ESC = 0x1b, GS = 0x1d;
   const cmd = (...b: number[]) => new Uint8Array(b);
-  const line = (l: string, r: string) => {
-    l = clean(l); r = clean(r);
-    if (l.length + r.length + 1 > W) l = l.slice(0, W - r.length - 1);
-    const gap = Math.max(1, W - l.length - r.length);
-    return l + " ".repeat(gap) + r + "\n";
-  };
-  const center = (s: string) => { s = clean(s); const pad = Math.max(0, Math.floor((W - s.length) / 2)); return " ".repeat(pad) + s + "\n"; };
-  const rule = "-".repeat(W) + "\n";
+  const { fit, line, center, wrap, rule } = formatters(W);
 
   const parts: (Uint8Array | string)[] = [];
   parts.push(cmd(ESC, 0x40));                 // init
   parts.push(new Uint8Array(DENSITY_BYTES[density] ?? DENSITY_BYTES.normal));   // darkness
   parts.push(cmd(ESC, 0x61, 0x01));           // center
-  parts.push(cmd(ESC, 0x21, 0x30));           // double width+height
-  parts.push(clean(d.storeName) + "\n");
+  // Double WIDTH halves the usable columns — 16 on a 58mm roll — so a longer
+  // store name wrapped mid-word. Wide only while it fits, tall otherwise.
+  const wide = clean(d.storeName).length <= Math.floor(W / 2);
+  parts.push(cmd(ESC, 0x21, wide ? 0x30 : 0x10));
+  parts.push(fit(d.storeName, wide ? Math.floor(W / 2) : W) + "\n");
   parts.push(cmd(ESC, 0x21, 0x00));           // normal
   if (d.storeAddress) parts.push(center(d.storeAddress));
   if (d.storePhone) parts.push(center(d.storePhone));
   parts.push(cmd(ESC, 0x61, 0x00));           // left
   parts.push("\n");
   parts.push(line(d.trxId, d.dateStr + " " + d.timeStr));
-  parts.push("Kasir: " + clean(d.cashierName) + "\n");
-  if (d.customerName) parts.push("Pelanggan: " + clean(d.customerName) + "\n");
+  parts.push(wrap("Kasir: " + d.cashierName));
+  if (d.customerName) parts.push(wrap("Pelanggan: " + d.customerName));
   parts.push(rule);
   for (const it of d.items) {
-    parts.push(clean(it.name) + "\n");
+    parts.push(wrap(it.name));
     parts.push(line(`  ${it.qty} x ${rp(it.price)}`, rp(it.qty * it.price)));
   }
   parts.push(rule);
@@ -356,22 +397,18 @@ export function buildShiftClosing(d: ShiftClosingPrint, paper: 58 | 80, density:
   const W = paper === 80 ? 48 : 32;
   const ESC = 0x1b, GS = 0x1d;
   const cmd = (...b: number[]) => new Uint8Array(b);
-  const line = (l: string, r: string) => {
-    l = clean(l); r = clean(r);
-    if (l.length + r.length + 1 > W) l = l.slice(0, W - r.length - 1);
-    return l + " ".repeat(Math.max(1, W - l.length - r.length)) + r + "\n";
-  };
-  const center = (s: string) => { s = clean(s); return " ".repeat(Math.max(0, Math.floor((W - s.length) / 2))) + s + "\n"; };
-  const rule = "-".repeat(W) + "\n";
+  const { line, center, rule } = formatters(W);
 
   const p: (Uint8Array | string)[] = [];
   p.push(cmd(ESC, 0x40));
   p.push(new Uint8Array(DENSITY_BYTES[density] ?? DENSITY_BYTES.normal));
   p.push(cmd(ESC, 0x61, 0x01));                    // centre
-  p.push(cmd(ESC, 0x21, 0x10));                    // double height
+  p.push(cmd(ESC, 0x21, 0x10));                    // double height, single width
   p.push(center(d.storeName));
   p.push(cmd(ESC, 0x21, 0x00));
   p.push(center("NOTA TUTUP SHIFT"));
+  // The full date ("Selasa, 5 Agustus 2026") is 22 chars and fits 58mm; longer
+  // locales get trimmed by center() rather than wrapping onto a second line.
   p.push(center(d.dateStr));
   p.push(cmd(ESC, 0x61, 0x00));                    // left
   p.push(rule);
