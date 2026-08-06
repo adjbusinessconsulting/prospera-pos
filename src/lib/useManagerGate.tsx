@@ -13,13 +13,21 @@ export function useManagerGate() {
   const isDemoMode = useStore(s => s.isDemoMode);
   const dbCashiers = useStore(s => s.dbCashiers);
   const selectedCashier = useStore(s => s.selectedCashier);
+  const settings = useStore(s => s.settings);
   const isPremium = isAtLeast(storeId ? storeTier : "premium", "premium");
   const currentRole = (dbCashiers.find(c => c.id === selectedCashier)?.role ?? "").toLowerCase();
   const [g, setG] = useState<{ action: string; run: () => void } | null>(null);
 
   function gate(action: string, fn: () => void) {
-    if (isPremium && !isDemoMode && (currentRole === "manajer" || currentRole === "kasir")) { setG({ action, run: fn }); return; }
-    fn();
+    if (!isPremium || isDemoMode) { fn(); return; }
+    // The owner always passes.
+    if (currentRole !== "manajer" && currentRole !== "kasir") { fn(); return; }
+    // A MANAGER the owner has trusted with this action goes through unprompted.
+    // These toggles live in Back Office (Manajemen > Staf) and were being written
+    // but never read here, so granting a permission changed nothing at the till.
+    // A plain kasir still asks: handing over a drawer is a cash-custody event.
+    if (currentRole === "manajer" && (settings.managerPerms ?? {})[action]) { fn(); return; }
+    setG({ action, run: fn });
   }
 
   const gateModal = (
