@@ -3,6 +3,7 @@ import {
   isIOS, bluetoothSupported, usbSupported, isDesktop, isConnected, connectedName, connectedCharUuid,
   connectBluetooth, connectUsb, testPrint, loadPrinterConfig, savePrinterConfig, clearPrinterConfig, dumpServices, listPipes, setPipe,
 } from "../lib/printer";
+import type { DumpSvc } from "../lib/printer";
 import { IS_DEV_BUILD } from "../lib/devStoreSwitch";
 
 export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -11,7 +12,7 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
   const [busy, setBusy] = useState<"" | "bt" | "usb" | "test">("");
   const [err, setErr] = useState("");
   const [okMsg, setOkMsg] = useState("");
-  const [dump, setDump] = useState<string[]>([]);   // dev-only BLE service listing
+  const [dump, setDump] = useState<DumpSvc[]>([]);   // dev-only BLE service listing
   const [pipes, setPipes] = useState<string[]>([]);  // dev-only pipe picker
   const [, force] = useState(0);
 
@@ -137,18 +138,14 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
                 </p>
                 <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
                   <button type="button"
-                    onClick={() => { void dumpServices().then(setDump); }}
+                    onClick={() => { dumpServices().then(d => { setDump(d); setPipes(listPipes()); }).catch(e => setErr((e as Error)?.message || "Gagal membaca service BLE.")); }}
                     style={{ background: "none", border: "1px solid #ECE7DD", borderRadius: 8, padding: "5px 10px", fontSize: 10.5, color: "#7A776F", cursor: "pointer" }}>
                     Diagnostik BLE
                   </button>
-                  <button type="button"
-                    onClick={() => setPipes(listPipes())}
-                    style={{ background: "none", border: "1px solid #ECE7DD", borderRadius: 8, padding: "5px 10px", fontSize: 10.5, color: "#7A776F", cursor: "pointer" }}>
-                    Coba pipe lain
-                  </button>
                 </div>
-                {/* Tap a pipe, then Test Print. Whichever one moves paper is the
-                    printer's real data path — faster than another round of guessing. */}
+                {/* Tap a pipe, then Test Print. Whichever moves paper is the real
+                    data path. The marker is computed at render, never baked into
+                    the dump — a stale marker sent me chasing the wrong pipe once. */}
                 {pipes.map(u => (
                   <button key={u} type="button"
                     onClick={() => { setPipe(u); setOkMsg(""); setErr(""); force(x => x + 1); }}
@@ -159,9 +156,18 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
                   </button>
                 ))}
                 {dump.length > 0 && (
-                  <pre style={{ margin: "8px 0 0", fontSize: 10, lineHeight: 1.5, color: "#0D1117", background: "#F7F4EE", border: "1px solid #ECE7DD", borderRadius: 8, padding: 10, overflowX: "auto", whiteSpace: "pre" }}>
-{dump.join("\n")}
-                  </pre>
+                  <div style={{ margin: "8px 0 0", fontSize: 10, lineHeight: 1.6, color: "#0D1117", background: "#F7F4EE", border: "1px solid #ECE7DD", borderRadius: 8, padding: 10, overflowX: "auto", fontFamily: "monospace" }}>
+                    {dump.map(sv => (
+                      <div key={sv.short}>
+                        <div>SVC {sv.short}</div>
+                        {sv.chars.map(c => (
+                          <div key={c.uuid} style={{ paddingLeft: 12, color: c.uuid === connectedCharUuid() ? "#3D7A5E" : "#0D1117", fontWeight: c.uuid === connectedCharUuid() ? 700 : 400 }}>
+                            {c.short} [{c.flags}]{c.uuid === connectedCharUuid() ? "  ← DIPAKAI" : ""}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </>
             )}

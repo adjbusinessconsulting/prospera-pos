@@ -156,23 +156,30 @@ export async function connectBluetooth(): Promise<string> {
  * lives on Bluetooth Classic, which the web platform cannot reach at all. This
  * answers that in one screenshot instead of a round trip per guess.
  */
-export async function dumpServices(): Promise<string[]> {
-  if (!btServer) return ["(belum terhubung)"];
-  const out: string[] = [];
+export interface DumpChar { uuid: string; short: string; flags: string }
+export interface DumpSvc { short: string; chars: DumpChar[] }
+
+export async function dumpServices(): Promise<DumpSvc[]> {
+  if (!btServer) throw new Error("Belum terhubung ke printer.");
+  const out: DumpSvc[] = [];
   const services = await btServer.getPrimaryServices();
   for (const svc of services) {
-    out.push(`SVC ${shortUuid(svc.uuid ?? "?")}`);
+    const entry: DumpSvc = { short: shortUuid(svc.uuid ?? "?"), chars: [] };
     let chars;
-    try { chars = await svc.getCharacteristics(); } catch { out.push("   (tidak bisa dibaca)"); continue; }
+    try { chars = await svc.getCharacteristics(); } catch { out.push(entry); continue; }
     for (const ch of chars) {
       const p = ch.properties ?? ({} as Record<string, boolean>);
-      const flags = [p.write && "write", p.writeWithoutResponse && "wnr", p.read && "read", p.notify && "notify"]
-        .filter(Boolean).join(",") || "none";
-      const chosen = (ch as unknown as { uuid?: string }).uuid === btCharUuid ? "  <-- DIPAKAI" : "";
-      out.push(`   ${shortUuid((ch as unknown as { uuid?: string }).uuid ?? "?")} [${flags}]${chosen}`);
+      const uuid = (ch as unknown as { uuid?: string }).uuid ?? "?";
+      entry.chars.push({
+        uuid,
+        short: shortUuid(uuid),
+        flags: [p.write && "write", p.writeWithoutResponse && "wnr", p.read && "read", p.notify && "notify"]
+          .filter(Boolean).join(",") || "none",
+      });
     }
+    out.push(entry);
   }
-  return out.length ? out : ["(tidak ada service)"];
+  return out;
 }
 
 export async function connectUsb(): Promise<string> {
