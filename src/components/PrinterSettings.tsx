@@ -141,7 +141,8 @@ export function PrinterSettings({ open, onClose }: { open: boolean; onClose: () 
               ))}
             </div>
             <p style={{ margin: "6px 0 0", fontSize: 10.5, color: "#7A776F", lineHeight: 1.5 }}>
-              Struk terlalu pudar? Pilih <b>Tebal</b>. Kertas thermal murah biasanya perlu ini.
+              Struk pudar? Coba ganti kertas thermal dulu — itu penyebab paling sering.
+              Kalau masih pudar, pilih <b>Tebal</b> (cetak lebih lambat).
             </p>
 
             {/* Status */}

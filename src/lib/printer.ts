@@ -10,23 +10,23 @@ export type PrinterConn = "bluetooth" | "usb";
 export type Density = "ringan" | "normal" | "tebal";
 export interface PrinterConfig { type: PrinterConn; paper: 58 | 80; name: string; density?: Density }
 
-// ESC 7 n1 n2 n3 — max printing dots, heating TIME, heating interval. Heating time
-// is what darkens the print: the head stays hot longer per dot, so more of the
-// thermal paper reacts. Cheap printers ship faint, and faint receipts fade to
-// blank in a few months, which matters when a bon is the only record of a debt.
-// Capped at 180 deliberately; pushing heating time far higher cooks the head.
-// Default is TEBAL: these printers ship faint, and an unreadable struk is a worse
-// failure than a slightly slower print.
-// Three commands, because no single one is reliable across these printers:
+// Print darkness. Several commands per level, because no single one is honoured
+// across these printers:
 //
-//   ESC 7 n1 n2 n3  heating time — the real density control, but plenty of
-//                   firmware silently ignores it (an RPP02N did).
+//   ESC 7 n1 n2 n3  max dots, heating TIME, heating interval. Heating time is the
+//                   real control — the head stays hot longer per dot so more of
+//                   the paper reacts. Capped at 180; far higher cooks the head.
 //   DC2 # n         vendor density on the Zjiang/POS58 family.
 //   ESC E 1         emphasized.
-//   ESC G 1         DOUBLE-STRIKE — prints every line twice. Core ESC/POS,
-//                   supported essentially everywhere, and the one that actually
-//                   makes a faint printer legible. Costs print speed, which is a
-//                   fair trade for a struk that can still be read next year.
+//   ESC G 1         double-strike — prints every line twice. Core ESC/POS, so it
+//                   works even where the density commands are ignored, at the
+//                   cost of halving print speed.
+//
+// Default is NORMAL, which stops short of double-strike. A faint struk is far
+// more often old or cheap thermal paper than a printer setting: an RPP02N here
+// printed faint through every density level and came out perfectly the moment the
+// roll was changed. Tebal is one tap away for customers stuck with poor paper,
+// but nobody should pay double print time by default for a paper problem.
 const DENSITY_BYTES: Record<Density, number[]> = {
   ringan: [0x1b, 0x37, 7, 60, 2,
            0x1b, 0x45, 0, 0x1b, 0x47, 0],                  // no emphasis
@@ -275,7 +275,7 @@ function encode(parts: (Uint8Array | string)[]): Uint8Array {
   return out;
 }
 
-export function buildReceipt(d: ReceiptData, paper: 58 | 80, density: Density = "tebal"): Uint8Array {
+export function buildReceipt(d: ReceiptData, paper: 58 | 80, density: Density = "normal"): Uint8Array {
   const W = paper === 80 ? 48 : 32;
   const ESC = 0x1b, GS = 0x1d;
   const cmd = (...b: number[]) => new Uint8Array(b);
@@ -329,7 +329,7 @@ export function buildReceipt(d: ReceiptData, paper: 58 | 80, density: Density = 
 }
 
 export async function printReceipt(d: ReceiptData, paper: 58 | 80): Promise<void> {
-  await writeChunks(buildReceipt(d, paper, loadPrinterConfig()?.density ?? "tebal"));
+  await writeChunks(buildReceipt(d, paper, loadPrinterConfig()?.density ?? "normal"));
 }
 
 // Small sample so owners can confirm the printer works before going live.
