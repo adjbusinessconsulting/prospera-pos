@@ -22,10 +22,11 @@ export function useManagerGate() {
     if (!isPremium || isDemoMode) { fn(); return; }
     // The owner always passes.
     if (currentRole !== "manajer" && currentRole !== "kasir") { fn(); return; }
-    // A MANAGER the owner has trusted with this action goes through unprompted.
-    // These toggles live in Back Office (Manajemen > Staf) and were being written
-    // but never read here, so granting a permission changed nothing at the till.
-    // A plain kasir still asks: handing over a drawer is a cash-custody event.
+    // "Semua" in Back Office: nobody is asked, kasir included. Set per action by
+    // the owner, because a one-person warung should not have to authorise itself
+    // to look at its own Laporan.
+    if ((settings.openPerms ?? {})[action]) { fn(); return; }
+    // "Manajer": a manager the owner has trusted acts alone; a kasir still asks.
     if (currentRole === "manajer" && (settings.managerPerms ?? {})[action]) { fn(); return; }
     setG({ action, run: fn });
   }

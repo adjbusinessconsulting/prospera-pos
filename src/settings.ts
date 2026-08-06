@@ -33,6 +33,7 @@ export interface StoreSettings {
   // Manager permissions (set in Back Office, Premium). Which gated actions a manager
   // may approve at the register, and how they approve (PIN or password).
   managerPerms: Record<string, boolean>;
+  openPerms: Record<string, boolean>;      // anyone may do it, no approval at all
   approvalMethod: string;   // 'pin' | 'password'
 }
 
@@ -56,6 +57,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   sessionGraceMinutes: 15,   // come back within 15 min → no PIN re-entry
   sellWhenHabis: true,   // allow overselling by default (sembako restocks before the app knows)
   managerPerms: {},          // all off by default; owner enables in Back Office
+  openPerms: {},             // nothing is unrestricted until the owner says so
   approvalMethod: "pin",
 };
 

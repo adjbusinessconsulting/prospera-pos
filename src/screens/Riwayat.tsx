@@ -99,6 +99,9 @@ export default function Riwayat() {
   const [voidSale, setVoidSale] = useState<SaleRecord | null>(null);
   const [voidGate, setVoidGate] = useState<null | "owner" | "manager">(null);
   const managerCanVoid = isPremium && !isDemoMode && !!(settings.managerPerms ?? {}).void;
+  // Void set to "Semua" in Back Office: no approval from anyone. Void still can
+  // only happen on its own day before close, so the time window remains the guard.
+  const voidOpenToAll = isPremium && !isDemoMode && !!(settings.openPerms ?? {}).void;
 
   // Correcting a mis-keyed payment method. Owner password only — this moves money
   // between the omzet breakdown and the drawer, so it is never delegated.
@@ -152,11 +155,14 @@ export default function Riwayat() {
     const blocked = voidBlockReason(sale);
     if (blocked) { alert(blocked); return; }
     setVoidSale(sale);
+    // No approval configured for anyone: run it now. The sale is passed in rather
+    // than read back from state, which has not updated yet in this tick.
+    if (voidOpenToAll) { void doVoid(sale); return; }
     setVoidGate(managerCanVoid ? "manager" : "owner");
   }
 
-  async function doVoid() {
-    const sale = voidSale;
+  async function doVoid(target?: SaleRecord) {
+    const sale = target ?? voidSale;
     setVoidGate(null); setVoidSale(null);
     if (!sale || !storeId || isDemoMode) { if (isDemoMode && sale) setSales(prev => prev.map(s => s.id === sale.id ? { ...s, voided: true } : s)); return; }
     try {
