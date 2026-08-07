@@ -173,24 +173,29 @@ export default function Sales() {
 
           {/* Product grid */}
           <div className="flex-1 overflow-auto px-4 lg:px-8 pt-4 pb-[80px] lg:pb-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 content-start">
+            {/* 2 columns with a square image showed barely two products on a phone —
+                on the screen a cashier taps hundreds of times a shift. Three across,
+                and a 4:3 image rather than 1:1, roughly doubles what is on screen
+                while keeping each card a comfortable tap target (~105px on a 390px
+                phone). */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 content-start">
               {filtered.map(p => {
                 const qty = cartQty(p.id);
                 return (
                   <button key={p.id} onClick={() => handleAdd(p)}
-                    className="bg-white border border-warm-border rounded-card p-2.5 text-left hover:border-navy/30 active:scale-[0.98] transition-all">
-                    <div className="relative aspect-square rounded-[9px] overflow-hidden flex items-center justify-center mb-2.5"
+                    className="bg-white border border-warm-border rounded-card p-2 text-left hover:border-navy/30 active:scale-[0.98] transition-all">
+                    <div className="relative aspect-[4/3] rounded-[9px] overflow-hidden flex items-center justify-center mb-2"
                       style={{ background: "linear-gradient(135deg, #F2EDE3 0%, #E8DFC9 100%)" }}>
                       {p.photo
                         ? <img src={p.photo} alt={p.name} className="absolute inset-0 w-full h-full object-cover" />
-                        : <span className="text-[36px] lg:text-[30px] leading-none select-none">{p.emoji}</span>
+                        : <span className="text-[28px] lg:text-[26px] leading-none select-none">{p.emoji}</span>
                       }
                       {inventoryOn && <span className={`absolute top-1.5 left-2 text-[8.5px] ${p.stock <= 0 ? "text-warning font-semibold" : p.stock <= 5 ? "text-warning" : "text-text-mute"}`} style={{ fontVariantNumeric: "tabular-nums" }}>{p.stock <= 0 ? "Habis" : `×${p.stock}`}</span>}
                       {qty > 0 && <span className="absolute top-1.5 right-1.5 bg-navy text-gold text-[9px] px-[7px] py-[3px] rounded-[5px] font-semibold" style={{ fontVariantNumeric: "tabular-nums" }}>×{qty}</span>}
                     </div>
-                    <div className="text-[12px] font-medium text-navy leading-tight mb-0.5">{p.name}</div>
-                    <div className="text-[10.5px] text-text-mute mb-1">{p.category} · {p.unit}</div>
-                    <div className="num text-[16px] font-semibold text-navy">Rp {p.price.toLocaleString("id-ID")}</div>
+                    <div className="text-[11.5px] font-medium text-navy leading-tight mb-0.5 line-clamp-2">{p.name}</div>
+                    <div className="text-[10px] text-text-mute mb-0.5 truncate">{p.category} · {p.unit}</div>
+                    <div className="num text-[14px] font-semibold text-navy">Rp {p.price.toLocaleString("id-ID")}</div>
                   </button>
                 );
               })}
