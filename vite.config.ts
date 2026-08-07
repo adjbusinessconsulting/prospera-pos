@@ -16,6 +16,9 @@ const appIcon = isDev ? 'icon-dev-v2-512.png' : 'icon-v2-512.png'
 const maskIcon = isDev ? 'icon-dev-v2-maskable-512.png' : 'icon-v2-maskable-512.png'
 // 192px for the tab: a 512 favicon is downscaled by the browser every paint.
 const favIcon = isDev ? 'icon-dev-v2-192.png' : 'icon-v2-192.png'
+// index.html hardcoded <title>Sterith POS</title>, so a dev tab was indistinguishable
+// from a customer's. Back Office has always said "Backoffice (Dev)"; POS now matches.
+const appTitle = isDev ? 'POS (Dev)' : 'Sterith POS'
 
 export default defineConfig({
   // Lets the app itself know it's a dev build — used to expose the store
@@ -42,6 +45,7 @@ export default defineConfig({
             /<link rel="icon"[^>]*>/,
             `<link rel="icon" type="image/png" href="/${favIcon}" />`,
           )
+          .replace(/<title>[^<]*<\/title>/, `<title>${appTitle}</title>`)
       },
     },
     VitePWA({
