@@ -14,6 +14,8 @@ const appIcon = isDev ? 'icon-dev-v2-512.png' : 'icon-v2-512.png'
 // art reaches the edges. Feeding it the rounded badge crops inside its own corners
 // and leaves transparent slivers, so both point at purpose-built files.
 const maskIcon = isDev ? 'icon-dev-v2-maskable-512.png' : 'icon-v2-maskable-512.png'
+// 192px for the tab: a 512 favicon is downscaled by the browser every paint.
+const favIcon = isDev ? 'icon-dev-v2-192.png' : 'icon-v2-192.png'
 
 export default defineConfig({
   // Lets the app itself know it's a dev build — used to expose the store
@@ -28,15 +30,23 @@ export default defineConfig({
     {
       name: 'sterith-apple-touch-icon',
       transformIndexHtml(html: string) {
-        return html.replace(
-          /<link rel="apple-touch-icon"[^>]*>/,
-          `<link rel="apple-touch-icon" href="/${appIcon}" />`,
-        )
+        return html
+          .replace(
+            /<link rel="apple-touch-icon"[^>]*>/,
+            `<link rel="apple-touch-icon" href="/${appIcon}" />`,
+          )
+          // The browser-tab favicon was still Vite's default purple lightning
+          // bolt — POS never got its own, so every tab and taskbar entry showed
+          // the starter template's logo next to the name "Sterith POS".
+          .replace(
+            /<link rel="icon"[^>]*>/,
+            `<link rel="icon" type="image/png" href="/${favIcon}" />`,
+          )
       },
     },
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.svg', 'icon-512.png', 'icon-dev-512.png', 'icon-v2-512.png', 'icon-v2-maskable-512.png', 'icon-dev-v2-512.png', 'icon-dev-v2-maskable-512.png', 'splash-logo.png'],
+      includeAssets: ['favicon.svg', 'icon-512.png', 'icon-dev-512.png', 'icon-v2-512.png', 'icon-v2-maskable-512.png', 'icon-dev-v2-512.png', 'icon-dev-v2-maskable-512.png', 'icon-v2-192.png', 'icon-dev-v2-192.png', 'splash-logo.png'],
       manifest: {
         name: appName,
         short_name: appName,
