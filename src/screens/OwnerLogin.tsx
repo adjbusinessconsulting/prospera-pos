@@ -467,7 +467,7 @@ export default function OwnerLogin() {
   if (blockedStore) {
     const bs = blockedStore;   // narrowed for the async handlers below
     return (
-      <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
+      <div style={{ height: "100dvh", overflowY: "auto", background: "#FAFAF7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "safe center", padding: "24px 20px", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
         {fonts}
         <img src="/horizontal-light.png" alt="Sterith" style={{ height: 56, width: "auto", marginBottom: 24 }} />
         <div style={{ width: "100%", maxWidth: 420, textAlign: "center" }}>
@@ -499,7 +499,7 @@ export default function OwnerLogin() {
   // ── First store (logged in, but the account has no store yet) ──
   if (ownerId && storeChoices.length === 0) {
     return (
-      <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
+      <div style={{ height: "100dvh", overflowY: "auto", background: "#FAFAF7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "safe center", padding: "24px 20px", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
         {fonts}
         <img src="/horizontal-light.png" alt="Sterith" style={{ height: 56, width: "auto", marginBottom: 24 }} />
         <div style={{ width: "100%", maxWidth: 420 }}>
@@ -523,9 +523,19 @@ export default function OwnerLogin() {
   }
 
   // ── Multi-store picker (shown after login when the account has >1 store) ──
+  //
+  // Every full-screen view here scrolls itself. `body` is overflow:hidden and the
+  // app root is fixed inset-0, which is right for a till — each screen owns its
+  // scrolling — but these four never got one, so anything past the fold was
+  // unreachable: three stores plus the add-on note already overflowed a laptop.
+  //
+  // `safe center` rather than `center`: plain centring pushes overflow off BOTH
+  // ends, and the part above the viewport cannot be scrolled back to at all.
+  // Browsers without `safe` ignore the declaration and fall back to flex-start,
+  // which still scrolls — a graceful failure rather than a clipped one.
   if (storeChoices.length > 0) {
     return (
-      <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
+      <div style={{ height: "100dvh", overflowY: "auto", background: "#FAFAF7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "safe center", padding: "24px 20px", fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
         {fonts}
         <img src="/horizontal-light.png" alt="Sterith" style={{ height: 56, width: "auto", marginBottom: 24 }} />
         <div style={{ width: "100%", maxWidth: 420 }}>
@@ -591,7 +601,7 @@ export default function OwnerLogin() {
   }
 
   return (
-    <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
+    <div style={{ height: "100dvh", overflowY: "auto", background: "#FAFAF7", display: "flex", alignItems: "safe center", justifyContent: "center", padding: 16, fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
       {fonts}
       {showChooser && <DemoChooser onClassic={() => { setShowChooser(false); startDemo(); }} onClose={() => setShowChooser(false)} />}
       {card}

@@ -248,7 +248,7 @@ export default function ResetPassword() {
   );
 
   return (
-    <div style={{ minHeight: "100dvh", background: "#FAFAF7", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
+    <div style={{ height: "100dvh", overflowY: "auto", background: "#FAFAF7", display: "flex", alignItems: "safe center", justifyContent: "center", padding: 16, fontFamily: "'Hanken Grotesk', system-ui, sans-serif" }}>
       {fonts}
       {card}
     </div>
