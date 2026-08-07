@@ -49,7 +49,7 @@ export default function PindahShift() {
 
   // Real cashiers for the "next cashier" picker (demo falls back to seeded names).
   const cashiers = isDemoMode
-    ? [{ id: "ae", name: "Aerith D." }, { id: "st", name: "Stevany C." }]
+    ? [{ id: "ae", name: "Mr Bah" }, { id: "st", name: "Mr Pra" }]
     : dbCashiers.map(c => ({ id: c.id, name: c.name }));
 
   const [hitungFisik, setHitungFisik] = useState("");

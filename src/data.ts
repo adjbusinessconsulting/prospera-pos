@@ -1,9 +1,9 @@
 import type { Product, Cashier } from './types';
 
 export const CASHIERS: Cashier[] = [
-  { id: 'ae', initials: 'AE', name: 'Aerith D.',   role: 'Kasir · Shift 2', active: true },
-  { id: 'st', initials: 'ST', name: 'Stevany C.',  role: 'Kasir · Shift 3' },
-  { id: 'an', initials: 'AN', name: 'Anthony D.',  role: 'Owner · Shift 1' },
+  { id: 'ae', initials: 'MB', name: 'Mr Bah',      role: 'Kasir · Shift 2', active: true },
+  { id: 'st', initials: 'MP', name: 'Mr Pra',      role: 'Kasir · Shift 3' },
+  { id: 'an', initials: 'MT', name: 'Mr Trum',     role: 'Owner · Shift 1' },
 ];
 
 export const PRODUCTS: Product[] = [

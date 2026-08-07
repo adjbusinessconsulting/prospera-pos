@@ -98,8 +98,8 @@ const TOP_PRODUCTS = [
   { name: "Indomie Goreng", qty: 420, rev: 1_470_000 },
 ];
 const BY_CASHIER = [
-  { name: "Aerith D.", rev: 7_820_000, trx: 92 },
-  { name: "Stevany C.", rev: 6_686_000, trx: 76 },
+  { name: "Mr Bah", rev: 7_820_000, trx: 92 },
+  { name: "Mr Pra", rev: 6_686_000, trx: 76 },
 ];
 
 const typeLabel: Record<string, string> = {

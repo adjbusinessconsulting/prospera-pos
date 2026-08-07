@@ -13,9 +13,9 @@ interface KasMove { time: string; label: string; desc: string; amount: number; i
 
 // Demo-only seed (real stores load from kas_entries / sales).
 const DEMO_MANUAL: KasMove[] = [
-  { time: "16:10", label: "Pelunasan bon TRX-0042 — Budi", desc: "Aerith D. · pelunasan hutang", amount: 185000, icon: "hutang_settle", photo: false },
-  { time: "15:30", label: "Bayar parkir & retribusi", desc: "Aerith D. · keluar", amount: -15000,  icon: "keluar", photo: true },
-  { time: "14:48", label: "Beli es batu",             desc: "Aerith D. · keluar", amount: -100000, icon: "keluar", photo: true },
+  { time: "16:10", label: "Pelunasan bon TRX-0042 — Budi", desc: "Mr Bah · pelunasan hutang", amount: 185000, icon: "hutang_settle", photo: false },
+  { time: "15:30", label: "Bayar parkir & retribusi", desc: "Mr Bah · keluar", amount: -15000,  icon: "keluar", photo: true },
+  { time: "14:48", label: "Beli es batu",             desc: "Mr Bah · keluar", amount: -100000, icon: "keluar", photo: true },
 ];
 const DEMO_MODAL = 500000, DEMO_AUTO = 2680000;
 

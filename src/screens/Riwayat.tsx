@@ -51,7 +51,7 @@ function dateKey(iso: string): string {
 }
 
 function seedDemoSales(): SaleRecord[] {
-  const cashiers = ["Aerith", "Stevany"];
+  const cashiers = ["Mr Bah", "Mr Pra"];
   const methods = ["tunai", "tunai", "tunai", "qris", "qris", "transfer", "debit", "hutang"];
   const products: [string, number][] = [
     ["Beras Pandan 5kg", 75000], ["Indomie Goreng", 3500], ["Telur Ayam", 28000],

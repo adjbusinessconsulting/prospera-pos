@@ -138,8 +138,8 @@ export const DEMO_STORE_ID = '42dea26b-82a2-4b1b-b5fd-c573687df422';
 export const DEMO_CASHIER: CashierDB = {
   id: 'ae',
   store_id: DEMO_STORE_ID,
-  name: 'Aerith Djiady',
-  initials: 'AE',
+  name: 'Mr Bah',
+  initials: 'MB',
   role: 'cashier',
   pin: '000000',
   active: true,
@@ -148,8 +148,8 @@ export const DEMO_CASHIER: CashierDB = {
 export const useStore = create<POSState>((set) => ({
   screen: _startsAsReset ? 'reset-password' : 'owner-login',
   selectedCashier: 'ae',
-  cashierName: 'Aerith',
-  cashierInitials: 'AE',
+  cashierName: 'Mr Bah',
+  cashierInitials: 'MB',
   selectedShift: currentShiftFromTime(),
   selectedShiftName: FALLBACK_SHIFT_LABELS[currentShiftFromTime()],
   dbShifts: [],
@@ -231,8 +231,8 @@ export const useStore = create<POSState>((set) => ({
 
   selectCashier: (id) => set((s) => {
     const cashier = s.dbCashiers.find(c => c.id === id);
-    const name = cashier ? cashier.name.split(' ')[0] : (id === 'ae' ? 'Aerith' : id === 'st' ? 'Stevany' : 'Anthony');
-    const initials = cashier ? cashier.initials : (id === 'ae' ? 'AE' : id === 'st' ? 'ST' : 'AN');
+    const name = cashier ? shortName(cashier.name) : (id === 'ae' ? 'Mr Bah' : id === 'st' ? 'Mr Pra' : 'Mr Trum');
+    const initials = cashier ? cashier.initials : (id === 'ae' ? 'MB' : id === 'st' ? 'MP' : 'MT');
     return { selectedCashier: id, cashierName: name, cashierInitials: initials };
   }),
 
@@ -283,8 +283,8 @@ export const useStore = create<POSState>((set) => ({
     paymentMethod: 'tunai',
     cashReceived: 0,
     selectedCashier: 'ae',
-    cashierName: 'Aerith',
-    cashierInitials: 'AE',
+    cashierName: 'Mr Bah',
+    cashierInitials: 'MB',
     storeId: '',
     storeName: '',
     storeAddress: '',
@@ -328,7 +328,7 @@ export const useStore = create<POSState>((set) => ({
     dbCashiers: cashiers,
     selectedCashier: cashiers.length > 0 ? cashiers[0].id : 'ae',
     // Sync the greeting/attribution to the loaded cashier so a returning session
-    // shows the real name, not the initial 'Aerith' fallback.
+    // shows the real name, not the demo fallback.
     ...(cashiers.length > 0
       ? { cashierName: cashiers[0].name.split(' ')[0], cashierInitials: cashiers[0].initials }
       : {}),
@@ -346,6 +346,16 @@ export const getItemCount = (cart: CartItem[]) => cart.reduce((sum, i) => sum + 
 export const getTrxId = (counter: number) => `#TRX-${counter.toString().padStart(4, '0')}`;
 
 const TIER_LEVELS: Record<string, number> = { free: 0, standard: 1, premium: 2, business: 3, enterprise: 4 };
+// Greeting name. Taking the first word alone turns "Pak Budi" into "Pak" and
+// "Mr Bah" into "Mr" — a title is not a name, so keep the word after it.
+const TITLES = new Set(["mr", "mrs", "ms", "pak", "bu", "ibu", "bapak", "mas", "mbak", "kak", "haji", "hj", "h"]);
+export function shortName(full: string): string {
+  const parts = (full || "").trim().split(/\s+/);
+  if (!parts[0]) return full;
+  const head = parts[0].replace(/\.$/, "").toLowerCase();
+  return TITLES.has(head) && parts[1] ? `${parts[0]} ${parts[1]}` : parts[0];
+}
+
 export const tierLevel = (tier: string) => TIER_LEVELS[tier?.toLowerCase()] ?? 0;
 export const isAtLeast = (tier: string, required: string) => tierLevel(tier) >= tierLevel(required);
 

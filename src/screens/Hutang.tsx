@@ -16,10 +16,10 @@ interface HutangRow {
 }
 
 const DEMO_HUTANG: HutangRow[] = [
-  { id: "d1", trx_id: "TRX-0412", customer_name: "Bu Sari (warung sebelah)", phone: "0812-3456-7890", amount: 185000, paid_amount: 0, status: "open", cashier_name: "Aerith", created_at: new Date(Date.now() - 2 * 864e5).toISOString() },
-  { id: "d3", trx_id: "TRX-0431", customer_name: "Ibu Ratna", phone: null, amount: 32000, paid_amount: 0, status: "open", cashier_name: "Stevany", created_at: new Date(Date.now() - 1 * 864e5).toISOString() },
-  { id: "d5", trx_id: "TRX-0388", customer_name: "Pak Budi", phone: "0813-1111-2222", amount: 90000, paid_amount: 90000, status: "lunas", cashier_name: "Aerith", created_at: new Date(Date.now() - 6 * 864e5).toISOString(), settled_at: new Date(Date.now() - 1 * 864e5).toISOString(), settled_method: "tunai" },
-  { id: "d6", trx_id: "TRX-0295", customer_name: "Mbak Yanti", phone: "0857-9090-1212", amount: 47000, paid_amount: 47000, status: "lunas", cashier_name: "Stevany", created_at: new Date(Date.now() - 9 * 864e5).toISOString(), settled_at: new Date(Date.now() - 3 * 864e5).toISOString(), settled_method: "qris" },
+  { id: "d1", trx_id: "TRX-0412", customer_name: "Bu Sari (warung sebelah)", phone: "0812-3456-7890", amount: 185000, paid_amount: 0, status: "open", cashier_name: "Mr Bah", created_at: new Date(Date.now() - 2 * 864e5).toISOString() },
+  { id: "d3", trx_id: "TRX-0431", customer_name: "Ibu Ratna", phone: null, amount: 32000, paid_amount: 0, status: "open", cashier_name: "Mr Pra", created_at: new Date(Date.now() - 1 * 864e5).toISOString() },
+  { id: "d5", trx_id: "TRX-0388", customer_name: "Pak Budi", phone: "0813-1111-2222", amount: 90000, paid_amount: 90000, status: "lunas", cashier_name: "Mr Bah", created_at: new Date(Date.now() - 6 * 864e5).toISOString(), settled_at: new Date(Date.now() - 1 * 864e5).toISOString(), settled_method: "tunai" },
+  { id: "d6", trx_id: "TRX-0295", customer_name: "Mbak Yanti", phone: "0857-9090-1212", amount: 47000, paid_amount: 47000, status: "lunas", cashier_name: "Mr Pra", created_at: new Date(Date.now() - 9 * 864e5).toISOString(), settled_at: new Date(Date.now() - 3 * 864e5).toISOString(), settled_method: "qris" },
 ];
 
 const METHODS = [
