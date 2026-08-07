@@ -70,6 +70,10 @@ export default function App() {
       if (scr) setScreen(scr as Parameters<typeof setScreen>[0]);
       const tier = params.get("tier");
       if (tier) useStore.getState().setStoreTier(tier);
+      // ?view=back opens straight into the Back Office side of the demo, so Back
+      // Office can send visitors here instead of keeping its own separate copy.
+      // The Front/Back toggle is already on screen, so the two halves stay linked.
+      if (params.get("view") === "back") useStore.getState().setDemoView("back");
     }
   }, []);
 
