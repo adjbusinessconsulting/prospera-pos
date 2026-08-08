@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { BUILD } from "../version";
+import { IS_DEV_BUILD } from "../lib/devStoreSwitch";
 import { setRegistration } from "../lib/pwaUpdate";
 
 // Guard so the recurring update check is wired up only once, even though this
@@ -56,20 +57,20 @@ export default function UpdateBanner() {
 
         {/* Logo + branding */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
-          <svg width="48" height="48" viewBox="0 0 100 100" style={{ marginBottom: 10 }}>
-            <rect x="10" y="62" width="14" height="26" rx="3" fill="#A6843F"/>
-            <rect x="30" y="50" width="14" height="38" rx="3" fill="#C9A55F"/>
-            <rect x="50" y="34" width="14" height="54" rx="3" fill="#D4B36C"/>
-            <rect x="70" y="22" width="14" height="66" rx="3" fill="#E5C778"/>
-            <polygon points="63,22 91,22 77,4" fill="#E5C778"/>
-          </svg>
+          {/* The app's own mark, not the company logo — and the same file the
+              build installs, so a dev update prompt shows the slate icon and a
+              production one shows gold. You should be able to tell which app is
+              asking to update without reading the text. */}
+          <img src={IS_DEV_BUILD ? "/icon-dev-v2-192.png" : "/icon-v2-192.png"}
+            alt="" width={54} height={54}
+            style={{ marginBottom: 10, borderRadius: 13 }} />
 
           <p style={{ margin: 0, fontFamily: "'EB Garamond', Georgia, serif", fontSize: 26, fontWeight: 600, color: "#F2EDE3", letterSpacing: "0.18em", textTransform: "uppercase" }}>STERITH</p>
           <p style={{ margin: "3px 0 0", fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 8, letterSpacing: "0.28em", color: "#C9A55F", textTransform: "uppercase" }}>BUSINESS CONSULTING</p>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
             <span style={{ flex: 1, height: 1, width: 32, background: "rgba(201,165,95,0.5)" }} />
-            <span style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 8, letterSpacing: "0.22em", color: "#C9A55F", textTransform: "uppercase", whiteSpace: "nowrap" }}>POS · POINT OF SALE</span>
+            <span style={{ fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 8, letterSpacing: "0.22em", color: "#C9A55F", textTransform: "uppercase", whiteSpace: "nowrap" }}>{IS_DEV_BUILD ? "POS · DEV" : "POS · POINT OF SALE"}</span>
             <span style={{ flex: 1, height: 1, width: 32, background: "rgba(201,165,95,0.5)" }} />
           </div>
         </div>
