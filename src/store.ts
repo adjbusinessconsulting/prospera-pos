@@ -224,7 +224,7 @@ export const useStore = create<POSState>((set) => ({
     lowStockThreshold: 5,
     dbCashiers: [DEMO_CASHIER],
     selectedCashier: DEMO_CASHIER.id,
-    cashierName: DEMO_CASHIER.name.split(' ')[0],
+    cashierName: shortName(DEMO_CASHIER.name),
     cashierInitials: DEMO_CASHIER.initials,
     screen: 'login',
   }),
@@ -330,7 +330,7 @@ export const useStore = create<POSState>((set) => ({
     // Sync the greeting/attribution to the loaded cashier so a returning session
     // shows the real name, not the demo fallback.
     ...(cashiers.length > 0
-      ? { cashierName: cashiers[0].name.split(' ')[0], cashierInitials: cashiers[0].initials }
+      ? { cashierName: shortName(cashiers[0].name), cashierInitials: cashiers[0].initials }
       : {}),
   }),
 }));
