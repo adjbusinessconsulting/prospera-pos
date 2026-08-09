@@ -210,6 +210,9 @@ export default function OwnerLogin() {
       return {
         ...r,
         stock,
+        // photo_url is the stored copy; `photo` is what the UI renders. Without
+        // this mapping a saved photo never comes back after a reload.
+        photo:         (r.photo_url as string) || undefined,
         stockAwal:     rolls ? stock : ((r.stock_awal as number) ?? stock),
         stockTambahan: rolls ? 0     : ((r.stock_tambahan as number) ?? 0),
         stockTerjual:  rolls ? 0     : ((r.stock_terjual as number) ?? 0),

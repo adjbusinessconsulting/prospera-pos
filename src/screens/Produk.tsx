@@ -86,6 +86,21 @@ export default function Produk() {
     fn();
   }
 
+  // A picked photo arrives as a base64 data URL. Push it to Storage and keep only
+  // the URL on the row: the product list is re-fetched on every login, and inlined
+  // photos would turn that into a multi-megabyte download on a phone.
+  async function uploadPhoto(productId: string, dataUrl: string): Promise<string | null> {
+    if (!dataUrl.startsWith("data:")) return dataUrl;   // already a URL — leave it
+    try {
+      const blob = await (await fetch(dataUrl)).blob();
+      const path = `${storeId}/${productId}-${Date.now()}.jpg`;
+      const { error } = await supabase.storage.from("product-photos")
+        .upload(path, blob, { contentType: blob.type || "image/jpeg", upsert: true });
+      if (error) return null;
+      return supabase.storage.from("product-photos").getPublicUrl(path).data.publicUrl;
+    } catch { return null; }
+  }
+
   function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -125,8 +140,12 @@ export default function Produk() {
       updateProduct(editId, { name: form.name.trim(), sku: sku || undefined, unit, category: form.category, price, stock, monogram, ...(form.photo ? { photo: form.photo } : {}) });
       void logEvent("product.edit", `Ubah produk: ${form.name.trim()}`);
       if (storeId && !isDemoMode) {
-        const { error } = await supabase.from("products").update({ name: form.name.trim(), sku: sku || null, unit, category: form.category, price, stock, store_qty: stock, monogram }).eq("id", editId);
+        const photoUrl = form.photo ? await uploadPhoto(editId, form.photo) : null;
+        const { error } = await supabase.from("products").update({ name: form.name.trim(), sku: sku || null, unit, category: form.category, price, stock, store_qty: stock, monogram, ...(photoUrl ? { photo_url: photoUrl } : {}) }).eq("id", editId);
         if (error) { alert(`Perubahan belum tersimpan ke server: ${error.message}`); return; }
+        // Swap the heavy data URL for the stored one so this device stops holding it.
+        if (photoUrl) updateProduct(editId, { photo: photoUrl });
+        else if (form.photo) alert("Produk tersimpan, tapi foto gagal diunggah. Coba lagi nanti.");
       }
       if (inSessionEdit) { setAdded(list => list.map(a => a.id === editId ? { ...a, name: form.name.trim() } : a)); backToAdd(); }
       else closeForm();
@@ -138,8 +157,11 @@ export default function Produk() {
     addProduct(newProduct);
     void logEvent("product.add", `Produk baru: ${newProduct.name} — ${formatRp(price)}`);
     if (storeId && !isDemoMode) {
-      const { error } = await supabase.from("products").insert({ id, store_id: storeId, name: newProduct.name, monogram, emoji: newProduct.emoji, category: newProduct.category, unit, price, stock, store_qty: stock, sku: sku || null });
+      const photoUrl = form.photo ? await uploadPhoto(id, form.photo) : null;
+      const { error } = await supabase.from("products").insert({ id, store_id: storeId, name: newProduct.name, monogram, emoji: newProduct.emoji, category: newProduct.category, unit, price, stock, store_qty: stock, sku: sku || null, ...(photoUrl ? { photo_url: photoUrl } : {}) });
       if (error) { alert(`Produk belum tersimpan ke server: ${error.message}`); return; }
+      if (photoUrl) updateProduct(id, { photo: photoUrl });
+      else if (form.photo) alert("Produk tersimpan, tapi foto gagal diunggah. Coba lagi nanti.");
     }
     setAdded(list => [...list, { id, name: newProduct.name }]);
     if (addAnother) { setForm(f => ({ ...EMPTY_FORM, unit: f.unit, category: f.category })); nameRef.current?.focus(); }
