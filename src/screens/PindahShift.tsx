@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useStore, shiftNameFor } from "../store";
+import { useStore, shiftNameFor, demoCashiers } from "../store";
 import { formatRp } from "../data";
 import { supabase } from "../lib/supabase";
 import { modalAwalToday, fetchModalAwalToday } from "../lib/dayopen";
@@ -49,7 +49,9 @@ export default function PindahShift() {
 
   // Real cashiers for the "next cashier" picker (demo falls back to seeded names).
   const cashiers = isDemoMode
-    ? [{ id: "ae", name: "Mr Bah" }, { id: "st", name: "Mr Pra" }]
+    // Same source as everywhere else, so the handover list cannot disagree with
+    // who the demo says works here.
+    ? demoCashiers(storeTier).map(c => ({ id: c.id, name: c.name }))
     : dbCashiers.map(c => ({ id: c.id, name: c.name }));
 
   const [hitungFisik, setHitungFisik] = useState("");

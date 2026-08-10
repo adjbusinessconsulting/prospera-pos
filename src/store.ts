@@ -145,6 +145,17 @@ export const DEMO_CASHIER: CashierDB = {
   active: true,
 };
 
+// The demo's staff list follows the tier it is showing. Free allows ONE cashier
+// (KASIR_LIMITS below), so a Free demo listing three people would be advertising
+// a limit the product enforces — the first thing a Free customer would hit.
+const DEMO_STAFF: CashierDB[] = [
+  DEMO_CASHIER,
+  { id: 'st', store_id: DEMO_STORE_ID, name: 'Mr Pra',  initials: 'MP', role: 'manajer',  pin: '000000', active: true },
+  { id: 'an', store_id: DEMO_STORE_ID, name: 'Mr Trum', initials: 'MT', role: 'owner',    pin: '000000', active: true },
+];
+export const demoCashiers = (tier: string): CashierDB[] =>
+  (tier || 'free').toLowerCase() === 'free' ? [DEMO_CASHIER] : DEMO_STAFF;
+
 export const useStore = create<POSState>((set) => ({
   screen: _startsAsReset ? 'reset-password' : 'owner-login',
   selectedCashier: 'ae',
@@ -196,7 +207,11 @@ export const useStore = create<POSState>((set) => ({
     pendingSyncCount: s.pendingSyncCount ?? st.pendingSyncCount,
     lastSyncedAt: s.lastSyncedAt !== undefined ? s.lastSyncedAt : st.lastSyncedAt,
   })),
-  setStoreTier: (storeTier) => set({ storeTier }),
+  setStoreTier: (storeTier) => set((s) => s.isDemoMode
+    // The demo's tier pill switches tier live, so the staff list must follow —
+    // otherwise flipping to Free leaves three cashiers on screen.
+    ? { storeTier, dbCashiers: demoCashiers(storeTier) }
+    : { storeTier }),
   setKickedOut: (kickedOut) => set({ kickedOut }),
   setSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
   loadSettings: (raw) => set({ settings: mergeSettings(raw) }),
@@ -222,7 +237,7 @@ export const useStore = create<POSState>((set) => ({
     settings: { ...DEFAULT_SETTINGS },
     inventoryEnabled: true,
     lowStockThreshold: 5,
-    dbCashiers: [DEMO_CASHIER],
+    dbCashiers: demoCashiers('premium'),   // demo opens on Premium
     selectedCashier: DEMO_CASHIER.id,
     cashierName: shortName(DEMO_CASHIER.name),
     cashierInitials: DEMO_CASHIER.initials,
