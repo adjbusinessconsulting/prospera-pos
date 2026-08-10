@@ -19,10 +19,10 @@ export default function TutupToko() {
   const recOn = isStd && settings.rekonsiliasi;   // owner can hide the reconciliation tool
   const retentionDays = RETENTION[effectiveTier] ?? 1;
 
-  // Omzet = money actually received for TODAY's activity. Credit sales (hutang)
-  // are NOT counted until settled, and a debt settled today belongs to the day
-  // its bon was made — so it never lands in today's omzet here.
-  const [omzet, setOmzet] = useState(isDemoMode ? 7_950_000 : 0);
+  // Omzet is ACCRUAL: every sale made today counts, however it was paid, bons
+  // included. Collecting a bon later moves cash into the laci and never touches
+  // omzet, so a closed day's revenue is final.
+  const [omzet, setOmzet] = useState(isDemoMode ? 8_352_000 : 0);
   const [trx, setTrx] = useState(isDemoMode ? 54 : 0);
   const [shiftCount, setShiftCount] = useState(isDemoMode ? 3 : 1);
   const [cash, setCash] = useState(isDemoMode ? 6_120_000 : 0);   // TUNAI sales only — see the drawer note below
@@ -36,8 +36,13 @@ export default function TutupToko() {
   const [piutangBaru, setPiutangBaru] = useState(isDemoMode ? 217_000 : 0); // hutang baru hari ini, belum lunas
   const [voidedTotal, setVoidedTotal] = useState(0);
   const [voidedCount, setVoidedCount] = useState(0);
+  // Demo seed, kept internally consistent so the numbers survive being read:
+  //   omzet 8.352.000 = 5.120 + 1.830 + 1.000 + 402 (hutang)
+  //   the 402.000 of bons splits into 217.000 still owed + 185.000 collected in cash
+  // The hutang line has to be here — under accrual a bon IS revenue on its own day,
+  // and a demo breakdown without one still tells the old cash-basis story.
   const [breakdown, setBreakdown] = useState<Record<string, number>>(isDemoMode
-    ? { tunai: 5_120_000, qris: 1_830_000, transfer: 1_000_000 } : {});
+    ? { tunai: 5_120_000, qris: 1_830_000, transfer: 1_000_000, hutang: 402_000 } : {});
 
   useEffect(() => {
     if (!storeId || isDemoMode) return;

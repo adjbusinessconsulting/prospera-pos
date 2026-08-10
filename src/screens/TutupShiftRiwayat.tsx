@@ -22,6 +22,22 @@ interface Closing {
   hutang_settle: number | null; piutang_baru: number | null;
 }
 
+// The demo has no Supabase rows, so the saved nota — the screen the whole product
+// argues for — came up empty for anyone trying the demo. Seeded here with the same
+// figures Tutup Toko shows, so the two screens tell one story:
+//   omzet 8.352.000 = tunai 5.120 + qris 1.830 + transfer 1.000 + hutang 402
+//   laci  5.690.000 = modal 500 + tunai 5.120 + pelunasan 185 - keluar 115
+//   dihitung 5.685.000, so the demo also shows a realistic 5.000 short.
+const DEMO_CLOSING: Closing = {
+  business_date: "", closed_at: new Date().toISOString(), cashier_name: "Mr Bah",
+  omzet: 8_352_000, trx: 54, shift_count: 3, modal_awal: 500_000,
+  expected: 5_690_000, counted: 5_685_000, selisih: -5_000,
+  reconciled: true, auto_closed: false,
+  breakdown: { tunai: 5_120_000, qris: 1_830_000, transfer: 1_000_000, hutang: 402_000 },
+  cash: 5_120_000, kas_masuk: 0, kas_keluar: 115_000,
+  hutang_settle: 185_000, piutang_baru: 217_000,
+};
+
 function ymd(d: Date) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
 function prettyDate(iso: string) {
   const d = new Date(`${iso}T00:00:00`);
@@ -53,6 +69,13 @@ export default function TutupShiftRiwayat() {
   }, [storeId, isDemoMode]);
 
   useEffect(() => {
+    if (isDemoMode) {
+      // Today and yesterday have a nota; older dates stay empty, which is honest —
+      // the demo store did not exist then.
+      setRow(date === today || date === yest ? { ...DEMO_CLOSING, business_date: date } : null);
+      setLoading(false);
+      return;
+    }
     if (!storeId) { setLoading(false); return; }
     if (!caughtUp) return;   // wait for the catch-up so a freshly-closed day shows
     let alive = true;
@@ -60,7 +83,7 @@ export default function TutupShiftRiwayat() {
     supabase.from("shift_closings").select("*").eq("store_id", storeId).eq("business_date", date).maybeSingle()
       .then(({ data }) => { if (alive) { setRow((data as Closing) ?? null); setLoading(false); } });
     return () => { alive = false; };
-  }, [storeId, date, caughtUp]);
+  }, [storeId, date, caughtUp, isDemoMode, today, yest]);
 
   const canExtended = isAtLeast(effectiveTier, "standard");
   const bdRows = useMemo(() => METHOD_ORDER.filter(m => (row?.breakdown?.[m] ?? 0) > 0), [row]);
