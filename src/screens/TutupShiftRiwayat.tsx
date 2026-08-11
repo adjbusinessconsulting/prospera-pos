@@ -136,7 +136,7 @@ export default function TutupShiftRiwayat() {
   return (
     <div className="w-full h-full flex flex-col animate-screen-in bg-cream-bg">
       <AppSidebar active="riwayat" cashierInitials={cashierInitials} setScreen={setScreen} signOut={signOut} showDemoBack />
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto lg:overflow-hidden">
         {/* Header + tabs */}
         <div className="px-5 lg:px-10 pt-5 lg:pt-7 pb-0 shrink-0">
           <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute mb-0.5">LAPORAN</p>
@@ -164,7 +164,7 @@ export default function TutupShiftRiwayat() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-5 lg:px-10 py-5">
+        <div className="flex-1 lg:overflow-y-auto px-5 lg:px-10 py-5">
           <div style={{ maxWidth: 460 }}>
             <p style={{ fontSize: 11.5, color: "#7A776F", margin: "0 0 12px" }}>{prettyDate(date)}</p>
 

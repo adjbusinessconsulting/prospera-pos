@@ -162,7 +162,7 @@ export default function Kas() {
     <div className="w-full h-full flex flex-col animate-screen-in bg-cream-bg">
       <AppSidebar active="riwayat" cashierInitials={cashierInitials} setScreen={setScreen} signOut={signOut} showDemoBack />
 
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto lg:overflow-hidden">
 
         {/* Header + tabs */}
         <div className="px-5 lg:px-10 pt-5 lg:pt-7 pb-0 shrink-0">
@@ -325,7 +325,7 @@ export default function Kas() {
 
             <p style={{ fontSize: 10, letterSpacing: "0.2em" }} className="font-sans uppercase text-text-mute mb-3 shrink-0">PERGERAKAN HARI INI</p>
 
-            <div className="flex-1 overflow-auto">
+            <div className="flex-1 lg:overflow-auto">
               <div className="bg-white border border-warm-border rounded-card overflow-hidden">
                 {pergerakan.map((p, i) => {
                   const settle = p.icon === "hutang_settle";

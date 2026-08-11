@@ -263,7 +263,7 @@ export default function Laporan() {
     <div className="w-full h-full flex flex-col animate-screen-in bg-cream-bg">
       <AppSidebar active="laporan" cashierInitials={cashierInitials} setScreen={setScreen} signOut={signOut} showDemoBack />
 
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto lg:overflow-hidden">
         {/* Header */}
         <div className="flex justify-between items-end px-5 lg:px-10 pt-5 lg:pt-8 pb-0 shrink-0 gap-3">
           <div>
@@ -284,7 +284,7 @@ export default function Laporan() {
           })()}
         </div>
 
-        <div className="flex-1 overflow-auto px-5 lg:px-10 pt-4 pb-6">
+        <div className="flex-1 lg:overflow-auto px-5 lg:px-10 pt-4 pb-6">
 
           {/* ── FREE: today-only omset + modal awal ── */}
           {effectiveTier === "free" ? (

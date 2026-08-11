@@ -441,7 +441,12 @@ export default function Riwayat() {
     <div className="w-full h-full flex flex-col animate-screen-in bg-cream-bg">
       <AppSidebar active="riwayat" cashierInitials={cashierInitials} setScreen={setScreen} signOut={signOut} showDemoBack />
 
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+      {/* On a phone the whole column scrolls: header, summary cards, filter chips
+          and the list together. Pinning them cost 423px of an 844px screen and
+          left the list — the point of this page — with 294px, which reads as
+          "cannot scroll". Desktop keeps the pinned header and a scrolling list,
+          where there is room for both. */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto lg:overflow-hidden">
 
         {/* Header */}
         <div className="px-5 lg:px-10 pt-5 lg:pt-7 pb-0 shrink-0">
@@ -634,7 +639,7 @@ export default function Riwayat() {
         </div>
 
         {/* Table / Cards */}
-        <div className="flex-1 overflow-auto px-5 lg:px-10 pt-3 pb-4 lg:pb-6">
+        <div className="flex-1 lg:overflow-auto px-5 lg:px-10 pt-3 pb-4 lg:pb-6">
 
           {loadingData && (
             <div style={{ padding: "48px 0", textAlign: "center", color: "#B8B0A8", fontSize: 13 }}>Memuat data…</div>

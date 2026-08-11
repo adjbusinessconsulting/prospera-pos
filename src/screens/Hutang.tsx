@@ -154,7 +154,7 @@ export default function Hutang() {
     <div className="w-full h-full flex flex-col animate-screen-in bg-cream-bg">
       <AppSidebar active="riwayat" cashierInitials={cashierInitials} setScreen={setScreen} signOut={signOut} showDemoBack />
 
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto lg:overflow-hidden">
         {/* Header + tabs */}
         <div className="px-5 lg:px-10 pt-5 lg:pt-7 pb-0 shrink-0">
           <p style={{ fontSize: 10, letterSpacing: "0.22em" }} className="font-sans uppercase text-text-mute mb-0.5">LAPORAN · HUTANG</p>
@@ -170,7 +170,7 @@ export default function Hutang() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto px-5 lg:px-10 pt-4 pb-6">
+        <div className="flex-1 lg:overflow-auto px-5 lg:px-10 pt-4 pb-6">
           {!canHutang ? (
             <div className="bg-white border border-dashed border-warm-border rounded-card px-5 py-4 flex items-center gap-3 max-w-[460px]">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4C9B8" strokeWidth="1.5" className="shrink-0"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
