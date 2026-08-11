@@ -50,53 +50,6 @@ function dateKey(iso: string): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-// The seeded history must only contain methods the shown tier can actually take.
-// Free is tunai/qris/transfer; hutang is Standard+; debit and e-wallet are Premium
-// (see methodLock in Payment.tsx). A Free demo listing Debit rows advertises a
-// payment method the product would refuse the moment someone tried it.
-function demoMethods(tier: string): string[] {
-  const t = (tier || "free").toLowerCase();
-  const base = ["tunai", "tunai", "tunai", "qris", "qris", "transfer"];
-  if (t === "free") return base;
-  if (t === "standard") return [...base, "hutang"];
-  return [...base, "hutang", "debit"];
-}
-
-function seedDemoSales(tier: string): SaleRecord[] {
-  const cashiers = ["Mr Bah", "Mr Pra"];
-  const methods = demoMethods(tier);
-  const products: [string, number][] = [
-    ["Beras Pandan 5kg", 75000], ["Indomie Goreng", 3500], ["Telur Ayam", 28000],
-    ["Aqua 600ml", 4000], ["Bimoli 2L", 38000], ["Gula Pasir 1kg", 16000], ["Kapal Api Sachet", 1500],
-  ];
-  const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)];
-  const out: SaleRecord[] = [];
-  let n = 42;
-  for (let d = 0; d < 5; d++) {
-    const perDay = d === 0 ? 9 : 3 + (d % 3);
-    for (let i = 0; i < perDay; i++) {
-      const when = new Date(); when.setDate(when.getDate() - d);
-      when.setHours(9 + Math.floor(Math.random() * 10), Math.floor(Math.random() * 60), 0, 0);
-      const items = Array.from({ length: 1 + Math.floor(Math.random() * 3) }, () => {
-        const [pn, price] = pick(products); const qty = 1 + Math.floor(Math.random() * 3);
-        return { product_id: "", product_name: pn, price, qty, subtotal: price * qty };
-      });
-      const total = items.reduce((s, it) => s + it.subtotal, 0);
-      const method = pick(methods);
-      const rounded = Math.ceil(total / 5000) * 5000;
-      out.push({
-        id: `demo-${n}`, trx_id: `#TRX-${String(n).padStart(4, "0")}`, cashier_id: "",
-        cashier_name: pick(cashiers), shift: 1 + Math.floor(Math.random() * 3), total,
-        payment_method: method, cash_received: method === "tunai" ? rounded : total,
-        change_amount: method === "tunai" ? rounded - total : 0,
-        created_at: when.toISOString(), sale_items: items,
-      });
-      n++;
-    }
-  }
-  return out.sort((a, b) => b.created_at.localeCompare(a.created_at));
-}
-
 export default function Riwayat() {
   const { cashierInitials, selectedShiftName, storeId, storePhone, storeTier, isDemoMode, settings, inventoryEnabled, updateProduct, products, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
@@ -243,6 +196,7 @@ export default function Riwayat() {
 
   const [seededSales, setSales]     = useState<SaleRecord[]>([]);
   const demoSales = useStore((st) => st.demoSales);
+  const demoSeed = useStore((st) => st.demoSeed);
   // A demo sale behaves like any other row: it filters, totals, prints and can be
   // voided or re-labelled, because everything downstream reads this one list.
   const sales = useMemo(
@@ -264,7 +218,8 @@ export default function Riwayat() {
     // Re-seeds when the demo's tier pill changes, so the history always matches
     // what that tier can do. Sales the visitor rang up live in demoSales, which is
     // separate, so re-seeding never discards them.
-    if (isDemoMode) { setSales(seedDemoSales(storeTier)); setLoadingData(false); return; }
+    // Reads the shared seed so Kas and Tutup Toko count the same sales.
+    if (isDemoMode) { setSales(demoSeed); setLoadingData(false); return; }
     if (!storeId) { setLoadingData(false); return; }
     // Paint the last-cached history instantly so the screen is never blank while
     // the network catches up (esp. on a cold open after the app was closed a while).
@@ -304,7 +259,7 @@ export default function Riwayat() {
         });
         setHutangByTrx(m);
       });
-  }, [storeId, isDemoMode, canExtendedHistory, storeTier]);
+  }, [storeId, isDemoMode, canExtendedHistory, demoSeed]);
 
   // Cash-basis: a credit (hutang) sale only counts once its bon is settled (lunas);
   // the money lands on the bon's own date (this row's date), never on payment day.

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { CartItem, CashierDB, Product, SaleRecord, Screen, ShiftDef } from './types';
 import { PRODUCTS } from './data';
 import { DEFAULT_SETTINGS, mergeSettings, type StoreSettings } from './settings';
+import { makeDemoSales } from './lib/demoSeed';
 
 interface POSState {
   screen: Screen;
@@ -81,6 +82,10 @@ interface POSState {
   // day_opens; the demo writes nothing, so it lives here for the session and
   // feeds Kas, Tutup Toko and the closing nota exactly as a real one would.
   // -1 means "not asked yet", which is how the Buka Toko gate knows to show.
+  // The demo's seeded history. Held here rather than generated inside Riwayat so
+  // Kas, Tutup Toko and the nota count from the SAME sales — Kas showing a
+  // different tunai total from Riwayat is the one thing this product cannot do.
+  demoSeed: SaleRecord[];
   demoModalAwal: number;
   setDemoModalAwal: (n: number) => void;
   demoSales: SaleRecord[];
@@ -183,6 +188,7 @@ export const useStore = create<POSState>((set) => ({
   cashReceived: 0,
   hutangCustomer: null,
   orderCustomer: null,
+  demoSeed: [],
   demoModalAwal: -1,
   demoSales: [],
   demoHutang: [],
@@ -223,7 +229,9 @@ export const useStore = create<POSState>((set) => ({
   setStoreTier: (storeTier) => set((s) => s.isDemoMode
     // The demo's tier pill switches tier live, so the staff list must follow —
     // otherwise flipping to Free leaves three cashiers on screen.
-    ? { storeTier, dbCashiers: demoCashiers(storeTier) }
+    // Re-seed on a tier change: the history must only contain methods that tier
+    // can take, and every screen counts from this one array.
+    ? { storeTier, dbCashiers: demoCashiers(storeTier), demoSeed: makeDemoSales(storeTier) }
     : { storeTier }),
   setKickedOut: (kickedOut) => set({ kickedOut }),
   setSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
@@ -239,6 +247,7 @@ export const useStore = create<POSState>((set) => ({
   // Ephemeral — nothing is written to Supabase while isDemoMode is true.
   startDemo: () => set({
     isDemoMode: true,
+    demoSeed: makeDemoSales('premium'),   // demo opens on Premium
     demoModalAwal: -1,   // ask this visitor for their own opening float
     demoSales: [],
     demoHutang: [],
@@ -334,6 +343,7 @@ export const useStore = create<POSState>((set) => ({
     trxCounter: 42,
     isDemoMode: false,
     // Anything done in the demo dies with it: sales, bons and any product added.
+    demoSeed: [],
     demoModalAwal: -1,
     demoSales: [],
     demoHutang: [],

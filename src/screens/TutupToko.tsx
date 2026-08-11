@@ -6,6 +6,7 @@ import { logEvent } from "../lib/auditlog";
 import { saveShiftClosing } from "../lib/shift";
 import { modalAwalToday, fetchModalAwalToday } from "../lib/dayopen";
 import { clearSession } from "../lib/session";
+import { demoTotals } from "../lib/demoSeed";
 
 const RETENTION: Record<string, number> = { free: 1, standard: 30, premium: 90, business: 1095, enterprise: 1825 };
 const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet", hutang: "Hutang / Bon" };
@@ -13,7 +14,7 @@ const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", tra
 const METHOD_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet", "hutang"];
 
 export default function TutupToko() {
-  const { signOut, setScreen, storeId, storeTier, isDemoMode, demoModalAwal, settings, cashierName } = useStore();
+  const { signOut, setScreen, storeId, storeTier, isDemoMode, demoModalAwal, demoSeed, demoSales, settings, cashierName } = useStore();
   const effectiveTier = storeId ? storeTier : "free";
   const isStd = isAtLeast(effectiveTier, "standard");
   const recOn = isStd && settings.rekonsiliasi;   // owner can hide the reconciliation tool
@@ -22,42 +23,39 @@ export default function TutupToko() {
   // Omzet is ACCRUAL: every sale made today counts, however it was paid, bons
   // included. Collecting a bon later moves cash into the laci and never touches
   // omzet, so a closed day's revenue is final.
-  const [omzet, setOmzet] = useState(isDemoMode ? 8_352_000 : 0);
-  const [trx, setTrx] = useState(isDemoMode ? 54 : 0);
+  const [omzet, setOmzet] = useState(0);
+  const [trx, setTrx] = useState(0);
   const [shiftCount, setShiftCount] = useState(isDemoMode ? 3 : 1);
-  const [cash, setCash] = useState(isDemoMode ? 6_120_000 : 0);   // TUNAI sales only — see the drawer note below
+  const [cash, setCash] = useState(0);   // TUNAI sales only — see the drawer note below
   const [modalAwal, setModalAwal] = useState(isDemoMode ? Math.max(demoModalAwal, 0) : 0);
   const [kasMasuk, setKasMasuk] = useState(0);
-  const [kasKeluar, setKasKeluar] = useState(isDemoMode ? 115_000 : 0);
-  const [hutangSettle, setHutangSettle] = useState(isDemoMode ? 185_000 : 0); // pelunasan tunai hari ini → masuk laci
+  const [kasKeluar, setKasKeluar] = useState(isDemoMode ? 115_000 : 0);   // the two demo kas keluar rows
+  const [hutangSettle, setHutangSettle] = useState(0); // pelunasan tunai hari ini → masuk laci
   const [shiftId, setShiftId] = useState<string | null>(null);
   const [showRecon, setShowRecon] = useState(false);
   const [counted, setCounted] = useState("");
-  const [piutangBaru, setPiutangBaru] = useState(isDemoMode ? 217_000 : 0); // hutang baru hari ini, belum lunas
+  const [piutangBaru, setPiutangBaru] = useState(0); // hutang baru hari ini, belum lunas
   const [voidedTotal, setVoidedTotal] = useState(0);
   const [voidedCount, setVoidedCount] = useState(0);
-  // Demo seed, kept internally consistent so the numbers survive being read:
-  //   omzet 8.352.000 = 5.120 + 1.830 + 1.000 + 402 (hutang)
-  //   the 402.000 of bons splits into 217.000 still owed + 185.000 collected in cash
-  // The hutang line has to be here — under accrual a bon IS revenue on its own day,
-  // and a demo breakdown without one still tells the old cash-basis story.
-  const [breakdown, setBreakdown] = useState<Record<string, number>>(isDemoMode
-    ? { tunai: 5_120_000, qris: 1_830_000, transfer: 1_000_000, hutang: 402_000 } : {});
+  const [breakdown, setBreakdown] = useState<Record<string, number>>({});
 
   // Demo figures follow the tier pill. Free has no Hutang/Bon at all, so it gets
   // no hutang line in omzet, no piutang, and no pelunasan in the drawer — showing
   // them would advertise a feature that tier cannot use.
   useEffect(() => {
     if (!isDemoMode) return;
-    const credit = isAtLeast(storeTier, "standard");
-    const bd: Record<string, number> = { tunai: 5_120_000, qris: 1_830_000, transfer: 1_000_000 };
-    if (credit) bd.hutang = 402_000;
-    setBreakdown(bd);
-    setOmzet(Object.values(bd).reduce((a, v) => a + v, 0));
-    setPiutangBaru(credit ? 217_000 : 0);
-    setHutangSettle(credit ? 185_000 : 0);
+    // Every figure here is counted from the same sales Riwayat lists, so the
+    // closing screen can be checked against the history line by line. Hardcoded
+    // demo totals could never match a seed that is random per session.
+    const t = demoTotals([...demoSales, ...demoSeed]);
+    setBreakdown(t.breakdown);
+    setOmzet(t.omzet);
+    setCash(t.cash);
+    setTrx(t.trx);
+    setPiutangBaru(t.piutangBaru);
+    setHutangSettle(t.hutangSettle);
     setModalAwal(Math.max(demoModalAwal, 0));   // the visitor's own opening float
-  }, [isDemoMode, storeTier, demoModalAwal]);
+  }, [isDemoMode, storeTier, demoModalAwal, demoSeed, demoSales]);
 
   useEffect(() => {
     if (!storeId || isDemoMode) return;

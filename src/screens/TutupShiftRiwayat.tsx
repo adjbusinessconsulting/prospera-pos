@@ -6,7 +6,8 @@ import { supabase } from "../lib/supabase";
 import { autoCloseStaleShifts } from "../lib/shift";
 import { isConnected as printerReady, printShiftClosing, loadPrinterConfig } from "../lib/printer";
 import { formatRp } from "../data";
-import type { Screen } from "../types";
+import { demoTotals } from "../lib/demoSeed";
+import type { SaleRecord, Screen } from "../types";
 
 const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet", hutang: "Hutang / Bon" };
 const METHOD_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet", "hutang"];
@@ -23,27 +24,20 @@ interface Closing {
 }
 
 // The demo has no Supabase rows, so the saved nota — the screen the whole product
-// argues for — came up empty for anyone trying the demo. Seeded here with the same
-// figures Tutup Toko shows, so the two screens tell one story, and always with a
-// realistic 5.000 shortage rather than a tidy zero.
-//
-// Built per tier: Free has no Hutang/Bon, so no hutang line, no piutang and no
-// pelunasan in the drawer — otherwise the demo advertises a feature that tier
-// cannot use. Figures stay consistent with Tutup Toko either way.
-function demoClosing(credit: boolean, modalAwal: number): Closing {
-  const breakdown: Record<string, number> = { tunai: 5_120_000, qris: 1_830_000, transfer: 1_000_000 };
-  if (credit) breakdown.hutang = 402_000;
-  const omzet = Object.values(breakdown).reduce((a, v) => a + v, 0);
-  const settle = credit ? 185_000 : 0;
-  //   laci = modal 500 + tunai 5.120 + pelunasan - keluar 115, counted 5.000 short
-  const expected = modalAwal + 5_120_000 + settle - 115_000;
+// argues for — came up empty for anyone trying the demo. Built from the SAME sales
+// Riwayat, Kas and Tutup Toko count, so the four screens reconcile line by line.
+function demoClosing(sales: SaleRecord[], modalAwal: number, kasKeluar: number): Closing {
+  const t = demoTotals(sales);
+  const expected = modalAwal + t.cash + t.hutangSettle - kasKeluar;
   return {
     business_date: "", closed_at: new Date().toISOString(), cashier_name: "Mr Bah",
-    omzet, trx: 54, shift_count: 3, modal_awal: modalAwal,
+    omzet: t.omzet, trx: t.trx, shift_count: 3, modal_awal: modalAwal,
+    // A small shortage rather than a tidy zero — a demo that always balances
+    // perfectly is the least convincing thing to show a warung owner.
     expected, counted: expected - 5_000, selisih: -5_000,
-    reconciled: true, auto_closed: false, breakdown,
-    cash: 5_120_000, kas_masuk: 0, kas_keluar: 115_000,
-    hutang_settle: settle, piutang_baru: credit ? 217_000 : 0,
+    reconciled: true, auto_closed: false, breakdown: t.breakdown,
+    cash: t.cash, kas_masuk: 0, kas_keluar: kasKeluar,
+    hutang_settle: t.hutangSettle, piutang_baru: t.piutangBaru,
   };
 }
 
@@ -54,7 +48,7 @@ function prettyDate(iso: string) {
 }
 
 export default function TutupShiftRiwayat() {
-  const { setScreen, cashierInitials, signOut, storeId, storeTier, isDemoMode, demoModalAwal } = useStore();
+  const { setScreen, cashierInitials, signOut, storeId, storeTier, isDemoMode, demoModalAwal, demoSeed, demoSales } = useStore();
   const storeName = useStore((st) => st.storeName);
   const [printMsg, setPrintMsg] = useState("");
   const effectiveTier = storeId ? storeTier : "premium";
@@ -82,7 +76,7 @@ export default function TutupShiftRiwayat() {
       // Today and yesterday have a nota; older dates stay empty, which is honest —
       // the demo store did not exist then.
       setRow(date === today || date === yest
-        ? { ...demoClosing(isAtLeast(storeTier, "standard"), Math.max(demoModalAwal, 0)), business_date: date }
+        ? { ...demoClosing([...demoSales, ...demoSeed], Math.max(demoModalAwal, 0), 115_000), business_date: date }
         : null);
       setLoading(false);
       return;
@@ -94,7 +88,7 @@ export default function TutupShiftRiwayat() {
     supabase.from("shift_closings").select("*").eq("store_id", storeId).eq("business_date", date).maybeSingle()
       .then(({ data }) => { if (alive) { setRow((data as Closing) ?? null); setLoading(false); } });
     return () => { alive = false; };
-  }, [storeId, date, caughtUp, isDemoMode, today, yest, storeTier, demoModalAwal]);
+  }, [storeId, date, caughtUp, isDemoMode, today, yest, demoModalAwal, demoSeed, demoSales]);
 
   const canExtended = isAtLeast(effectiveTier, "standard");
   const bdRows = useMemo(() => METHOD_ORDER.filter(m => (row?.breakdown?.[m] ?? 0) > 0), [row]);
