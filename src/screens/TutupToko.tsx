@@ -44,6 +44,20 @@ export default function TutupToko() {
   const [breakdown, setBreakdown] = useState<Record<string, number>>(isDemoMode
     ? { tunai: 5_120_000, qris: 1_830_000, transfer: 1_000_000, hutang: 402_000 } : {});
 
+  // Demo figures follow the tier pill. Free has no Hutang/Bon at all, so it gets
+  // no hutang line in omzet, no piutang, and no pelunasan in the drawer — showing
+  // them would advertise a feature that tier cannot use.
+  useEffect(() => {
+    if (!isDemoMode) return;
+    const credit = isAtLeast(storeTier, "standard");
+    const bd: Record<string, number> = { tunai: 5_120_000, qris: 1_830_000, transfer: 1_000_000 };
+    if (credit) bd.hutang = 402_000;
+    setBreakdown(bd);
+    setOmzet(Object.values(bd).reduce((a, v) => a + v, 0));
+    setPiutangBaru(credit ? 217_000 : 0);
+    setHutangSettle(credit ? 185_000 : 0);
+  }, [isDemoMode, storeTier]);
+
   useEffect(() => {
     if (!storeId || isDemoMode) return;
     let cancelled = false;

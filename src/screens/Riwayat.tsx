@@ -50,9 +50,21 @@ function dateKey(iso: string): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function seedDemoSales(): SaleRecord[] {
+// The seeded history must only contain methods the shown tier can actually take.
+// Free is tunai/qris/transfer; hutang is Standard+; debit and e-wallet are Premium
+// (see methodLock in Payment.tsx). A Free demo listing Debit rows advertises a
+// payment method the product would refuse the moment someone tried it.
+function demoMethods(tier: string): string[] {
+  const t = (tier || "free").toLowerCase();
+  const base = ["tunai", "tunai", "tunai", "qris", "qris", "transfer"];
+  if (t === "free") return base;
+  if (t === "standard") return [...base, "hutang"];
+  return [...base, "hutang", "debit"];
+}
+
+function seedDemoSales(tier: string): SaleRecord[] {
   const cashiers = ["Mr Bah", "Mr Pra"];
-  const methods = ["tunai", "tunai", "tunai", "qris", "qris", "transfer", "debit", "hutang"];
+  const methods = demoMethods(tier);
   const products: [string, number][] = [
     ["Beras Pandan 5kg", 75000], ["Indomie Goreng", 3500], ["Telur Ayam", 28000],
     ["Aqua 600ml", 4000], ["Bimoli 2L", 38000], ["Gula Pasir 1kg", 16000], ["Kapal Api Sachet", 1500],
@@ -249,7 +261,10 @@ export default function Riwayat() {
     // Seed the history once per demo session. demoSales (rung up during the visit)
     // is merged in below rather than stored here, so re-running this effect can
     // never drop a sale the visitor just made.
-    if (isDemoMode) { setSales(prev => prev.length ? prev : seedDemoSales()); setLoadingData(false); return; }
+    // Re-seeds when the demo's tier pill changes, so the history always matches
+    // what that tier can do. Sales the visitor rang up live in demoSales, which is
+    // separate, so re-seeding never discards them.
+    if (isDemoMode) { setSales(seedDemoSales(storeTier)); setLoadingData(false); return; }
     if (!storeId) { setLoadingData(false); return; }
     // Paint the last-cached history instantly so the screen is never blank while
     // the network catches up (esp. on a cold open after the app was closed a while).
@@ -289,7 +304,7 @@ export default function Riwayat() {
         });
         setHutangByTrx(m);
       });
-  }, [storeId, isDemoMode, canExtendedHistory]);
+  }, [storeId, isDemoMode, canExtendedHistory, storeTier]);
 
   // Cash-basis: a credit (hutang) sale only counts once its bon is settled (lunas);
   // the money lands on the bon's own date (this row's date), never on payment day.

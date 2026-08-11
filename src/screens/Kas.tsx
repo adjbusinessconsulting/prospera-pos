@@ -43,7 +43,18 @@ export default function Kas() {
   // Foto bukti is optional by default; the owner can make it required (Pengaturan).
   const requiresPhoto = settings.fotoBuktiWajib;
 
-  const [manual, setManual] = useState<KasMove[]>(isDemoMode ? DEMO_MANUAL : []);
+  // Uang Kas is Standard+ in full — a Free store cannot record kas masuk/keluar at
+  // all, and cannot settle a bon. So a Free demo shows no manual entries whatever:
+  // just the two automatic rows, modal awal and penjualan tunai.
+  const [manual, setManual] = useState<KasMove[]>(
+    isDemoMode && isAtLeast(storeTier, "standard") ? DEMO_MANUAL : [],
+  );
+
+  // The demo's tier pill switches live, so the seed has to follow it.
+  useEffect(() => {
+    if (!isDemoMode) return;
+    setManual(isAtLeast(storeTier, "standard") ? DEMO_MANUAL : []);
+  }, [isDemoMode, storeTier]);
   const [modalAwal, setModalAwal] = useState(isDemoMode ? DEMO_MODAL : 0);
   const [autoTunai, setAutoTunai] = useState(isDemoMode ? DEMO_AUTO : 0);
   const [bukaTime, setBukaTime] = useState(isDemoMode ? "14:00" : "");
