@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { CartItem, CashierDB, Product, Screen, ShiftDef } from './types';
+import type { CartItem, CashierDB, Product, SaleRecord, Screen, ShiftDef } from './types';
 import { PRODUCTS } from './data';
 import { DEFAULT_SETTINGS, mergeSettings, type StoreSettings } from './settings';
 
@@ -74,6 +74,11 @@ interface POSState {
   setCashReceived: (n: number) => void;
   setHutangCustomer: (c: { name: string; phone: string; paidNow: number } | null) => void;
   setOrderCustomer: (c: { name: string; phone: string } | null) => void;
+  // Sales rung up during a demo session. In memory only — the demo writes nothing
+  // to Supabase, so without this a completed sale vanished and Riwayat kept showing
+  // only the seeded history, which made the demo feel fake.
+  demoSales: SaleRecord[];
+  addDemoSale: (s: SaleRecord) => void;
   addDemoHutang: (h: POSState["demoHutang"][number]) => void;
   setDemoHutang: (h: POSState["demoHutang"]) => void;
   addCash: (n: number) => void;
@@ -172,6 +177,7 @@ export const useStore = create<POSState>((set) => ({
   cashReceived: 0,
   hutangCustomer: null,
   orderCustomer: null,
+  demoSales: [],
   demoHutang: [],
   trxCounter: 42,
 
@@ -226,6 +232,9 @@ export const useStore = create<POSState>((set) => ({
   // Ephemeral — nothing is written to Supabase while isDemoMode is true.
   startDemo: () => set({
     isDemoMode: true,
+    demoSales: [],
+    demoHutang: [],
+    products: PRODUCTS,   // a fresh catalogue every time the demo is opened
     demoView: 'front',
     subscriptionExpired: false,
     paidTier: '',
@@ -277,6 +286,7 @@ export const useStore = create<POSState>((set) => ({
   setCashReceived: (cashReceived) => set({ cashReceived }),
   setHutangCustomer: (hutangCustomer) => set({ hutangCustomer }),
   setOrderCustomer: (orderCustomer) => set({ orderCustomer }),
+  addDemoSale: (sale) => set((s) => ({ demoSales: [sale, ...s.demoSales] })),
   addDemoHutang: (h) => set((s) => ({ demoHutang: [h, ...s.demoHutang] })),
   setDemoHutang: (demoHutang) => set({ demoHutang }),
   addCash: (n) => set(s => ({ cashReceived: s.cashReceived + n })),
@@ -314,6 +324,10 @@ export const useStore = create<POSState>((set) => ({
     dbShifts: [],
     trxCounter: 42,
     isDemoMode: false,
+    // Anything done in the demo dies with it: sales, bons and any product added.
+    demoSales: [],
+    demoHutang: [],
+    products: PRODUCTS,
     subscriptionExpired: false,
     paidTier: '',
   }),

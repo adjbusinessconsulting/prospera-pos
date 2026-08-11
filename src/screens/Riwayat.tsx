@@ -229,7 +229,14 @@ export default function Riwayat() {
     });
   }
 
-  const [sales, setSales]           = useState<SaleRecord[]>([]);
+  const [seededSales, setSales]     = useState<SaleRecord[]>([]);
+  const demoSales = useStore((st) => st.demoSales);
+  // A demo sale behaves like any other row: it filters, totals, prints and can be
+  // voided or re-labelled, because everything downstream reads this one list.
+  const sales = useMemo(
+    () => (isDemoMode && demoSales.length ? [...demoSales, ...seededSales] : seededSales),
+    [isDemoMode, demoSales, seededSales],
+  );
   const [hutangByTrx, setHutangByTrx] = useState<Record<string, { status: string; settled_method: string | null }>>({});
   const [loadingData, setLoadingData] = useState(true);
   const [activeFilter, setActiveFilter] = useState(0);
@@ -239,7 +246,10 @@ export default function Riwayat() {
   const [showExportMenu, setShowExportMenu] = useState(false);
 
   useEffect(() => {
-    if (isDemoMode) { setSales(seedDemoSales()); setLoadingData(false); return; }
+    // Seed the history once per demo session. demoSales (rung up during the visit)
+    // is merged in below rather than stored here, so re-running this effect can
+    // never drop a sale the visitor just made.
+    if (isDemoMode) { setSales(prev => prev.length ? prev : seedDemoSales()); setLoadingData(false); return; }
     if (!storeId) { setLoadingData(false); return; }
     // Paint the last-cached history instantly so the screen is never blank while
     // the network catches up (esp. on a cold open after the app was closed a while).

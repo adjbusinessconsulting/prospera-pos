@@ -26,7 +26,7 @@ function SterithWatermark({ tier }: { tier: string }) {
 }
 
 export default function Receipt() {
-  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, selectedShiftName, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, inventoryEnabled, receiptLogo, products, hutangCustomer, orderCustomer, settings, updateProduct, setHutangCustomer, restart, setScreen, signOut } = useStore();
+  const { cart, cashReceived, cashierName, cashierInitials, selectedShift, selectedShiftName, trxCounter, paymentMethod, selectedCashier, storeId, storeName, storeAddress, storePhone, storeTier, isDemoMode, inventoryEnabled, receiptLogo, products, hutangCustomer, orderCustomer, settings, updateProduct, addDemoSale, setHutangCustomer, restart, setScreen, signOut } = useStore();
   const customerName = hutangCustomer?.name || orderCustomer?.name || null;
   const effectiveTier = storeId ? storeTier : 'free';
   const inventoryOn = isAtLeast(effectiveTier, 'premium') && inventoryEnabled;
@@ -75,6 +75,7 @@ export default function Receipt() {
     if (recordedRef.current) return;
     recordedRef.current = true;
     const isCash = paymentMethod === "tunai";
+    const itemCount = cart.reduce((n, i) => n + i.qty, 0);
     if (storeId && !isDemoMode) {
       recordSale({
         id: crypto.randomUUID(),
@@ -101,8 +102,26 @@ export default function Receipt() {
         stock: inventoryOn ? cart.map(i => ({ id: i.product.id, qty: i.qty })) : [],
       });
       const mLabel: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", hutang: "Hutang/Bon" };
-      const itemCount = cart.reduce((n, i) => n + i.qty, 0);
       void logEvent("sale", `Penjualan ${trxId} — ${formatRp(total)} · ${mLabel[paymentMethod] ?? paymentMethod} · ${itemCount} item`, false);
+    }
+    // Demo: keep the sale in memory so it turns up in Riwayat, Kas and Laporan
+    // like a real one. Nothing is written to Supabase, and leaving the demo drops
+    // the lot — a visitor who rings something up should see where it lands.
+    if (isDemoMode) {
+      addDemoSale({
+        id: crypto.randomUUID(), trx_id: trxId, cashier_id: selectedCashier,
+        cashier_name: cashierName, shift: selectedShift, total,
+        payment_method: paymentMethod,
+        cash_received: isCash ? cashReceived : total,
+        change_amount: isCash ? change : 0,
+        customer_name: customerName ?? undefined,
+        created_at: new Date().toISOString(),
+        sale_items: cart.map(i => ({
+          product_id: i.product.id, product_name: i.product.name,
+          price: i.product.price, qty: i.qty, subtotal: i.product.price * i.qty,
+        })),
+      });
+      void logEvent("sale", `Penjualan ${trxId} — ${formatRp(total)} · ${itemCount} item`, false);
     }
     // Basic Inventori: reflect terjual/sisa locally right away (immediate UI).
     if (inventoryOn) {
