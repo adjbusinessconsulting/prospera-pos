@@ -6,7 +6,7 @@ import { supabase } from "../lib/supabase";
 import { autoCloseStaleShifts } from "../lib/shift";
 import { isConnected as printerReady, printShiftClosing, loadPrinterConfig } from "../lib/printer";
 import { formatRp } from "../data";
-import { demoTotals } from "../lib/demoSeed";
+import { demoTotals, salesForTier } from "../lib/demoSeed";
 import type { SaleRecord, Screen } from "../types";
 
 const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet", hutang: "Hutang / Bon" };
@@ -76,7 +76,7 @@ export default function TutupShiftRiwayat() {
       // Today and yesterday have a nota; older dates stay empty, which is honest —
       // the demo store did not exist then.
       setRow(date === today || date === yest
-        ? { ...demoClosing([...demoSales, ...demoSeed], Math.max(demoModalAwal, 0), 115_000), business_date: date }
+        ? { ...demoClosing(salesForTier([...demoSales, ...demoSeed], storeTier), Math.max(demoModalAwal, 0), 115_000), business_date: date }
         : null);
       setLoading(false);
       return;

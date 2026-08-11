@@ -6,7 +6,7 @@ import { logEvent } from "../lib/auditlog";
 import { saveShiftClosing } from "../lib/shift";
 import { modalAwalToday, fetchModalAwalToday } from "../lib/dayopen";
 import { clearSession } from "../lib/session";
-import { demoTotals } from "../lib/demoSeed";
+import { demoTotals, salesForTier } from "../lib/demoSeed";
 
 const RETENTION: Record<string, number> = { free: 1, standard: 30, premium: 90, business: 1095, enterprise: 1825 };
 const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet", hutang: "Hutang / Bon" };
@@ -47,7 +47,7 @@ export default function TutupToko() {
     // Every figure here is counted from the same sales Riwayat lists, so the
     // closing screen can be checked against the history line by line. Hardcoded
     // demo totals could never match a seed that is random per session.
-    const t = demoTotals([...demoSales, ...demoSeed]);
+    const t = demoTotals(salesForTier([...demoSales, ...demoSeed], storeTier));
     setBreakdown(t.breakdown);
     setOmzet(t.omzet);
     setCash(t.cash);

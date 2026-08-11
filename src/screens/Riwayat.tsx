@@ -8,6 +8,7 @@ import { readRiwayatCache, saveRiwayatCache } from "../lib/snapshot";
 import { logEvent } from "../lib/auditlog";
 import { ManagerApproval } from "../components/ManagerApproval";
 import { OwnerConfirm } from "../components/OwnerConfirm";
+import { salesForTier } from "../lib/demoSeed";
 import type { SaleRecord } from "../types";
 
 const FILTER_LABELS = [
@@ -219,7 +220,7 @@ export default function Riwayat() {
     // what that tier can do. Sales the visitor rang up live in demoSales, which is
     // separate, so re-seeding never discards them.
     // Reads the shared seed so Kas and Tutup Toko count the same sales.
-    if (isDemoMode) { setSales(demoSeed); setLoadingData(false); return; }
+    if (isDemoMode) { setSales(salesForTier(demoSeed, storeTier)); setLoadingData(false); return; }
     if (!storeId) { setLoadingData(false); return; }
     // Paint the last-cached history instantly so the screen is never blank while
     // the network catches up (esp. on a cold open after the app was closed a while).

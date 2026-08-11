@@ -229,9 +229,9 @@ export const useStore = create<POSState>((set) => ({
   setStoreTier: (storeTier) => set((s) => s.isDemoMode
     // The demo's tier pill switches tier live, so the staff list must follow —
     // otherwise flipping to Free leaves three cashiers on screen.
-    // Re-seed on a tier change: the history must only contain methods that tier
-    // can take, and every screen counts from this one array.
-    ? { storeTier, dbCashiers: demoCashiers(storeTier), demoSeed: makeDemoSales(storeTier) }
+    // No re-seed: it is the same shop on a different plan, so screens filter the
+    // one seed by tier rather than inventing a new history.
+    ? { storeTier, dbCashiers: demoCashiers(storeTier) }
     : { storeTier }),
   setKickedOut: (kickedOut) => set({ kickedOut }),
   setSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
@@ -247,7 +247,7 @@ export const useStore = create<POSState>((set) => ({
   // Ephemeral — nothing is written to Supabase while isDemoMode is true.
   startDemo: () => set({
     isDemoMode: true,
-    demoSeed: makeDemoSales('premium'),   // demo opens on Premium
+    demoSeed: makeDemoSales(),   // one shop; each tier filters what it can show
     demoModalAwal: -1,   // ask this visitor for their own opening float
     demoSales: [],
     demoHutang: [],

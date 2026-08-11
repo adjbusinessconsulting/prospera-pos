@@ -7,7 +7,7 @@ import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
 import { modalAwalToday, openedAtToday } from "../lib/dayopen";
 import { useManagerGate } from "../lib/useManagerGate";
-import { demoTotals } from "../lib/demoSeed";
+import { demoTotals, salesForTier } from "../lib/demoSeed";
 
 type KasIcon = "masuk" | "keluar" | "auto" | "hutang_settle";
 interface KasMove { time: string; label: string; desc: string; amount: number; icon: KasIcon; photo: boolean }
@@ -60,7 +60,7 @@ export default function Kas() {
     // Cash sales come from the SAME sales Riwayat lists, so "Penjualan tunai"
     // here always equals the Tunai total there. Anything else makes the saldo
     // impossible to check, which is the opposite of what this screen is for.
-    setAutoTunai(demoTotals([...demoSales, ...demoSeed]).cash);
+    setAutoTunai(demoTotals(salesForTier([...demoSales, ...demoSeed], storeTier)).cash);
   }, [isDemoMode, storeTier, demoModalAwal, demoSeed, demoSales]);
   const [modalAwal, setModalAwal] = useState(isDemoMode ? Math.max(demoModalAwal, 0) : 0);
   const [autoTunai, setAutoTunai] = useState(0);

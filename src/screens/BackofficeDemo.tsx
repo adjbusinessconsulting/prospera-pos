@@ -1,5 +1,6 @@
-import { useState, useEffect, type CSSProperties } from "react";
+import { useState, useEffect, useMemo, type CSSProperties } from "react";
 import { useStore } from "../store";
+import { demoBackofficeTotals, demoTotals, salesForTier } from "../lib/demoSeed";
 import { formatRp } from "../data";
 import { DemoControls } from "../components/DemoControls";
 import { getLog, type AuditEntry } from "../lib/auditlog";
@@ -83,24 +84,6 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 // Demo analytics for the Laporan tab (month-to-date, all cabang).
-const PAY_BREAKDOWN = [
-  { label: "Tunai", value: 8_900_000, color: "#4E8C6E" },
-  { label: "QRIS", value: 3_100_000, color: "#0D1117" },
-  { label: "Transfer", value: 1_300_000, color: "#A6843F" },
-  { label: "Debit", value: 1_206_000, color: "#7A776F" },
-];
-const PIUTANG = 1_240_000; // hutang belum lunas — piutang, bukan omzet
-const TOP_PRODUCTS = [
-  { name: "Beras Pandan 5kg", qty: 128, rev: 9_600_000 },
-  { name: "Telur Ayam /kg", qty: 96, rev: 2_688_000 },
-  { name: "Rokok Sampoerna 16", qty: 62, rev: 1_984_000 },
-  { name: "Aqua 600ml", qty: 388, rev: 1_552_000 },
-  { name: "Indomie Goreng", qty: 420, rev: 1_470_000 },
-];
-const BY_CASHIER = [
-  { name: "Mr Bah", rev: 7_820_000, trx: 92 },
-  { name: "Mr Pra", rev: 6_686_000, trx: 76 },
-];
 
 const typeLabel: Record<string, string> = {
   "product.add": "Produk baru",
@@ -116,6 +99,22 @@ const typeColor: Record<string, string> = {
 export default function BackofficeDemo() {
   const { products, updateProduct, addProduct, deleteProduct, lowStockThreshold } = useStore();
   const threshold = lowStockThreshold || 5;
+
+  // Counted from the SAME sales the POS side of this demo shows. Back Office used
+  // to carry its own figures, so toggling Front/Back showed two different shops.
+  const demoSeed = useStore((st) => st.demoSeed);
+  const demoSales = useStore((st) => st.demoSales);
+  const storeTier = useStore((st) => st.storeTier);
+  // Today only, for Ringkasan; `bo` below covers the whole seeded period, which
+  // is what a Back Office report shows.
+  const boToday = useMemo(
+    () => demoTotals(salesForTier([...demoSales, ...demoSeed], storeTier)),
+    [demoSales, demoSeed, storeTier],
+  );
+  const bo = useMemo(
+    () => demoBackofficeTotals(salesForTier([...demoSales, ...demoSeed], storeTier)),
+    [demoSales, demoSeed, storeTier],
+  );
 
   const [tab, setTab] = useState<Tab>("ringkasan");
   const [q, setQ] = useState("");
@@ -148,7 +147,8 @@ export default function BackofficeDemo() {
   const branch = branches.find(b => b.id === selectedBranch) ?? branches[0];
   const branchShort = branch.name.replace("Toko Sembako Maju · ", "");
   const totSales = branches.reduce((s, b) => s + b.sales, 0);
-  const totTrx = branches.reduce((s, b) => s + b.trx, 0);
+  // totTrx removed: transaction counts now come from the shared seed, not the
+  // fictional per-branch figures.
   const totStock = branches.reduce((s, b) => s + b.stockValue, 0);
   const totLow = branches.reduce((s, b) => s + b.lowStock, 0);
 
@@ -284,8 +284,10 @@ export default function BackofficeDemo() {
 
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
             {[
-              { l: "Penjualan Hari Ini", v: formatRp(totSales), accent: true },
-              { l: "Transaksi", v: String(totTrx), accent: false },
+              // Counted from the same sales as the POS side — the branch totals
+              // below are a separate fiction and must not drive this number.
+              { l: "Penjualan Hari Ini", v: formatRp(boToday.omzet), accent: true },
+              { l: "Transaksi", v: String(boToday.trx), accent: false },
               { l: "Nilai Stok", v: formatRp(totStock), accent: false },
               { l: "Stok Rendah", v: `${totLow} item`, accent: false, warn: totLow > 0 },
             ].map(s => (
@@ -340,10 +342,10 @@ export default function BackofficeDemo() {
           {/* Stat cards */}
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
             {[
-              { l: "Total Omzet", v: formatRp(totSales), accent: true },
-              { l: "Transaksi", v: String(totTrx), accent: false },
-              { l: "Rata-rata / Trx", v: formatRp(Math.round(totSales / totTrx)), accent: false },
-              { l: "Piutang (belum lunas)", v: formatRp(PIUTANG), accent: false, warn: true },
+              { l: "Total Omzet", v: formatRp(bo.omzet), accent: true },
+              { l: "Transaksi", v: String(bo.trx), accent: false },
+              { l: "Rata-rata / Trx", v: formatRp(bo.trx ? Math.round(bo.omzet / bo.trx) : 0), accent: false },
+              { l: "Piutang (belum lunas)", v: formatRp(bo.piutang), accent: false, warn: true },
             ].map(s => (
               <div key={s.l} style={{ background: s.accent ? NAVY : CARD, border: s.accent ? "none" : `1px solid ${BORDER}`, borderRadius: 16, padding: "16px 18px" }}>
                 <div style={{ fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, color: s.accent ? "rgba(201,165,95,0.85)" : MUTE }}>{s.l}</div>
@@ -356,7 +358,7 @@ export default function BackofficeDemo() {
             {/* Payment breakdown */}
             <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "18px 20px" }}>
               <h3 style={{ fontSize: 13, fontWeight: 800, color: NAVY, marginBottom: 14 }}>Metode Pembayaran</h3>
-              {PAY_BREAKDOWN.map(m => {
+              {bo.payMix.map(m => {
                 const pct = Math.round((m.value / totSales) * 100);
                 return (
                   <div key={m.label} style={{ marginBottom: 12 }}>
@@ -372,14 +374,14 @@ export default function BackofficeDemo() {
               })}
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginTop: 14, paddingTop: 12, borderTop: `1px dashed ${BORDER}` }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 7, color: DANGER }}><span style={{ width: 8, height: 8, borderRadius: 999, background: DANGER }} />Hutang belum lunas</span>
-                <span style={{ fontWeight: 700, color: DANGER, fontVariantNumeric: "tabular-nums" }}>{formatRp(PIUTANG)}</span>
+                <span style={{ fontWeight: 700, color: DANGER, fontVariantNumeric: "tabular-nums" }}>{formatRp(bo.piutang)}</span>
               </div>
             </div>
 
             {/* Per cashier */}
             <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "18px 20px" }}>
               <h3 style={{ fontSize: 13, fontWeight: 800, color: NAVY, marginBottom: 14 }}>Per Kasir</h3>
-              {BY_CASHIER.map(c => (
+              {bo.byCashier.map(c => (
                 <div key={c.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid #F2EDE3` }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ width: 30, height: 30, borderRadius: 999, background: "#F0EBE1", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: MUTE }}>{c.name.split(" ").map(w => w[0]).join("")}</span>
@@ -397,8 +399,8 @@ export default function BackofficeDemo() {
           {/* Top products */}
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "18px 20px", marginTop: 16 }}>
             <h3 style={{ fontSize: 13, fontWeight: 800, color: NAVY, marginBottom: 12 }}>Produk Terlaris</h3>
-            {TOP_PRODUCTS.map((p, i) => (
-              <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: i < TOP_PRODUCTS.length - 1 ? `1px solid #F2EDE3` : "none" }}>
+            {bo.topProducts.map((p, i) => (
+              <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: i < bo.topProducts.length - 1 ? `1px solid #F2EDE3` : "none" }}>
                 <span style={{ width: 22, height: 22, borderRadius: 6, background: i === 0 ? "rgba(201,165,95,0.16)" : "#F0ECE3", color: i === 0 ? GOLD : MUTE, fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
                 <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: NAVY }}>{p.name}</span>
                 <span style={{ fontSize: 12, color: MUTE, fontVariantNumeric: "tabular-nums" }}>{p.qty} terjual</span>
