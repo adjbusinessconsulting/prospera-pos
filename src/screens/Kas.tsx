@@ -17,7 +17,7 @@ const DEMO_MANUAL: KasMove[] = [
   { time: "15:30", label: "Bayar parkir & retribusi", desc: "Mr Bah · keluar", amount: -15000,  icon: "keluar", photo: true },
   { time: "14:48", label: "Beli es batu",             desc: "Mr Bah · keluar", amount: -100000, icon: "keluar", photo: true },
 ];
-const DEMO_MODAL = 500000, DEMO_AUTO = 2680000;
+const DEMO_AUTO = 2680000;   // modal awal now comes from what the visitor typed
 
 function PhotoThumb({ size = "sm" }: { size?: "sm" | "md" }) {
   const dim = size === "md" ? "w-10 h-10" : "w-8 h-8";
@@ -35,7 +35,7 @@ function PhotoThumb({ size = "sm" }: { size?: "sm" | "md" }) {
 }
 
 export default function Kas() {
-  const { cashierInitials, cashierName, selectedShift, selectedShiftName, storeId, storeTier, isDemoMode, settings, setScreen, signOut } = useStore();
+  const { cashierInitials, cashierName, selectedShift, selectedShiftName, storeId, storeTier, isDemoMode, demoModalAwal, settings, setScreen, signOut } = useStore();
   const { gate, gateModal } = useManagerGate();
   const effectiveTier = storeId ? storeTier : 'free';
   const canKas = isAtLeast(effectiveTier, 'standard');       // tier gate (banner/upsell)
@@ -54,8 +54,11 @@ export default function Kas() {
   useEffect(() => {
     if (!isDemoMode) return;
     setManual(isAtLeast(storeTier, "standard") ? DEMO_MANUAL : []);
-  }, [isDemoMode, storeTier]);
-  const [modalAwal, setModalAwal] = useState(isDemoMode ? DEMO_MODAL : 0);
+    // The float the visitor typed at Buka Toko, not a fixed 500rb — so the laci
+    // adds up to their own number and the demo answers "where did my money go".
+    setModalAwal(Math.max(demoModalAwal, 0));
+  }, [isDemoMode, storeTier, demoModalAwal]);
+  const [modalAwal, setModalAwal] = useState(isDemoMode ? Math.max(demoModalAwal, 0) : 0);
   const [autoTunai, setAutoTunai] = useState(isDemoMode ? DEMO_AUTO : 0);
   const [bukaTime, setBukaTime] = useState(isDemoMode ? "14:00" : "");
   const [showMasuk, setShowMasuk] = useState(false);

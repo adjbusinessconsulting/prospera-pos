@@ -77,6 +77,12 @@ interface POSState {
   // Sales rung up during a demo session. In memory only — the demo writes nothing
   // to Supabase, so without this a completed sale vanished and Riwayat kept showing
   // only the seeded history, which made the demo feel fake.
+  // The float a demo visitor enters at Buka Toko. Real stores keep this in
+  // day_opens; the demo writes nothing, so it lives here for the session and
+  // feeds Kas, Tutup Toko and the closing nota exactly as a real one would.
+  // -1 means "not asked yet", which is how the Buka Toko gate knows to show.
+  demoModalAwal: number;
+  setDemoModalAwal: (n: number) => void;
   demoSales: SaleRecord[];
   addDemoSale: (s: SaleRecord) => void;
   addDemoHutang: (h: POSState["demoHutang"][number]) => void;
@@ -177,6 +183,7 @@ export const useStore = create<POSState>((set) => ({
   cashReceived: 0,
   hutangCustomer: null,
   orderCustomer: null,
+  demoModalAwal: -1,
   demoSales: [],
   demoHutang: [],
   trxCounter: 42,
@@ -232,6 +239,7 @@ export const useStore = create<POSState>((set) => ({
   // Ephemeral — nothing is written to Supabase while isDemoMode is true.
   startDemo: () => set({
     isDemoMode: true,
+    demoModalAwal: -1,   // ask this visitor for their own opening float
     demoSales: [],
     demoHutang: [],
     products: PRODUCTS,   // a fresh catalogue every time the demo is opened
@@ -286,6 +294,7 @@ export const useStore = create<POSState>((set) => ({
   setCashReceived: (cashReceived) => set({ cashReceived }),
   setHutangCustomer: (hutangCustomer) => set({ hutangCustomer }),
   setOrderCustomer: (orderCustomer) => set({ orderCustomer }),
+  setDemoModalAwal: (demoModalAwal) => set({ demoModalAwal }),
   addDemoSale: (sale) => set((s) => ({ demoSales: [sale, ...s.demoSales] })),
   addDemoHutang: (h) => set((s) => ({ demoHutang: [h, ...s.demoHutang] })),
   setDemoHutang: (demoHutang) => set({ demoHutang }),
@@ -325,6 +334,7 @@ export const useStore = create<POSState>((set) => ({
     trxCounter: 42,
     isDemoMode: false,
     // Anything done in the demo dies with it: sales, bons and any product added.
+    demoModalAwal: -1,
     demoSales: [],
     demoHutang: [],
     products: PRODUCTS,

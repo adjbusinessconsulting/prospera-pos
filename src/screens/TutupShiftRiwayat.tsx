@@ -30,16 +30,16 @@ interface Closing {
 // Built per tier: Free has no Hutang/Bon, so no hutang line, no piutang and no
 // pelunasan in the drawer — otherwise the demo advertises a feature that tier
 // cannot use. Figures stay consistent with Tutup Toko either way.
-function demoClosing(credit: boolean): Closing {
+function demoClosing(credit: boolean, modalAwal: number): Closing {
   const breakdown: Record<string, number> = { tunai: 5_120_000, qris: 1_830_000, transfer: 1_000_000 };
   if (credit) breakdown.hutang = 402_000;
   const omzet = Object.values(breakdown).reduce((a, v) => a + v, 0);
   const settle = credit ? 185_000 : 0;
   //   laci = modal 500 + tunai 5.120 + pelunasan - keluar 115, counted 5.000 short
-  const expected = 500_000 + 5_120_000 + settle - 115_000;
+  const expected = modalAwal + 5_120_000 + settle - 115_000;
   return {
     business_date: "", closed_at: new Date().toISOString(), cashier_name: "Mr Bah",
-    omzet, trx: 54, shift_count: 3, modal_awal: 500_000,
+    omzet, trx: 54, shift_count: 3, modal_awal: modalAwal,
     expected, counted: expected - 5_000, selisih: -5_000,
     reconciled: true, auto_closed: false, breakdown,
     cash: 5_120_000, kas_masuk: 0, kas_keluar: 115_000,
@@ -54,7 +54,7 @@ function prettyDate(iso: string) {
 }
 
 export default function TutupShiftRiwayat() {
-  const { setScreen, cashierInitials, signOut, storeId, storeTier, isDemoMode } = useStore();
+  const { setScreen, cashierInitials, signOut, storeId, storeTier, isDemoMode, demoModalAwal } = useStore();
   const storeName = useStore((st) => st.storeName);
   const [printMsg, setPrintMsg] = useState("");
   const effectiveTier = storeId ? storeTier : "premium";
@@ -82,7 +82,7 @@ export default function TutupShiftRiwayat() {
       // Today and yesterday have a nota; older dates stay empty, which is honest —
       // the demo store did not exist then.
       setRow(date === today || date === yest
-        ? { ...demoClosing(isAtLeast(storeTier, "standard")), business_date: date }
+        ? { ...demoClosing(isAtLeast(storeTier, "standard"), Math.max(demoModalAwal, 0)), business_date: date }
         : null);
       setLoading(false);
       return;
@@ -94,7 +94,7 @@ export default function TutupShiftRiwayat() {
     supabase.from("shift_closings").select("*").eq("store_id", storeId).eq("business_date", date).maybeSingle()
       .then(({ data }) => { if (alive) { setRow((data as Closing) ?? null); setLoading(false); } });
     return () => { alive = false; };
-  }, [storeId, date, caughtUp, isDemoMode, today, yest, storeTier]);
+  }, [storeId, date, caughtUp, isDemoMode, today, yest, storeTier, demoModalAwal]);
 
   const canExtended = isAtLeast(effectiveTier, "standard");
   const bdRows = useMemo(() => METHOD_ORDER.filter(m => (row?.breakdown?.[m] ?? 0) > 0), [row]);

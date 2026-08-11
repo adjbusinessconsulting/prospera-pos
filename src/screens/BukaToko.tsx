@@ -16,7 +16,7 @@ function greeting(): string {
 // Daily "Buka Toko" gate — captures the opening cash float (modal awal) once per
 // calendar day before selling. Reached from the first Sales mount of the day.
 export default function BukaToko() {
-  const { storeId, storeName, cashierName, settings, setScreen } = useStore();
+  const { storeId, storeName, cashierName, settings, setScreen, isDemoMode, setDemoModalAwal } = useStore();
   const [modal, setModal] = useState(0);
   const [saving, setSaving] = useState(false);
   const quick = settings.quickCash?.length ? settings.quickCash : QUICK;
@@ -25,7 +25,11 @@ export default function BukaToko() {
   async function open(amount: number) {
     if (saving) return;
     setSaving(true);
-    try { if (storeId) await saveDayOpen(storeId, amount, cashierName); } catch { /* non-fatal */ }
+    // Demo keeps it in memory — nothing reaches day_opens — but everything
+    // downstream reads it the same way, so the figure the visitor typed shows up
+    // in Kas, Tutup Shift and the printed nota.
+    if (isDemoMode) setDemoModalAwal(amount);
+    else { try { if (storeId) await saveDayOpen(storeId, amount, cashierName); } catch { /* non-fatal */ } }
     setScreen("sales");
   }
 

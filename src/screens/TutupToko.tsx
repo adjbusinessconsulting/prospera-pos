@@ -13,7 +13,7 @@ const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", tra
 const METHOD_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet", "hutang"];
 
 export default function TutupToko() {
-  const { signOut, setScreen, storeId, storeTier, isDemoMode, settings, cashierName } = useStore();
+  const { signOut, setScreen, storeId, storeTier, isDemoMode, demoModalAwal, settings, cashierName } = useStore();
   const effectiveTier = storeId ? storeTier : "free";
   const isStd = isAtLeast(effectiveTier, "standard");
   const recOn = isStd && settings.rekonsiliasi;   // owner can hide the reconciliation tool
@@ -26,7 +26,7 @@ export default function TutupToko() {
   const [trx, setTrx] = useState(isDemoMode ? 54 : 0);
   const [shiftCount, setShiftCount] = useState(isDemoMode ? 3 : 1);
   const [cash, setCash] = useState(isDemoMode ? 6_120_000 : 0);   // TUNAI sales only — see the drawer note below
-  const [modalAwal, setModalAwal] = useState(isDemoMode ? 500_000 : 0);
+  const [modalAwal, setModalAwal] = useState(isDemoMode ? Math.max(demoModalAwal, 0) : 0);
   const [kasMasuk, setKasMasuk] = useState(0);
   const [kasKeluar, setKasKeluar] = useState(isDemoMode ? 115_000 : 0);
   const [hutangSettle, setHutangSettle] = useState(isDemoMode ? 185_000 : 0); // pelunasan tunai hari ini → masuk laci
@@ -56,7 +56,8 @@ export default function TutupToko() {
     setOmzet(Object.values(bd).reduce((a, v) => a + v, 0));
     setPiutangBaru(credit ? 217_000 : 0);
     setHutangSettle(credit ? 185_000 : 0);
-  }, [isDemoMode, storeTier]);
+    setModalAwal(Math.max(demoModalAwal, 0));   // the visitor's own opening float
+  }, [isDemoMode, storeTier, demoModalAwal]);
 
   useEffect(() => {
     if (!storeId || isDemoMode) return;

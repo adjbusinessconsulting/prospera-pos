@@ -60,6 +60,7 @@ export default function Sales() {
   const heldN = canHold ? heldCount(storeId) : 0;   // cheap localStorage read, recomputed each render
   const inventoryEnabled = useStore((s) => s.inventoryEnabled);
   const isDemoMode = useStore((s) => s.isDemoMode);
+  const demoModalAwal = useStore((s) => s.demoModalAwal);
   const settings = useStore((s) => s.settings);
   const inventoryOn = isAtLeast(storeId ? storeTier : "premium", "premium") && inventoryEnabled; // Basic Inventori: show stock on items
   const [oversellMsg, setOversellMsg] = useState("");
@@ -83,7 +84,11 @@ export default function Sales() {
   // send the cashier to set the opening cash float (modal awal). Once opened,
   // hasOpenedToday() is true and this no-ops for the rest of the day.
   useEffect(() => {
-    if (!isDemoMode && storeId && !hasOpenedToday(storeId)) setScreen("buka-toko");
+    // The demo goes through Buka Toko too — a visitor sets their own opening
+    // float and then sees it carried through Kas and Tutup Shift, which is the
+    // whole point of the screen. -1 means they have not been asked yet.
+    if (isDemoMode) { if (demoModalAwal < 0) setScreen("buka-toko"); return; }
+    if (storeId && !hasOpenedToday(storeId)) setScreen("buka-toko");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);
 
