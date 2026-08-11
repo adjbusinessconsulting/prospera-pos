@@ -1,1 +1,1 @@
-export const BUILD = "9.5";
+export const BUILD = "9.6";
