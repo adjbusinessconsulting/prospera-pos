@@ -11,6 +11,8 @@ import type { SaleRecord, Screen } from "../types";
 
 const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet", hutang: "Hutang / Bon" };
 const METHOD_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet", "hutang"];
+// Sum of the demo's manual keluar rows in Kas.tsx (beli es batu + parkir).
+const DEMO_KAS_KELUAR = 115_000;
 
 interface Closing {
   business_date: string; closed_at: string; cashier_name: string | null;
@@ -75,8 +77,12 @@ export default function TutupShiftRiwayat() {
     if (isDemoMode) {
       // Today and yesterday have a nota; older dates stay empty, which is honest —
       // the demo store did not exist then.
+      // Kas keluar only exists from Standard up (Free cannot record a cash
+      // movement), so the Free nota's drawer is modal awal + tunai. Same gate as
+      // TutupToko and the rows themselves in Kas.
+      const kasKeluar = isAtLeast(storeTier, "standard") ? DEMO_KAS_KELUAR : 0;
       setRow(date === today || date === yest
-        ? { ...demoClosing(salesForTier([...demoSales, ...demoSeed], storeTier), Math.max(demoModalAwal, 0), 115_000), business_date: date }
+        ? { ...demoClosing(salesForTier([...demoSales, ...demoSeed], storeTier), Math.max(demoModalAwal, 0), kasKeluar), business_date: date }
         : null);
       setLoading(false);
       return;
@@ -88,7 +94,9 @@ export default function TutupShiftRiwayat() {
     supabase.from("shift_closings").select("*").eq("store_id", storeId).eq("business_date", date).maybeSingle()
       .then(({ data }) => { if (alive) { setRow((data as Closing) ?? null); setLoading(false); } });
     return () => { alive = false; };
-  }, [storeId, date, caughtUp, isDemoMode, today, yest, demoModalAwal, demoSeed, demoSales]);
+    // storeTier included so the demo's tier pill re-derives the nota — it was read
+    // inside the effect but missing here, so switching tier left the nota stale.
+  }, [storeId, date, caughtUp, isDemoMode, today, yest, demoModalAwal, demoSeed, demoSales, storeTier]);
 
   const canExtended = isAtLeast(effectiveTier, "standard");
   const bdRows = useMemo(() => METHOD_ORDER.filter(m => (row?.breakdown?.[m] ?? 0) > 0), [row]);
