@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useStore, isAtLeast, localDateISO } from "../store";
+import { useStore, isAtLeast, localDateISO, shiftNameFor, shiftSlotLimit } from "../store";
 import { formatRp } from "../data";
 import { AppSidebar } from "../components/AppSidebar";
 import { supabase } from "../lib/supabase";
@@ -52,8 +52,13 @@ function dateKey(iso: string): string {
 }
 
 export default function Riwayat() {
-  const { cashierInitials, selectedShiftName, storeId, storePhone, storeTier, isDemoMode, settings, inventoryEnabled, updateProduct, products, setScreen, signOut } = useStore();
+  const { cashierInitials, selectedShiftName, storeId, storePhone, storeTier, isDemoMode, settings, inventoryEnabled, updateProduct, products, dbShifts, setScreen, signOut } = useStore();
   const effectiveTier = storeId ? storeTier : 'free';
+  // Shift filter options: the configured shifts, else the plan's slot allowance,
+  // capped at the three the fallback labels name.
+  const shiftFilterCount = dbShifts.length > 0
+    ? dbShifts.length
+    : Math.min(3, shiftSlotLimit(effectiveTier));
   const canExport = isAtLeast(effectiveTier, 'standard');
   const canExtendedHistory = isAtLeast(effectiveTier, 'standard');
   const isPremium = isAtLeast(effectiveTier, 'premium');
@@ -488,9 +493,12 @@ export default function Riwayat() {
           <div style={{ position: "relative" }}>
             <select value={shiftFilter} onChange={e => setShiftFilter(e.target.value)} style={selectStyle}>
               <option value="Semua">Shift: Semua</option>
-              <option value="1">Shift 1 · Pagi</option>
-              <option value="2">Shift 2 · Siang</option>
-              <option value="3">Shift 3 · Malam</option>
+              {/* Capped at the plan's shift slots. Free has one, so offering
+                  Siang and Malam meant two filters that could only ever come
+                  back empty. */}
+              {Array.from({ length: shiftFilterCount }, (_, i) => i + 1).map(n => (
+                <option key={n} value={String(n)}>{shiftNameFor(dbShifts, n)}</option>
+              ))}
             </select>
             <svg style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
           </div>
