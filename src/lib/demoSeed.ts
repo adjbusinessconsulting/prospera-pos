@@ -26,10 +26,29 @@ export function methodsForTier(tier: string): Set<string> {
   return ok;
 }
 
-/** The same seeded day, showing only what this plan can actually do. */
+/**
+ * How many shifts this plan can run. Free has a single shift slot
+ * (SHIFT_SLOT_LIMITS in store.ts), so a Free demo showing three shifts would be
+ * advertising a limit the product enforces.
+ */
+export function shiftCountForTier(tier: string): number {
+  return (tier || "free").toLowerCase() === "free" ? 1 : 3;
+}
+
+/**
+ * The same seeded day, showing only what this plan can actually do.
+ *
+ * Two adjustments, both cosmetic to the money: methods the plan cannot use are
+ * dropped, and the seeded shift spread (1-3) is collapsed to shift 1 on Free.
+ * Collapsing rather than filtering matters — every sale still counts, so omzet,
+ * tunai and trx are identical whichever way the tier pill is set.
+ */
 export function salesForTier(sales: SaleRecord[], tier: string): SaleRecord[] {
   const ok = methodsForTier(tier);
-  return sales.filter(s => ok.has(s.payment_method));
+  const shifts = shiftCountForTier(tier);
+  return sales
+    .filter(s => ok.has(s.payment_method))
+    .map(s => (s.shift && s.shift > shifts ? { ...s, shift: 1 } : s));
 }
 
 // Deterministic PRNG (mulberry32) with a fixed seed, so the demo shows the SAME

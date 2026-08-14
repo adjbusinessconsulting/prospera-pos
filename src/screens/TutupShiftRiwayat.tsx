@@ -6,7 +6,7 @@ import { supabase } from "../lib/supabase";
 import { autoCloseStaleShifts } from "../lib/shift";
 import { isConnected as printerReady, printShiftClosing, loadPrinterConfig } from "../lib/printer";
 import { formatRp } from "../data";
-import { demoTotals, salesForTier } from "../lib/demoSeed";
+import { demoTotals, salesForTier, shiftCountForTier } from "../lib/demoSeed";
 import type { SaleRecord, Screen } from "../types";
 
 const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet", hutang: "Hutang / Bon" };
@@ -28,12 +28,12 @@ interface Closing {
 // The demo has no Supabase rows, so the saved nota — the screen the whole product
 // argues for — came up empty for anyone trying the demo. Built from the SAME sales
 // Riwayat, Kas and Tutup Toko count, so the four screens reconcile line by line.
-function demoClosing(sales: SaleRecord[], modalAwal: number, kasKeluar: number): Closing {
+function demoClosing(sales: SaleRecord[], modalAwal: number, kasKeluar: number, shiftCount: number): Closing {
   const t = demoTotals(sales);
   const expected = modalAwal + t.cash + t.hutangSettle - kasKeluar;
   return {
     business_date: "", closed_at: new Date().toISOString(), cashier_name: "Mr Bah",
-    omzet: t.omzet, trx: t.trx, shift_count: 3, modal_awal: modalAwal,
+    omzet: t.omzet, trx: t.trx, shift_count: shiftCount, modal_awal: modalAwal,
     // A small shortage rather than a tidy zero — a demo that always balances
     // perfectly is the least convincing thing to show a warung owner.
     expected, counted: expected - 5_000, selisih: -5_000,
@@ -82,7 +82,7 @@ export default function TutupShiftRiwayat() {
       // TutupToko and the rows themselves in Kas.
       const kasKeluar = isAtLeast(storeTier, "standard") ? DEMO_KAS_KELUAR : 0;
       setRow(date === today || date === yest
-        ? { ...demoClosing(salesForTier([...demoSales, ...demoSeed], storeTier), Math.max(demoModalAwal, 0), kasKeluar), business_date: date }
+        ? { ...demoClosing(salesForTier([...demoSales, ...demoSeed], storeTier), Math.max(demoModalAwal, 0), kasKeluar, shiftCountForTier(storeTier)), business_date: date }
         : null);
       setLoading(false);
       return;

@@ -1,26 +1,45 @@
 import { useState, useEffect } from "react";
-import { useStore, shiftNameFor, demoCashiers } from "../store";
+import { useStore, shiftNameFor, demoCashiers, isAtLeast } from "../store";
+import { demoTotals, salesForTier, shiftCountForTier } from "../lib/demoSeed";
 import { formatRp } from "../data";
 import { supabase } from "../lib/supabase";
 import { modalAwalToday, fetchModalAwalToday } from "../lib/dayopen";
 import { logEvent } from "../lib/auditlog";
 import { isConnected as printerReady, printHandover, loadPrinterConfig } from "../lib/printer";
 
+// Sum of the demo's manual keluar rows in Kas.tsx (beli es batu + parkir).
+const DEMO_KAS_KELUAR = 115_000;
+
 function initialsOf(name: string) {
   return name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase() || "–";
 }
 
 export default function PindahShift() {
-  const { cashierName, selectedShift, selectedShiftName, dbShifts, dbCashiers, storeId, storeName, storeTier, isDemoMode, setScreen, setShift, selectCashier } = useStore();
-  const shiftCount = dbShifts.length > 0 ? dbShifts.length : 3;
+  const { cashierName, selectedShift, selectedShiftName, dbShifts, dbCashiers, storeId, storeName, storeTier, isDemoMode, demoModalAwal, demoSeed, demoSales, setScreen, setShift, selectCashier } = useStore();
   const effectiveTier = storeId ? storeTier : "premium";
+  const shiftCount = dbShifts.length > 0 ? dbShifts.length : shiftCountForTier(storeTier);
 
-  // Real drawer figures for today (demo keeps the seeded numbers).
-  const [modalAwal, setModalAwal] = useState(isDemoMode ? 500000 : 0);
-  const [penjualanTunai, setPenjualanTunai] = useState(isDemoMode ? 2680000 : 0);
-  const [tunaiTrx, setTunaiTrx] = useState(isDemoMode ? 18 : 0);
-  const [kasKeluar, setKasKeluar] = useState(isDemoMode ? 115000 : 0);
-  const [kasKeluarTrx, setKasKeluarTrx] = useState(isDemoMode ? 2 : 0);
+  // Real drawer figures for today. The demo derives them from the same seed every
+  // other screen counts from — these used to be hardcoded leftovers from before
+  // the seed existed (tunai 2.680.000 against the seed's 943.500), so the handover
+  // nota described a different day from the Riwayat it was handing over.
+  const [modalAwal, setModalAwal] = useState(0);
+  const [penjualanTunai, setPenjualanTunai] = useState(0);
+  const [tunaiTrx, setTunaiTrx] = useState(0);
+  const [kasKeluar, setKasKeluar] = useState(0);
+  const [kasKeluarTrx, setKasKeluarTrx] = useState(0);
+
+  // Demo figures, derived on mount and again whenever the tier pill moves.
+  useEffect(() => {
+    if (!isDemoMode) return;
+    const t = demoTotals(salesForTier([...demoSales, ...demoSeed], storeTier));
+    const keluar = isAtLeast(storeTier, "standard") ? DEMO_KAS_KELUAR : 0;
+    setModalAwal(Math.max(demoModalAwal, 0));
+    setPenjualanTunai(t.cash);
+    setTunaiTrx(t.trx);
+    setKasKeluar(keluar);
+    setKasKeluarTrx(keluar ? 2 : 0);
+  }, [isDemoMode, storeTier, demoModalAwal, demoSeed, demoSales]);
 
   useEffect(() => {
     if (!storeId || isDemoMode) return;

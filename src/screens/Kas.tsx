@@ -39,6 +39,7 @@ export default function Kas() {
   const { gate, gateModal } = useManagerGate();
   const effectiveTier = storeId ? storeTier : 'free';
   const canKas = isAtLeast(effectiveTier, 'standard');       // tier gate (banner/upsell)
+  const canShift = isAtLeast(effectiveTier, 'standard');     // Free has one shift slot — nothing to move to
   const newKasOn = canKas && settings.kas;                    // owner can hide new-entry buttons
   // Foto bukti is optional by default; the owner can make it required (Pengaturan).
   const requiresPhoto = settings.fotoBuktiWajib;
@@ -376,7 +377,10 @@ export default function Kas() {
 
         {/* Bottom: Pindah Shift + Tutup Toko */}
         <div className="flex gap-2.5 px-5 lg:px-10 py-4 shrink-0 border-t border-warm-border bg-cream-bg">
-          {settings.gantiShift && (
+          {/* Free has a single shift slot, so there is no shift to move to — the
+              button was gated only on the setting, which let a Free store open a
+              handover screen for a feature it cannot use. */}
+          {settings.gantiShift && canShift && (
           <button onClick={() => gate("shifts", () => setScreen("pindah-shift"))}
             className="flex-1 bg-cream-bg border border-warm-border rounded-card h-[46px] flex items-center justify-center gap-2 text-[13px] font-semibold text-navy hover:border-navy/40 transition-colors cursor-pointer">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6" /></svg>

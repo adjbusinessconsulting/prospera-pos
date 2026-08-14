@@ -6,7 +6,7 @@ import { logEvent } from "../lib/auditlog";
 import { saveShiftClosing } from "../lib/shift";
 import { modalAwalToday, fetchModalAwalToday } from "../lib/dayopen";
 import { clearSession } from "../lib/session";
-import { demoTotals, salesForTier } from "../lib/demoSeed";
+import { demoTotals, salesForTier, shiftCountForTier } from "../lib/demoSeed";
 
 const RETENTION: Record<string, number> = { free: 1, standard: 30, premium: 90, business: 1095, enterprise: 1825 };
 const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet", hutang: "Hutang / Bon" };
@@ -27,7 +27,7 @@ export default function TutupToko() {
   // omzet, so a closed day's revenue is final.
   const [omzet, setOmzet] = useState(0);
   const [trx, setTrx] = useState(0);
-  const [shiftCount, setShiftCount] = useState(isDemoMode ? 3 : 1);
+  const [shiftCount, setShiftCount] = useState(isDemoMode ? shiftCountForTier(effectiveTier) : 1);
   const [cash, setCash] = useState(0);   // TUNAI sales only — see the drawer note below
   const [modalAwal, setModalAwal] = useState(isDemoMode ? Math.max(demoModalAwal, 0) : 0);
   const [kasMasuk, setKasMasuk] = useState(0);
@@ -64,6 +64,7 @@ export default function TutupToko() {
     // Follows the tier pill like every figure above it. Without this the initial
     // value survived a switch down to Free, and the drawer lost 115rb it never had.
     setKasKeluar(isAtLeast(storeTier, "standard") ? DEMO_KAS_KELUAR : 0);
+    setShiftCount(shiftCountForTier(storeTier));   // Free runs one shift, not three
   }, [isDemoMode, storeTier, demoModalAwal, demoSeed, demoSales]);
 
   useEffect(() => {
