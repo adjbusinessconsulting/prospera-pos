@@ -12,6 +12,8 @@ const RETENTION: Record<string, number> = { free: 1, standard: 30, premium: 90, 
 const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet", hutang: "Hutang / Bon" };
 // "hutang" sits last: it is revenue like the rest, but the only one not yet collected.
 const METHOD_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet", "hutang"];
+// Sum of the demo's manual keluar rows in Kas.tsx (beli es batu + parkir).
+const DEMO_KAS_KELUAR = 115_000;
 
 export default function TutupToko() {
   const { signOut, setScreen, storeId, storeTier, isDemoMode, demoModalAwal, demoSeed, demoSales, settings, cashierName } = useStore();
@@ -29,7 +31,11 @@ export default function TutupToko() {
   const [cash, setCash] = useState(0);   // TUNAI sales only — see the drawer note below
   const [modalAwal, setModalAwal] = useState(isDemoMode ? Math.max(demoModalAwal, 0) : 0);
   const [kasMasuk, setKasMasuk] = useState(0);
-  const [kasKeluar, setKasKeluar] = useState(isDemoMode ? 115_000 : 0);   // the two demo kas keluar rows
+  // The two demo kas keluar rows (beli es batu 100rb + parkir 15rb), which only
+  // exist from Standard up — Free cannot record a cash movement at all, so
+  // subtracting one would show a Free drawer that Free could never produce.
+  // Mirrors the same gate on the rows themselves in Kas.tsx.
+  const [kasKeluar, setKasKeluar] = useState(isDemoMode && isAtLeast(effectiveTier, "standard") ? DEMO_KAS_KELUAR : 0);
   const [hutangSettle, setHutangSettle] = useState(0); // pelunasan tunai hari ini → masuk laci
   const [shiftId, setShiftId] = useState<string | null>(null);
   const [showRecon, setShowRecon] = useState(false);
@@ -55,6 +61,9 @@ export default function TutupToko() {
     setPiutangBaru(t.piutangBaru);
     setHutangSettle(t.hutangSettle);
     setModalAwal(Math.max(demoModalAwal, 0));   // the visitor's own opening float
+    // Follows the tier pill like every figure above it. Without this the initial
+    // value survived a switch down to Free, and the drawer lost 115rb it never had.
+    setKasKeluar(isAtLeast(storeTier, "standard") ? DEMO_KAS_KELUAR : 0);
   }, [isDemoMode, storeTier, demoModalAwal, demoSeed, demoSales]);
 
   useEffect(() => {
