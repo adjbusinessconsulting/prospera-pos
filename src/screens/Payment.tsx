@@ -391,8 +391,11 @@ export default function Payment() {
         </div>
       </div>
 
-      {/* Right: payment method + math */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* Right: payment method + math.
+          Scrolls (rather than clipping) once the method floor above means the
+          three sections no longer fit — on a normal phone nothing overflows, so
+          the cash panel stays put exactly as before. */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
 
         {/* Mobile: back button + header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-0 shrink-0 lg:px-10 lg:pt-8">
@@ -407,8 +410,15 @@ export default function Payment() {
           </div>
         </div>
 
-        {/* Method tiles — 3-col desktop, 2-col mobile */}
-        <div className="flex-1 overflow-auto px-5 lg:px-10 pt-5 pb-5">
+        {/* Method tiles — 3-col desktop, 2-col mobile.
+            min-h matters: this is the only flexible child of a fixed-height
+            column, so `flex-1` (flex: 1 1 0%) let it shrink below its content.
+            On a short viewport — browser zoom, landscape, a small phone — the
+            cash panel below kept its full height and squeezed this to ~40px,
+            leaving the "METODE PEMBAYARAN" label above an empty strip with no
+            way to pick a method. The floor keeps one full row of cards on
+            screen; the column scrolls when the three sections can't all fit. */}
+        <div className="flex-1 min-h-[200px] overflow-auto px-5 lg:px-10 pt-5 pb-5">
           <p style={{ fontSize: 10, letterSpacing: "0.18em" }} className="font-sans uppercase text-text-mute mb-3">METODE PEMBAYARAN</p>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {visibleMethods.map(m => {
