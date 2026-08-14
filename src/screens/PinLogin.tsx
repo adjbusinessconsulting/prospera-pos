@@ -1,4 +1,4 @@
-import { useStore, isAtLeast } from "../store";
+import { useStore, isAtLeast, shiftSlotLimit } from "../store";
 import { CASHIERS } from "../data";
 import { useState, useEffect } from "react";
 import ManageStaff from "../components/ManageStaff";
@@ -80,7 +80,11 @@ export default function PinLogin() {
     // Only the demo fabricates sample shifts. A real store with no shifts shows a
     // "buat shift" prompt instead of fake Pagi/Siang/Malam it never created.
     : isDemoMode
-      ? ([1, 2, 3] as const).map(n => ({ pos: n, name: SHIFT_LABELS[n], time: "", isNow: currentShiftLabel() === n }))
+      // Capped at the plan's slots — a Free demo offering Siang and Malam would
+      // advertise shifts the tier cannot open.
+      ? ([1, 2, 3] as const)
+          .filter(n => n <= shiftSlotLimit(effectiveTier))
+          .map(n => ({ pos: n, name: SHIFT_LABELS[n], time: "", isNow: currentShiftLabel() === n }))
       : [];
   const noShiftsReal = !hasConfiguredShifts && !isDemoMode && !!storeId;
 

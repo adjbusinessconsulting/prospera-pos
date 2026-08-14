@@ -117,6 +117,17 @@ function currentShiftFromTime(): 1 | 2 | 3 {
 // Fallback labels for stores that haven't configured shift slots yet.
 const FALLBACK_SHIFT_LABELS: Record<number, string> = { 1: 'Shift 1 · Pagi', 2: 'Shift 2 · Siang', 3: 'Shift 3 · Malam' };
 
+/**
+ * Hold a shift position inside what the plan actually allows.
+ *
+ * The opening shift is chosen from the wall clock, which knows nothing about
+ * tiers — so a Free store (one slot) opening at 15:00 landed on shift 2.
+ */
+export function clampShift(n: number, tier: string): number {
+  const lim = shiftSlotLimit(tier);
+  return Number.isFinite(lim) ? Math.min(Math.max(1, n), lim) : Math.max(1, n);
+}
+
 // Display name for the shift at 1-based position `n`: configured shift name if any, else fallback.
 export function shiftNameFor(dbShifts: ShiftDef[], n: number): string {
   if (dbShifts.length > 0) return dbShifts[n - 1]?.name ?? `Shift ${n}`;
@@ -226,13 +237,20 @@ export const useStore = create<POSState>((set) => ({
     pendingSyncCount: s.pendingSyncCount ?? st.pendingSyncCount,
     lastSyncedAt: s.lastSyncedAt !== undefined ? s.lastSyncedAt : st.lastSyncedAt,
   })),
-  setStoreTier: (storeTier) => set((s) => s.isDemoMode
-    // The demo's tier pill switches tier live, so the staff list must follow —
-    // otherwise flipping to Free leaves three cashiers on screen.
-    // No re-seed: it is the same shop on a different plan, so screens filter the
-    // one seed by tier rather than inventing a new history.
-    ? { storeTier, dbCashiers: demoCashiers(storeTier) }
-    : { storeTier }),
+  setStoreTier: (storeTier) => set((s) => {
+    // The shift picked from the clock has to be re-clamped: Free has one slot, so
+    // a session opened at 15:00 would otherwise sit on "Shift 2 · Siang" — a shift
+    // the plan cannot open, stamped onto every sale it rings up.
+    const shift = clampShift(s.selectedShift, storeTier);
+    const shiftPatch = { selectedShift: shift, selectedShiftName: shiftNameFor(s.dbShifts, shift) };
+    return s.isDemoMode
+      // The demo's tier pill switches tier live, so the staff list must follow —
+      // otherwise flipping to Free leaves three cashiers on screen.
+      // No re-seed: it is the same shop on a different plan, so screens filter the
+      // one seed by tier rather than inventing a new history.
+      ? { storeTier, dbCashiers: demoCashiers(storeTier), ...shiftPatch }
+      : { storeTier, ...shiftPatch };
+  }),
   setKickedOut: (kickedOut) => set({ kickedOut }),
   setSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
   loadSettings: (raw) => set({ settings: mergeSettings(raw) }),
@@ -277,7 +295,10 @@ export const useStore = create<POSState>((set) => ({
     return { selectedCashier: id, cashierName: name, cashierInitials: initials };
   }),
 
-  setShift: (n) => set((s) => ({ selectedShift: n, selectedShiftName: shiftNameFor(s.dbShifts, n) })),
+  setShift: (n) => set((s) => {
+    const shift = s.dbShifts.length > 0 ? n : clampShift(n, s.storeTier);
+    return { selectedShift: shift, selectedShiftName: shiftNameFor(s.dbShifts, shift) };
+  }),
   setDbShifts: (dbShifts) => set((s) => ({ dbShifts, selectedShiftName: shiftNameFor(dbShifts, s.selectedShift) })),
 
   addPin: (digit) => set(s => ({ pin: s.pin.length < 6 ? s.pin + digit : s.pin })),
@@ -366,21 +387,28 @@ export const useStore = create<POSState>((set) => ({
     cart: s.cart.filter(i => i.product.id !== id),
   })),
 
-  setStoreData: (id, name, address, cashiers, phone = '', qrisImageUrl = '', midtransClientKey = '', tier = 'free') => set({
-    storeId: id,
-    storeName: name,
-    storeAddress: address,
-    storePhone: phone,
-    storeTier: tier,
-    qrisImageUrl,
-    midtransClientKey,
-    dbCashiers: cashiers,
-    selectedCashier: cashiers.length > 0 ? cashiers[0].id : 'ae',
-    // Sync the greeting/attribution to the loaded cashier so a returning session
-    // shows the real name, not the demo fallback.
-    ...(cashiers.length > 0
-      ? { cashierName: shortName(cashiers[0].name), cashierInitials: cashiers[0].initials }
-      : {}),
+  setStoreData: (id, name, address, cashiers, phone = '', qrisImageUrl = '', midtransClientKey = '', tier = 'free') => set((s) => {
+    // The tier arrives here, after the clock already picked a shift — so this is
+    // the first moment the choice can be held inside the plan's slot allowance.
+    const shift = s.dbShifts.length > 0 ? s.selectedShift : clampShift(s.selectedShift, tier);
+    return {
+      storeId: id,
+      storeName: name,
+      storeAddress: address,
+      storePhone: phone,
+      storeTier: tier,
+      qrisImageUrl,
+      midtransClientKey,
+      dbCashiers: cashiers,
+      selectedCashier: cashiers.length > 0 ? cashiers[0].id : 'ae',
+      selectedShift: shift,
+      selectedShiftName: shiftNameFor(s.dbShifts, shift),
+      // Sync the greeting/attribution to the loaded cashier so a returning session
+      // shows the real name, not the demo fallback.
+      ...(cashiers.length > 0
+        ? { cashierName: shortName(cashiers[0].name), cashierInitials: cashiers[0].initials }
+        : {}),
+    };
   }),
 }));
 
