@@ -212,7 +212,7 @@ export default function Riwayat() {
   const [hutangByTrx, setHutangByTrx] = useState<Record<string, { status: string; settled_method: string | null }>>({});
   const [loadingData, setLoadingData] = useState(true);
   const [activeFilter, setActiveFilter] = useState(0);
-  const [methodFilter, setMethodFilter] = useState("Semua");
+  const [methodFilter, setMethodFilter] = useState("semua");
   const [shiftFilter, setShiftFilter]   = useState("Semua");
   const [kasirFilter, setKasirFilter]   = useState("Semua");
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -300,10 +300,16 @@ export default function Riwayat() {
   }
 
   const periodSales = filterByDays(sales, FILTER_LABELS[activeFilter].days);
+  const countBy = (method: string) =>
+    periodSales.filter(t => t.payment_method.toLowerCase() === method).length;
 
   const filtered = periodSales.filter(s => {
-    const m = methodLabel(s.payment_method);
-    const matchMethod = methodFilter === "Semua" || m === methodFilter;
+    // Match on the stored method, never on its display label. The label is
+    // title-cased ("qris" -> "Qris") while the chip carried "QRIS", so the two
+    // could never be equal and the QRIS chip always came back empty — counting
+    // 2 transactions and then showing none. Every other method survived only
+    // because title-casing happens to round-trip it.
+    const matchMethod = methodFilter === "semua" || s.payment_method.toLowerCase() === methodFilter;
     const matchShift  = shiftFilter === "Semua" || s.shift === parseInt(shiftFilter);
     const matchKasir  = kasirFilter === "Semua" || s.cashier_name === kasirFilter;
     return matchMethod && matchShift && matchKasir;
@@ -612,17 +618,21 @@ export default function Riwayat() {
 
         {/* Method pills */}
         <div className="flex gap-2 px-5 lg:px-10 pt-3 pb-0 shrink-0 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+          {/* `id` is the stored payment_method and drives the filter; `label` is
+              only ever displayed. Keeping them separate is what stops a pretty
+              label from silently becoming a lookup key. */}
           {[
-            { key: "Semua",    count: periodSales.length },
-            { key: "Tunai",    count: periodSales.filter(t => t.payment_method.toLowerCase() === "tunai").length },
-            { key: "QRIS",     count: periodSales.filter(t => t.payment_method.toLowerCase() === "qris").length },
-            { key: "Debit",    count: periodSales.filter(t => t.payment_method.toLowerCase() === "debit").length },
-            { key: "Transfer", count: periodSales.filter(t => t.payment_method.toLowerCase() === "transfer").length },
-            { key: "Hutang",   count: periodSales.filter(t => t.payment_method.toLowerCase() === "hutang").length },
-          ].filter(m => m.key === "Semua" || m.count > 0).map(m => (
-            <button key={m.key} onClick={() => setMethodFilter(m.key)}
-              className={`px-3.5 py-[6px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors cursor-pointer ${methodFilter === m.key ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border hover:border-navy/40"}`}>
-              {m.key} · {m.count}
+            { id: "semua",    label: "Semua",    count: periodSales.length },
+            { id: "tunai",    label: "Tunai",    count: countBy("tunai") },
+            { id: "qris",     label: "QRIS",     count: countBy("qris") },
+            { id: "debit",    label: "Debit",    count: countBy("debit") },
+            { id: "ewallet",  label: "E-Wallet", count: countBy("ewallet") },
+            { id: "transfer", label: "Transfer", count: countBy("transfer") },
+            { id: "hutang",   label: "Hutang",   count: countBy("hutang") },
+          ].filter(m => m.id === "semua" || m.count > 0).map(m => (
+            <button key={m.id} onClick={() => setMethodFilter(m.id)}
+              className={`px-3.5 py-[6px] rounded-full text-[12px] font-medium border whitespace-nowrap transition-colors cursor-pointer ${methodFilter === m.id ? "bg-navy text-cream-text border-navy" : "bg-white text-navy border-warm-border hover:border-navy/40"}`}>
+              {m.label} · {m.count}
             </button>
           ))}
         </div>
