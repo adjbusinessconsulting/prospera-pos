@@ -6,13 +6,11 @@ import { supabase } from "../lib/supabase";
 import { autoCloseStaleShifts } from "../lib/shift";
 import { isConnected as printerReady, printShiftClosing, loadPrinterConfig } from "../lib/printer";
 import { formatRp } from "../data";
-import { demoTotals, salesForTier, shiftCountForTier } from "../lib/demoSeed";
+import { demoTotals, salesForTier, shiftCountForTier, demoManualCash } from "../lib/demoSeed";
 import type { SaleRecord, Screen } from "../types";
 
 const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet", hutang: "Hutang / Bon" };
 const METHOD_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet", "hutang"];
-// Sum of the demo's manual keluar rows in Kas.tsx (beli es batu + parkir).
-const DEMO_KAS_KELUAR = 115_000;
 
 interface Closing {
   business_date: string; closed_at: string; cashier_name: string | null;
@@ -28,9 +26,11 @@ interface Closing {
 // The demo has no Supabase rows, so the saved nota — the screen the whole product
 // argues for — came up empty for anyone trying the demo. Built from the SAME sales
 // Riwayat, Kas and Tutup Toko count, so the four screens reconcile line by line.
-function demoClosing(sales: SaleRecord[], modalAwal: number, kasKeluar: number, shiftCount: number): Closing {
+function demoClosing(sales: SaleRecord[], modalAwal: number, manual: { hutangSettle: number; kasKeluar: number }, shiftCount: number): Closing {
   const t = demoTotals(sales);
-  const expected = modalAwal + t.cash + t.hutangSettle - kasKeluar;
+  // Same drawer arithmetic as Kas and Tutup Toko, from the same manual rows.
+  const hutangSettle = t.hutangSettle + manual.hutangSettle;
+  const expected = modalAwal + t.cash + hutangSettle - manual.kasKeluar;
   return {
     business_date: "", closed_at: new Date().toISOString(), cashier_name: "Mr Bah",
     omzet: t.omzet, trx: t.trx, shift_count: shiftCount, modal_awal: modalAwal,
@@ -38,8 +38,8 @@ function demoClosing(sales: SaleRecord[], modalAwal: number, kasKeluar: number, 
     // perfectly is the least convincing thing to show a warung owner.
     expected, counted: expected - 5_000, selisih: -5_000,
     reconciled: true, auto_closed: false, breakdown: t.breakdown,
-    cash: t.cash, kas_masuk: 0, kas_keluar: kasKeluar,
-    hutang_settle: t.hutangSettle, piutang_baru: t.piutangBaru,
+    cash: t.cash, kas_masuk: 0, kas_keluar: manual.kasKeluar,
+    hutang_settle: hutangSettle, piutang_baru: t.piutangBaru,
   };
 }
 
@@ -77,12 +77,11 @@ export default function TutupShiftRiwayat() {
     if (isDemoMode) {
       // Today and yesterday have a nota; older dates stay empty, which is honest —
       // the demo store did not exist then.
-      // Kas keluar only exists from Standard up (Free cannot record a cash
-      // movement), so the Free nota's drawer is modal awal + tunai. Same gate as
-      // TutupToko and the rows themselves in Kas.
-      const kasKeluar = isAtLeast(storeTier, "standard") ? DEMO_KAS_KELUAR : 0;
+      // Manual cash movements exist from Standard up: Free can neither record a
+      // movement nor settle a bon, so its drawer is modal awal + tunai.
+      const manual = demoManualCash(storeTier);
       setRow(date === today || date === yest
-        ? { ...demoClosing(salesForTier([...demoSales, ...demoSeed], storeTier), Math.max(demoModalAwal, 0), kasKeluar, shiftCountForTier(storeTier)), business_date: date }
+        ? { ...demoClosing(salesForTier([...demoSales, ...demoSeed], storeTier), Math.max(demoModalAwal, 0), manual, shiftCountForTier(storeTier)), business_date: date }
         : null);
       setLoading(false);
       return;

@@ -51,6 +51,27 @@ export function salesForTier(sales: SaleRecord[], tier: string): SaleRecord[] {
     .map(s => (s.shift && s.shift > shifts ? { ...s, shift: 1 } : s));
 }
 
+// The demo's MANUAL cash movements — the rows Kas lists individually, as opposed
+// to the automatic "penjualan tunai" it derives from the seed.
+//
+// These live here, next to the sales, because they were previously duplicated as
+// literals in each screen and drifted apart twice: Tutup Toko/Tutup Shift kept a
+// hardcoded kas keluar with no tier gate, and neither ever knew about the
+// pelunasan row Kas counted — so Kas reported a drawer 185rb larger than the nota
+// that was supposed to reconcile it. One definition, every screen.
+//
+// All of it is Standard+: Free can neither record a cash movement nor open a bon.
+export const DEMO_MANUAL_KELUAR = [15_000, 100_000];   // parkir & retribusi, beli es batu
+export const DEMO_MANUAL_SETTLE = 185_000;             // pelunasan bon — cash in, never omzet
+
+export function demoManualCash(tier: string): { hutangSettle: number; kasKeluar: number } {
+  const on = (tier || "free").toLowerCase() !== "free";
+  return {
+    hutangSettle: on ? DEMO_MANUAL_SETTLE : 0,
+    kasKeluar: on ? DEMO_MANUAL_KELUAR.reduce((a, b) => a + b, 0) : 0,
+  };
+}
+
 // Deterministic PRNG (mulberry32) with a fixed seed, so the demo shows the SAME
 // figures every time it is opened.
 //

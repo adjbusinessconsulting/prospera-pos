@@ -6,14 +6,12 @@ import { logEvent } from "../lib/auditlog";
 import { saveShiftClosing } from "../lib/shift";
 import { modalAwalToday, fetchModalAwalToday } from "../lib/dayopen";
 import { clearSession } from "../lib/session";
-import { demoTotals, salesForTier, shiftCountForTier } from "../lib/demoSeed";
+import { demoTotals, salesForTier, shiftCountForTier, demoManualCash } from "../lib/demoSeed";
 
 const RETENTION: Record<string, number> = { free: 1, standard: 30, premium: 90, business: 1095, enterprise: 1825 };
 const METHOD_LABEL: Record<string, string> = { tunai: "Tunai", qris: "QRIS", transfer: "Transfer", debit: "Debit", ewallet: "E-Wallet", hutang: "Hutang / Bon" };
 // "hutang" sits last: it is revenue like the rest, but the only one not yet collected.
 const METHOD_ORDER = ["tunai", "qris", "transfer", "debit", "ewallet", "hutang"];
-// Sum of the demo's manual keluar rows in Kas.tsx (beli es batu + parkir).
-const DEMO_KAS_KELUAR = 115_000;
 
 export default function TutupToko() {
   const { signOut, setScreen, storeId, storeTier, isDemoMode, demoModalAwal, demoSeed, demoSales, settings, cashierName } = useStore();
@@ -35,7 +33,7 @@ export default function TutupToko() {
   // exist from Standard up — Free cannot record a cash movement at all, so
   // subtracting one would show a Free drawer that Free could never produce.
   // Mirrors the same gate on the rows themselves in Kas.tsx.
-  const [kasKeluar, setKasKeluar] = useState(isDemoMode && isAtLeast(effectiveTier, "standard") ? DEMO_KAS_KELUAR : 0);
+  const [kasKeluar, setKasKeluar] = useState(isDemoMode ? demoManualCash(effectiveTier).kasKeluar : 0);
   const [hutangSettle, setHutangSettle] = useState(0); // pelunasan tunai hari ini → masuk laci
   const [shiftId, setShiftId] = useState<string | null>(null);
   const [showRecon, setShowRecon] = useState(false);
@@ -59,11 +57,15 @@ export default function TutupToko() {
     setCash(t.cash);
     setTrx(t.trx);
     setPiutangBaru(t.piutangBaru);
-    setHutangSettle(t.hutangSettle);
     setModalAwal(Math.max(demoModalAwal, 0));   // the visitor's own opening float
-    // Follows the tier pill like every figure above it. Without this the initial
-    // value survived a switch down to Free, and the drawer lost 115rb it never had.
-    setKasKeluar(isAtLeast(storeTier, "standard") ? DEMO_KAS_KELUAR : 0);
+    // The manual rows Kas lists — same source, so the drawer this screen reports
+    // matches the one Kas shows. Both follow the tier pill: without that the kas
+    // keluar survived a switch down to Free and the drawer lost 115rb it never had.
+    const manual = demoManualCash(storeTier);
+    setKasKeluar(manual.kasKeluar);
+    // Bons settled today: those opened today from the seed, plus the manual
+    // pelunasan Kas lists. Cash in the laci, never omzet.
+    setHutangSettle(t.hutangSettle + manual.hutangSettle);
     setShiftCount(shiftCountForTier(storeTier));   // Free runs one shift, not three
   }, [isDemoMode, storeTier, demoModalAwal, demoSeed, demoSales]);
 

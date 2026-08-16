@@ -7,16 +7,16 @@ import { supabase } from "../lib/supabase";
 import { logEvent } from "../lib/auditlog";
 import { modalAwalToday, openedAtToday } from "../lib/dayopen";
 import { useManagerGate } from "../lib/useManagerGate";
-import { demoTotals, salesForTier } from "../lib/demoSeed";
+import { demoTotals, salesForTier, DEMO_MANUAL_KELUAR, DEMO_MANUAL_SETTLE } from "../lib/demoSeed";
 
 type KasIcon = "masuk" | "keluar" | "auto" | "hutang_settle";
 interface KasMove { time: string; label: string; desc: string; amount: number; icon: KasIcon; photo: boolean }
 
 // Demo-only seed (real stores load from kas_entries / sales).
 const DEMO_MANUAL: KasMove[] = [
-  { time: "16:10", label: "Pelunasan bon TRX-0042 — Budi", desc: "Mr Bah · pelunasan hutang", amount: 185000, icon: "hutang_settle", photo: false },
-  { time: "15:30", label: "Bayar parkir & retribusi", desc: "Mr Bah · keluar", amount: -15000,  icon: "keluar", photo: true },
-  { time: "14:48", label: "Beli es batu",             desc: "Mr Bah · keluar", amount: -100000, icon: "keluar", photo: true },
+  { time: "16:10", label: "Pelunasan bon TRX-0042 — Budi", desc: "Mr Bah · pelunasan hutang", amount: DEMO_MANUAL_SETTLE, icon: "hutang_settle", photo: false },
+  { time: "15:30", label: "Bayar parkir & retribusi", desc: "Mr Bah · keluar", amount: -DEMO_MANUAL_KELUAR[0], icon: "keluar", photo: true },
+  { time: "14:48", label: "Beli es batu",             desc: "Mr Bah · keluar", amount: -DEMO_MANUAL_KELUAR[1], icon: "keluar", photo: true },
 ];
 
 function PhotoThumb({ size = "sm" }: { size?: "sm" | "md" }) {
